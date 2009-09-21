@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/443/tags/rpyc/3.0.3/demos/time
+END
+client.py
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/443/tags/rpyc/3.0.3/demos/time/client.py
+END
+time_service.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/443/tags/rpyc/3.0.3/demos/time/time_service.py
+END
+readme.txt
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/443/tags/rpyc/3.0.3/demos/time/readme.txt
+END
+server.py
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/443/tags/rpyc/3.0.3/demos/time/server.py
+END

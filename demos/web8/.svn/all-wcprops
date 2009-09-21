@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/443/tags/rpyc/3.0.3/demos/web8
+END
+readme.txt
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/443/tags/rpyc/3.0.3/demos/web8/readme.txt
+END
+safegtk.py
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/443/tags/rpyc/3.0.3/demos/web8/safegtk.py
+END
+client.pyw
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/443/tags/rpyc/3.0.3/demos/web8/client.pyw
+END
+server.py
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/443/tags/rpyc/3.0.3/demos/web8/server.py
+END
