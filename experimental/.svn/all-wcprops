@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/442/tags/rpyc/3.0.4/experimental
+END
+batching.py
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/442/tags/rpyc/3.0.4/experimental/batching.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/442/tags/rpyc/3.0.4/experimental/__init__.py
+END
+safeproxy_test.py
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/442/tags/rpyc/3.0.4/experimental/safeproxy_test.py
+END
+setup.py
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/442/tags/rpyc/3.0.4/experimental/setup.py
+END
+functional.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/442/tags/rpyc/3.0.4/experimental/functional.py
+END
