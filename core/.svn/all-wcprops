@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/409/tags/rpyc/3.0.2/core
+END
+channel.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/409/tags/rpyc/3.0.2/core/channel.py
+END
+consts.py
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/409/tags/rpyc/3.0.2/core/consts.py
+END
+vinegar.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/409/tags/rpyc/3.0.2/core/vinegar.py
+END
+stream.py
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/409/tags/rpyc/3.0.2/core/stream.py
+END
+async.py
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/409/tags/rpyc/3.0.2/core/async.py
+END
+brine.py
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/409/tags/rpyc/3.0.2/core/brine.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/409/tags/rpyc/3.0.2/core/__init__.py
+END
+service.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/409/tags/rpyc/3.0.2/core/service.py
+END
+protocol.py
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/409/tags/rpyc/3.0.2/core/protocol.py
+END
+netref.py
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/409/tags/rpyc/3.0.2/core/netref.py
+END
