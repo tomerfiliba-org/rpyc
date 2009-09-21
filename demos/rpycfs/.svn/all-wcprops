@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/407/tags/rpyc/3.0.0/demos/rpycfs
+END
+rpycfsd.py
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/407/tags/rpyc/3.0.0/demos/rpycfs/rpycfsd.py
+END
+service.py
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/407/tags/rpyc/3.0.0/demos/rpycfs/service.py
+END
+readme.txt
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/407/tags/rpyc/3.0.0/demos/rpycfs/readme.txt
+END
+mount.rpycfs.py
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/407/tags/rpyc/3.0.0/demos/rpycfs/mount.rpycfs.py
+END

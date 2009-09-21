@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svn/!svn/ver/407/tags/rpyc/3.0.0/servers
+END
+registry_server.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/407/tags/rpyc/3.0.0/servers/registry_server.py
+END
+classic_server.py
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/407/tags/rpyc/3.0.0/servers/classic_server.py
+END

@@ -1,0 +1,17 @@
+=== Known Issues ===
+
+* __cmp__ - comparing remote and local objects will usually not work, but 
+  there's nothing to do about it. 
+
+* 64bit platforms: since channels use 32bit length field, you can't pass 
+  data/strings over 4gb. this is not a real limitation (unless you have a 
+  superfast local network and tons of RAM), but as 64bit python becomes the
+  defacto standard, i will upgrade channels to 64bit length field.
+
+* threads: in face of no better solution, and after consulting many people,
+  i resorted to setting a timeout on the underlying recv(). this is not an 
+  elegant way, but all other solution required rewriting all sorts of 
+  threading primitives and were not necessarily deadlock/race-free.
+  as the zen says, "practicality beats purity".
+
+* win32: pipes work like shit
