@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests
+END
+twisted_server.py
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests/twisted_server.py
+END
+custom_service.py
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests/custom_service.py
+END
+threads.py
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests/threads.py
+END
+testbase.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests/testbase.py
+END
+runall.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests/runall.py
+END
+async.py
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests/async.py
+END
+classic.py
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests/classic.py
+END
+twisted_client.py
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests/twisted_client.py
+END
+tls.py
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests/tls.py
+END
+win32pipes.py
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests/win32pipes.py
+END
+remoting.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/408/tags/rpyc/3.0.1/tests/remoting.py
+END

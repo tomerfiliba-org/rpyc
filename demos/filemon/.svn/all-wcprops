@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/408/tags/rpyc/3.0.1/demos/filemon
+END
+client.py
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/408/tags/rpyc/3.0.1/demos/filemon/client.py
+END
+readme.txt
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/408/tags/rpyc/3.0.1/demos/filemon/readme.txt
+END
+server.py
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/408/tags/rpyc/3.0.1/demos/filemon/server.py
+END

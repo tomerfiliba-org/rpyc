@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 33
+/svn/!svn/ver/408/tags/rpyc/3.0.1
+END
+buildall.sh
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/408/tags/rpyc/3.0.1/buildall.sh
+END
+todo.txt
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/408/tags/rpyc/3.0.1/todo.txt
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/408/tags/rpyc/3.0.1/__init__.py
+END
+setup.py
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/408/tags/rpyc/3.0.1/setup.py
+END
+issues.txt
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/408/tags/rpyc/3.0.1/issues.txt
+END
+license.py
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/408/tags/rpyc/3.0.1/license.py
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/!svn/ver/408/tags/rpyc/3.0.1/README
+END
