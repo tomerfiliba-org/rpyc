@@ -1,0 +1,65 @@
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/446/tags/rpyc/3.0.5/utils
+END
+registry.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/446/tags/rpyc/3.0.5/utils/registry.py
+END
+authenticators.py
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/446/tags/rpyc/3.0.5/utils/authenticators.py
+END
+logger.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/446/tags/rpyc/3.0.5/utils/logger.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/446/tags/rpyc/3.0.5/utils/__init__.py
+END
+classic.py
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/446/tags/rpyc/3.0.5/utils/classic.py
+END
+helpers.py
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/446/tags/rpyc/3.0.5/utils/helpers.py
+END
+server.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/446/tags/rpyc/3.0.5/utils/server.py
+END
+lib.py
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/446/tags/rpyc/3.0.5/utils/lib.py
+END
+twisted_integration.py
+K 25
+svn:wc:ra_dav:version-url
+V 62
+/svn/!svn/ver/446/tags/rpyc/3.0.5/utils/twisted_integration.py
+END
+factory.py
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/446/tags/rpyc/3.0.5/utils/factory.py
+END

@@ -1,0 +1,11 @@
+K 10
+svn:ignore
+V 49
+.pydevproject
+.project
+dist
+*.pyc
+.settings
+.git
+
+END
