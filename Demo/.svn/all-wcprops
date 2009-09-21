@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo
+END
+pipe-child.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo/pipe-child.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo/__init__.py
+END
+demo-1.py
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo/demo-1.py
+END
+demo-2.py
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo/demo-2.py
+END
+pipe-parent.py
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo/pipe-parent.py
+END
+demo-3.py
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo/demo-3.py
+END
+demo-4.py
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo/demo-4.py
+END
+testmodule.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo/testmodule.py
+END
+demo-5.py
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo/demo-5.py
+END
+demo-6.py
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo/demo-6.py
+END
+testsuite.bat
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/313/tags/rpyc/2.60/Demo/testsuite.bat
+END

@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/313/tags/rpyc/2.60/Utils
+END
+Builtins.py
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/313/tags/rpyc/2.60/Utils/Builtins.py
+END
+Serving.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/313/tags/rpyc/2.60/Utils/Serving.py
+END
+Factories.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/313/tags/rpyc/2.60/Utils/Factories.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/313/tags/rpyc/2.60/Utils/__init__.py
+END
+Files.py
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/313/tags/rpyc/2.60/Utils/Files.py
+END
+Helpers.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/313/tags/rpyc/2.60/Utils/Helpers.py
+END
+Dist.py
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/313/tags/rpyc/2.60/Utils/Dist.py
+END
+Interpreter.py
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/313/tags/rpyc/2.60/Utils/Interpreter.py
+END
+Discovery.py
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/313/tags/rpyc/2.60/Utils/Discovery.py
+END

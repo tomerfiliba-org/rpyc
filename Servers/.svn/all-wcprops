@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/!svn/ver/313/tags/rpyc/2.60/Servers
+END
+tls_server.py
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/313/tags/rpyc/2.60/Servers/tls_server.py
+END
+simple_server.py
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/313/tags/rpyc/2.60/Servers/simple_server.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/313/tags/rpyc/2.60/Servers/__init__.py
+END
+std_server.py
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/313/tags/rpyc/2.60/Servers/std_server.py
+END
+Users.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/313/tags/rpyc/2.60/Servers/Users.py
+END
+selecting_server.py
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/!svn/ver/313/tags/rpyc/2.60/Servers/selecting_server.py
+END
+forking_server.py
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/313/tags/rpyc/2.60/Servers/forking_server.py
+END
+threaded_server.py
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/313/tags/rpyc/2.60/Servers/threaded_server.py
+END

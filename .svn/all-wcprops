@@ -1,0 +1,59 @@
+K 25
+svn:wc:ra_dav:version-url
+V 32
+/svn/!svn/ver/313/tags/rpyc/2.60
+END
+NetProxy.py
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/313/tags/rpyc/2.60/NetProxy.py
+END
+Channel.py
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/313/tags/rpyc/2.60/Channel.py
+END
+Stream.py
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/313/tags/rpyc/2.60/Stream.py
+END
+ModuleNetProxy.py
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/313/tags/rpyc/2.60/ModuleNetProxy.py
+END
+Connection.py
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/313/tags/rpyc/2.60/Connection.py
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/313/tags/rpyc/2.60/__init__.py
+END
+AsyncNetProxy.py
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/313/tags/rpyc/2.60/AsyncNetProxy.py
+END
+Boxing.py
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/313/tags/rpyc/2.60/Boxing.py
+END
+Lib.py
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/313/tags/rpyc/2.60/Lib.py
+END
