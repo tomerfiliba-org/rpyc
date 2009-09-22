@@ -106,40 +106,31 @@ cd ..
 mv build/$DEVTARNAME.tar.gz dist
 rm -rf build
 
-##############################################################################
-# continue only if this is a final build
-##############################################################################
 echo "=============== created the following files ================"
 find dist -type f 
 echo 
 
+##############################################################################
+# continue only if this is a final build
+##############################################################################
 if [ "$is_final" != "yes" ]; then
-    exit
+    exit 0
 fi
 
-echo "tagging in svn"
+##############################################################################
+# tag in git
+##############################################################################
+git tag -a -f -m "release $1.$2.$3 (`date +%Y%m%d%H%M%S`)" $1.$2.$3
+if [ $? -ne 0 ]; then
+    echo "!! git tag failed !!"
+    exit 1
+fi
 
-##############################################################################
-# tag in svn
-##############################################################################
-#svn commit -m "building of $1.$2.$3"
-#
-#echo "removing previous svn tag"
-#svn rm https://sebulbasvn.googlecode.com/svn/tags/rpyc/$1.$2.$3 -m "tagging release"
-#echo "creating svn tag"
-#svn copy https://sebulbasvn.googlecode.com/svn/trunk/rpyc https://sebulbasvn.googlecode.com/svn/tags/rpyc/$1.$2.$3 -m "tagging release"
-#
-#if [ $? -ne 0 ]; then
-#    echo "!! creating svn tag failed !!"
-#    exit 1
-#fi
-
-##############################################################################
-# upload to sourceforge 
-##############################################################################
-echo "uploading to sourceforge"
-scp dist/* gangesmaster@frs.sourceforge.net:uploads
-
+git push --tag
+if [ $? -ne 0 ]; then
+    echo "!! pushing tag failed !!"
+    exit 1
+fi
 
 
 
