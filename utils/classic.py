@@ -10,6 +10,7 @@ from rpyc.utils import factory
 
 SERVER_FILE = os.path.join(os.path.dirname(rpyc.__file__), "servers", "classic_server.py")
 DEFAULT_SERVER_PORT = 18812
+CHUNK_SIZE = 16000
 
 
 #===============================================================================
@@ -50,6 +51,12 @@ def connect_thread():
 #===============================================================================
 # remoting utilities
 #===============================================================================
+
+def set_chunks_size(sz):
+    """Sets the internal chunk size used for download & upload"""
+    global CHUNK_SIZE
+    CHUNK_SIZE = sz
+
 def upload(conn, localpath, remotepath, filter = None, ignore_invalid = False):
     """uploads a file or a directory to the given remote path
     localpath - the local file or directory
@@ -68,7 +75,7 @@ def upload_file(conn, localpath, remotepath):
     lf = open(localpath, "rb")
     rf = conn.modules.__builtin__.open(remotepath, "wb")
     while True:
-        buf = lf.read(16000)
+        buf = lf.read(CHUNK_SIZE)
         if not buf:
             break
         rf.write(buf)
@@ -102,7 +109,7 @@ def download_file(conn, remotepath, localpath):
     rf = conn.modules.__builtin__.open(remotepath, "rb")
     lf = open(localpath, "wb")
     while True:
-        buf = rf.read(16000)
+        buf = rf.read(CHUNK_SIZE)
         if not buf:
             break
         lf.write(buf)
