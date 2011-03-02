@@ -139,7 +139,7 @@ def update_module(conn, module, chunk_size = 16000):
     lf = inspect.getsourcefile(module)
     rf = conn.modules.inspect.getsourcefile(rmodule)
     upload_file(conn, lf, rf, chunk_size = chunk_size)
-    c.modules.__builtin__.reload(rmodule)
+    conn.modules.__builtin__.reload(rmodule)
 
 def obtain(proxy):
     """obtains (recreates) a remote object proxy from the other party. 

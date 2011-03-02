@@ -22,26 +22,30 @@ parser.add_option("-q", "--quiet", action="store_true", dest="quiet",
 parser.add_option("-t", "--timeout", action="store", dest="pruning_timeout", 
     type="int", default=DEFAULT_PRUNING_TIMEOUT, help="sets a custom pruning timeout")
 
-options, args = parser.parse_args()
-if args:
-    raise ValueError("does not take positional arguments: %r" % (args,))
+def main():
+    options, args = parser.parse_args()
+    if args:
+        raise ValueError("does not take positional arguments: %r" % (args,))
+    
+    if options.port < 1 or options.port > 65535:
+        raise ValueError("invalid TCP/UDP port %r" % (options.port,))
+    
+    if options.mode.lower() == "udp":
+        server = UDPRegistryServer(port = options.port, 
+            pruning_timeout = options.pruning_timeout)
+    elif options.mode.lower() == "tcp":
+        server = TCPRegistryServer(port = options.port, 
+            pruning_timeout = options.pruning_timeout)
+    else:
+        raise ValueError("invalid mode %r" % (options.mode,))
+    
+    server.logger.quiet = options.quiet
+    if options.logfile:
+        server.logger.console = open(options.logfile)
+    
+    server.start()
 
-if options.port < 1 or options.port > 65535:
-    raise ValueError("invalid TCP/UDP port %r" % (options.port,))
 
-if options.mode.lower() == "udp":
-    server = UDPRegistryServer(port = options.port, 
-        pruning_timeout = options.pruning_timeout)
-elif options.mode.lower() == "tcp":
-    server = TCPRegistryServer(port = options.port, 
-        pruning_timeout = options.pruning_timeout)
-else:
-    raise ValueError("invalid mode %r" % (options.mode,))
-
-server.logger.quiet = options.quiet
-if options.logfile:
-    server.logger.console = open(options.logfile)
-
-server.start()
-
+if __name__ == "__main__":
+    main()
 

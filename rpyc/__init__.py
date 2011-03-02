@@ -40,10 +40,9 @@ from rpyc.utils.factory import (connect_stream, connect_channel, connect_pipes,
     connect_subproc, connect_thread)
 from rpyc.utils.helpers import async, timed, buffiter, BgServingThread
 from rpyc.utils import classic
-
+from rpyc.version import version, version_string
 
 __author__ = "Tomer Filiba (tomerfiliba@gmail.com)"
-version = __version__ = (3, 1, 0)
-version_string = "%s.%s.%s" % version
+__version__ = version
 __doc__ = __doc__.replace("$$RPYC_VERSION$$", version_string)
 

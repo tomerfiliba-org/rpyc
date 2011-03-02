@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 import time
-import rpyc
 import subprocess
 from optparse import OptionParser
 
@@ -12,14 +11,7 @@ def run(args, input = None, cwd = None, env = None, retcode = 0):
         raise OSError("process failed")
 
 
-def main(publish):
-    # generate setup.py
-    with open("_setup.py", "r") as f:
-        setup_py = f.read()
-    setup_py = setup_py.replace("$$RPYC_VERSION$$", rpyc.version_string)
-    with open("setup.py", "w") as f:
-        f.write(setup_py)
-    
+def main(publish = False):
     # generate zip, tar.gz, win32 installer and egg
     run(["python", "setup.py", "sdist", "--formats=zip,gztar"])
     run(["python", "setup.py", "bdist_wininst", "--plat-name=win32"])
