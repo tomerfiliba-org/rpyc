@@ -32,6 +32,10 @@ Classic-style usage:
     f = c.builtin.open("foobar.txt", "rb")
     print f.read(100)
 """
+import platform
+if platform.system()=='cli':#Detect .NET platform
+	import clr
+	clr.AddReference("IronPython.Zlib")#Add Reference to IronPython zlib -- https://bitbucket.org/jdhardy/ironpythonzlib --
 from rpyc.core import (SocketStream, PipeStream, Channel, Connection, Service,
     BaseNetref, AsyncResult, GenericException, AsyncResultTimeout, VoidService,
     SlaveService)
