@@ -117,6 +117,7 @@ class BaseNetref(object):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
 
 def _make_method(name, doc):
+    name = str(name)
     if name == "__call__":
         def __call__(_self, *args, **kwargs):
             kwargs = tuple(kwargs.items())
@@ -149,6 +150,7 @@ def inspect_methods(obj):
     return methods.items()
 
 def class_factory(clsname, modname, methods):
+    clsname = str(clsname)
     ns = {"__slots__" : ()}
     for name, doc in methods:
         if name not in _local_netref_attrs:
