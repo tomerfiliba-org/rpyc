@@ -4,6 +4,9 @@ class MissingModule(object):
         self.__name = name
     def __getattr__(self, name):
         raise ImportError("module %r not found" % (self.__name,))
+    def __bool__(self):
+        return False
+    __nonzero__ = __bool__
 
 def safe_import(name):
     try:

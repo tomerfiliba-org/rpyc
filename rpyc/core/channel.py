@@ -4,10 +4,12 @@ channel - an abstraction layer over streams that works with data frames
 Note: in order to avoid problems with all sorts of line-buffered transports,
 we deliberately add \\n at the end of each frame.
 
-note: unlike previous versions, this is no longer thread safe
+note: unlike previous versions, this is no longer thread safe (thread-safety was
+moved up to the Connection class)
 """
-import zlib
+from rpyc.lib import safe_import
 from rpyc.utils.lib import Struct
+zlib = safe_import("zlib")
 
 # * 64 bit length field?
 # * separate \n into a FlushingChannel subclass?
@@ -22,6 +24,8 @@ class Channel(object):
     
     def __init__(self, stream, compress = True):
         self.stream = stream
+        if not zlib:
+            compress = False
         self.compress = compress
     def close(self):
         self.stream.close()

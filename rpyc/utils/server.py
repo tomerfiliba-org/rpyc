@@ -7,12 +7,13 @@ import socket
 import time
 import threading
 import select
-import signal
 import errno
 from rpyc.core import brine, SocketStream, Channel, Connection
 from rpyc.utils.logger import Logger
 from rpyc.utils.registry import UDPRegistryClient, TCPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
+from rpyc.lib import safe_import
+signal = safe_import("signal")
 
 
 class Server(object):
@@ -187,6 +188,8 @@ class ThreadedServer(Server):
 
 class ForkingServer(Server):
     def __init__(self, *args, **kwargs):
+        if not signal:
+            raise OSError("ForkingServer not supported on this platform")
         Server.__init__(self, *args, **kwargs)
         # setup sigchld handler
         self._prevhandler = signal.signal(signal.SIGCHLD, self._handle_sigchld)

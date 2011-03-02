@@ -30,6 +30,16 @@ except NameError:
     def callable(obj):
         return hasattr(obj, "__call__")
 
+try:
+    import select
+except ImportError:
+    def select(*args):
+        raise ImportError("select not supported on this platform")
+else:
+    if hasattr(select, 'cpython_compatible_select'):
+        from select import cpython_compatible_select as select
+    else:
+        from select import select
 
 
 
