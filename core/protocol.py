@@ -178,7 +178,11 @@ class Connection(object):
             return consts.LABEL_LOCAL_REF, obj.____oid__
         else:
             self._local_objects.add(obj)
-            cls = getattr(obj, "__class__", type(obj))
+            try:
+                cls = obj.__class__
+            except Exception:
+                # see issue #16
+                cls = type(obj)
             return consts.LABEL_REMOTE_REF, (id(obj), cls.__name__, cls.__module__)
     
     def _unbox(self, package):

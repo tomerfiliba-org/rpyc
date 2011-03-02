@@ -10,7 +10,6 @@ from rpyc.utils import factory
 
 SERVER_FILE = os.path.join(os.path.dirname(rpyc.__file__), "servers", "classic_server.py")
 DEFAULT_SERVER_PORT = 18812
-CHUNK_SIZE = 16000
 
 
 #===============================================================================
@@ -40,7 +39,7 @@ def tls_connect(host, username, password, port = DEFAULT_SERVER_PORT):
 def connect_subproc():
     """runs an rpyc classic server as a subprocess and return an rpyc
     connection to it"""
-    return factory.connect_subproc(["python", "-u", SERVER_FILE, "-q", "-m", "stdio"], 
+    return factory.connect_subproc([sys.executable, "-u", SERVER_FILE, "-q", "-m", "stdio"], 
         SlaveService)
 
 def connect_thread():
@@ -52,71 +51,70 @@ def connect_thread():
 # remoting utilities
 #===============================================================================
 
-def set_chunks_size(sz):
-    """Sets the internal chunk size used for download & upload"""
-    global CHUNK_SIZE
-    CHUNK_SIZE = sz
-
-def upload(conn, localpath, remotepath, filter = None, ignore_invalid = False):
+def upload(conn, localpath, remotepath, filter = None, ignore_invalid = False, chunk_size = 16000):
     """uploads a file or a directory to the given remote path
     localpath - the local file or directory
     remotepath - the remote path
     filter - a predicate that accepts the filename and determines whether 
-    it should be uploaded; None means any file"""
+    it should be uploaded; None means any file
+    chunk_size - the IO chunk size
+    """
     if os.path.isdir(localpath):
-        upload_dir(conn, localpath, remotepath, filter)
+        upload_dir(conn, localpath, remotepath, filter, chunk_size)
     elif os.path.isfile(localpath):
-        upload_file(conn, localpath, remotepath)
+        upload_file(conn, localpath, remotepath, chunk_size)
     else:
         if not ignore_invalid:
             raise ValueError("cannot upload %r" % (localpath,))
 
-def upload_file(conn, localpath, remotepath):
+def upload_file(conn, localpath, remotepath, chunk_size = 16000):
     lf = open(localpath, "rb")
     rf = conn.modules.__builtin__.open(remotepath, "wb")
     while True:
-        buf = lf.read(CHUNK_SIZE)
+        buf = lf.read(chunk_size)
         if not buf:
             break
         rf.write(buf)
     lf.close()
     rf.close()
 
-def upload_dir(conn, localpath, remotepath, filter = None):
+def upload_dir(conn, localpath, remotepath, filter = None, chunk_size = 16000):
     if not conn.modules.os.path.isdir(remotepath):
         conn.modules.os.makedirs(remotepath)
     for fn in os.listdir(localpath):
         if not filter or filter(fn):
             lfn = os.path.join(localpath, fn)
             rfn = conn.modules.os.path.join(remotepath, fn)
-            upload(conn, lfn, rfn, filter = filter, ignore_invalid = True)
+            upload(conn, lfn, rfn, filter = filter, ignore_invalid = True, chunk_size = chunk_size)
 
-def download(conn, remotepath, localpath, filter = None, ignore_invalid = False):
+def download(conn, remotepath, localpath, filter = None, ignore_invalid = False, chunk_size = 16000):
     """download a file or a directory to the given remote path
     localpath - the local file or directory
     remotepath - the remote path
     filter - a predicate that accepts the filename and determines whether 
-    it should be downloaded; None means any file"""
+    it should be downloaded; None means any file
+    chunk_size - the IO chunk size
+    """
     if conn.modules.os.path.isdir(remotepath):
         download_dir(conn, remotepath, localpath, filter)
     elif conn.modules.os.path.isfile(remotepath):
-        download_file(conn, remotepath, localpath)
+        download_file(conn, remotepath, localpath, chunk_size)
     else:
         if not ignore_invalid:
             raise ValueError("cannot download %r" % (remotepath,))
 
-def download_file(conn, remotepath, localpath):
+def download_file(conn, remotepath, localpath, chunk_size = 16000):
     rf = conn.modules.__builtin__.open(remotepath, "rb")
     lf = open(localpath, "wb")
     while True:
-        buf = rf.read(CHUNK_SIZE)
+        buf = rf.read(chunk_size)
         if not buf:
             break
         lf.write(buf)
     lf.close()
     rf.close()
 
-def download_dir(conn, remotepath, localpath, filter = None):
+def download_dir(conn, remotepath, localpath, filter = None, chunk_size = 16000):
     if not os.path.isdir(localpath):
         os.makedirs(localpath)
     for fn in conn.modules.os.listdir(remotepath):
@@ -125,22 +123,22 @@ def download_dir(conn, remotepath, localpath, filter = None):
             lfn = os.path.join(localpath, fn)
             download(conn, rfn, lfn, filter = filter, ignore_invalid = True)
 
-def upload_package(conn, module, remotepath = None):
+def upload_package(conn, module, remotepath = None, chunk_size = 16000):
     """uploads a module or a package to the remote party"""
     if remotepath is None:
         site = conn.modules["distutils.sysconfig"].get_python_lib()
         remotepath = conn.modules.os.path.join(site, module.__name__)
     localpath = os.path.dirname(inspect.getsourcefile(module))
-    upload(conn, localpath, remotepath)
+    upload(conn, localpath, remotepath, chunk_size = chunk_size)
 
 upload_module = upload_package
 
-def update_module(conn, module):
+def update_module(conn, module, chunk_size = 16000):
     """replaces a module on the remote party"""
     rmodule = conn.modules[module.__name__]
     lf = inspect.getsourcefile(module)
     rf = conn.modules.inspect.getsourcefile(rmodule)
-    upload_file(conn, lf, rf)
+    upload_file(conn, lf, rf, chunk_size = chunk_size)
     c.modules.__builtin__.reload(rmodule)
 
 def obtain(proxy):

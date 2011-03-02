@@ -198,15 +198,17 @@ class ForkingServer(Server):
     def _get_logger(self):
         return Logger(self.service.get_service_name(), show_pid = True)
     
-    @staticmethod
-    def _handle_sigchld(signum, unused):
+    @classmethod
+    def _handle_sigchld(cls, signum, unused):
         try:
             while True:
-                os.waitpid(-1, os.WNOHANG)
+                pid, dummy = os.waitpid(-1, os.WNOHANG)
+                if pid <= 0:
+                    break
         except OSError:
             pass
         # re-register signal handler (see man signal(2), under Portability)
-        signal.signal(signal.SIGCHLD, self._handle_sigchld)
+        signal.signal(signal.SIGCHLD, cls._handle_sigchld)
     
     def _accept_method(self, sock):
         pid = os.fork()

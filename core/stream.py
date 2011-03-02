@@ -211,7 +211,7 @@ class Win32PipeStream(Stream):
         try:
             data = []
             while count > 0:
-                dummy, buf = win32file.ReadFile(self.incoming, min(self.MAX_IO_CHUNK, count))
+                dummy, buf = win32file.ReadFile(self.incoming, int(min(self.MAX_IO_CHUNK, count)))
                 count -= len(buf)
                 data.append(buf)
         except TypeError, ex:
