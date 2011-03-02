@@ -1,3 +1,0 @@
-future releases:
-	* add __instancecheck__ and __subclasscheck__
-	* investigate __sizeof__ and __subclasshook__

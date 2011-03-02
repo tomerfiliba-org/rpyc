@@ -10,8 +10,8 @@
      -------------------- ## ------------------------------------------
                          ##
 
-Remote Python Call (RPyC) v __MAJOR__.__MINOR__.__REVISION__ (__DATE__)
-Licensed under the MIT license (see license.py)
+Remote Python Call (RPyC) v $$RPYC_VERSION$$
+Licensed under the MIT license (see LICENSE.txt)
 
 A transparent, symmetric and light-weight RPC and distributed computing 
 library for python.
@@ -40,11 +40,10 @@ from rpyc.utils.factory import (connect_stream, connect_channel, connect_pipes,
     connect_subproc, connect_thread)
 from rpyc.utils.helpers import async, timed, buffiter, BgServingThread
 from rpyc.utils import classic
-from rpyc.license import __doc__ as license
 
 
 __author__ = "Tomer Filiba (tomerfiliba@gmail.com)"
-version = __version__ = (__MAJOR__, __MINOR__, __REVISION__)
-
-
+version = __version__ = (3, 1, 0)
+version_string = "%s.%s.%s" % version
+__doc__ = __doc__.replace("$$RPYC_VERSION$$", version_string)
 

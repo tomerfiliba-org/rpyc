@@ -1,6 +1,7 @@
 """
 helpers and wrappers for common rpyc tasks
 """
+import time
 import threading
 from rpyc.utils.lib import WeakValueDict, callable
 from rpyc.core.consts import HANDLE_BUFFITER, HANDLE_CALL
@@ -71,7 +72,8 @@ class BgServingThread(object):
     """runs an RPyC server in the background to serve all requests and replies
     that arrive on the given RPyC connection. the thread is created along with
     the object; you can use the stop() method to stop the server thread"""
-    INTERVAL = 0.1
+    SERVE_INTERVAL = 0.1
+    SLEEP_INTERVAL = 0.1
     def __init__(self, conn):
         self._conn = conn
         self._thread = threading.Thread(target = self._bg_server)
@@ -84,7 +86,8 @@ class BgServingThread(object):
     def _bg_server(self):
         try:
             while self._active:
-                self._conn.serve(self.INTERVAL)
+                self._conn.serve(self.SERVE_INTERVAL)
+                time.sleep(self.SLEEP_INTERVAL)
         except Exception:
             if self._active:
                 raise
