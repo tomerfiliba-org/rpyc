@@ -27,24 +27,21 @@ setup(name="RPyC",
         'rpyc.lib',
         'rpyc.utils', 
     ],
-    #scripts = [
-    #    "servers/rpyc_classic.py",
-    #    "servers/rpyc_registry.py",
-    #    "servers/rpyc_vdbconf.py",
-    #],
-    #package_dir = {
-    #    'rpyc' : 'rpyc',
-    #},
+    scripts = [
+        os.path.join("rpyc", "scripts", "rpyc_classic.py"),
+        os.path.join("rpyc", "scripts", "rpyc_registry.py"),
+        os.path.join("rpyc", "scripts", "rpyc_vdbconf.py"),
+    ],
+    platforms = ["POSIX", "Windows"],
     use_2to3 = True,
     zip_ok = False,
-    platforms = ["POSIX", "Windows"],
-    entry_points = {
-        "console_scripts": [
-             "vdbconf = rpyc.scripts.vdbconf:main",
-             "rpyc_classic = rpyc.scripts.rpyc_classic:main",
-             "rpyc_registry = rpyc.scripts.rpyc_classic:main",
-        ]
-    },
+    #entry_points = {
+    #    "console_scripts": [
+    #         "rpyc_vdbconf = rpyc.scripts.vdbconf:main",
+    #         "rpyc_classic = rpyc.scripts.rpyc_classic:main",
+    #         "rpyc_registry = rpyc.scripts.rpyc_classic:main",
+    #    ]
+    #},
     long_description = ("A symmetric library for transparent RPC, clustering and "
         "distributed computing for python, built around the concept of remote "
         "services and object proxying"),
