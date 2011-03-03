@@ -30,7 +30,7 @@ pairs.
 """
 import os
 import anydbm
-from rpyc.utils.lib import safe_import
+from rpyc.lib import safe_import
 tlsapi = safe_import("tlslite.api")
 
 

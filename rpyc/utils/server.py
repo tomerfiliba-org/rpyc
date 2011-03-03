@@ -6,10 +6,9 @@ import os
 import socket
 import time
 import threading
-import select
 import errno
+import logging
 from rpyc.core import brine, SocketStream, Channel, Connection
-from rpyc.utils.logger import Logger
 from rpyc.utils.registry import UDPRegistryClient, TCPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
 from rpyc.lib import safe_import
@@ -55,7 +54,7 @@ class Server(object):
             try:
                 self.registrar.unregister(self.port)
             except Exception:
-                self.logger.traceback()
+                 self.logger.exception("error unregistering services")
         self.listener.close()
         self.logger.info("listener closed")
         for c in set(self.clients):
@@ -143,7 +142,7 @@ class Server(object):
                         self.registrar.register(self.service.get_service_aliases(),
                             self.port)
                     except Exception:
-                        self.logger.traceback()
+                        self.logger.exception("error registering services")
                 time.sleep(1)
         finally:
             if not self._closed:
@@ -178,7 +177,8 @@ class Server(object):
 
 class ThreadedServer(Server):
     def _get_logger(self):
-        return Logger(self.service.get_service_name(), show_tid = True)
+        ### XXX: show_tid = True
+        return logging.getLogger(self.service.get_service_name())
     
     def _accept_method(self, sock):
         t = threading.Thread(target = self._authenticate_and_serve_client, args = (sock,))
@@ -199,7 +199,8 @@ class ForkingServer(Server):
         signal.signal(signal.SIGCHLD, self._prevhandler)
     
     def _get_logger(self):
-        return Logger(self.service.get_service_name(), show_pid = True)
+        ### XXX: show_pid = True
+        return logging.getLogger(self.service.get_service_name())
     
     @classmethod
     def _handle_sigchld(cls, signum, unused):
@@ -219,15 +220,17 @@ class ForkingServer(Server):
             # child
             try:
                 try:
-                    self.logger.info("child process created")
+                    self.logger.debug("child process created")
                     signal.signal(signal.SIGCHLD, self._prevhandler)
                     self.listener.close()
                     self.clients.clear()
                     self._authenticate_and_serve_client(sock)
                 except:
-                    self.logger.traceback()
+                    self.logger.exception("child process terminated abnormally")
+                else:
+                    self.logger.debug("child process terminated")
             finally:
-                self.logger.info("child terminated")
+                self.logger.debug("child terminated")
                 os._exit(0)
         else:
             # parent

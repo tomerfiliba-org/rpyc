@@ -1,3 +1,6 @@
+import logging
+
+
 class MissingModule(object):
     __slots__ = ["__name"]
     def __init__(self, name):
@@ -14,3 +17,13 @@ def safe_import(name):
     except ImportError:
         mod = MissingModule(name)
     return mod
+
+
+def setup_logger(options):
+    logging_options = {}
+    if options.quiet:
+        logging_options['level'] = logging.ERROR
+    if options.logfile:
+        logging_options['file'] = options.logfile
+    logging.basicConfig(**logging_options)
+

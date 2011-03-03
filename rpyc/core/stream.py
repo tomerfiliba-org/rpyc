@@ -6,8 +6,8 @@ import os
 import socket
 import time
 import errno
-from select import select
-from rpyc.utils.lib import safe_import
+from rpyc.lib import safe_import
+from rpyc.lib.compat import select
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 msvcrt = safe_import("msvcrt")

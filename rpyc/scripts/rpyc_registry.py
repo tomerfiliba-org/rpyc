@@ -8,6 +8,7 @@ be running somewhere on their local network.
 from optparse import OptionParser
 from rpyc.utils.registry import REGISTRY_PORT, DEFAULT_PRUNING_TIMEOUT
 from rpyc.utils.registry import UDPRegistryServer, TCPRegistryServer
+from rpyc.lib import setup_logger
 
 
 parser = OptionParser()
@@ -18,7 +19,7 @@ parser.add_option("-p", "--port", action="store", dest="port", type="int",
 parser.add_option("-f", "--file", action="store", dest="logfile", type="str", 
     metavar="FILE", default=None, help="specify the log file to use; the default is stderr")
 parser.add_option("-q", "--quiet", action="store_true", dest="quiet", 
-    default=False, help="quiet mode (no logging)")
+    default=False, help="quiet mode (only errors are logged)")
 parser.add_option("-t", "--timeout", action="store", dest="pruning_timeout", 
     type="int", default=DEFAULT_PRUNING_TIMEOUT, help="sets a custom pruning timeout")
 
@@ -39,10 +40,7 @@ def main():
     else:
         raise ValueError("invalid mode %r" % (options.mode,))
     
-    server.logger.quiet = options.quiet
-    if options.logfile:
-        server.logger.console = open(options.logfile)
-    
+    setup_logger(options)
     server.start()
 
 

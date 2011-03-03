@@ -15,6 +15,7 @@ from rpyc.utils.classic import DEFAULT_SERVER_PORT
 from rpyc.utils.registry import REGISTRY_PORT
 from rpyc.utils.registry import UDPRegistryClient, TCPRegistryClient
 from rpyc.utils.authenticators import VdbAuthenticator
+from rpyc.lib import setup_logger
 from rpyc.core import SlaveService
 
 
@@ -33,8 +34,8 @@ parser.add_option("--logfile", action="store", dest="logfile", type="str",
     metavar="FILE", default=None, help="specify the log file to use; the "
     "default is stderr")
 parser.add_option("-q", "--quiet", action="store_true", dest="quiet", 
-    default=False, help="quiet mode (no logging). in stdio mode, "
-    "writes to /dev/null")
+    default=False, 
+    help="quiet mode (no logging). in stdio mode, writes to /dev/null")
 parser.add_option("--vdb", action="store", dest="vdbfile", metavar="FILENAME",
     default=None, help="starts an TLS/SSL authenticated server (using tlslite);"
     "the credentials are loaded from the vdb file. if not given, the server"
@@ -84,6 +85,7 @@ def get_options():
     return options
 
 def serve_threaded(options):
+    setup_logger(options)
     t = ThreadedServer(SlaveService, hostname = options.host, 
         port = options.port, reuse_addr = True, 
         authenticator = options.authenticator, registrar = options.registrar,
@@ -94,6 +96,7 @@ def serve_threaded(options):
     t.start()
 
 def serve_forking(options):    
+    setup_logger(options)
     t = ForkingServer(SlaveService, hostname = options.host, 
         port = options.port, reuse_addr = True, 
         authenticator = options.authenticator, registrar = options.registrar,

@@ -8,7 +8,7 @@ note: unlike previous versions, this is no longer thread safe (thread-safety was
 moved up to the Connection class)
 """
 from rpyc.lib import safe_import
-from rpyc.utils.lib import Struct
+from rpyc.lib.compat import Struct
 zlib = safe_import("zlib")
 
 # * 64 bit length field?
