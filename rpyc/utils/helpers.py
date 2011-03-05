@@ -3,7 +3,7 @@ helpers and wrappers for common rpyc tasks
 """
 import time
 import threading
-from rpyc.lib.collections import WeakValueDict
+from rpyc.lib.colls import WeakValueDict
 from rpyc.lib.compat import callable
 from rpyc.core.consts import HANDLE_BUFFITER, HANDLE_CALL
 from rpyc.core.netref import BaseNetref, syncreq, asyncreq

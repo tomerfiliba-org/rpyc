@@ -1,5 +1,5 @@
 import weakref
-#from weakref import WeakValueDictionary as WeakValueDict
+from threading import Lock
 
 class WeakValueDict(object):
     """a light-weight version of weakref.WeakValueDictionary"""
