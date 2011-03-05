@@ -7,9 +7,9 @@ A simple configurator for tlslite's verifier databases (VDB), which allows you t
  3) delete an existing username from the vdb file
 
 Examples:
-    vdbconf <filename> -l               : list all users in `filename`
-    vdbconf <filename> -a <username>    : add/replace `username` in `filename`
-    vdbconf <filename> -d <username>    : delete `username` from `filename`
+    rpyc_vdbconf <filename> -l               : list all users in `filename`
+    rpyc_vdbconf <filename> -a <username>    : add/replace `username` in `filename`
+    rpyc_vdbconf <filename> -d <username>    : delete `username` from `filename`
 
 SECURITY NOTE: 
 Make sure the vdb file has the correct write permissions!

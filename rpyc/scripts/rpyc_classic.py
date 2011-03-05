@@ -2,9 +2,9 @@
 """
 classic rpyc server (threaded, forking or std) running a SlaveService
 usage: 
-    classic_server.py                         # default settings
-    classic_server.py -m forking -p 12345     # custom settings
-    classic_server.py --vdb file.vdb          # tlslite-authenticated server
+    rpyc_classic.py                         # default settings
+    rpyc_classic.py -m forking -p 12345     # custom settings
+    rpyc_classic.py --vdb file.vdb          # tlslite-authenticated server
 """
 import sys
 import os

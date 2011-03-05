@@ -8,7 +8,7 @@ from rpyc import SlaveService
 from rpyc.utils import factory
 
 
-SERVER_FILE = os.path.join(os.path.dirname(rpyc.__file__), "servers", "classic_server.py")
+SERVER_FILE = os.path.join(os.path.dirname(rpyc.__file__), "scripts", "rpyc_classic.py")
 DEFAULT_SERVER_PORT = 18812
 
 
