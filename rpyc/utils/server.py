@@ -107,7 +107,11 @@ class Server(object):
                     self.logger.info("%s:%s authenticated successfully", h, p)
             else:
                 credentials = None
-            self._serve_client(sock, credentials)
+            try:
+                self._serve_client(sock, credentials)
+            except Exception:
+                self.logger.exception("client connection terminated abruptly")
+                raise
         finally:
             try:
                 sock.shutdown(socket.SHUT_RDWR)
@@ -118,7 +122,10 @@ class Server(object):
     
     def _serve_client(self, sock, credentials):
         h, p = sock.getpeername()
-        self.logger.info("welcome %s:%s", h, p)
+        if credentials:
+            self.logger.info("welcome %s:%s (%r)", h, p, credentials)
+        else:
+            self.logger.info("welcome %s:%s", h, p)
         try:
             config = dict(self.protocol_config, credentials = credentials)
             conn = Connection(self.service, Channel(SocketStream(sock)), 
