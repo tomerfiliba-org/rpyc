@@ -63,10 +63,12 @@ class SocketStream(Stream):
         self.sock = sock
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, type = socket.SOCK_STREAM, 
-            proto = 0, timeout = 3):
+            proto = 0, timeout = 3, nodelay = False):
         s = socket.socket(family, type, proto)
         s.settimeout(timeout)
         s.connect((host, port))
+        if nodelay:
+            s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         return s
     @classmethod
     def connect(cls, host, port, **kwargs):
@@ -79,8 +81,8 @@ class SocketStream(Stream):
         s2.handshakeClientSRP(username, password)
         return cls(s2)
     @classmethod
-    def ssl_connect(cls, host, port, ssl_kwargs):
-        s = cls._connect(host, port)
+    def ssl_connect(cls, host, port, ssl_kwargs, **kwargs):
+        s = cls._connect(host, port, **kwargs)
         s2 = ssl.wrap_socket(s, **ssl_kwargs)
         return cls(s2)
     @property
