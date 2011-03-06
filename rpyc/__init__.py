@@ -10,8 +10,8 @@
      -------------------- ## ------------------------------------------
                          ##
 
-Remote Python Call (RPyC) v $$RPYC_VERSION$$
-Licensed under the MIT license (see LICENSE.txt)
+Remote Python Call (RPyC) v $$VERSION$$, $$DATE$$
+Licensed under the MIT license (see `LICENSE` file)
 
 A transparent, symmetric and light-weight RPC and distributed computing 
 library for python.
@@ -36,13 +36,14 @@ from rpyc.core import (SocketStream, PipeStream, Channel, Connection, Service,
     BaseNetref, AsyncResult, GenericException, AsyncResultTimeout, VoidService,
     SlaveService)
 from rpyc.utils.factory import (connect_stream, connect_channel, connect_pipes, 
-    connect_stdpipes, connect, tls_connect, discover, connect_by_service, 
-    connect_subproc, connect_thread)
+    connect_stdpipes, connect, tlslite_connect, ssl_connect, discover, 
+    connect_by_service, connect_subproc, connect_thread)
 from rpyc.utils.helpers import async, timed, buffiter, BgServingThread
 from rpyc.utils import classic
-from rpyc.version import version, version_string
+from rpyc.version import version, version_string, release_date
 
 __author__ = "Tomer Filiba (tomerfiliba@gmail.com)"
 __version__ = version
-__doc__ = __doc__.replace("$$RPYC_VERSION$$", version_string)
+__doc__ = __doc__.replace("$$VERSION$$", version_string).replace("$$DATE$$", release_date)
+del version_string, release_date
 

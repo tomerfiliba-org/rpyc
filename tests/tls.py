@@ -1,6 +1,6 @@
 from testbase import TestBase
 from rpyc.utils.server import ThreadedServer
-from rpyc.utils.authenticators import VdbAuthenticator
+from rpyc.utils.authenticators import TlsliteVdbAuthenticator
 import rpyc
 import thread, time
 try:
@@ -18,7 +18,7 @@ class Tlslite(TestBase):
             "foo" : "bar",
             "spam" : "eggs",
         }
-        authenticator = VdbAuthenticator.from_dict(users)
+        authenticator = TlsliteVdbAuthenticator.from_dict(users)
         self.server = ThreadedServer(rpyc.SlaveService, hostname = "localhost", 
             authenticator = authenticator)
         self.server.logger.quiet = True
@@ -29,7 +29,7 @@ class Tlslite(TestBase):
         self.server.close()
     
     def step_successful(self):
-        c = rpyc.classic.tls_connect("localhost", "spam", "eggs", 
+        c = rpyc.classic.tlslite_connect("localhost", "spam", "eggs", 
             port = self.server.port)
         self.log("server credentials = %r", c.root.getconn()._config["credentials"])
         self.log("%s", c.modules.sys)
@@ -38,7 +38,7 @@ class Tlslite(TestBase):
     def _expect_fail(self, username, password):
         self.log("expecting %s:%s to fail", username, password)
         try:
-            c = rpyc.classic.tls_connect("localhost", username, password, 
+            c = rpyc.classic.tlslite_connect("localhost", username, password, 
                 port = self.server.port)
         except TLSError:
             pass
