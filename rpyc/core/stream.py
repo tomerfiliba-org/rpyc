@@ -11,6 +11,8 @@ from rpyc.lib.compat import select
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 msvcrt = safe_import("msvcrt")
+ssl = safe_import("ssl")
+tlsapi = safe_import("tlslite.api")
 
 
 retry_errnos = set([errno.EAGAIN])
@@ -61,7 +63,7 @@ class SocketStream(Stream):
         self.sock = sock
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, type = socket.SOCK_STREAM, 
-    proto = 0, timeout = 3):
+            proto = 0, timeout = 3):
         s = socket.socket(family, type, proto)
         s.settimeout(timeout)
         s.connect((host, port))
@@ -70,12 +72,16 @@ class SocketStream(Stream):
     def connect(cls, host, port, **kwargs):
         return cls(cls._connect(host, port, **kwargs))
     @classmethod
-    def tls_connect(cls, host, port, username, password, **kwargs):
-        from tlslite.api import TLSConnection
+    def tlslite_connect(cls, host, port, username, password, **kwargs):
         s = cls._connect(host, port, **kwargs)
-        s2 = TLSConnection(s)
+        s2 = tlsapi.TLSConnection(s)
         s2.fileno = lambda fd=s.fileno(): fd
         s2.handshakeClientSRP(username, password)
+        return cls(s2)
+    @classmethod
+    def ssl_connect(cls, host, port, ssl_kwargs):
+        s = cls._connect(host, port)
+        s2 = ssl.wrap_socket(s, **ssl_kwargs)
         return cls(s2)
     @property
     def closed(self):

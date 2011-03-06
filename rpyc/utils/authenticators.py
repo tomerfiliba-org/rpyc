@@ -32,25 +32,38 @@ import os
 import anydbm
 from rpyc.lib import safe_import
 tlsapi = safe_import("tlslite.api")
+ssl = safe_import("ssl")
 
 
 class AuthenticationError(Exception):
     pass
 
 
-def _load_vdb_with_mode(vdb, mode):
-    """taken from tlslite/BaseDB.py -- patched for file mode""" 
-    # {{
-    db = anydbm.open(vdb.filename, mode)
-    try:
-        if db["--Reserved--type"] != vdb.type:
-            raise ValueError("Not a %s database" % (vdb.type,))
-    except KeyError:
-        raise ValueError("Not a recognized database")
-    vdb.db = db
-    # }}
+def SSLAuthenticator(object):
+    def __init__(self, keyfile, certfile, ca_certs = None, ssl_version = None):
+        self.keyfile = keyfile
+        self.certfile = certfile
+        self.ca_certs = ca_certs
+        if ca_certs:
+            self.cert_reqs = ssl.CERT_REQUIRED
+        else:
+            self.cert_reqs = ssl.CERT_NONE
+        if ssl_version:
+            self.ssl_version = ssl_version
+        else:
+            self.ssl_version = ssl.PROTOCOL_TLSv1
+    
+    def __call__(self, sock):
+        try:
+            sock2 = ssl.wrap_socket(sock, keyfile = self.keyfile, certfile = self.certfile,
+                server_side = True, ssl_version = self.ssl_version, ca_certs = self.ca_certs,
+                cert_reqs = self.cert_reqs)
+        except ssl.SSLError, ex:
+            raise AuthenticationError(str(ex))
+        return sock2, sock2.getpeercert()
 
-class VdbAuthenticator(object):
+
+class TlsliteVdbAuthenticator(object):
     __slots__ = ["vdb"]
     BITS = 2048
     
@@ -65,10 +78,23 @@ class VdbAuthenticator(object):
         return inst
     
     @classmethod
+    def _load_vdb_with_mode(cls, vdb, mode):
+        """taken from tlslite/BaseDB.py -- patched for file mode""" 
+        # {{
+        db = anydbm.open(vdb.filename, mode)
+        try:
+            if db["--Reserved--type"] != vdb.type:
+                raise ValueError("Not a %s database" % (vdb.type,))
+        except KeyError:
+            raise ValueError("Not a recognized database")
+        vdb.db = db
+        # }}
+    
+    @classmethod
     def from_file(cls, filename, mode = "w"):
         vdb = tlsapi.VerifierDB(filename)
         if os.path.exists(filename):
-            _load_vdb_with_mode(vdb, mode)
+            cls._load_vdb_with_mode(vdb, mode)
         else:
             if mode not in "ncw":
                 raise ValueError("%s does not exist but mode does not allow "

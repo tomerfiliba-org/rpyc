@@ -8,8 +8,8 @@ import time
 import threading
 import errno
 import logging
-from rpyc.core import brine, SocketStream, Channel, Connection
-from rpyc.utils.registry import UDPRegistryClient, TCPRegistryClient
+from rpyc.core import SocketStream, Channel, Connection
+from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
 from rpyc.lib import safe_import
 signal = safe_import("signal")

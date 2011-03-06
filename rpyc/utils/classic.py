@@ -1,7 +1,6 @@
 import sys
 import os
 import inspect
-import pdb
 import cPickle as pickle
 import rpyc
 from rpyc import SlaveService
@@ -10,6 +9,7 @@ from rpyc.utils import factory
 
 SERVER_FILE = os.path.join(os.path.dirname(rpyc.__file__), "scripts", "rpyc_classic.py")
 DEFAULT_SERVER_PORT = 18812
+DEFAULT_SERVER_SSL_PORT = 18821
 
 
 #===============================================================================
@@ -31,10 +31,17 @@ def connect(host, port = DEFAULT_SERVER_PORT):
     """creates a socket connection to the given host and port"""
     return factory.connect(host, port, SlaveService)
 
-def tls_connect(host, username, password, port = DEFAULT_SERVER_PORT):
+def tlslite_connect(host, username, password, port = DEFAULT_SERVER_PORT):
     """creates a secure (TLS) socket connection to the given host and port,
     authenticating with the given username and password"""
-    return factory.tls_connect(host, port, username, password, SlaveService)
+    return factory.tlslite_connect(host, port, username, password, SlaveService)
+
+def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None, 
+        certfile = None, ca_certs = None, ssl_version = None):
+    """creates a secure (SSL) socket connection to the given host and port,
+    authenticating with the given certfile and CA file"""
+    return factory.ssl_connect(host, port, keyfile = keyfile, certfile = certfile,
+        ssl_version = ssl_version, ca_certs = ca_certs)
 
 def connect_subproc():
     """runs an rpyc classic server as a subprocess and return an rpyc
