@@ -41,7 +41,7 @@ def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None,
     """creates a secure (SSL) socket connection to the given host and port,
     authenticating with the given certfile and CA file"""
     return factory.ssl_connect(host, port, keyfile = keyfile, certfile = certfile,
-        ssl_version = ssl_version, ca_certs = ca_certs)
+        ssl_version = ssl_version, ca_certs = ca_certs, service = SlaveService)
 
 def connect_subproc():
     """runs an rpyc classic server as a subprocess and return an rpyc
