@@ -316,7 +316,7 @@ class Connection(object):
                     self.serve(0.1)
             except select.error:
                 if not self.closed:
-                    raise e
+                    raise
             except EOFError:
                 pass
         finally:
