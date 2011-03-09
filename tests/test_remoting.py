@@ -1,18 +1,21 @@
-from testbase import TestBase
-import rpyc
 import os
 import tempfile
 import shutil
+from nose.tools import raises
+from nose import SkipTest
+import rpyc
 
+class Test_Remoting(object):
+    def __init__(self):
+        pass
 
-class Remoting(TestBase):
     def setup(self):
         self.conn = rpyc.classic.connect_thread()
     
-    def cleanup(self):
+    def teardown(self):
         self.conn.close()
     
-    def step_files(self):
+    def test_files(self):
         base = tempfile.mkdtemp()
         base1 = os.path.join(base, "1")
         base2 = os.path.join(base, "2")
@@ -23,37 +26,35 @@ class Remoting(TestBase):
         os.mkdir(os.path.join(base1, "somedir1"))
         
         rpyc.classic.upload(self.conn, base1, base2)
-        self.require(os.listdir(base1) == os.listdir(base2))
+        assert os.listdir(base1) == os.listdir(base2)
         
         rpyc.classic.download(self.conn, base2, base3)
-        self.require(os.listdir(base2) == os.listdir(base3))
+        assert os.listdir(base2) == os.listdir(base3)
         
         shutil.rmtree(base)
     
-    def step_distribution(self):
-        self.log("TODO: upload package")
-        self.log("TODO: update module")
-    
-    def step_interactive(self):
-        self.log("type Ctrl+D to exit (Ctrl+Z on Windows)")
+    def test_distribution(self):
+        print "TODO: upload package"
+        print "TODO: update module"
+        
+    def test_interactive(self):
+        raise SkipTest("Need to be manually")
+        print "type Ctrl+D to exit (Ctrl+Z on Windows)"
         rpyc.classic.interact(self.conn)
     
-    def step_post_mortem(self):
+    def test_post_mortem(self):
+        raise SkipTest("Need to be manually")
         try:
             self.conn.modules.sys.path[100000]
         except IndexError:
-            self.log("type 'q' to exit")
-            rpyc.classic.pm(self.conn)
+            print "type 'q' to exit"
+            rpyc.utils.classic.post_mortem(self.conn)
+            raise
         else:
-            self.fail("expected an exception")
+            assert False, "expected an exception"
     
-    def step_migration(self):
+    def test_migration(self):
         l = rpyc.classic.obtain(self.conn.modules.sys.path)
-        self.require(type(l) is list)
+        assert type(l) is list
         rl = rpyc.classic.deliver(self.conn, l)
-        self.require(isinstance(rl, rpyc.BaseNetref))
-
-
-if __name__ == "__main__":
-    Remoting.run()
-
+        assert isinstance(rl, rpyc.BaseNetref)

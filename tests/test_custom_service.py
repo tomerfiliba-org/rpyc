@@ -1,8 +1,7 @@
-from testbase import TestBase
-import rpyc
 import math
 import time
 
+import rpyc
 
 on_connect_called = False
 on_disconnect_called = False
@@ -19,6 +18,7 @@ class MyService(rpyc.Service):
     def on_connect(self):
         global on_connect_called
         on_connect_called = True
+
     def on_disconnect(self):
         global on_disconnect_called
         on_disconnect_called = True
@@ -29,7 +29,7 @@ class MyService(rpyc.Service):
         return math.sqrt((x2-x1)**2 + (y2-y1)**2)
     
     def exposed_getlist(self):
-        return [1,2,3]
+        return [1, 2, 3]
     
     def foobar(self):
         assert False
@@ -37,26 +37,28 @@ class MyService(rpyc.Service):
     def exposed_getmeta(self):
         return MyClass()
 
-class CustomService(TestBase):
+class Test_CustomService(object):
     config = {}
+
     def setup(self):
-        self.conn = rpyc.connect_thread(remote_service = MyService)
+        self.conn = rpyc.connect_thread(remote_service=MyService)
         self.conn.root # this will block until the service is initialized,
         # so we can be sure on_connect_called is True by that time
-        self.require(on_connect_called)
-    def cleanup(self):
+        assert on_connect_called
+
+    def teardown(self):
         self.conn.close()
         time.sleep(0.5) # this will wait a little, making sure 
         # on_disconnect_called is already True
-        self.require(on_disconnect_called)
+        assert on_disconnect_called
     
-    def step_aliases(self):
-        self.log("service name: %s", self.conn.root.get_service_name())
+    def test_aliases(self):
+        print "service name: {0}".format(self.conn.root.get_service_name())
     
-    def step_distance(self):
-        self.require(self.conn.root.distance((2,7), (5,11)) == 5)
+    def test_distance(self):
+        assert self.conn.root.distance((2,7), (5,11)) == 5
     
-    def step_attributes(self):
+    def test_attributes(self):
         self.conn.root.distance
         self.conn.root.exposed_distance
         self.conn.root.getlist
@@ -64,22 +66,16 @@ class CustomService(TestBase):
         try:
             self.conn.root.foobar() # this is not an exposed attribute
         except AttributeError, ex:
-            self.log("exception is: %s", ex)
+            print "exception is: {0}".format(ex)
         else:
             self.fail("expected AttributeError")
     
-    def step_safeattrs(self):
+    def test_safeattrs(self):
         x = self.conn.root.getlist()
         #self.require(x == [1, 2, 3]) -- can't compare remote objects, sorry
         #self.require(x * 2 == [1, 2, 3, 1, 2, 3])
-        self.require([y*2 for y in x] == [2, 4, 6])
+        assert [y*2 for y in x] == [2, 4, 6]
     
-    def step_metaclasses(self):
+    def test_metaclasses(self):
         x = self.conn.root.getmeta()
-        self.log(x)
-
-
-if __name__ == '__main__':
-    CustomService.run()
-
-
+        print x
