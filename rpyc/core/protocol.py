@@ -389,6 +389,7 @@ class Connection(object):
         return False
     
     def _access_attr(self, oid, name, args, overrider, param, default):
+        if type(name) is unicode: name = str(name)
         if type(name) is not str:
             raise TypeError("attr name must be a string")
         obj = self._local_objects[oid]
