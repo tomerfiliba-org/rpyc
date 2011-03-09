@@ -1,5 +1,3 @@
-import rpyc
-
 from rpyc.core.brine import dumpable
 from rpyc.core.brine import dump
 from rpyc.core.brine import load

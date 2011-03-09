@@ -1,7 +1,6 @@
 import os
 import tempfile
 import shutil
-from nose.tools import raises
 from nose import SkipTest
 import rpyc
 

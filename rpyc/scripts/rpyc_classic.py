@@ -14,7 +14,7 @@ import os
 import rpyc
 from optparse import OptionParser
 from rpyc.utils.server import ThreadedServer, ForkingServer
-from rpyc.utils.classic import DEFAULT_SERVER_PORT
+from rpyc.utils.classic import DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT
 from rpyc.utils.registry import REGISTRY_PORT
 from rpyc.utils.registry import UDPRegistryClient, TCPRegistryClient
 from rpyc.utils.authenticators import TlsliteVdbAuthenticator, SSLAuthenticator
@@ -31,8 +31,9 @@ parser.add_option("-m", "--mode", action="store", dest="mode", metavar="MODE",
 # TCP options
 #
 parser.add_option("-p", "--port", action="store", dest="port", type="int", 
-    metavar="PORT", default=DEFAULT_SERVER_PORT, help="specify a different "
-    "TCP listener port. Default is 18812")
+    metavar="PORT", default=None, 
+    help="specify a different TCP listener port (default = %s, default for SSL = %s)" % 
+        (DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT))
 parser.add_option("--host", action="store", dest="host", type="str", 
     metavar="HOST", default="0.0.0.0", help="specify a different "
     "host to bind to. Default is 0.0.0.0")
@@ -110,8 +111,12 @@ def get_options():
             parser.error("SSL: certfile required")
         options.authenticator = SSLAuthenticator(options.ssl_keyfile, 
             options.ssl_certfile, options.ssl_cafile)
+        if not options.port:
+            options.port = DEFAULT_SERVER_SSL_PORT
     else:
         options.authenticator = None
+        if not options.port:
+            options.port = DEFAULT_SERVER_PORT
 
     options.handler = "serve_%s" % (options.mode,)
     if options.handler not in globals():

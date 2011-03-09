@@ -2,17 +2,15 @@ import sys
 import time
 from threading import Thread
 
-from nose.plugins.skip import SkipTest
+from nose import SkipTest
+if sys.platform != "win32":
+    raise SkipTest("Requires windows")
 
 import rpyc
 from rpyc.core.stream import PipeStream, NamedPipeStream
 
 
 class Test_Pipes(object):
-    def setup(self):
-        if sys.platform != "win32":
-            raise SkipTest("This test requires win32")
-    
     def test_basic_io(self):
         p1, p2 = PipeStream.create_pair()
         p1.write("hello")
@@ -43,9 +41,6 @@ class Test_Pipes(object):
 
 class Test_NamedPipe(object):
     def setup(self):
-        if sys.platform != "win32":
-            raise SkipTest("This test requires win32")
-        
         self.pipe_server_thread = Thread(target=self.pipe_server)
         self.pipe_server_thread.start()
         time.sleep(1) # make sure server is accepting already

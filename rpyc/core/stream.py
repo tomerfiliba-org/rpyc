@@ -182,11 +182,12 @@ class PipeStream(Stream):
 
 class Win32PipeStream(Stream):
     """win32 has to suck"""
-    __slots__ = ("incoming", "outgoing", "_fileno")
+    __slots__ = ("incoming", "outgoing", "_fileno", "_keepalive")
     PIPE_BUFFER_SIZE = 130000
     MAX_IO_CHUNK = 32000
     
     def __init__(self, incoming, outgoing):
+        self._keepalive = (incoming, outgoing)
         if hasattr(incoming, "fileno"):
             self._fileno = incoming.fileno()
             incoming = msvcrt.get_osfhandle(incoming.fileno())
@@ -211,9 +212,15 @@ class Win32PipeStream(Stream):
     def close(self):
         if self.closed:
             return
-        win32file.CloseHandle(self.incoming)
-        win32file.CloseHandle(self.outgoing)
+        try:
+            win32file.CloseHandle(self.incoming)
+        except Exception:
+            pass
         self.incoming = ClosedFile
+        try:
+            win32file.CloseHandle(self.outgoing)
+        except Exception:
+            pass
         self.outgoing = ClosedFile
     def read(self, count):
         try:

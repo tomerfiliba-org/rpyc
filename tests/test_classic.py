@@ -9,6 +9,20 @@ class Test_Classic(object):
         self.conn.close()
     
     def test_piped_server(self):
+        # this causes the following lines to be printed to stderr on Windows:
+        #
+        # close failed in file object destructor:
+        #     IOError: [Errno 9] Bad file descriptor
+        # close failed in file object destructor:
+        #     IOError: [Errno 9] Bad file descriptor
+        #
+        # this is because the pipe objects that hold the child process' stdin
+        # and stdout were disowned by Win32PipeStream (it forcefully takes 
+        # ownership of the file handles). so when the low-level pipe objects
+        # are gc'ed, they cry that their fd is already closed. this is all
+        # considered harmless, but there's no way to disable that message 
+        # to stderr 
+        
         conn2 = rpyc.classic.connect_subproc()
         conn2.modules.sys.path.append("xxx")
         assert conn2.modules.sys.path.pop(-1), "xxx"

@@ -1,8 +1,5 @@
 """
 NetRef - transparent network references implementation.
-
-SURGEON GENERAL'S WARNING: Black magaic is known to causes Lung Cancer,
-Heart Disease, Emphysema, and May Complicate Pregnancy. Close your eyes!
 """
 import sys
 import inspect
@@ -27,12 +24,12 @@ _builtin_types = [
     types.CodeType, types.FrameType, types.TracebackType, xrange,
     types.ModuleType, types.FunctionType,
     
-    type(int.__add__), # wrapper_descriptor
-    type((1).__add__), # method-wrapper
-    type(iter([])), # listiterator
-    type(iter(())), # tupleiterator
+    type(int.__add__),      # wrapper_descriptor
+    type((1).__add__),      # method-wrapper
+    type(iter([])),         # listiterator
+    type(iter(())),         # tupleiterator
     type(iter(xrange(10))), # rangeiterator
-    type(iter(set())), # setiterator
+    type(iter(set())),      # setiterator
 ]
 
 _normalized_builtin_types = dict(((t.__name__, t.__module__), t) 
@@ -66,7 +63,7 @@ class BaseNetref(object):
     __slots__ = ["____conn__", "____oid__", "__weakref__"]
     def __init__(self, conn, oid):
         self.____conn__ = conn
-        self.____oid__ =  oid
+        self.____oid__ = oid
     def __del__(self):
         try:
             asyncreq(self, consts.HANDLE_DEL)
