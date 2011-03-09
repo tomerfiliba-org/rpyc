@@ -1,7 +1,7 @@
 from __future__ import with_statement
-from testbase import TestBase
-import rpyc
 from contextlib import contextmanager
+
+import rpyc
 
 
 on_context_enter = False
@@ -17,23 +17,20 @@ class MyService(rpyc.Service):
         finally:
             on_context_exit = True
 
-class Python25Test(TestBase):
+
+class Test_Python25(object):
     def setup(self):
-        self.conn = rpyc.connect_thread(remote_service = MyService)
+        self.conn = rpyc.connect_thread(remote_service=MyService)
     
-    def cleanup(self):
+    def teardown(self):
         self.conn.close()
     
-    def step_context(self):
+    def test_context(self):
         with self.conn.root.context(3) as x:
-            self.require(on_context_enter)
-            self.require(x == 20)
-        self.require(on_context_exit)
-
-
-if __name__ == "__main__":
-    Python25Test.run()
-
-
-
-
+            print "entering test"
+            assert on_context_enter
+            print "got past context enter"
+            assert x == 20
+            print "got past x=20"
+        assert on_context_exit
+        print "got past on_context_exit" 

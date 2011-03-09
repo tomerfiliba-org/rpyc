@@ -3,9 +3,10 @@ rpyc connection factories
 """
 import socket
 import thread, threading
-import rpyc
 from rpyc import Connection, Channel, SocketStream, PipeStream, VoidService
-from rpyc.utils.registry import UDPRegistryClient, TCPRegistryClient
+from rpyc.utils.registry import UDPRegistryClient
+from rpyc.lib import safe_import
+ssl = safe_import("ssl")
 
 
 class DiscoveryError(Exception):
@@ -51,7 +52,7 @@ def connect(host, port, service = VoidService, config = {}):
     config - configuration dict"""
     return Connection(service, Channel(SocketStream.connect(host, port)), config = config)
 
-def tls_connect(host, port, username, password, service = VoidService, config = {}):
+def tlslite_connect(host, port, username, password, service = VoidService, config = {}):
     """creates a TLS-connection to the given host (encrypted and authenticated)
     username - the username used to authenticate the client
     password - the password used to authenticate the client
@@ -59,7 +60,32 @@ def tls_connect(host, port, username, password, service = VoidService, config = 
     port - the TCP port to use
     service - the local service to expose (defaults to Void)
     config - configuration dict"""
-    s = SocketStream.tls_connect(host, port, username, password)
+    s = SocketStream.tlslite_connect(host, port, username, password)
+    return Connection(service, Channel(s), config = config)
+
+def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
+        ssl_version = None, service = VoidService, config = {}):
+    """creates an SSL-wrapped connection to the given host (encrypted and 
+    authenticated).
+    host - the hostname to connect to
+    port - the TCP port to use
+    service - the local service to expose (defaults to Void)
+    config - configuration dict
+    
+    keyfile, certfile, ca_certs, ssl_version -- arguments to ssl.wrap_socket.
+    see that module's documentation for further info."""
+    kwargs = {"server_side" : False}
+    if keyfile:
+        kwargs["keyfile"] = keyfile
+    if certfile:
+        kwargs["certfile"] = certfile
+    if ca_certs:
+        kwargs["ca_certs"] = ca_certs
+    if ssl_version:
+        kwargs["ssl_version"] = ssl_version
+    else:
+        kwargs["ssl_version"] = ssl.PROTOCOL_TLSv1
+    s = SocketStream.ssl_connect(host, port, kwargs)
     return Connection(service, Channel(s), config = config)
 
 def discover(service_name, host = None, registrar = None, timeout = 2):  

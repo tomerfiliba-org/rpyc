@@ -1,6 +1,4 @@
-from testbase import TestBase
 import rpyc
-
 
 class Properties(object):
     def __init__(self):
@@ -18,22 +16,16 @@ class Properties(object):
         1/0
 
 
-class AttributeTest(TestBase):
+class Test_Attributes(object):
     def setup(self):
         self.conn = rpyc.classic.connect_thread()
     
-    def cleanup(self):
+    def teardown(self):
         self.conn.close()
     
-    def step_properties(self):
-        p = self.conn.modules["attributes"].Properties()
-        self.log(p.counter) # 1
-        self.log(p.counter) # 2
-        self.log(p.counter) # 3
-        self.require(p.counter == 4) # 4
-
-
-    
-if __name__ == "__main__":
-    AttributeTest.run()
-
+    def test_properties(self):
+        p = self.conn.modules["test_attributes"].Properties()
+        print p.counter        # 1
+        print p.counter        # 2
+        print p.counter        # 3
+        assert p.counter == 4  # 4

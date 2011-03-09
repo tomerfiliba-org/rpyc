@@ -6,7 +6,7 @@ slice, complex, tuple(of simple types), forzenset(of simple types)
 as well as the following singletons: None, NotImplemented, Ellipsis
 """
 from cStringIO import StringIO
-from rpyc.utils.lib import Struct, all
+from rpyc.lib.compat import Struct, all
 
 
 # singletons

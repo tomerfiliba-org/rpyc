@@ -4,8 +4,8 @@ rpyc registry server implementation
 import sys
 import socket
 import time
+import logging
 from rpyc.core import brine
-from rpyc.utils.logger import Logger
 
 
 DEFAULT_PRUNING_TIMEOUT = 4 * 60
@@ -26,7 +26,7 @@ class RegistryServer(object):
             pruning_timeout = DEFAULT_PRUNING_TIMEOUT
         self.pruning_timeout = pruning_timeout
         if logger is None:
-            logger = Logger("REGSRV")
+            logger = logging.getLogger('REGSRV')
         self.logger = logger
     
     def on_service_added(self, name, addrinfo):
@@ -46,7 +46,7 @@ class RegistryServer(object):
             try:
                 self.on_service_added(name, addrinfo)
             except Exception:
-                self.logger.traceback()
+                self.logger.exception('error executing service add callback')
     
     def remove_service(self, name, addrinfo):
         self.services[name].pop(addrinfo, None)
@@ -55,7 +55,7 @@ class RegistryServer(object):
         try:
             self.on_service_removed(name, addrinfo)
         except Exception:
-            self.logger.traceback()
+            self.logger.exception('error executing service remove callback')
     
     def cmd_query(self, host, name):
         name = name.upper()
@@ -116,7 +116,7 @@ class RegistryServer(object):
             try:
                 reply = cmdfunc(addrinfo[0], *args)
             except Exception:
-                self.logger.traceback()
+                self.logger.exception('error executing function')
             else:
                 self._send(brine.dump(reply), addrinfo)
     
@@ -146,7 +146,8 @@ class RegistryServer(object):
 
 class UDPRegistryServer(RegistryServer):
     def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT, 
-    pruning_timeout = None, logger = None):
+            pruning_timeout = None, logger = None):
+        
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((host, port))
         sock.settimeout(0.5)
@@ -164,7 +165,8 @@ class UDPRegistryServer(RegistryServer):
 
 class TCPRegistryServer(RegistryServer):
     def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT, 
-    pruning_timeout = None, logger = None, reuse_addr = True):
+            pruning_timeout = None, logger = None, reuse_addr = True):
+        
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if reuse_addr and sys.platform != "win32":
             # warning: reuseaddr is not what you expect on windows!
@@ -201,7 +203,7 @@ class RegistryClient(object):
         self.port = port
         self.timeout = timeout
         if logger is None:
-            logger = Logger("REGCLNT")
+            logger = logging.getLogger('REGCLNT')
         self.logger = logger
 
     def discover(self, name):

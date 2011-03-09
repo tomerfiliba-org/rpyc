@@ -7,7 +7,7 @@ import weakref
 import itertools
 import cPickle as pickle
 from threading import Lock
-from rpyc.lib.collections import WeakValueDict, RefCountingColl
+from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
 
@@ -316,7 +316,7 @@ class Connection(object):
                     self.serve(0.1)
             except select.error:
                 if not self.closed:
-                    raise e
+                    raise
             except EOFError:
                 pass
         finally:
@@ -426,7 +426,7 @@ class Connection(object):
             return NotImplemented
     def _handle_hash(self, oid):
         return hash(self._local_objects[oid])
-    def _handle_call(self, oid, args, kwargs):
+    def _handle_call(self, oid, args, kwargs=()):
         return self._local_objects[oid](*args, **dict(kwargs))
     def _handle_dir(self, oid):
         return tuple(dir(self._local_objects[oid]))
@@ -447,11 +447,13 @@ class Connection(object):
     def _handle_buffiter(self, oid, count):
         items = []
         obj = self._local_objects[oid]
-        for i in xrange(count):
-            try:
+        i = 0
+        try:
+            while i < count:
                 items.append(obj.next())
-            except StopIteration:
-                break
+                i += 1
+        except StopIteration:
+            pass
         return tuple(items)
     
     # collect handlers

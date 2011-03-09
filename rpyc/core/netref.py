@@ -1,8 +1,5 @@
 """
 NetRef - transparent network references implementation.
-
-SURGEON GENERAL'S WARNING: Black magaic is known to causes Lung Cancer,
-Heart Disease, Emphysema, and May Complicate Pregnancy. Close your eyes!
 """
 import sys
 import inspect
@@ -27,12 +24,12 @@ _builtin_types = [
     types.CodeType, types.FrameType, types.TracebackType, xrange,
     types.ModuleType, types.FunctionType,
     
-    type(int.__add__), # wrapper_descriptor
-    type((1).__add__), # method-wrapper
-    type(iter([])), # listiterator
-    type(iter(())), # tupleiterator
+    type(int.__add__),      # wrapper_descriptor
+    type((1).__add__),      # method-wrapper
+    type(iter([])),         # listiterator
+    type(iter(())),         # tupleiterator
     type(iter(xrange(10))), # rangeiterator
-    type(iter(set())), # setiterator
+    type(iter(set())),      # setiterator
 ]
 
 _normalized_builtin_types = dict(((t.__name__, t.__module__), t) 
@@ -66,7 +63,7 @@ class BaseNetref(object):
     __slots__ = ["____conn__", "____oid__", "__weakref__"]
     def __init__(self, conn, oid):
         self.____conn__ = conn
-        self.____oid__ =  oid
+        self.____oid__ = oid
     def __del__(self):
         try:
             asyncreq(self, consts.HANDLE_DEL)
@@ -117,7 +114,7 @@ class BaseNetref(object):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
 
 def _make_method(name, doc):
-    name = str(name)
+    name = str(name)   # issue #10
     if name == "__call__":
         def __call__(_self, *args, **kwargs):
             kwargs = tuple(kwargs.items())
@@ -150,7 +147,7 @@ def inspect_methods(obj):
     return methods.items()
 
 def class_factory(clsname, modname, methods):
-    clsname = str(clsname)
+    clsname = str(clsname)   # issue #10
     ns = {"__slots__" : ()}
     for name, doc in methods:
         if name not in _local_netref_attrs:

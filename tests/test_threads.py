@@ -1,9 +1,8 @@
 #!/usr/bin/env python
-from testbase import TestBase
-import rpyc
 import threading
 import time
 
+import rpyc
 
 class MyService(rpyc.Service):
     class exposed_Invoker(object):
@@ -11,12 +10,14 @@ class MyService(rpyc.Service):
             self.callback = rpyc.async(callback)
             self.interval = interval
             self.active = True
-            self.thread = threading.Thread(target = self.work)
+            self.thread = threading.Thread(target=self.work)
             self.thread.setDaemon(True)
             self.thread.start()
+        
         def exposed_stop(self):
             self.active = False
             self.thread.join()
+        
         def work(self):
             while self.active:
                 self.callback(time.time())
@@ -24,32 +25,32 @@ class MyService(rpyc.Service):
     
     def exposed_foo(self, x):
         time.sleep(2)
-        return x*17
+        return x * 17
 
-class Multithreaded(TestBase):
+class Test_Multithreaded(object):
     def setup(self):
-        self.conn = rpyc.connect_thread(remote_service = MyService)
+        self.conn = rpyc.connect_thread(remote_service=MyService)
         self.bgserver = rpyc.BgServingThread(self.conn)
-    def cleanup(self):
+
+    def teardown(self):
         self.bgserver.stop()
         self.conn.close()
     
-    def step_invoker(self):
+    def test_invoker(self):
         counter = [0]
         def callback(x):
             counter[0] += 1
-            self.log("callback(%s)", x)
+            print "callback{0}".format(x)
         invoker = self.conn.root.Invoker(callback, 1)
         # 3 * 2sec = 6 sec = ~6 calls to callback
         for i in range(3): 
-            self.log("foo(%d) = %s", i, self.conn.root.foo(i))
+            print "foo{0} = {1}".format(i, self.conn.root.foo(i))
         invoker.stop()
-        self.log("callback called %d times", counter[0])
-        self.require(counter[0] >= 5)
+        print "callback called {0} times".format(counter[0])
+        assert counter[0] >= 5
 
 
 if __name__ == "__main__":
     for i in range(200):
         print "======================  %d  ==========================" % (i,)
         Multithreaded.run()
-

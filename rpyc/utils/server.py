@@ -6,12 +6,13 @@ import os
 import socket
 import time
 import threading
-import select
 import errno
-from rpyc.core import brine, SocketStream, Channel, Connection
-from rpyc.utils.logger import Logger
-from rpyc.utils.registry import UDPRegistryClient, TCPRegistryClient
+import logging
+from rpyc.core import SocketStream, Channel, Connection
+from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
+from rpyc.lib import safe_import
+signal = safe_import("signal")
 
 
 class Server(object):
@@ -53,7 +54,7 @@ class Server(object):
             try:
                 self.registrar.unregister(self.port)
             except Exception:
-                self.logger.traceback()
+                 self.logger.exception("error unregistering services")
         self.listener.close()
         self.logger.info("listener closed")
         for c in set(self.clients):
@@ -106,7 +107,11 @@ class Server(object):
                     self.logger.info("%s:%s authenticated successfully", h, p)
             else:
                 credentials = None
-            self._serve_client(sock, credentials)
+            try:
+                self._serve_client(sock, credentials)
+            except Exception:
+                self.logger.exception("client connection terminated abruptly")
+                raise
         finally:
             try:
                 sock.shutdown(socket.SHUT_RDWR)
@@ -117,7 +122,10 @@ class Server(object):
     
     def _serve_client(self, sock, credentials):
         h, p = sock.getpeername()
-        self.logger.info("welcome %s:%s", h, p)
+        if credentials:
+            self.logger.info("welcome %s:%s (%r)", h, p, credentials)
+        else:
+            self.logger.info("welcome %s:%s", h, p)
         try:
             config = dict(self.protocol_config, credentials = credentials)
             conn = Connection(self.service, Channel(SocketStream(sock)), 
@@ -141,7 +149,7 @@ class Server(object):
                         self.registrar.register(self.service.get_service_aliases(),
                             self.port)
                     except Exception:
-                        self.logger.traceback()
+                        self.logger.exception("error registering services")
                 time.sleep(1)
         finally:
             if not self._closed:
@@ -176,7 +184,8 @@ class Server(object):
 
 class ThreadedServer(Server):
     def _get_logger(self):
-        return Logger(self.service.get_service_name(), show_tid = True)
+        ### XXX: show_tid = True
+        return logging.getLogger(self.service.get_service_name())
     
     def _accept_method(self, sock):
         t = threading.Thread(target = self._authenticate_and_serve_client, args = (sock,))
@@ -184,60 +193,52 @@ class ThreadedServer(Server):
         t.start()
 
 
-import platform
-if platform.system()=='cli':#Detect .NET platform
-	class ForkingServer:
-		def __init__(self, *args, **kwargs):
-			raise Exception("Forking server not supported in IronPython")
-else:
-	import signal
-	class ForkingServer(Server):
-		def __init__(self, *args, **kwargs):
-			Server.__init__(self, *args, **kwargs)
-			# setup sigchld handler
-			self._prevhandler = signal.signal(signal.SIGCHLD, self._handle_sigchld)
-		
-		def close(self):
-			Server.close(self)
-			signal.signal(signal.SIGCHLD, self._prevhandler)
-		
-		def _get_logger(self):
-			return Logger(self.service.get_service_name(), show_pid = True)
-		
-		@classmethod
-		def _handle_sigchld(cls, signum, unused):
-			try:
-				while True:
-					pid, dummy = os.waitpid(-1, os.WNOHANG)
-					if pid <= 0:
-						break
-			except OSError:
-				pass
-			# re-register signal handler (see man signal(2), under Portability)
-			signal.signal(signal.SIGCHLD, cls._handle_sigchld)
-		
-		def _accept_method(self, sock):
-			pid = os.fork()
-			if pid == 0:
-				# child
-				try:
-					try:
-						self.logger.info("child process created")
-						signal.signal(signal.SIGCHLD, self._prevhandler)
-						self.listener.close()
-						self.clients.clear()
-						self._authenticate_and_serve_client(sock)
-					except:
-						self.logger.traceback()
-				finally:
-					self.logger.info("child terminated")
-					os._exit(0)
-			else:
-				# parent
-				sock.close()
-
-
-
-
-
-
+class ForkingServer(Server):
+    def __init__(self, *args, **kwargs):
+        if not signal:
+            raise OSError("ForkingServer not supported on this platform")
+        Server.__init__(self, *args, **kwargs)
+        # setup sigchld handler
+        self._prevhandler = signal.signal(signal.SIGCHLD, self._handle_sigchld)
+    
+    def close(self):
+        Server.close(self)
+        signal.signal(signal.SIGCHLD, self._prevhandler)
+    
+    def _get_logger(self):
+        ### XXX: show_pid = True
+        return logging.getLogger(self.service.get_service_name())
+    
+    @classmethod
+    def _handle_sigchld(cls, signum, unused):
+        try:
+            while True:
+                pid, dummy = os.waitpid(-1, os.WNOHANG)
+                if pid <= 0:
+                    break
+        except OSError:
+            pass
+        # re-register signal handler (see man signal(2), under Portability)
+        signal.signal(signal.SIGCHLD, cls._handle_sigchld)
+    
+    def _accept_method(self, sock):
+        pid = os.fork()
+        if pid == 0:
+            # child
+            try:
+                try:
+                    self.logger.debug("child process created")
+                    signal.signal(signal.SIGCHLD, self._prevhandler)
+                    self.listener.close()
+                    self.clients.clear()
+                    self._authenticate_and_serve_client(sock)
+                except:
+                    self.logger.exception("child process terminated abnormally")
+                else:
+                    self.logger.debug("child process terminated")
+            finally:
+                self.logger.debug("child terminated")
+                os._exit(0)
+        else:
+            # parent
+            sock.close()

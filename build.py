@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import time
+import shutil
 import subprocess
 from optparse import OptionParser
 
@@ -8,10 +9,17 @@ def run(args, input = None, cwd = None, env = None, retcode = 0):
         stderr = subprocess.PIPE, cwd = None, env = None)
     out, err = proc.communicate(input)
     if proc.returncode != retcode:
+        print "==============================================================="
+        print out
+        print err
         raise OSError("process failed")
 
 
 def main(publish = False):
+    shutil.rmtree("build", ignore_errors = True)
+    shutil.rmtree("dist", ignore_errors = True)
+    shutil.rmtree("MANIFEST", ignore_errors = True)
+    
     # generate zip, tar.gz, win32 installer and egg
     run(["python", "setup.py", "sdist", "--formats=zip,gztar"])
     run(["python", "setup.py", "bdist_wininst", "--plat-name=win32"])
@@ -30,13 +38,15 @@ def main(publish = False):
         dst = "gangesmaster,rpyc@frs.sourceforge.net:/home/frs/project/r/rp/rpyc/%s/" % (rpyc.version_string,)
         run(["scp", "-r", "dist", dst])
 
+    shutil.rmtree("build", ignore_errors = True)
+    shutil.rmtree("RPyC.egg-info", ignore_errors = True)
 
 
 
 if __name__ == "__main__":
     parser = OptionParser()
-    parser.add_option("--public", action="store_true", dest="public", default=False,
-                      help="public on pypi, sourceforge, tag in github")
+    parser.add_option("--publish", action="store_true", dest="publish", default=False,
+                      help="publish on pypi, sourceforge, tag in github")
     options, args = parser.parse_args()
     main(options.publish)
 

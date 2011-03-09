@@ -6,11 +6,13 @@ import os
 import socket
 import time
 import errno
-from select import select
-from rpyc.utils.lib import safe_import
+from rpyc.lib import safe_import
+from rpyc.lib.compat import select
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 msvcrt = safe_import("msvcrt")
+ssl = safe_import("ssl")
+tlsapi = safe_import("tlslite.api")
 
 
 retry_errnos = set([errno.EAGAIN])
@@ -61,21 +63,27 @@ class SocketStream(Stream):
         self.sock = sock
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, type = socket.SOCK_STREAM, 
-    proto = 0, timeout = 3):
+            proto = 0, timeout = 3, nodelay = False):
         s = socket.socket(family, type, proto)
         s.settimeout(timeout)
         s.connect((host, port))
+        if nodelay:
+            s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         return s
     @classmethod
     def connect(cls, host, port, **kwargs):
         return cls(cls._connect(host, port, **kwargs))
     @classmethod
-    def tls_connect(cls, host, port, username, password, **kwargs):
-        from tlslite.api import TLSConnection
+    def tlslite_connect(cls, host, port, username, password, **kwargs):
         s = cls._connect(host, port, **kwargs)
-        s2 = TLSConnection(s)
+        s2 = tlsapi.TLSConnection(s)
         s2.fileno = lambda fd=s.fileno(): fd
         s2.handshakeClientSRP(username, password)
+        return cls(s2)
+    @classmethod
+    def ssl_connect(cls, host, port, ssl_kwargs, **kwargs):
+        s = cls._connect(host, port, **kwargs)
+        s2 = ssl.wrap_socket(s, **ssl_kwargs)
         return cls(s2)
     @property
     def closed(self):
@@ -174,11 +182,12 @@ class PipeStream(Stream):
 
 class Win32PipeStream(Stream):
     """win32 has to suck"""
-    __slots__ = ("incoming", "outgoing", "_fileno")
+    __slots__ = ("incoming", "outgoing", "_fileno", "_keepalive")
     PIPE_BUFFER_SIZE = 130000
     MAX_IO_CHUNK = 32000
     
     def __init__(self, incoming, outgoing):
+        self._keepalive = (incoming, outgoing)
         if hasattr(incoming, "fileno"):
             self._fileno = incoming.fileno()
             incoming = msvcrt.get_osfhandle(incoming.fileno())
@@ -203,9 +212,15 @@ class Win32PipeStream(Stream):
     def close(self):
         if self.closed:
             return
-        win32file.CloseHandle(self.incoming)
-        win32file.CloseHandle(self.outgoing)
+        try:
+            win32file.CloseHandle(self.incoming)
+        except Exception:
+            pass
         self.incoming = ClosedFile
+        try:
+            win32file.CloseHandle(self.outgoing)
+        except Exception:
+            pass
         self.outgoing = ClosedFile
     def read(self, count):
         try:
