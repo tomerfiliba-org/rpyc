@@ -59,8 +59,8 @@ def test_inspect_methods_list():
     assert result
     
     print("-"*40)
-    methods_actual = {name for name, doc in netref.inspect_methods(simple_list)}
-    a_few_expected_list_methods = {'append', 'pop', 'extend', 'sort', '__iter__', 'count'}
+    methods_actual = set(name for name, doc in netref.inspect_methods(simple_list))
+    a_few_expected_list_methods = set(['append', 'pop', 'extend', 'sort', '__iter__', 'count'])
     print("Checking I get a few list methods expected in 3.1")
     assert methods_actual > a_few_expected_list_methods
     
@@ -87,8 +87,8 @@ def test_inspect_methods_str():
     assert result
     
     print("-"*40)
-    methods_actual = {name for name, doc in netref.inspect_methods(simple_string)}
-    a_few_expected_string_methods = {'startswith', 'encode', 'format', 'isdigit', 'rfind', 'strip'}
+    methods_actual = set(name for name, doc in netref.inspect_methods(simple_string))
+    a_few_expected_string_methods = set(['startswith', 'encode', 'format', 'isdigit', 'rfind', 'strip'])
     print("Checking I get a few string methods expected in 3.1")
     assert methods_actual > a_few_expected_string_methods
     
@@ -115,8 +115,8 @@ def test_inspect_methods_mul_tuple():
     assert result
     
     print("-"*40)
-    methods_actual = {name for name, doc in netref.inspect_methods(simple_mul_tuple)}
-    a_few_expected_mul_tuple_methods = {'__contains__', '__hash__', '__iter__', '__le__', '__len__', 'index'}
+    methods_actual = set(name for name, doc in netref.inspect_methods(simple_mul_tuple))
+    a_few_expected_mul_tuple_methods = set(['__contains__', '__hash__', '__iter__', '__le__', '__len__', 'index'])
     print("Checking I get a few string methods expected in 3.1")
     assert methods_actual > a_few_expected_mul_tuple_methods
     
