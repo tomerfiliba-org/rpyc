@@ -83,6 +83,8 @@ class BaseNetref(object):
                 return self.__dir__()
             else:
                 return object.__getattribute__(self, name)
+        elif name == "__call__": # .NET platform
+            return object.__getattribute__(self, "__call__")
         else:
             return syncreq(self, consts.HANDLE_GETATTR, name)
     def __getattr__(self, name):
@@ -114,7 +116,6 @@ class BaseNetref(object):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
 
 def _make_method(name, doc):
-    name = str(name)   # issue #10
     if name == "__call__":
         def __call__(_self, *args, **kwargs):
             kwargs = tuple(kwargs.items())
@@ -148,8 +149,10 @@ def inspect_methods(obj):
 
 def class_factory(clsname, modname, methods):
     clsname = str(clsname)   # issue #10
+    modname = str(modname)   # issue #10
     ns = {"__slots__" : ()}
     for name, doc in methods:
+        name = str(name)   # issue #10
         if name not in _local_netref_attrs:
             ns[name] = _make_method(name, doc)
     ns["__module__"] = modname
