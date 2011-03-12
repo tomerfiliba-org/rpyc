@@ -143,6 +143,7 @@ def inspect_methods(obj):
     for basecls in mros:
         attrs.update(basecls.__dict__)
     for name, attr in attrs.iteritems():
+        name = str(name)   # issue #10
         if name not in _local_netref_attrs and hasattr(attr, "__call__"):
             methods[name] = inspect.getdoc(attr)
     return methods.items()
