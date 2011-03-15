@@ -6,7 +6,7 @@ class Number(object):
         self.number=number 
 
 def f(number): 
-    print number.number 
+    print( number.number) 
 
 
 if __name__ == "__main__": 

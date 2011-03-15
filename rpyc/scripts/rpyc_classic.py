@@ -166,7 +166,7 @@ def serve_stdio(options):
         try:
             conn.serve_all()
         except KeyboardInterrupt:
-            print "User interrupt!"
+            print( "User interrupt!" )
     finally:
         conn.close()
 

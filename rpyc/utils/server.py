@@ -175,7 +175,7 @@ class Server(object):
             except EOFError:
                 pass # server closed by another thread
             except KeyboardInterrupt:
-                print
+                print("")
                 self.logger.warn("keyboard interrupt!")
         finally:
             self.logger.info("server has terminated")
