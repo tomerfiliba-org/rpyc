@@ -29,6 +29,7 @@ the VdbAuthenticator class authenticates clients based on username-password
 pairs.
 """
 import os
+import sys
 import anydbm
 from rpyc.lib import safe_import
 tlsapi = safe_import("tlslite.api")
@@ -58,7 +59,8 @@ class SSLAuthenticator(object):
             sock2 = ssl.wrap_socket(sock, keyfile = self.keyfile, certfile = self.certfile,
                 server_side = True, ssl_version = self.ssl_version, ca_certs = self.ca_certs,
                 cert_reqs = self.cert_reqs)
-        except ssl.SSLError, ex:
+        except ssl.SSLError:
+            ex = sys.exc_info()[1]
             raise AuthenticationError(str(ex))
         return sock2, sock2.getpeercert()
 
@@ -116,10 +118,11 @@ class TlsliteVdbAuthenticator(object):
     
     def __call__(self, sock):
         sock2 = tlsapi.TLSConnection(sock)
-        sock2.fileno = lambda fd=sock.fileno(): fd    # tlslite omitted fileno
+        sock2.fileno = lambda fd = sock.fileno(): fd    # tlslite omitted fileno
         try:
             sock2.handshakeServer(verifierDB = self.vdb)
-        except Exception, ex:
+        except Exception:
+            ex = sys.exc_info()[1]
             raise AuthenticationError(str(ex))
         return sock2, sock2.allegedSrpUsername
 

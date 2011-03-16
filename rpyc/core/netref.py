@@ -67,7 +67,9 @@ class BaseNetref(object):
     def __del__(self):
         try:
             asyncreq(self, consts.HANDLE_DEL)
-        except:
+        except Exception: 
+            # raised in a destructor, most likely on program termination,
+            # it's safe to ignore all exceptions here
             pass
     
     def __getattribute__(self, name):

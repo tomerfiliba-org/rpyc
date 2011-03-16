@@ -36,6 +36,7 @@ except ImportError:
     def select(*args):
         raise ImportError("select not supported on this platform")
 else:
+    # jython
     if hasattr(select, 'cpython_compatible_select'):
         from select import cpython_compatible_select as select
     else:

@@ -31,7 +31,7 @@ class Stream(object):
         raise NotImplementedError()
     def poll(self, timeout):
         """indicate whether the stream has data to read"""
-        rl, wl, xl = select([self], [], [], timeout)
+        rl, _, _ = select([self], [], [], timeout)
         return bool(rl)
     def read(self, count):
         """read exactly `count` bytes, or raise EOFError"""
@@ -62,9 +62,9 @@ class SocketStream(Stream):
     def __init__(self, sock):
         self.sock = sock
     @classmethod
-    def _connect(cls, host, port, family = socket.AF_INET, type = socket.SOCK_STREAM, 
+    def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM, 
             proto = 0, timeout = 3, nodelay = False):
-        s = socket.socket(family, type, proto)
+        s = socket.socket(family, socktype, proto)
         s.settimeout(timeout)
         s.connect((host, port))
         if nodelay:
@@ -77,7 +77,7 @@ class SocketStream(Stream):
     def tlslite_connect(cls, host, port, username, password, **kwargs):
         s = cls._connect(host, port, **kwargs)
         s2 = tlsapi.TLSConnection(s)
-        s2.fileno = lambda fd=s.fileno(): fd
+        s2.fileno = lambda fd = s.fileno(): fd
         s2.handshakeClientSRP(username, password)
         return cls(s2)
     @classmethod
@@ -105,7 +105,8 @@ class SocketStream(Stream):
                 buf = self.sock.recv(min(self.MAX_IO_CHUNK, count))
             except socket.timeout:
                 continue
-            except socket.error, ex:
+            except socket.error:
+                ex = sys.exc_info()[1]
                 if ex[0] in retry_errnos:
                     # windows just has to be a bitch
                     continue
@@ -122,7 +123,8 @@ class SocketStream(Stream):
             while data:
                 count = self.sock.send(data[:self.MAX_IO_CHUNK])
                 data = data[count:]
-        except socket.error, ex:
+        except socket.error:
+            ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
 
@@ -165,7 +167,8 @@ class PipeStream(Stream):
         except EOFError:
             self.close()
             raise
-        except EnvironmentError, ex:
+        except EnvironmentError:
+            ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
         return "".join(data)
@@ -175,7 +178,8 @@ class PipeStream(Stream):
                 chunk = data[:self.MAX_IO_CHUNK]
                 written = os.write(self.outgoing.fileno(), chunk)
                 data = data[written:]
-        except EnvironmentError, ex:
+        except EnvironmentError:
+            ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
 
@@ -229,11 +233,13 @@ class Win32PipeStream(Stream):
                 dummy, buf = win32file.ReadFile(self.incoming, int(min(self.MAX_IO_CHUNK, count)))
                 count -= len(buf)
                 data.append(buf)
-        except TypeError, ex:
+        except TypeError:
+            ex = sys.exc_info()[1]
             if not self.closed:
                 raise
             raise EOFError(ex)
-        except win32file.error, ex:
+        except win32file.error:
+            ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
         return "".join(data)
@@ -242,11 +248,13 @@ class Win32PipeStream(Stream):
             while data:
                 dummy, count = win32file.WriteFile(self.outgoing, data[:self.MAX_IO_CHUNK])
                 data = data[count:]
-        except TypeError, ex:
+        except TypeError:
+            ex = sys.exc_info()[1]
             if not self.closed:
                 raise
             raise EOFError(ex)
-        except win32file.error, ex:
+        except win32file.error:
+            ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
     
@@ -262,7 +270,8 @@ class Win32PipeStream(Stream):
                 if time.time() >= tmax:
                     break
                 time.sleep(interval)
-        except TypeError, ex:
+        except TypeError:
+            ex = sys.exc_info()[1]
             if not self.closed:
                 raise
             raise EOFError(ex)

@@ -228,6 +228,7 @@ class Connection(object):
         except KeyboardInterrupt:
             raise
         except:
+            # need to catch old style exceptions too 
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
             if t is SystemExit and self._config["propagate_SystemExit_locally"]:
