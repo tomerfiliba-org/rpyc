@@ -254,7 +254,7 @@ def test_inspect_methods_advanced_instance():
 #####################################################################
 #####################################################################
 
-class pretend_connection():
+class pretend_connection(object):
     obj_register = {}
     obj_id = count(1)
     def __init__(self):

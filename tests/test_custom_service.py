@@ -53,7 +53,7 @@ class Test_CustomService(object):
         assert on_disconnect_called
     
     def test_aliases(self):
-        print( "service name: {0}".format(self.conn.root.get_service_name()) )
+        print( "service name: %s" % (self.conn.root.get_service_name(),) )
     
     def test_distance(self):
         assert self.conn.root.distance((2,7), (5,11)) == 5
@@ -66,7 +66,7 @@ class Test_CustomService(object):
         try:
             self.conn.root.foobar() # this is not an exposed attribute
         except AttributeError, ex:
-            print( "exception is: {0}".format(ex) )
+            print( "exception is: %s" % (ex,) )
         else:
             self.fail("expected AttributeError")
     

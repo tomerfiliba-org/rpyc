@@ -16,7 +16,7 @@ from rpyc.core.brine_3 import Brine_Exception
 
 def test_dump_load():
     x = ("he", 7, "llo", 8, (), 900, None, True, 18.2, 18.2j + 13, 
-         slice(1, 2, 3), frozenset([5, 6, 7]), b"\11")
+         slice(1, 2, 3), frozenset([5, 6, 7]), bytes([0x11]))
     assert dumpable(x)
     y = dump(x)
     z = load(y)
@@ -32,15 +32,15 @@ def test_undumpable():
 @raises(Brine_Exception)
 def test_unloadable():
     x = ("he", 7, "llo", 8, (), 900, None, True, 18.2, 18.2j + 13, 
-         slice(1, 2, 3), frozenset([5, 6, 7]), b"\11")
+         slice(1, 2, 3), frozenset([5, 6, 7]), bytes([0x11]))
     y = dump(x)
-    y = b"\02" + y
+    y = bytes([0x02]) + y
     z = load(y)
 
 def test_pickle_direct():
     x = {1:2}
     y = _pickle(x)
-    z =  load(b"\01"+y)
+    z =  load(bytes([0x01])+y)
     assert x == z
 
 @raises(Brine_Exception)

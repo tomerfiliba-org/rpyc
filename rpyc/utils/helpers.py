@@ -6,7 +6,7 @@ import threading
 from rpyc.lib.colls import WeakValueDict
 from rpyc.lib.compat import callable
 from rpyc.core.consts import HANDLE_BUFFITER, HANDLE_CALL
-from rpyc.core.netref import BaseNetref, syncreq, asyncreq
+from rpyc.core.netref import syncreq, asyncreq
 
 
 def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):

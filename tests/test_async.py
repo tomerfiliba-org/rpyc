@@ -35,7 +35,7 @@ class Test_Async(object):
             dt = time.time() - t0
         else:
             assert False, "expected AsyncResultTimeout"
-        print( "timed out after {0}".format(dt) )
+        print( "timed out after %s" % (dt,) )
         assert 3.9 <= dt <= 4.1
     
     def test_asyncresult_callbacks(self):
