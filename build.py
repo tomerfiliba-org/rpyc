@@ -9,9 +9,9 @@ def run(args, input = None, cwd = None, env = None, retcode = 0):
         stderr = subprocess.PIPE, cwd = None, env = None)
     out, err = proc.communicate(input)
     if proc.returncode != retcode:
-        print "==============================================================="
-        print out
-        print err
+        print( "===============================================================" )
+        print( out )
+        print( err )
         raise OSError("process failed")
 
 

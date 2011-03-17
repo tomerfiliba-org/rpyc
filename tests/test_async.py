@@ -35,7 +35,7 @@ class Test_Async(object):
             dt = time.time() - t0
         else:
             assert False, "expected AsyncResultTimeout"
-        print "timed out after {0}".format(dt)
+        print( "timed out after %s" % (dt,) )
         assert 3.9 <= dt <= 4.1
     
     def test_asyncresult_callbacks(self):
@@ -58,11 +58,11 @@ class Test_Async(object):
     @raises(rpyc.AsyncResultTimeout)
     def test_timed(self):
         timed_sleep = rpyc.timed(self.a_sleep, 5)
-        print timed_sleep
+        print( timed_sleep )
         res = timed_sleep(3)
-        print res.value
+        print( res.value )
         res = timed_sleep(7)
-        print res.value
+        print( res.value )
     
     @raises(ValueError)
     def test_exceptions(self):

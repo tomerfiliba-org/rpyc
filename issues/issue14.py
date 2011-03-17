@@ -6,7 +6,7 @@ class Number(object):
         self.number=number 
 
 def f(number): 
-    print number.number 
+    print( number.number) 
 
 
 if __name__ == "__main__": 
@@ -16,7 +16,8 @@ if __name__ == "__main__":
     mod = conn.modules["issue14"] 
     n = Number(999) 
     f = rpyc.async(mod.f)(n)
-    f.value
+    print( f )
+    print( f.value )
     
     #proxy = rpyc.async(mod.f) 
     #f = proxy(n) 

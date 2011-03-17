@@ -228,6 +228,7 @@ class Connection(object):
         except KeyboardInterrupt:
             raise
         except:
+            # need to catch old style exceptions too 
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
             if t is SystemExit and self._config["propagate_SystemExit_locally"]:
@@ -389,8 +390,9 @@ class Connection(object):
         return False
     
     def _access_attr(self, oid, name, args, overrider, param, default):
-        if type(name) is unicode: name = str(name)
-        if type(name) is not str:
+        if type(name) is unicode:
+            name = str(name) # IronPython issue #10
+        elif type(name) is not str:
             raise TypeError("attr name must be a string")
         obj = self._local_objects[oid]
         accessor = getattr(type(obj), overrider, None)

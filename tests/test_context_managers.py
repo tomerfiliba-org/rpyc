@@ -27,10 +27,10 @@ class Test_Python25(object):
     
     def test_context(self):
         with self.conn.root.context(3) as x:
-            print "entering test"
+            print( "entering test" )
             assert on_context_enter
-            print "got past context enter"
+            print( "got past context enter" )
             assert x == 20
-            print "got past x=20"
+            print( "got past x=20" )
         assert on_context_exit
-        print "got past on_context_exit" 
+        print( "got past on_context_exit" ) 

@@ -34,15 +34,15 @@ class Test_Classic(object):
         assert list(bi) == range(10000)
     
     def test_classic(self):
-        print self.conn.modules.sys
-        print self.conn.modules["xml.dom.minidom"].parseString("<a/>")
+        print( self.conn.modules.sys )
+        print( self.conn.modules["xml.dom.minidom"].parseString("<a/>") )
         self.conn.execute("x = 5")
         assert self.conn.namespace["x"] == 5
         assert self.conn.eval("1+x") == 6
     
     def test_isinstance(self):
         x = self.conn.modules.__builtin__.range(10)
-        print x
-        print type(x)
-        print x.__class__
+        print( x )
+        print( type(x) )
+        print( x.__class__ )
         assert isinstance(x, list)

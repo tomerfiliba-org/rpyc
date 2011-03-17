@@ -6,7 +6,7 @@ import threading
 from rpyc.lib.colls import WeakValueDict
 from rpyc.lib.compat import callable
 from rpyc.core.consts import HANDLE_BUFFITER, HANDLE_CALL
-from rpyc.core.netref import BaseNetref, syncreq, asyncreq
+from rpyc.core.netref import syncreq, asyncreq
 
 
 def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
@@ -73,8 +73,8 @@ class BgServingThread(object):
     """runs an RPyC server in the background to serve all requests and replies
     that arrive on the given RPyC connection. the thread is created along with
     the object; you can use the stop() method to stop the server thread"""
-    SERVE_INTERVAL = 0.1
-    SLEEP_INTERVAL = 0.1
+    SERVE_INTERVAL = 0.01
+    SLEEP_INTERVAL = 0.01
     def __init__(self, conn):
         self._conn = conn
         self._thread = threading.Thread(target = self._bg_server)

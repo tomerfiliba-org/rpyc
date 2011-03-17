@@ -67,7 +67,9 @@ class BaseNetref(object):
     def __del__(self):
         try:
             asyncreq(self, consts.HANDLE_DEL)
-        except:
+        except Exception: 
+            # raised in a destructor, most likely on program termination,
+            # it's safe to ignore all exceptions here
             pass
     
     def __getattribute__(self, name):
@@ -79,8 +81,10 @@ class BaseNetref(object):
                 return cls
             elif name == "__doc__":
                 return self.__getattr__("__doc__")
-            elif name == "__members__": # sys.version_info < (2, 6)
+            elif name == "__members__":                       # for Python < 2.6
                 return self.__dir__()
+            elif name == "__call__":                      # IronPython issue #10
+                return object.__getattribute__(self, "__call__")
             else:
                 return object.__getattribute__(self, name)
         else:
@@ -114,7 +118,7 @@ class BaseNetref(object):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
 
 def _make_method(name, doc):
-    name = str(name)   # issue #10
+    name = str(name)                                      # IronPython issue #10
     if name == "__call__":
         def __call__(_self, *args, **kwargs):
             kwargs = tuple(kwargs.items())
@@ -147,9 +151,11 @@ def inspect_methods(obj):
     return methods.items()
 
 def class_factory(clsname, modname, methods):
-    clsname = str(clsname)   # issue #10
+    clsname = str(clsname)                                # IronPython issue #10
+    modname = str(modname)                                # IronPython issue #10    
     ns = {"__slots__" : ()}
     for name, doc in methods:
+        name = str(name)                                  # IronPython issue #10
         if name not in _local_netref_attrs:
             ns[name] = _make_method(name, doc)
     ns["__module__"] = modname
@@ -158,7 +164,8 @@ def class_factory(clsname, modname, methods):
     elif (clsname, modname) in _normalized_builtin_types:
         ns["__class__"] = _normalized_builtin_types[clsname, modname]
     else:
-        ns["__class__"] = None # to be resolved by the instance
+        # to be resolved by the instance
+        ns["__class__"] = None
     return type(clsname, (BaseNetref,), ns)
 
 builtin_classes_cache = {}

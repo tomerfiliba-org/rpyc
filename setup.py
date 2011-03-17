@@ -11,7 +11,7 @@ if sys.version_info < (2, 4):
     sys.exit("requires python 2.4 and up")
 
 here = os.path.dirname(__file__)
-exec(open(os.path.join(here, 'rpyc', 'version.py')))
+exec(open(os.path.join(here, 'rpyc', 'version.py')).read())
 
 setup(name="RPyC",
     version = version_string,

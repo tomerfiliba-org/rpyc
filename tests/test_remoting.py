@@ -33,12 +33,11 @@ class Test_Remoting(object):
         shutil.rmtree(base)
     
     def test_distribution(self):
-        print "TODO: upload package"
-        print "TODO: update module"
+        raise SkipTest("TODO: upload a package and a module")
         
     def test_interactive(self):
         raise SkipTest("Need to be manually")
-        print "type Ctrl+D to exit (Ctrl+Z on Windows)"
+        print( "type Ctrl+D to exit (Ctrl+Z on Windows)" )
         rpyc.classic.interact(self.conn)
     
     def test_post_mortem(self):
@@ -46,8 +45,8 @@ class Test_Remoting(object):
         try:
             self.conn.modules.sys.path[100000]
         except IndexError:
-            print "type 'q' to exit"
-            rpyc.utils.classic.post_mortem(self.conn)
+            print( "type 'q' to exit" )
+            rpyc.classic.pm(self.conn)
             raise
         else:
             assert False, "expected an exception"

@@ -70,9 +70,9 @@ parser.add_option("--ssl-cafile", action="store", dest="ssl_cafile", metavar="FI
 #
 # registry
 #
-parser.add_option("--dont-register", action="store_false", dest="auto_register", 
-    default=True, help="disables this server from registering at all. "
-    "By default, the server will attempt to register")
+parser.add_option("--register", action="store_true", dest="auto_register", 
+    default=False, help="asks the server to attempt registering with a registry server"
+    "By default, the server will not attempt to register")
 parser.add_option("--registry-type", action="store", dest="regtype", type="str", 
     default="udp", help="can be 'udp' or 'tcp', default is 'udp'")
 parser.add_option("--registry-port", action="store", dest="regport", type="int", 
@@ -166,7 +166,7 @@ def serve_stdio(options):
         try:
             conn.serve_all()
         except KeyboardInterrupt:
-            print "User interrupt!"
+            print( "User interrupt!" )
     finally:
         conn.close()
 

@@ -24,7 +24,7 @@ class Test_SSL(object):
     def setup(self):
         self.key = os.path.join( os.path.dirname(__file__) , "server.key")
         self.cert =  os.path.join( os.path.dirname(__file__) , "server.crt")
-        print self.cert, self.key
+        print( self.cert, self.key )
         
         authenticator = SSLAuthenticator(self.key, self.cert)
         self.server = ThreadedServer(SlaveService, hostname = "localhost",port = 18812, 
@@ -39,9 +39,9 @@ class Test_SSL(object):
     def test_ssl_conenction(self):
         c = rpyc.classic.ssl_connect("localhost", port = 18812, 
             keyfile=self.key, certfile=self.cert)
-        print repr(c)
-        print c.modules.sys
-        print c.modules["xml.dom.minidom"].parseString("<a/>")
+        print( repr(c) )
+        print( c.modules.sys )
+        print( c.modules["xml.dom.minidom"].parseString("<a/>") )
         c.execute("x = 5")
         assert c.namespace["x"] == 5
         assert c.eval("1+x") == 6

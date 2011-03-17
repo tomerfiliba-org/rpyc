@@ -27,12 +27,6 @@ class Server(object):
         self.auto_register = auto_register
         self.protocol_config = protocol_config
         self.clients = set()
-        if logger is None:
-            logger = self._get_logger()
-        self.logger = logger
-        if registrar is None:
-            registrar = UDPRegistryClient(logger = self.logger)
-        self.registrar = registrar
         
         self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if reuse_addr and sys.platform != "win32":
@@ -41,9 +35,16 @@ class Server(object):
         
         self.listener.bind((hostname, port))
         self.port = self.listener.getsockname()[1]
+        
+        if logger is None:
+            logger = self._get_logger()
+        self.logger = logger
+        if registrar is None:
+            registrar = UDPRegistryClient(logger = self.logger)
+        self.registrar = registrar
     
     def _get_logger(self):
-        raise NotImplementedError()
+        return logging.getLogger("%s/%d" % (self.service.get_service_name(), self.port))
     
     def close(self):
         if self._closed:
@@ -74,7 +75,8 @@ class Server(object):
                 sock, (h, p) = self.listener.accept()
             except socket.timeout:
                 pass
-            except socket.error, ex:
+            except socket.error:
+                ex = sys.exc_info()[1]
                 if ex[0] == errno.EINTR:
                     pass
                 else:
@@ -175,7 +177,7 @@ class Server(object):
             except EOFError:
                 pass # server closed by another thread
             except KeyboardInterrupt:
-                print
+                print("")
                 self.logger.warn("keyboard interrupt!")
         finally:
             self.logger.info("server has terminated")
@@ -183,10 +185,6 @@ class Server(object):
 
 
 class ThreadedServer(Server):
-    def _get_logger(self):
-        ### XXX: show_tid = True
-        return logging.getLogger(self.service.get_service_name())
-    
     def _accept_method(self, sock):
         t = threading.Thread(target = self._authenticate_and_serve_client, args = (sock,))
         t.setDaemon(True)
@@ -204,11 +202,7 @@ class ForkingServer(Server):
     def close(self):
         Server.close(self)
         signal.signal(signal.SIGCHLD, self._prevhandler)
-    
-    def _get_logger(self):
-        ### XXX: show_pid = True
-        return logging.getLogger(self.service.get_service_name())
-    
+       
     @classmethod
     def _handle_sigchld(cls, signum, unused):
         try:

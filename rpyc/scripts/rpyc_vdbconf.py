@@ -41,9 +41,9 @@ def get_options():
 def list_users(vdb, options):
     users = sorted(vdb.list_users())
     if not users:
-        print "No users defined in %s:" % (options.filename,)
+        print( "No users defined in %s:" % (options.filename,) )
     else:
-        print "Existing users in %s:" % (options.filename,)
+        print( "Existing users in %s:" % (options.filename,) )
         for user in users:
             print "  %s" % (user,)
 
@@ -52,16 +52,16 @@ def del_user(vdb, options):
     if username not in vdb.list_users():
         sys.exit("User %s doesn't exist in %s" % (username, options.filename))
     
-    print "Removing user %s from %s" % (username, options.filename)
+    print( "Removing user %s from %s" % (username, options.filename) )
     vdb.del_user(username)
     vdb.sync()
 
 def set_user(vdb, options):
     username = options.add
     if username in vdb.list_users():
-        print "Adding user %s to %s" % (username, options.filename)
+        print( "Adding user %s to %s" % (username, options.filename) )
     else:
-        print "Changing user %s in %s" % (username, options.filename)
+        print( "Changing user %s in %s" % (username, options.filename) )
     
     password1 = getpass.getpass("Password: ")
     password2 = getpass.getpass("Retype password: ")
@@ -82,10 +82,10 @@ def main():
         list_users(vdb, options)
     elif options.delete:
         del_user(vdb, options)
-        print "OK"
+        print( "OK" )
     elif options.add:
         set_user(vdb, options)
-        print "OK"
+        print( "OK" )
     else:
         parser.error("No action specified")
 

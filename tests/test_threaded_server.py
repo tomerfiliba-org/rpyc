@@ -16,8 +16,8 @@ class Test_ThreadedServer(object):
         
     def test_conenction(self):
         c = rpyc.classic.connect("localhost", port=18874)
-        print c.modules.sys
-        print c.modules["xml.dom.minidom"].parseString("<a/>")
+        print( c.modules.sys )
+        print( c.modules["xml.dom.minidom"].parseString("<a/>") )
         c.execute("x = 5")
         assert c.namespace["x"] == 5
         assert c.eval("1+x") == 6

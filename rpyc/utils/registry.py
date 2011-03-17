@@ -20,14 +20,18 @@ REGISTRY_PORT           = 18811
 class RegistryServer(object):
     def __init__(self, listenersock, pruning_timeout = None, logger = None):
         self.sock = listenersock
+        self.port = self.sock.getsockname()[1]
         self.active = False
         self.services = {}
         if pruning_timeout is None:
             pruning_timeout = DEFAULT_PRUNING_TIMEOUT
         self.pruning_timeout = pruning_timeout
         if logger is None:
-            logger = logging.getLogger('REGSRV')
+            logger = self._get_logger()
         self.logger = logger
+    
+    def _get_logger(self):
+        raise NotImplementedError()
     
     def on_service_added(self, name, addrinfo):
         """called when a new service joins the registry (but on keepalives).
@@ -151,8 +155,11 @@ class UDPRegistryServer(RegistryServer):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.bind((host, port))
         sock.settimeout(0.5)
-        super(UDPRegistryServer, self).__init__(sock, 
-            pruning_timeout = pruning_timeout, logger = logger)
+        RegistryServer.__init__(self, sock, pruning_timeout = pruning_timeout, 
+            logger = logger)
+    
+    def _get_logger(self):
+        return logging.getLogger("REGSRV/UDP/%d" % (self.port,))        
     
     def _recv(self):
         return self.sock.recvfrom(MAX_DGRAM_SIZE)
@@ -174,9 +181,12 @@ class TCPRegistryServer(RegistryServer):
         sock.bind((host, port))
         sock.listen(10)
         sock.settimeout(0.5)
-        super(TCPRegistryServer, self).__init__(sock, 
-            pruning_timeout = pruning_timeout, logger = logger)
+        RegistryServer.__init__(self, sock, pruning_timeout = pruning_timeout,
+            logger = logger)
         self._connected_sockets = {}
+
+    def _get_logger(self):
+        return logging.getLogger("REGSRV/TCP/%d" % (self.port,))        
     
     def _recv(self):
         sock2 = self.sock.accept()[0]
@@ -203,27 +213,33 @@ class RegistryClient(object):
         self.port = port
         self.timeout = timeout
         if logger is None:
-            logger = logging.getLogger('REGCLNT')
+            logger = self._get_logger()
         self.logger = logger
 
+    def _get_logger(self):
+        raise NotImplementedError()
+
     def discover(self, name):
-        raise NotImplementedError    
+        raise NotImplementedError()
     
     def register(self, aliases, port):
-        raise NotImplementedError    
+        raise NotImplementedError()
     
     def unregister(self, port):
-        raise NotImplementedError    
+        raise NotImplementedError()
 
 class UDPRegistryClient(RegistryClient):
     def __init__(self, ip = "255.255.255.255", port = REGISTRY_PORT, timeout = 2,
     bcast = None, logger = None):
-        super(UDPRegistryClient, self).__init__(ip = ip, port = port, 
-            timeout = timeout, logger = logger)
+        RegistryClient.__init__(self, ip = ip, port = port, timeout = timeout, 
+            logger = logger)
         if bcast is None:
             bcast = "255" in ip.split(".")
         self.bcast = bcast
-    
+
+    def _get_logger(self):
+        return logging.getLogger('REGCLNT/UDP')
+        
     def discover(self, name):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         if self.bcast:
@@ -234,7 +250,7 @@ class UDPRegistryClient(RegistryClient):
         
         try:
             try:
-                data, addrinfo = sock.recvfrom(MAX_DGRAM_SIZE)
+                data, _ = sock.recvfrom(MAX_DGRAM_SIZE)
             except (socket.error, socket.timeout):
                 servers = ()
             else:
@@ -284,8 +300,11 @@ class UDPRegistryClient(RegistryClient):
 
 class TCPRegistryClient(RegistryClient):
     def __init__(self, ip, port = REGISTRY_PORT, timeout = 2, logger = None):
-        super(TCPRegistryClient, self).__init__(ip = ip, port = port, 
-            timeout = timeout, logger = logger)
+        RegistryClient.__init__(self, ip = ip, port = port, timeout = timeout, 
+            logger = logger)
+
+    def _get_logger(self):
+        return logging.getLogger('REGCLNT/TCP')
     
     def discover(self, name):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
