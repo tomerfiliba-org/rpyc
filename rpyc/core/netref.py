@@ -83,11 +83,9 @@ class BaseNetref(object):
                 return self.__getattr__("__doc__")
             elif name == "__members__":                       # for Python < 2.6
                 return self.__dir__()
-            elif name == "__call__":                      # IronPython issue #10
-                return object.__getattribute__(self, "__call__")
             else:
                 return object.__getattribute__(self, name)
-        elif name == "__call__": # .NET platform
+        elif name == "__call__": # IronPython issue #10
             return object.__getattribute__(self, "__call__")
         else:
             return syncreq(self, consts.HANDLE_GETATTR, name)
