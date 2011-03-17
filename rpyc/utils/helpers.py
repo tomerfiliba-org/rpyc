@@ -7,7 +7,6 @@ from rpyc.lib.colls import WeakValueDict
 from rpyc.lib.compat import callable
 from rpyc.core.consts import HANDLE_BUFFITER, HANDLE_CALL
 from rpyc.core.netref import syncreq, asyncreq
-from platform import uname
 
 
 def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
@@ -74,12 +73,9 @@ class BgServingThread(object):
     """runs an RPyC server in the background to serve all requests and replies
     that arrive on the given RPyC connection. the thread is created along with
     the object; you can use the stop() method to stop the server thread"""
-    if uname()[0].lower() == "linux":
-        SERVE_INTERVAL = 0.0
-        SLEEP_INTERVAL = 0.1
-    else:
-        SERVE_INTERVAL = 0.0
-        SLEEP_INTERVAL = 0.1
+    # these numbers are magical...
+    SERVE_INTERVAL = 0.0
+    SLEEP_INTERVAL = 0.1
 
     def __init__(self, conn):
         self._conn = conn
