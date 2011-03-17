@@ -87,6 +87,8 @@ class BaseNetref(object):
                 return object.__getattribute__(self, "__call__")
             else:
                 return object.__getattribute__(self, name)
+        elif name == "__call__": # .NET platform
+            return object.__getattribute__(self, "__call__")
         else:
             return syncreq(self, consts.HANDLE_GETATTR, name)
     def __getattr__(self, name):
@@ -118,7 +120,6 @@ class BaseNetref(object):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
 
 def _make_method(name, doc):
-    name = str(name)                                      # IronPython issue #10
     if name == "__call__":
         def __call__(_self, *args, **kwargs):
             kwargs = tuple(kwargs.items())
@@ -146,6 +147,7 @@ def inspect_methods(obj):
     for basecls in mros:
         attrs.update(basecls.__dict__)
     for name, attr in attrs.iteritems():
+        name = str(name)   # issue #10
         if name not in _local_netref_attrs and hasattr(attr, "__call__"):
             methods[name] = inspect.getdoc(attr)
     return methods.items()
