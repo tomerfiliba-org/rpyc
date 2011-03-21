@@ -22,21 +22,18 @@ def main(publish = False):
     shutil.rmtree("dist", ignore_errors = True)
     shutil.rmtree("MANIFEST", ignore_errors = True)
     
-    # generate zip, tar.gz, win32 installer and egg
-    run(["python", "setup.py", "sdist", "--formats=zip,gztar"])
-    run(["python", "setup.py", "bdist_wininst", "--plat-name=win32"])
-    run(["python", "setup.py", "bdist_egg"])
-    # python 2.5 and 2.6 eggs
-    run(["c:\\python25\\python.exe", "setup.py", "bdist_egg"])
-    run(["c:\\python26\\python.exe", "setup.py", "bdist_egg"])
-    
+    # generate zip, tar.gz, and win32 installer
     if publish:
-        # publish on pypi
         run(["python", "setup.py", "register"])
-        
+        run(["python", "setup.py", "sdist", "--formats=zip,gztar", "upload"])
+        run(["python", "setup.py", "bdist_wininst", "--plat-name=win32", "upload"])
+
         # upload to sourceforge
         dst = "gangesmaster,rpyc@frs.sourceforge.net:/home/frs/project/r/rp/rpyc/main/%s/" % (version_string,)
         run(["scp"] + ["dist/%s" % (f,) for f in os.listdir("dist")] + [dst])
+    else:
+        run(["python", "setup.py", "sdist", "--formats=zip,gztar"])
+        run(["python", "setup.py", "bdist_wininst", "--plat-name=win32"])
 
     shutil.rmtree("build", ignore_errors = True)
     shutil.rmtree("RPyC.egg-info", ignore_errors = True)
