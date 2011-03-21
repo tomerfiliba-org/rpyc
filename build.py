@@ -26,7 +26,7 @@ def main(publish = False):
     if publish:
         run(["python", "setup.py", "register"])
         run(["python", "setup.py", "sdist", "--formats=zip,gztar", "upload"])
-        run(["python", "setup.py", "bdist_wininst", "--plat-name=win32", "upload"])
+        run(["python", "setup.py", "bdist_wininst", "upload"])
 
         # upload to sourceforge
         dst = "gangesmaster,rpyc@frs.sourceforge.net:/home/frs/project/r/rp/rpyc/main/%s/" % (version_string,)

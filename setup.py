@@ -2,10 +2,10 @@
 import sys
 import os
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
+#try:
+#    from setuptools import setup
+#except ImportError:
+from distutils.core import setup
 
 if sys.version_info < (2, 4):
     sys.exit("requires python 2.4 and up")
