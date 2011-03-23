@@ -14,7 +14,7 @@ What's New:
 
 * Moves to more standard facilities (logging, nosetests)
 
-* Solves a major performance issue with the ``BgServingThread`` (`<#32 https://github.com/tomerfiliba/rpyc/issues/32>`_),
+* Solves a major performance issue with the ``BgServingThread`` (`#32 <https://github.com/tomerfiliba/rpyc/issues/32>`_),
   by removing the contention between the two threads that share a connection
 
 * Fixes lots of issues concerning the ForkingServer (`#3 <http://github.com/tomerfiliba/rpyc/issues/3>`_,
