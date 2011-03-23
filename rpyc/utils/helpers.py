@@ -73,8 +73,10 @@ class BgServingThread(object):
     """runs an RPyC server in the background to serve all requests and replies
     that arrive on the given RPyC connection. the thread is created along with
     the object; you can use the stop() method to stop the server thread"""
-    SERVE_INTERVAL = 0.01
-    SLEEP_INTERVAL = 0.01
+    # these numbers are magical...
+    SERVE_INTERVAL = 0.0
+    SLEEP_INTERVAL = 0.1
+
     def __init__(self, conn):
         self._conn = conn
         self._thread = threading.Thread(target = self._bg_server)
@@ -88,13 +90,14 @@ class BgServingThread(object):
         try:
             while self._active:
                 self._conn.serve(self.SERVE_INTERVAL)
-                time.sleep(self.SLEEP_INTERVAL)
+                time.sleep(self.SLEEP_INTERVAL) # to reduce contention
         except Exception:
             if self._active:
                 raise
     def stop(self):
         """stop the server thread. once stopped, it cannot be resumed. you will
-        have to create a new BgServingThread object later.""" 
+        have to create a new BgServingThread object later."""
+        assert self._active
         self._active = False
         self._thread.join()
         self._conn = None

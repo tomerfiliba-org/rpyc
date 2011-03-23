@@ -11,9 +11,9 @@ if sys.version_info < (2, 4):
     sys.exit("requires python 2.4 and up")
 
 here = os.path.dirname(__file__)
-exec(open(os.path.join(here, 'rpyc', 'version.py')).read())
+exec("\n".join(open(os.path.join(here, 'rpyc', 'version.py')).read().splitlines()))
 
-setup(name="RPyC",
+setup(name = "RPyC",
     version = version_string,
     description = "Remote Python Call (RPyC), a transparent and symmetric RPC library",
     author = "Tomer Filiba",
