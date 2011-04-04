@@ -32,7 +32,7 @@ Classic-style usage:
     f = c.builtin.open("foobar.txt", "rb")
     print f.read(100)
 """
-from rpyc.core import (SocketStream, PipeStream, Channel, Connection, Service,
+from rpyc.core import (SocketStream, PipeStream, Channel, SshConnection, Connection, Service,
     BaseNetref, AsyncResult, GenericException, AsyncResultTimeout, VoidService,
     SlaveService)
 from rpyc.utils.factory import (connect_stream, connect_channel, connect_pipes, 
