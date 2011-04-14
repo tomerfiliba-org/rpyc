@@ -128,6 +128,16 @@ class SocketStream(Stream):
             self.close()
             raise EOFError(ex)
 
+class TunneledSocketStream(SocketStream):
+    __slots__ = ("tun",)
+    def __init__(self, sock):
+        self.sock = sock
+        self.tun = None
+    def close(self):
+        SocketStream.close(self)
+        if self.tun:
+            self.tun.close()
+
 class PipeStream(Stream):
     __slots__ = ("incoming", "outgoing")
     MAX_IO_CHUNK = 32000

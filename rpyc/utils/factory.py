@@ -3,7 +3,7 @@ rpyc connection factories
 """
 import socket
 import thread, threading
-from rpyc import Connection, Channel, SocketStream, PipeStream, VoidService
+from rpyc import Connection, Channel, SocketStream, TunneledSocketStream, PipeStream, VoidService
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.lib import safe_import
 ssl = safe_import("ssl")
@@ -87,6 +87,27 @@ def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
         kwargs["ssl_version"] = ssl.PROTOCOL_TLSv1
     s = SocketStream.ssl_connect(host, port, kwargs)
     return Connection(service, Channel(s), config = config)
+
+def _get_free_port():
+    """attempts to find a free port"""
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(("localhost", 0))
+    _, port = s.getsockname()
+    s.close()
+    return port
+
+def ssh_connect(sshctx, remote_port, service = VoidService, config = {}):
+    """connects to an rpyc server over an SSH tunnel
+    sshctx - an rpyc.utils.ssh.SshContext object
+    remote_port - the port of the remote server
+    service - the local service to expose (defaults to Void)
+    config - configuration dict
+    """
+    loc_port = _get_free_port()
+    tun = sshctx.tunnel(loc_port, remote_port)
+    stream = TunneledSocketStream.connect("localhost", loc_port)
+    stream.tun = tun
+    return Connection(service, Channel(stream), config = config)
 
 def discover(service_name, host = None, registrar = None, timeout = 2):  
     """discovers hosts running the given service 

@@ -43,6 +43,10 @@ def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None,
     return factory.ssl_connect(host, port, keyfile = keyfile, certfile = certfile,
         ssl_version = ssl_version, ca_certs = ca_certs, service = SlaveService)
 
+def ssh_connect(sshctx, remote_port):
+    """connects to the remote server over an SSH tunnel"""
+    return factory.ssh_connect(sshctx, remote_port, SlaveService)
+
 def connect_subproc():
     """runs an rpyc classic server as a subprocess and return an rpyc
     connection to it"""
