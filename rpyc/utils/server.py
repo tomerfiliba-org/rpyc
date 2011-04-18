@@ -13,8 +13,11 @@ from rpyc.core import SocketStream, Channel, Connection
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
 from rpyc.lib import safe_import
-from rpyc.core.async import AsyncResultTimeout
 signal = safe_import("signal")
+
+
+class ThreadPoolFull(Exception):
+    pass
 
 
 class Server(object):
@@ -242,7 +245,7 @@ class ThreadPoolServer(Server):
       self._client_queue.put_nowait(sock)
     except Queue.Full:
       # queue was full, reject request
-      raise AsyncResultTimeout("server is overloaded")
+      raise ThreadPoolFull("server is overloaded")
 
 
 class ForkingServer(Server):
