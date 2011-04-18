@@ -30,9 +30,9 @@ class AsyncResult(object):
     def __call__(self, is_exc, obj):
         if self.expired:
             return
-        self._is_ready = True
         self._is_exc = is_exc
         self._obj = obj
+        self._is_ready = True
         for cb in self._callbacks:
             cb(self)
         del self._callbacks[:]
