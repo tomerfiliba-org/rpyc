@@ -17,7 +17,7 @@ Make sure the vdb file has the correct write permissions!
 import sys
 import getpass
 from optparse import OptionParser
-from rpyc.utils.authenticators import VdbAuthenticator
+from rpyc.utils.authenticators import TlsliteVdbAuthenticator
 
 
 parser = OptionParser(usage = __doc__)
@@ -76,7 +76,7 @@ def set_user(vdb, options):
 
 def main():
     options = get_options()
-    vdb = VdbAuthenticator.from_file(options.filename)
+    vdb = TlsliteVdbAuthenticator.from_file(options.filename)
 
     if options.listonly:
         list_users(vdb, options)
