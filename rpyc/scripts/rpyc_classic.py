@@ -104,7 +104,8 @@ def get_options():
         if not os.path.exists(options.vdbfile):
             parser.error("vdb file does not exist")
         options.authenticator = TlsliteVdbAuthenticator.from_file(options.vdbfile, mode = "r")
-    if options.ssl_keyfile or options.ssl_certfile or options.ssl_cafile:
+        options.port = DEFAULT_SERVER_PORT
+    elif options.ssl_keyfile or options.ssl_certfile or options.ssl_cafile:
         if not options.ssl_keyfile:
             parser.error("SSL: keyfile required")
         if not options.ssl_certfile:
