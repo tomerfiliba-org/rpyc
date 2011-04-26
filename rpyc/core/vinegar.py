@@ -24,7 +24,7 @@ def dump(typ, val, tb, include_local_traceback):
         return typ
     if typ is StopIteration:
         return consts.EXC_STOP_ITERATION # optimization
-    
+
     if include_local_traceback:
         tbtext = "".join(traceback.format_exception(typ, val, tb))
     else:
@@ -56,7 +56,7 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
         return StopIteration # optimization
     if type(val) is str:
         return val # deprecated string exceptions
-    
+
     (modname, clsname), args, attrs, tbtext = val
     if import_custom_exceptions and modname not in sys.modules:
         try:
@@ -69,14 +69,14 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
         cls = getattr(exceptions, clsname, None)
     else:
         cls = None
-    
+
     if not isinstance(cls, (type, ClassType)):
         cls = None
     elif issubclass(cls, ClassType) and not instantiate_oldstyle_exceptions:
         cls = None
     elif not issubclass(cls, BaseException):
         cls = None
-    
+
     if cls is None:
         fullname = "%s.%s" % (modname, clsname)
         if fullname not in _generic_exceptions_cache:
@@ -86,13 +86,13 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
             else:
                 _generic_exceptions_cache[fullname] = type(fullname, (GenericException,), fakemodule)
         cls = _generic_exceptions_cache[fullname]
-    
+
     # support old-style exception classes
     if isinstance(cls, ClassType):
         exc = InstanceType(cls)
     else:
         exc = cls.__new__(cls)
-    
+
     exc.args = args
     for name, attrval in attrs:
         setattr(exc, name, attrval)
@@ -127,5 +127,4 @@ def install_rpyc_excepthook():
 def uninstall_rpyc_excepthook():
     if _orig_excepthook is not None:
         sys.excepthook = _orig_excepthook
-
 

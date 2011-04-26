@@ -5,3 +5,4 @@ class external_exception(Exception):
         else:
             self.args = ("I am alive",)
         self.external_demo_attr = 2
+

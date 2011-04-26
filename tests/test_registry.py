@@ -14,7 +14,7 @@ class BaseRegistryTest(object):
 
     def _get_client(self):
         raise NotImplementedError
-    
+
     def setup(self):
         self.server = self._get_server()
         self.server.logger.quiet = True
@@ -22,11 +22,11 @@ class BaseRegistryTest(object):
         self.server_thread.setDaemon(True)
         self.server_thread.start()
         time.sleep(0.1)
-    
+
     def teardown(self):
         self.server.close()
         self.server_thread.join()
-    
+
     def test_api(self):
         c = self._get_client()
         c.logger.quiet = True
@@ -39,7 +39,7 @@ class BaseRegistryTest(object):
         res = c.discover("FOO")
         expected = (45678,)
         assert set(p for h, p in res) == set(expected)
-    
+
     def test_pruning(self):
         c = self._get_client()
         c.logger.quiet = True
@@ -48,7 +48,7 @@ class BaseRegistryTest(object):
         time.sleep(1)
         res = c.discover("BAR")
         assert set(p for h, p in res) == set((17171,))
-        
+
         time.sleep(PRUNING_TIMEOUT)
         res = c.discover("BAR")
         assert res == ()
@@ -67,3 +67,4 @@ class Test_UdpRegistry(BaseRegistryTest):
 
     def _get_client(self):
         return UDPRegistryClient()
+

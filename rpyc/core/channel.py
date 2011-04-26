@@ -21,7 +21,7 @@ class Channel(object):
     FRAME_HEADER = Struct("!LB")
     FLUSHER = "\n" # cause any line-buffered layers below us to flush
     __slots__ = ["stream", "compress"]
-    
+
     def __init__(self, stream, compress = True):
         self.stream = stream
         if not zlib:
@@ -52,7 +52,4 @@ class Channel(object):
         header = self.FRAME_HEADER.pack(len(data), compressed)
         buf = header + data + self.FLUSHER
         self.stream.write(buf)
-
-
-
 

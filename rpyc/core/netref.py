@@ -9,21 +9,21 @@ from rpyc.core import consts
 
 
 _local_netref_attrs = frozenset([
-    '____conn__', '____oid__', '__class__', '__cmp__', '__del__', '__delattr__', 
-    '__dir__', '__doc__', '__getattr__', '__getattribute__', '__hash__', 
-    '__init__', '__metaclass__', '__module__', '__new__', '__reduce__', 
-    '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__', 
+    '____conn__', '____oid__', '__class__', '__cmp__', '__del__', '__delattr__',
+    '__dir__', '__doc__', '__getattr__', '__getattribute__', '__hash__',
+    '__init__', '__metaclass__', '__module__', '__new__', '__reduce__',
+    '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__',
     '__weakref__', '__dict__', '__members__', '__methods__',
 ])
 
 _builtin_types = [
-    type, object, types.InstanceType, types.ClassType, bool, complex, dict, 
-    file, float, int, list, long, slice, str, basestring, tuple, unicode, 
-    str, set, frozenset, Exception, types.NoneType, types.DictProxyType, 
-    types.BuiltinFunctionType, types.GeneratorType, types.MethodType, 
+    type, object, types.InstanceType, types.ClassType, bool, complex, dict,
+    file, float, int, list, long, slice, str, basestring, tuple, unicode,
+    str, set, frozenset, Exception, types.NoneType, types.DictProxyType,
+    types.BuiltinFunctionType, types.GeneratorType, types.MethodType,
     types.CodeType, types.FrameType, types.TracebackType, xrange,
     types.ModuleType, types.FunctionType,
-    
+
     type(int.__add__),      # wrapper_descriptor
     type((1).__add__),      # method-wrapper
     type(iter([])),         # listiterator
@@ -32,7 +32,7 @@ _builtin_types = [
     type(iter(set())),      # setiterator
 ]
 
-_normalized_builtin_types = dict(((t.__name__, t.__module__), t) 
+_normalized_builtin_types = dict(((t.__name__, t.__module__), t)
     for t in _builtin_types)
 
 def syncreq(proxy, handler, *args):
@@ -42,7 +42,7 @@ def syncreq(proxy, handler, *args):
     return conn().sync_request(handler, oid, *args)
 
 def asyncreq(proxy, handler, *args):
-    """performs an asynchronous request on the given proxy object, 
+    """performs an asynchronous request on the given proxy object,
     retuning an AsyncResult"""
     conn = object.__getattribute__(proxy, "____conn__")
     oid = object.__getattribute__(proxy, "____oid__")
@@ -67,11 +67,11 @@ class BaseNetref(object):
     def __del__(self):
         try:
             asyncreq(self, consts.HANDLE_DEL)
-        except Exception: 
+        except Exception:
             # raised in a destructor, most likely on program termination,
             # it's safe to ignore all exceptions here
             pass
-    
+
     def __getattribute__(self, name):
         if name in _local_netref_attrs:
             if name == "__class__":
@@ -103,7 +103,7 @@ class BaseNetref(object):
             syncreq(self, consts.HANDLE_SETATTR, name, value)
     def __dir__(self):
         return list(syncreq(self, consts.HANDLE_DIR))
-    
+
     # support for metaclasses
     def __hash__(self):
         return syncreq(self, consts.HANDLE_HASH)
@@ -134,13 +134,13 @@ def _make_method(name, doc):
         return method
 
 def inspect_methods(obj):
-    """returns a list of (method name, docstring) tuples of all the methods of 
+    """returns a list of (method name, docstring) tuples of all the methods of
     the given object"""
     methods = {}
     attrs = {}
     if isinstance(obj, type):
         # don't forget the darn metaclass
-        mros = list(reversed(type(obj).__mro__)) + list(reversed(obj.__mro__)) 
+        mros = list(reversed(type(obj).__mro__)) + list(reversed(obj.__mro__))
     else:
         mros = reversed(type(obj).__mro__)
     for basecls in mros:
@@ -152,7 +152,7 @@ def inspect_methods(obj):
 
 def class_factory(clsname, modname, methods):
     clsname = str(clsname)                                # IronPython issue #10
-    modname = str(modname)                                # IronPython issue #10    
+    modname = str(modname)                                # IronPython issue #10
     ns = {"__slots__" : ()}
     for name, doc in methods:
         name = str(name)                                  # IronPython issue #10
@@ -172,5 +172,4 @@ builtin_classes_cache = {}
 for cls in _builtin_types:
     builtin_classes_cache[cls.__name__, cls.__module__] = class_factory(
         cls.__name__, cls.__module__, inspect_methods(cls))
-
 

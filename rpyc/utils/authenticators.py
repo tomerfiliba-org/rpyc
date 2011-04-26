@@ -1,9 +1,9 @@
 """
 authenticators: the server instance accepts an authenticator object,
 which is basically any callable (i.e., a function) that takes the newly
-connected socket and "authenticates" it. 
+connected socket and "authenticates" it.
 
-the authenticator should return a socket-like object with its associated 
+the authenticator should return a socket-like object with its associated
 credentials (a tuple), or raise AuthenticationError if it fails.
 
 a very trivial authenticator might be
@@ -12,11 +12,11 @@ a very trivial authenticator might be
         if sock.recv(5) != "Ma6ik":
             raise AuthenticationError("wrong magic word")
         return sock, None
-    
+
     s = ThreadedServer(...., authenticator = magic_word_authenticator)
 
-your authenticator can return any socket-like object. for instance, it may 
-authenticate the client and return a TLS/SSL-wrapped socket object that 
+your authenticator can return any socket-like object. for instance, it may
+authenticate the client and return a TLS/SSL-wrapped socket object that
 encrypts the transport.
 
 the credentials returned alongside with the new socket can be any object.
@@ -25,7 +25,7 @@ it will be stored in the rpyc connection configruation under the key
 are applicable, just return None as in the example above.
 
 rpyc includes integration with tlslite, a TLS/SSL library:
-the VdbAuthenticator class authenticates clients based on username-password 
+the VdbAuthenticator class authenticates clients based on username-password
 pairs.
 """
 import os
@@ -53,7 +53,7 @@ class SSLAuthenticator(object):
             self.ssl_version = ssl_version
         else:
             self.ssl_version = ssl.PROTOCOL_TLSv1
-    
+
     def __call__(self, sock):
         try:
             sock2 = ssl.wrap_socket(sock, keyfile = self.keyfile, certfile = self.certfile,
@@ -68,20 +68,20 @@ class SSLAuthenticator(object):
 class TlsliteVdbAuthenticator(object):
     __slots__ = ["vdb"]
     BITS = 2048
-    
+
     def __init__(self, vdb):
         self.vdb = vdb
-    
+
     @classmethod
-    def from_dict(cls, users): 
+    def from_dict(cls, users):
         inst = cls(tlsapi.VerifierDB())
         for username, password in users.iteritems():
             inst.set_user(username, password)
         return inst
-    
+
     @classmethod
     def _load_vdb_with_mode(cls, vdb, mode):
-        """taken from tlslite/BaseDB.py -- patched for file mode""" 
+        """taken from tlslite/BaseDB.py -- patched for file mode"""
         # {{
         db = anydbm.open(vdb.filename, mode)
         try:
@@ -91,7 +91,7 @@ class TlsliteVdbAuthenticator(object):
             raise ValueError("Not a recognized database")
         vdb.db = db
         # }}
-    
+
     @classmethod
     def from_file(cls, filename, mode = "w"):
         vdb = tlsapi.VerifierDB(filename)
@@ -103,19 +103,19 @@ class TlsliteVdbAuthenticator(object):
                     "writing (%r)" % (filename, mode))
             vdb.create()
         return cls(vdb)
-    
+
     def sync(self):
         self.vdb.db.sync()
-    
+
     def set_user(self, username, password):
         self.vdb[username] = self.vdb.makeVerifier(username, password, self.BITS)
-    
+
     def del_user(self, username):
         del self.vdb[username]
-    
+
     def list_users(self):
         return self.vdb.keys()
-    
+
     def __call__(self, sock):
         sock2 = tlsapi.TLSConnection(sock)
         sock2.fileno = lambda fd = sock.fileno(): fd    # tlslite omitted fileno
@@ -125,6 +125,4 @@ class TlsliteVdbAuthenticator(object):
             ex = sys.exc_info()[1]
             raise AuthenticationError(str(ex))
         return sock2, sock2.allegedSrpUsername
-
-
 

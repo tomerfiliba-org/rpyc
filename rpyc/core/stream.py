@@ -62,7 +62,7 @@ class SocketStream(Stream):
     def __init__(self, sock):
         self.sock = sock
     @classmethod
-    def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM, 
+    def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM,
             proto = 0, timeout = 3, nodelay = False):
         s = socket.socket(family, socktype, proto)
         s.settimeout(timeout)
@@ -199,7 +199,7 @@ class Win32PipeStream(Stream):
     __slots__ = ("incoming", "outgoing", "_fileno", "_keepalive")
     PIPE_BUFFER_SIZE = 130000
     MAX_IO_CHUNK = 32000
-    
+
     def __init__(self, incoming, outgoing):
         self._keepalive = (incoming, outgoing)
         if hasattr(incoming, "fileno"):
@@ -217,7 +217,7 @@ class Win32PipeStream(Stream):
         r1, w1 = win32pipe.CreatePipe(None, cls.PIPE_BUFFER_SIZE)
         r2, w2 = win32pipe.CreatePipe(None, cls.PIPE_BUFFER_SIZE)
         return cls(r1, w2), cls(r2, w1)
-    
+
     def fileno(self):
         return self._fileno
     @property
@@ -267,7 +267,7 @@ class Win32PipeStream(Stream):
             ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
-    
+
     def poll(self, timeout, interval = 0.1):
         """a poor man's version of select()"""
         if timeout is None:
@@ -293,7 +293,7 @@ class NamedPipeStream(Win32PipeStream):
     PIPE_IO_TIMEOUT = 3
     CONNECT_TIMEOUT = 3
     __slots__ = ("is_server_side",)
-    
+
     def __init__(self, handle, is_server_side):
         Win32PipeStream.__init__(self, handle, handle)
         self.is_server_side = is_server_side
@@ -301,15 +301,15 @@ class NamedPipeStream(Win32PipeStream):
     def from_std(cls):
         raise NotImplementedError()
     @classmethod
-    def create_pair(cls):    
+    def create_pair(cls):
         raise NotImplementedError()
-    
+
     @classmethod
     def create_server(cls, pipename, connect = True):
         if not pipename.startswith("\\\\."):
             pipename = cls.NAMED_PIPE_PREFIX + pipename
-        handle = win32pipe.CreateNamedPipe( 
-            pipename, 
+        handle = win32pipe.CreateNamedPipe(
+            pipename,
             win32pipe.PIPE_ACCESS_DUPLEX,
             win32pipe.PIPE_TYPE_BYTE | win32pipe.PIPE_READMODE_BYTE | win32pipe.PIPE_WAIT,
             1,
@@ -322,27 +322,27 @@ class NamedPipeStream(Win32PipeStream):
         if connect:
             inst.connect_server()
         return inst
-    
+
     def connect_server(self):
         if not self.is_server_side:
             raise ValueError("this must be the server side")
         win32pipe.ConnectNamedPipe(self.incoming, None)
-    
+
     @classmethod
     def create_client(cls, pipename, timeout = CONNECT_TIMEOUT):
         if not pipename.startswith("\\\\."):
             pipename = cls.NAMED_PIPE_PREFIX + pipename
         handle = win32file.CreateFile(
-            pipename, 
-            win32file.GENERIC_READ | win32file.GENERIC_WRITE, 
-            0, 
+            pipename,
+            win32file.GENERIC_READ | win32file.GENERIC_WRITE,
+            0,
             None,
-            win32file.OPEN_EXISTING, 
-            0, 
+            win32file.OPEN_EXISTING,
+            0,
             None
         )
-        return cls(handle, False) 
-    
+        return cls(handle, False)
+
     def close(self):
         if self.closed:
             return
@@ -352,13 +352,6 @@ class NamedPipeStream(Win32PipeStream):
         Win32PipeStream.close(self)
 
 
-if sys.platform == "win32":    
+if sys.platform == "win32":
     PipeStream = Win32PipeStream
-
-
-
-
-
-
-
 

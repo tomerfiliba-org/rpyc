@@ -13,16 +13,16 @@ class MyService(rpyc.Service):
             self.thread = threading.Thread(target=self.work)
             self.thread.setDaemon(True)
             self.thread.start()
-        
+
         def exposed_stop(self):
             self.active = False
             self.thread.join()
-        
+
         def work(self):
             while self.active:
                 self.callback(time.time())
                 time.sleep(self.interval)
-    
+
     def exposed_foo(self, x):
         time.sleep(2)
         return x * 17
@@ -35,7 +35,7 @@ class Test_Multithreaded(object):
     def teardown(self):
         self.bgserver.stop()
         self.conn.close()
-    
+
     def test_invoker(self):
         counter = [0]
         def callback(x):
@@ -43,12 +43,9 @@ class Test_Multithreaded(object):
             print( "callback %s" % (x,) )
         invoker = self.conn.root.Invoker(callback, 1)
         # 3 * 2sec = 6 sec = ~6 calls to callback
-        for i in range(3): 
+        for i in range(3):
             print( "foo%s = %s" % (i, self.conn.root.foo(i)) )
         invoker.stop()
         print( "callback called %s times" % (counter[0],) )
         assert counter[0] >= 5
-
-
-
 

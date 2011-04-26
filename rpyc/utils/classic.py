@@ -36,7 +36,7 @@ def tlslite_connect(host, username, password, port = DEFAULT_SERVER_PORT):
     authenticating with the given username and password"""
     return factory.tlslite_connect(host, port, username, password, SlaveService)
 
-def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None, 
+def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None,
         certfile = None, ca_certs = None, ssl_version = None):
     """creates a secure (SSL) socket connection to the given host and port,
     authenticating with the given certfile and CA file"""
@@ -50,7 +50,7 @@ def ssh_connect(sshctx, remote_port):
 def connect_subproc():
     """runs an rpyc classic server as a subprocess and return an rpyc
     connection to it"""
-    return factory.connect_subproc([sys.executable, "-u", SERVER_FILE, "-q", "-m", "stdio"], 
+    return factory.connect_subproc([sys.executable, "-u", SERVER_FILE, "-q", "-m", "stdio"],
         SlaveService)
 
 def connect_thread():
@@ -66,7 +66,7 @@ def upload(conn, localpath, remotepath, filter = None, ignore_invalid = False, c
     """uploads a file or a directory to the given remote path
     localpath - the local file or directory
     remotepath - the remote path
-    filter - a predicate that accepts the filename and determines whether 
+    filter - a predicate that accepts the filename and determines whether
     it should be uploaded; None means any file
     chunk_size - the IO chunk size
     """
@@ -102,7 +102,7 @@ def download(conn, remotepath, localpath, filter = None, ignore_invalid = False,
     """download a file or a directory to the given remote path
     localpath - the local file or directory
     remotepath - the remote path
-    filter - a predicate that accepts the filename and determines whether 
+    filter - a predicate that accepts the filename and determines whether
     it should be downloaded; None means any file
     chunk_size - the IO chunk size
     """
@@ -153,19 +153,19 @@ def update_module(conn, module, chunk_size = 16000):
     conn.modules.__builtin__.reload(rmodule)
 
 def obtain(proxy):
-    """obtains (recreates) a remote object proxy from the other party. 
-    the object is moved by *value*, so changes made to it will not reflect 
+    """obtains (recreates) a remote object proxy from the other party.
+    the object is moved by *value*, so changes made to it will not reflect
     on the remote object"""
     return pickle.loads(pickle.dumps(proxy))
 
 def deliver(conn, localobj):
     """delivers (recreates) a local object on the other party. the object is
-    moved by *value*, so changes made to it will not reflect on the local 
+    moved by *value*, so changes made to it will not reflect on the local
     object. returns a proxy to the remote object"""
     return conn.modules.cPickle.loads(pickle.dumps(localobj))
 
 class redirected_stdio(object):
-    """redirects the other party's stdin, stdout and stderr to those of the 
+    """redirects the other party's stdin, stdout and stderr to those of the
     local party, so remote STDIO will occur locally"""
     def __init__(self, conn):
         self._restored = True
@@ -229,7 +229,4 @@ def interact(conn, namespace = None):
         conn.namespace["_rinteract"](namespace)
     finally:
         redir.restore()
-
-
-
 

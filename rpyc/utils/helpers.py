@@ -11,7 +11,7 @@ from rpyc.core.netref import syncreq, asyncreq
 
 def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
     """buffering iterator - reads the remote iterator in chunks starting with
-    `chunk` up to `max_chunk`, multiplying by `factor` as an exponential 
+    `chunk` up to `max_chunk`, multiplying by `factor` as an exponential
     backoff"""
     if factor < 1:
         raise ValueError("factor must be >= 1, got %r" % (factor,))
@@ -26,10 +26,10 @@ def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
             yield elem
 
 class _Async(object):
-    """creates an async proxy wrapper over an existing proxy. async proxies 
+    """creates an async proxy wrapper over an existing proxy. async proxies
     are cached. invoking an async proxy will return an AsyncResult instead of
     blocking"""
-    
+
     __slots__ = ("proxy", "__weakref__")
     def __init__(self, proxy):
         self.proxy = proxy
@@ -57,7 +57,7 @@ class timed(object):
     """creates a timed asynchronous proxy. invoking the timed proxy will
     run in the background and will raise an AsyncResultTimeout exception
     if the computation does not terminate within the given timeout"""
-    
+
     __slots__ = ("__weakref__", "proxy", "timeout")
     def __init__(self, proxy, timeout):
         self.proxy = async(proxy)
@@ -101,8 +101,4 @@ class BgServingThread(object):
         self._active = False
         self._thread.join()
         self._conn = None
-
-
-
-
 

@@ -5,3 +5,4 @@ class orphan_external_exception(Exception):
         else:
             self.args = ("Wow I have been imported",)
         self.external_demo_attr = "Now imported"
+

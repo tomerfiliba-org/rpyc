@@ -3,4 +3,3 @@ A canonical example of a basic service:
  * server.py exposes the service
  * client.py utilizes the service
 
- 

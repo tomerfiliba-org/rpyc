@@ -1,19 +1,19 @@
 """
 .
          #####    #####             ####
-        ##   ##  ##   ##           ##             ####      
+        ##   ##  ##   ##           ##             ####
         ##  ##   ##  ##           ##                 #
-        #####    #####   ##   ##  ##               ## 
+        #####    #####   ##   ##  ##               ##
         ##  ##   ##       ## ##   ##                 #
         ##   ##  ##        ###    ##              ###
-        ##   ##  ##        ##      #####         
+        ##   ##  ##        ##      #####
      -------------------- ## ------------------------------------------
                          ##
 
 Remote Python Call (RPyC) v $$VERSION$$, $$DATE$$
 Licensed under the MIT license (see `LICENSE` file)
 
-A transparent, symmetric and light-weight RPC and distributed computing 
+A transparent, symmetric and light-weight RPC and distributed computing
 library for python.
 
 Usage:
@@ -24,7 +24,7 @@ Usage:
 Classic-style usage:
     import rpyc
     # `hostname` is assumed to be running a slave-service server
-    c = rpyc.classic.connect("hostname") 
+    c = rpyc.classic.connect("hostname")
     print c.execute("x = 5")
     print c.eval("x + 2")
     print c.modules.os.listdir(".")
@@ -32,11 +32,11 @@ Classic-style usage:
     f = c.builtin.open("foobar.txt", "rb")
     print f.read(100)
 """
-from rpyc.core import (SocketStream, TunneledSocketStream, PipeStream, Channel, 
-    Connection, Service, BaseNetref, AsyncResult, GenericException, 
+from rpyc.core import (SocketStream, TunneledSocketStream, PipeStream, Channel,
+    Connection, Service, BaseNetref, AsyncResult, GenericException,
     AsyncResultTimeout, VoidService, SlaveService)
-from rpyc.utils.factory import (connect_stream, connect_channel, connect_pipes, 
-    connect_stdpipes, connect, tlslite_connect, ssl_connect, discover, 
+from rpyc.utils.factory import (connect_stream, connect_channel, connect_pipes,
+    connect_stdpipes, connect, tlslite_connect, ssl_connect, discover,
     connect_by_service, connect_subproc, connect_thread)
 from rpyc.utils.helpers import async, timed, buffiter, BgServingThread
 from rpyc.utils import classic
