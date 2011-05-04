@@ -102,7 +102,8 @@ class SocketStream(Stream):
     def fileno(self):
         try:
             return self.sock.fileno()
-        except socket.error as ex:
+        except socket.error:
+            ex = sys.exc_info()[1]
             if ex.errno == errno.EBADF:
                 raise EOFError()
         
