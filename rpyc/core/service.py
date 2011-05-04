@@ -1,7 +1,7 @@
 class Service(object):
     """The service base-class. Subclass this class to implement custom RPyC
     services:
-    * The name of the class implementing the 'Foo' service should match the 
+    * The name of the class implementing the 'Foo' service should match the
       pattern 'FooService' (suffixed by the word 'Service'):
           class FooService(Service):
               pass
@@ -19,12 +19,12 @@ class Service(object):
           class FooService(Service):
               def exposed_foo(self, x, y):
                   return x + y
-    * All other names (not prefixed by 'exposed_') are local (not accessible 
+    * All other names (not prefixed by 'exposed_') are local (not accessible
       by the other party)
     """
     __slots__ = ["_conn"]
     ALIASES = ()
-    
+
     def __init__(self, conn):
         self._conn = conn
     def on_connect(self):
@@ -34,7 +34,7 @@ class Service(object):
         """called when the connection had already terminated for cleanup
         (must not perform any IO on the connection)"""
         pass
-    
+
     def _rpyc_getattr(self, name):
         if name.startswith("exposed_"):
             name = name
@@ -45,7 +45,7 @@ class Service(object):
         raise AttributeError("access denied")
     def _rpyc_setattr(self, name, value):
         raise AttributeError("access denied")
-    
+
     @classmethod
     def get_service_aliases(cls):
         if cls.ALIASES:
@@ -57,7 +57,7 @@ class Service(object):
     @classmethod
     def get_service_name(cls):
         return cls.get_service_aliases()[0]
-    
+
     exposed_get_service_aliases = get_service_aliases
     exposed_get_service_name = get_service_name
 
@@ -85,16 +85,16 @@ class ModuleNamespace(object):
 class SlaveService(Service):
     """The SlaveService allows the other side to perform arbitrary imports and
     code execution on the server. This is provided for compatibility with
-    the classic RPyC (2.6) modus operandi. 
+    the classic RPyC (2.6) modus operandi.
     This service is very useful in local, secured networks, but it exposes
     a major security risk otherwise."""
     __slots__ = ["exposed_namespace"]
-    
+
     def on_connect(self):
         self.exposed_namespace = {}
         self._conn._config.update(dict(
             allow_all_attrs = True,
-            allow_pickle = True, 
+            allow_pickle = True,
             allow_getattr = True,
             allow_setattr = True,
             allow_delattr = True,
@@ -108,7 +108,7 @@ class SlaveService(Service):
         self._conn.execute = self._conn.root.execute
         self._conn.namespace = self._conn.root.namespace
         self._conn.builtin = self._conn.modules.__builtin__
-    
+
     def exposed_execute(self, text):
         exec text in self.exposed_namespace
     def exposed_eval(self, text):
@@ -117,10 +117,4 @@ class SlaveService(Service):
         return __import__(name, None, None, "*")
     def exposed_getconn(self):
         return self._conn
-
-
-
-
-
-
 

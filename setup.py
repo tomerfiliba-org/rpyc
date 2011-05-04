@@ -22,10 +22,10 @@ setup(name = "RPyC",
     url = "http://rpyc.wikidot.com",
     download_url = "http://sourceforge.net/projects/rpyc/files/main/%s" % (version_string,),
     packages = [
-        'rpyc', 
-        'rpyc.core', 
+        'rpyc',
+        'rpyc.core',
         'rpyc.lib',
-        'rpyc.utils', 
+        'rpyc.utils',
     ],
     scripts = [
         os.path.join("rpyc", "scripts", "rpyc_classic.py"),
@@ -63,5 +63,4 @@ setup(name = "RPyC",
         "Topic :: System :: Systems Administration",
     ],
 )
-
 

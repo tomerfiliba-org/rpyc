@@ -5,15 +5,15 @@ import threading
 
 class Test_ThreadedServer(object):
     def setup(self):
-        self.server = ThreadedServer(SlaveService, 
+        self.server = ThreadedServer(SlaveService,
             hostname = "localhost", port=18874, auto_register=False)
         self.server.logger.quiet = False
         t = threading.Thread(target=self.server.start)
         t.start()
-        
+
     def teardown(self):
         self.server.close()
-        
+
     def test_conenction(self):
         c = rpyc.classic.connect("localhost", port=18874)
         print( c.modules.sys )
@@ -22,3 +22,4 @@ class Test_ThreadedServer(object):
         assert c.namespace["x"] == 5
         assert c.eval("1+x") == 6
         c.close()
+

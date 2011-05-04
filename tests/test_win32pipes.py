@@ -23,7 +23,7 @@ class Test_Pipes(object):
         assert not p1.poll(0)
         p1.close()
         p2.close()
-    
+
     def test_rpyc(self):
         p1, p2 = PipeStream.create_pair()
         client = rpyc.connect_stream(p1)
@@ -46,19 +46,20 @@ class Test_NamedPipe(object):
         time.sleep(1) # make sure server is accepting already
         self.np_client = NamedPipeStream.create_client("floop")
         self.client = rpyc.connect_stream(self.np_client)
-    
+
     def teardown(self):
         self.client.close()
         self.server.close()
         self.pipe_server_thread.join()
-    
+
     def pipe_server(self):
         self.np_server = NamedPipeStream.create_server("floop")
         self.server = rpyc.connect_stream(self.np_server)
         self.server.serve_all()
-    
+
     def test_rpyc(self):
         assert self.client.root.get_service_name() == "VOID"
         t = rpyc.BgServingThread(self.client)
         assert self.server.root.get_service_name() == "VOID"
         t.stop()
+

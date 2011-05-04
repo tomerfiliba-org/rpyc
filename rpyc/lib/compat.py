@@ -42,5 +42,3 @@ else:
     else:
         from select import select
 
-
-

@@ -21,7 +21,7 @@ def main(publish = False):
     shutil.rmtree("build", ignore_errors = True)
     shutil.rmtree("dist", ignore_errors = True)
     shutil.rmtree("MANIFEST", ignore_errors = True)
-    
+
     # generate zip, tar.gz, and win32 installer
     if publish:
         run(["python", "setup.py", "register"])
@@ -46,5 +46,4 @@ if __name__ == "__main__":
                       help="publish on pypi, sourceforge, tag in github")
     options, args = parser.parse_args()
     main(options.publish)
-
 

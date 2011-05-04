@@ -1,7 +1,7 @@
 """
 brine - a simple, fast and secure object serializer for immutable objects,
 optimized for small integers [-48..160).
-the following types are supported: int, long, bool, str, float, unicode, 
+the following types are supported: int, long, bool, str, float, unicode,
 slice, complex, tuple(of simple types), forzenset(of simple types)
 as well as the following singletons: None, NotImplemented, Ellipsis
 """
@@ -281,7 +281,7 @@ def load(data):
     stream = StringIO(data)
     return _load(stream)
 
-simple_types = frozenset([type(None), int, long, bool, str, float, unicode, 
+simple_types = frozenset([type(None), int, long, bool, str, float, unicode,
     slice, complex, type(NotImplemented), type(Ellipsis)])
 def dumpable(obj):
     """indicates whether the object is dumpable by brine"""
@@ -293,18 +293,10 @@ def dumpable(obj):
 
 
 if __name__ == "__main__":
-    x = ("he", 7, u"llo", 8, (), 900, None, True, Ellipsis, 18.2, 18.2j + 13, 
+    x = ("he", 7, u"llo", 8, (), 900, None, True, Ellipsis, 18.2, 18.2j + 13,
         slice(1,2,3), frozenset([5,6,7]), NotImplemented)
     assert dumpable(x)
     y = dump(x)
     z = load(y)
     assert x == z
-    
-
-
-
-
-
-
-
 

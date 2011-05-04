@@ -17,9 +17,13 @@ from rpyc.core.async import AsyncResultTimeout
 signal = safe_import("signal")
 
 
+class ThreadPoolFull(Exception):
+    pass
+
+
 class Server(object):
-    def __init__(self, service, hostname = "0.0.0.0", port = 0, backlog = 10, 
-            reuse_addr = True, authenticator = None, registrar = None, 
+    def __init__(self, service, hostname = "0.0.0.0", port = 0, backlog = 10,
+            reuse_addr = True, authenticator = None, registrar = None,
             auto_register = True, protocol_config = {}, logger = None):
         self.active = False
         self._closed = False
@@ -29,25 +33,25 @@ class Server(object):
         self.auto_register = auto_register
         self.protocol_config = protocol_config
         self.clients = set()
-        
+
         self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if reuse_addr and sys.platform != "win32":
             # warning: reuseaddr is not what you expect on windows!
             self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        
+
         self.listener.bind((hostname, port))
         self.port = self.listener.getsockname()[1]
-        
+
         if logger is None:
             logger = self._get_logger()
         self.logger = logger
         if registrar is None:
             registrar = UDPRegistryClient(logger = self.logger)
         self.registrar = registrar
-    
+
     def _get_logger(self):
         return logging.getLogger("%s/%d" % (self.service.get_service_name(), self.port))
-    
+
     def close(self):
         if self._closed:
             return
@@ -67,10 +71,10 @@ class Server(object):
                 pass
             c.close()
         self.clients.clear()
-    
+
     def fileno(self):
         return self.listener.fileno()
-    
+
     def accept(self):
         while True:
             try:
@@ -85,16 +89,16 @@ class Server(object):
                     raise EOFError()
             else:
                 break
-        
+
         sock.setblocking(True)
         self.logger.info("accepted %s:%s", h, p)
         self.clients.add(sock)
         self._accept_method(sock)
-    
+
     def _accept_method(self, sock):
-        """this method should start a thread, fork a child process, or 
+        """this method should start a thread, fork a child process, or
         anything else in order to serve the client. once the mechanism has
-        been created, it should invoke _authenticate_and_serve_client with 
+        been created, it should invoke _authenticate_and_serve_client with
         `sock` as the argument"""
         raise NotImplementedError
 
@@ -123,7 +127,7 @@ class Server(object):
                 pass
             sock.close()
             self.clients.discard(sock)
-    
+
     def _serve_client(self, sock, credentials):
         h, p = sock.getpeername()
         if credentials:
@@ -132,13 +136,13 @@ class Server(object):
             self.logger.info("welcome %s:%s", h, p)
         try:
             config = dict(self.protocol_config, credentials = credentials)
-            conn = Connection(self.service, Channel(SocketStream(sock)), 
+            conn = Connection(self.service, Channel(SocketStream(sock)),
                 config = config, _lazy = True)
             conn._init_service()
             conn.serve_all()
         finally:
             self.logger.info("goodbye %s:%s", h, p)
-    
+
     def _bg_register(self):
         interval = self.registrar.REREGISTER_INTERVAL
         self.logger.info("started background auto-register thread "
@@ -147,7 +151,7 @@ class Server(object):
         try:
             while self.active:
                 t = time.time()
-                if t >= tnext: 
+                if t >= tnext:
                     tnext = t + interval
                     try:
                         self.registrar.register(self.service.get_service_aliases(),
@@ -158,7 +162,7 @@ class Server(object):
         finally:
             if not self._closed:
                 self.logger.info("background auto-register thread finished")
-    
+
     def start(self):
         """starts the server. use close() to stop"""
         self.listener.listen(self.backlog)
@@ -242,7 +246,7 @@ class ThreadPoolServer(Server):
       self._client_queue.put_nowait(sock)
     except Queue.Full:
       # queue was full, reject request
-      raise AsyncResultTimeout("server is overloaded")
+      raise ThreadPoolFull("server is overloaded")
 
 
 class ForkingServer(Server):
@@ -252,11 +256,11 @@ class ForkingServer(Server):
         Server.__init__(self, *args, **kwargs)
         # setup sigchld handler
         self._prevhandler = signal.signal(signal.SIGCHLD, self._handle_sigchld)
-    
+
     def close(self):
         Server.close(self)
         signal.signal(signal.SIGCHLD, self._prevhandler)
-       
+
     @classmethod
     def _handle_sigchld(cls, signum, unused):
         try:
@@ -268,7 +272,7 @@ class ForkingServer(Server):
             pass
         # re-register signal handler (see man signal(2), under Portability)
         signal.signal(signal.SIGCHLD, cls._handle_sigchld)
-    
+
     def _accept_method(self, sock):
         pid = os.fork()
         if pid == 0:
@@ -290,9 +294,4 @@ class ForkingServer(Server):
         else:
             # parent
             sock.close()
-
-
-
-
-
 

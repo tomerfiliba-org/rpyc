@@ -13,9 +13,9 @@ class DiscoveryError(Exception):
     pass
 
 
-#------------------------------------------------------------------------------ 
+#------------------------------------------------------------------------------
 # API
-#------------------------------------------------------------------------------ 
+#------------------------------------------------------------------------------
 def connect_channel(channel, service = VoidService, config = {}):
     """creates a connection over a given channel
     channel - the channel to use
@@ -65,13 +65,13 @@ def tlslite_connect(host, port, username, password, service = VoidService, confi
 
 def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
         ssl_version = None, service = VoidService, config = {}):
-    """creates an SSL-wrapped connection to the given host (encrypted and 
+    """creates an SSL-wrapped connection to the given host (encrypted and
     authenticated).
     host - the hostname to connect to
     port - the TCP port to use
     service - the local service to expose (defaults to Void)
     config - configuration dict
-    
+
     keyfile, certfile, ca_certs, ssl_version -- arguments to ssl.wrap_socket.
     see that module's documentation for further info."""
     kwargs = {"server_side" : False}
@@ -109,8 +109,8 @@ def ssh_connect(sshctx, remote_port, service = VoidService, config = {}):
     stream.tun = tun
     return Connection(service, Channel(stream), config = config)
 
-def discover(service_name, host = None, registrar = None, timeout = 2):  
-    """discovers hosts running the given service 
+def discover(service_name, host = None, registrar = None, timeout = 2):
+    """discovers hosts running the given service
     service_name - the service to look for
     host - limit the discovery to the given host only (None means any host)
     registrar - use this registry client to discover services. if None,
@@ -141,7 +141,7 @@ def connect_by_service(service_name, host = None, service = VoidService, config 
     return connect(host, port, service, config = config)
 
 def connect_subproc(args, service = VoidService, config = {}):
-    """runs an rpyc server on a child process that and connects to it over 
+    """runs an rpyc server on a child process that and connects to it over
     the stdio pipes. uses the subprocess module.
     args - the args to Popen, e.g., ["python", "-u", "myfile.py"]
     service - the local service to expose (defaults to Void)
@@ -162,24 +162,20 @@ def connect_thread(service = VoidService, config = {}, remote_service = VoidServ
     listener = socket.socket()
     listener.bind(("localhost", 0))
     listener.listen(1)
-    
+
     def server(listener = listener):
         client = listener.accept()[0]
         listener.close()
-        conn = connect_stream(SocketStream(client), service = remote_service, 
+        conn = connect_stream(SocketStream(client), service = remote_service,
             config = remote_config)
         try:
             conn.serve_all()
         except KeyboardInterrupt:
             thread.interrupt_main()
-    
+
     t = threading.Thread(target = server)
     t.setDaemon(True)
     t.start()
     host, port = listener.getsockname()
     return connect(host, port, service = service, config = config)
-
-
-
-
 

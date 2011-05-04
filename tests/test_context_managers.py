@@ -21,10 +21,10 @@ class MyService(rpyc.Service):
 class Test_Python25(object):
     def setup(self):
         self.conn = rpyc.connect_thread(remote_service=MyService)
-    
+
     def teardown(self):
         self.conn.close()
-    
+
     def test_context(self):
         with self.conn.root.context(3) as x:
             print( "entering test" )
@@ -33,4 +33,5 @@ class Test_Python25(object):
             assert x == 20
             print( "got past x=20" )
         assert on_context_exit
-        print( "got past on_context_exit" ) 
+        print( "got past on_context_exit" )
+

@@ -96,4 +96,3 @@ class RefCountingColl(object):
         finally:
             self._lock.release()
 
-

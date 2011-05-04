@@ -39,4 +39,3 @@ EXC_STOP_ITERATION = 1
 #for k in globals().keys():
 #    globals()[k] = k
 
-

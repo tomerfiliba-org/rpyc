@@ -10,10 +10,10 @@ class Test_Remoting(object):
 
     def setup(self):
         self.conn = rpyc.classic.connect_thread()
-    
+
     def teardown(self):
         self.conn.close()
-    
+
     def test_files(self):
         base = tempfile.mkdtemp()
         base1 = os.path.join(base, "1")
@@ -23,23 +23,23 @@ class Test_Remoting(object):
         for i in range(10):
             open(os.path.join(base1, "foofoo%d" % (i,)), "w")
         os.mkdir(os.path.join(base1, "somedir1"))
-        
+
         rpyc.classic.upload(self.conn, base1, base2)
         assert os.listdir(base1) == os.listdir(base2)
-        
+
         rpyc.classic.download(self.conn, base2, base3)
         assert os.listdir(base2) == os.listdir(base3)
-        
+
         shutil.rmtree(base)
-    
+
     def test_distribution(self):
         raise SkipTest("TODO: upload a package and a module")
-        
+
     def test_interactive(self):
         raise SkipTest("Need to be manually")
         print( "type Ctrl+D to exit (Ctrl+Z on Windows)" )
         rpyc.classic.interact(self.conn)
-    
+
     def test_post_mortem(self):
         raise SkipTest("Need to be manually")
         try:
@@ -50,9 +50,10 @@ class Test_Remoting(object):
             raise
         else:
             assert False, "expected an exception"
-    
+
     def test_migration(self):
         l = rpyc.classic.obtain(self.conn.modules.sys.path)
         assert type(l) is list
         rl = rpyc.classic.deliver(self.conn, l)
         assert isinstance(rl, rpyc.BaseNetref)
+

@@ -9,8 +9,8 @@ import gtk
 
 
 safe_gtk_classes = set([
-    "Box", "VBox", "HBox", "Frame", "Entry", "Button", "ScrolledWindow", 
-    "TextView", "Label", 
+    "Box", "VBox", "HBox", "Frame", "Entry", "Button", "ScrolledWindow",
+    "TextView", "Label",
 ])
 
 class SafeGTK(object):

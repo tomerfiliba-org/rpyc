@@ -5,7 +5,7 @@ class AsyncResultTimeout(Exception):
     pass
 
 class AsyncResult(object):
-    """AsyncResult is an object that represent a computation that occurs in 
+    """AsyncResult is an object that represent a computation that occurs in
     the background and will eventually have a result. Use the .value property
     to access the result (which will block if the result has not yet arrived)
     """
@@ -36,7 +36,7 @@ class AsyncResult(object):
         for cb in self._callbacks:
             cb(self)
         del self._callbacks[:]
-    
+
     def wait(self):
         """wait for the result to arrive. if the AsyncResult object has an
         expiry set, and the result does not arrive within that timeout,
@@ -55,21 +55,21 @@ class AsyncResult(object):
                 if timeout <= 0:
                     raise AsyncResultTimeout("result expired")
     def add_callback(self, func):
-        """adds a callback to be invoked when the result arrives. the 
-        callback function takes a single argument, which is the current 
+        """adds a callback to be invoked when the result arrives. the
+        callback function takes a single argument, which is the current
         AsyncResult (self)"""
         if self._is_ready:
             func(self)
         else:
             self._callbacks.append(func)
     def set_expiry(self, timeout):
-        """set the expiry time (in seconds, relative to now) or None for 
+        """set the expiry time (in seconds, relative to now) or None for
         unlimited time"""
         if timeout is None:
             self._ttl = None
         else:
             self._ttl = time.time() + timeout
-    
+
     @property
     def ready(self):
         """a predicate of whether the result has arrived"""
@@ -94,9 +94,9 @@ class AsyncResult(object):
 
     @property
     def value(self):
-        """returns the result of the operation. if the result has not yet 
+        """returns the result of the operation. if the result has not yet
         arrived, accessing this property will wait for it. if the result does
-        not arrive before the expiry time elapses, AsyncResultTimeout is 
+        not arrive before the expiry time elapses, AsyncResultTimeout is
         raised. if the returned result is an exception, it will be raised here.
         otherwise, the result is returned directly."""
         self.wait()
@@ -104,6 +104,4 @@ class AsyncResult(object):
             raise self._obj
         else:
             return self._obj
-
-
 

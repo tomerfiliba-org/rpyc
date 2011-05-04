@@ -20,14 +20,14 @@ def shquote(text):
 
 class SshTunnel(object):
     PROGRAM = r"""import sys;sys.stdout.write("ready\n\n\n");sys.stdout.flush();sys.stdin.readline()"""
-    
+
     def __init__(self, sshctx, loc_host, loc_port, rem_host, rem_port):
         self.loc_host = loc_host
         self.loc_port = loc_port
         self.rem_host = rem_host
         self.rem_port = rem_port
         self.sshctx = sshctx
-        self.proc = sshctx.popen("python", "-u", "-c", self.PROGRAM, 
+        self.proc = sshctx.popen("python", "-u", "-c", self.PROGRAM,
             L = "%s:%s:%s" % (loc_port, rem_host, rem_port))
         banner = self.proc.stdout.readline().strip()
         if banner != "ready":
@@ -52,7 +52,7 @@ class SshTunnel(object):
         self.proc = None
 
 class SshContext(object):
-    def __init__(self, host, user = None, port = None, keyfile = None, 
+    def __init__(self, host, user = None, port = None, keyfile = None,
             ssh_program = "ssh", ssh_env = None, ssh_cwd = None,
             scp_program = "scp", scp_env = None, scp_cwd = None):
         self.host = host
@@ -71,7 +71,7 @@ class SshContext(object):
         if self.port:
             uri += ":%d" % (self.port)
         return uri
-    
+
     def _convert_kwargs_to_args(self, kwargs):
         args = []
         for k, v in kwargs.iteritems():
@@ -93,7 +93,7 @@ class SshContext(object):
         args.extend(self._convert_kwargs_to_args(kwargs))
         host = "%s@%s" % (self.user, self.host) if self.user else self.host
         return args, host
-    
+
     def _process_ssh_cmdline(self, kwargs):
         args = [self.ssh_program]
         if self.keyfile and "i" not in kwargs:
@@ -103,12 +103,12 @@ class SshContext(object):
         args.extend(self._convert_kwargs_to_args(kwargs))
         args.append("%s@%s" % (self.user, self.host) if self.user else self.host)
         return args
-    
+
     def popen(self, *args, **kwargs):
         cmdline = self._process_ssh_cmdline(kwargs)
         cmdline.extend(shquote(a) for a in args)
         #print cmdline
-        return Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE, 
+        return Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE,
             cwd = self.ssh_cwd, env = self.ssh_env, shell = False)
 
     def execute(self, *args, **kwargs):
@@ -118,33 +118,27 @@ class SshContext(object):
         if retcode is not None and proc.returncode != retcode:
             raise ValueError("process failed", stdout, stderr)
         return proc.returncode, stdout, stderr
-    
+
     def upload(self, src, dst, **kwargs):
         cmdline, host = self._process_scp_cmdline(kwargs)
         cmdline.append(src)
         cmdline.append("%s:%s" % (host, dst))
-        proc = Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE, 
+        proc = Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE,
             cwd = self.scp_cwd, env = self.scp_env)
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
             raise ValueError("upload failed", stdout, stderr)
-    
+
     def download(self, src, dst, **kwargs):
         cmdline, host = self._process_scp_cmdline(kwargs)
         cmdline.append("%s:%s" % (host, src))
         cmdline.append(dst)
-        proc = Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE, 
+        proc = Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE,
             cwd = self.scp_cwd, env = self.scp_env)
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
             raise ValueError("upload failed", stdout, stderr)
-    
+
     def tunnel(self, loc_port, rem_port, loc_host = "localhost", rem_host = "localhost"):
         return SshTunnel(self, loc_host, loc_port, rem_host, rem_port)
-
-
-
-
-
-
 
