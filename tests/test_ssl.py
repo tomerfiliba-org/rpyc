@@ -27,7 +27,7 @@ class Test_SSL(object):
         print( self.cert, self.key )
 
         authenticator = SSLAuthenticator(self.key, self.cert)
-        self.server = ThreadedServer(SlaveService, hostname = "localhost",port = 18812,
+        self.server = ThreadedServer(SlaveService, port = 18812,
             auto_register=False, authenticator = authenticator)
         self.server.logger.quiet = False
         t = threading.Thread(target=self.server.start)

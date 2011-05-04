@@ -1,15 +1,16 @@
 import rpyc
+import time
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
 import threading
 
 class Test_ThreadedServer(object):
     def setup(self):
-        self.server = ThreadedServer(SlaveService,
-            hostname = "localhost", port=18874, auto_register=False)
+        self.server = ThreadedServer(SlaveService, port=18874, auto_register=False)
         self.server.logger.quiet = False
         t = threading.Thread(target=self.server.start)
         t.start()
+        time.sleep(0.5)
 
     def teardown(self):
         self.server.close()

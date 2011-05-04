@@ -61,6 +61,7 @@ class SocketStream(Stream):
     MAX_IO_CHUNK = 8000
     def __init__(self, sock):
         self.sock = sock
+    
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM,
             proto = 0, timeout = 3, nodelay = False):
@@ -70,9 +71,11 @@ class SocketStream(Stream):
         if nodelay:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         return s
+    
     @classmethod
     def connect(cls, host, port, **kwargs):
         return cls(cls._connect(host, port, **kwargs))
+
     @classmethod
     def tlslite_connect(cls, host, port, username, password, **kwargs):
         s = cls._connect(host, port, **kwargs)
@@ -97,7 +100,12 @@ class SocketStream(Stream):
         self.sock.close()
         self.sock = ClosedFile
     def fileno(self):
-        return self.sock.fileno()
+        try:
+            return self.sock.fileno()
+        except socket.error as ex:
+            if ex.errno == errno.EBADF:
+                raise EOFError()
+        
     def read(self, count):
         data = []
         while count > 0:
