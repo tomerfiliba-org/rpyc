@@ -17,10 +17,6 @@ from rpyc.core.async import AsyncResultTimeout
 signal = safe_import("signal")
 
 
-class ThreadPoolFull(Exception):
-    pass
-
-
 class Server(object):
     def __init__(self, service, hostname = "0.0.0.0", port = 0, backlog = 10,
             reuse_addr = True, authenticator = None, registrar = None,
@@ -204,6 +200,8 @@ class ThreadPoolServer(Server):
 
   def __init__(self, *args, **kwargs):
     '''Initializes a ThreadPoolServer. In particular, instantiate the thread pool.'''
+    # last time we were overloaded
+    self.last_overload = 0
     # get the number of threads in the pool
     nbthreads = 20
     if 'nbThreads' in kwargs:
@@ -234,7 +232,7 @@ class ThreadPoolServer(Server):
         pass
       except Exception, e:
         # "Caught exception in Worker thread" message
-        self.logger.info("failed to serve client, caught exception : %s", str(e))
+        self.logger.warning("failed to serve client, caught exception : %s", str(e))
         # wait a bit so that we do not loop too fast in case of error
         time.sleep(.2)
 
@@ -245,8 +243,20 @@ class ThreadPoolServer(Server):
       # try to put the request in the queue
       self._client_queue.put_nowait(sock)
     except Queue.Full:
-      # queue was full, reject request
-      raise ThreadPoolFull("server is overloaded")
+      # queue was full, we ignore the request
+      try:
+        sock.shutdown(socket.SHUT_RDWR)
+      except Exception, e:
+        pass
+      try:
+        sock.close()
+      except Exception, e:
+        pass
+      # but we log something regularly (max every 5s) when we are overloaded
+      current_time = time.time()
+      if current_time - self.last_overload > 5:
+        self.logger.warning("server is overloaded")
+        self.last_overload = current_time
 
 
 class ForkingServer(Server):
