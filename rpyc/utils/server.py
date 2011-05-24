@@ -34,13 +34,23 @@ class Server(object):
         self.clients = set()
 
         if ipv6 is None:
-            ipv6 = socket.has_ipv6
+            if sys.platform == "win32":
+                # i couldn't get windows to allow an ipv4 socket to connect to
+                # an ipv6 server and vice versa... let's allow the user to 
+                # enable it explicitly, but let's not do it implicitly 
+                # IPPROTO_IPV6 = 41
+                # self.listener.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
+                ipv6 = False
+            else:
+                ipv6 = socket.has_ipv6
         if ipv6:
-            if hostname == "localhost":
+            if hostname == "localhost" and sys.platform != "win32":
+                # on windows, you should bind to localhost even for ipv6
                 hostname = "localhost6"
             self.listener = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         else:
             self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        
         if reuse_addr and sys.platform != "win32":
             # warning: reuseaddr is not what you expect on windows!
             self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
