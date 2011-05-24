@@ -45,8 +45,11 @@ def asyncreq(proxy, handler, *args):
     """performs an asynchronous request on the given proxy object,
     retuning an AsyncResult"""
     conn = object.__getattribute__(proxy, "____conn__")
+    connection = conn()
+    if not connection:
+        raise ReferenceError('weakly-referenced object no longer exists')
     oid = object.__getattribute__(proxy, "____oid__")
-    return conn().async_request(handler, oid, *args)
+    return connection.async_request(handler, oid, *args)
 
 class NetrefMetaclass(type):
     """a metaclass just to customize the __repr__ of netref classes"""
