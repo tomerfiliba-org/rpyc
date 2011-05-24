@@ -35,8 +35,11 @@ parser.add_option("-p", "--port", action="store", dest="port", type="int",
     help="specify a different TCP listener port (default = %s, default for SSL = %s)" %
         (DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT))
 parser.add_option("--host", action="store", dest="host", type="str",
-    metavar="HOST", default="0.0.0.0", help="specify a different "
-    "host to bind to. Default is 0.0.0.0")
+    metavar="HOST", default="", help="specify a different "
+    "host to bind to. Default is INADDR_ANY")
+parser.add_option("--ipv6", action="store_true", dest="ipv6",
+    metavar="HOST", default=False, help="whether to enable ipv6 or not. " 
+    "Default is false")
 #
 # logging
 #
@@ -128,7 +131,7 @@ def get_options():
 def serve_threaded(options):
     setup_logger(options)
     t = ThreadedServer(SlaveService, hostname = options.host,
-        port = options.port, reuse_addr = True,
+        port = options.port, reuse_addr = True, ipv6 = options.ipv6,
         authenticator = options.authenticator, registrar = options.registrar,
         auto_register = options.auto_register)
     t.logger.quiet = options.quiet
@@ -139,7 +142,7 @@ def serve_threaded(options):
 def serve_forking(options):
     setup_logger(options)
     t = ForkingServer(SlaveService, hostname = options.host,
-        port = options.port, reuse_addr = True,
+        port = options.port, reuse_addr = True, ipv6 = options.ipv6,
         authenticator = options.authenticator, registrar = options.registrar,
         auto_register = options.auto_register)
     t.logger.quiet = options.quiet

@@ -19,8 +19,8 @@ signal = safe_import("signal")
 
 
 class Server(object):
-    def __init__(self, service, hostname = "0.0.0.0", port = 0, backlog = 10,
-            reuse_addr = True, authenticator = None, registrar = None,
+    def __init__(self, service, hostname = "", ipv6 = None, port = 0, 
+            backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
             auto_register = True, protocol_config = {}, logger = None):
         self.active = False
         self._closed = False
@@ -31,7 +31,14 @@ class Server(object):
         self.protocol_config = protocol_config
         self.clients = set()
 
-        self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if ipv6 is None:
+            ipv6 = socket.has_ipv6
+        if ipv6:
+            if hostname == "localhost":
+                hostname = "localhost6"
+            self.listener = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        else:
+            self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if reuse_addr and sys.platform != "win32":
             # warning: reuseaddr is not what you expect on windows!
             self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -40,14 +47,11 @@ class Server(object):
         self.port = self.listener.getsockname()[1]
 
         if logger is None:
-            logger = self._get_logger()
+            logger = logging.getLogger("%s/%d" % (self.service.get_service_name(), self.port))
         self.logger = logger
         if registrar is None:
             registrar = UDPRegistryClient(logger = self.logger)
         self.registrar = registrar
-
-    def _get_logger(self):
-        return logging.getLogger("%s/%d" % (self.service.get_service_name(), self.port))
 
     def close(self):
         if self._closed:
@@ -75,7 +79,7 @@ class Server(object):
     def accept(self):
         while True:
             try:
-                sock, (h, p) = self.listener.accept()
+                sock, addrinfo = self.listener.accept()
             except socket.timeout:
                 pass
             except socket.error:
@@ -88,7 +92,7 @@ class Server(object):
                 break
 
         sock.setblocking(True)
-        self.logger.info("accepted %s:%s", h, p)
+        self.logger.info("accepted %s:%s", addrinfo[0], addrinfo[1])
         self.clients.add(sock)
         self._accept_method(sock)
 
@@ -102,14 +106,16 @@ class Server(object):
     def _authenticate_and_serve_client(self, sock):
         try:
             if self.authenticator:
-                h, p = sock.getpeername()
+                addrinfo = sock.getpeername()
+                h = addrinfo[0]
+                p = addrinfo[1]
                 try:
                     sock, credentials = self.authenticator(sock)
                 except AuthenticationError:
-                    self.logger.info("%s:%s failed to authenticate, rejecting connection", h, p)
+                    self.logger.info("[%s]:%s failed to authenticate, rejecting connection", h, p)
                     return
                 else:
-                    self.logger.info("%s:%s authenticated successfully", h, p)
+                    self.logger.info("[%s]:%s authenticated successfully", h, p)
             else:
                 credentials = None
             try:
@@ -126,11 +132,13 @@ class Server(object):
             self.clients.discard(sock)
 
     def _serve_client(self, sock, credentials):
-        h, p = sock.getpeername()
+        addrinfo = sock.getpeername()
+        h = addrinfo[0]
+        p = addrinfo[1]
         if credentials:
-            self.logger.info("welcome %s:%s (%r)", h, p, credentials)
+            self.logger.info("welcome [%s]:%s (%r)", h, p, credentials)
         else:
-            self.logger.info("welcome %s:%s", h, p)
+            self.logger.info("welcome [%s]:%s", h, p)
         try:
             config = dict(self.protocol_config, credentials = credentials)
             conn = Connection(self.service, Channel(SocketStream(sock)),
@@ -138,7 +146,7 @@ class Server(object):
             conn._init_service()
             conn.serve_all()
         finally:
-            self.logger.info("goodbye %s:%s", h, p)
+            self.logger.info("goodbye [%s]:%s", h, p)
 
     def _bg_register(self):
         interval = self.registrar.REREGISTER_INTERVAL
@@ -163,8 +171,10 @@ class Server(object):
     def start(self):
         """starts the server. use close() to stop"""
         self.listener.listen(self.backlog)
-        h, p = self.listener.getsockname()
-        self.logger.info("server started on %s:%s", h, p)
+        addrinfo = self.listener.getsockname()
+        h = addrinfo[0] # to support both IPv4 and IPv6
+        p = addrinfo[1]
+        self.logger.info("server started on [%s]:%s", h, p)
         self.active = True
         if self.auto_register:
             t = threading.Thread(target = self._bg_register)

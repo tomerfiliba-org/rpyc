@@ -28,7 +28,7 @@ class SshTunnel(object):
         self.rem_port = rem_port
         self.sshctx = sshctx
         self.proc = sshctx.popen("python", "-u", "-c", self.PROGRAM,
-            L = "%s:%s:%s" % (loc_port, rem_host, rem_port))
+            L = "[%s]:%s:[%s]:%s" % (loc_host, loc_port, rem_host, rem_port))
         banner = self.proc.stdout.readline().strip()
         if banner != "ready":
             raise ValueError("tunnel failed")
@@ -107,7 +107,6 @@ class SshContext(object):
     def popen(self, *args, **kwargs):
         cmdline = self._process_ssh_cmdline(kwargs)
         cmdline.extend(shquote(a) for a in args)
-        #print cmdline
         return Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE,
             cwd = self.ssh_cwd, env = self.ssh_env, shell = False)
 
