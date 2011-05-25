@@ -21,28 +21,18 @@ class ThreadPoolFull(Exception):
 
 
 class Server(object):
-    def __init__(self, service, hostname = "", ipv6 = None, port = 0, 
+    def __init__(self, service, hostname = "", ipv6 = False, port = 0, 
             backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
-            auto_register = True, protocol_config = {}, logger = None):
+            auto_register = False, protocol_config = {}, logger = None):
         self.active = False
         self._closed = False
         self.service = service
         self.authenticator = authenticator
         self.backlog = backlog
-        self.auto_register = auto_register
+        self.auto_register = bool(registrar)
         self.protocol_config = protocol_config
         self.clients = set()
 
-        if ipv6 is None:
-            if sys.platform == "win32":
-                # i couldn't get windows to allow an ipv4 socket to connect to
-                # an ipv6 server and vice versa... let's allow the user to 
-                # enable it explicitly, but let's not do it implicitly 
-                # IPPROTO_IPV6 = 41
-                # self.listener.setsockopt(IPPROTO_IPV6, socket.IPV6_V6ONLY, False)
-                ipv6 = False
-            else:
-                ipv6 = socket.has_ipv6
         if ipv6:
             if hostname == "localhost" and sys.platform != "win32":
                 # on windows, you should bind to localhost even for ipv6
@@ -52,11 +42,14 @@ class Server(object):
             self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         
         if reuse_addr and sys.platform != "win32":
-            # warning: reuseaddr is not what you expect on windows!
+            # warning: reuseaddr is not what you'd expect on windows!
+            # it allows you to bind an already bound port, results in 
+            # "unexpected behavior"
             self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         self.listener.bind((hostname, port))
-        self.port = self.listener.getsockname()[1]
+        sockname = self.listener.getsockname()
+        self.host, self.port = sockname[0], sockname[1]
 
         if logger is None:
             logger = logging.getLogger("%s/%d" % (self.service.get_service_name(), self.port))
@@ -74,7 +67,7 @@ class Server(object):
             try:
                 self.registrar.unregister(self.port)
             except Exception:
-                 self.logger.exception("error unregistering services")
+                self.logger.exception("error unregistering services")
         self.listener.close()
         self.logger.info("listener closed")
         for c in set(self.clients):
@@ -183,10 +176,7 @@ class Server(object):
     def start(self):
         """starts the server. use close() to stop"""
         self.listener.listen(self.backlog)
-        addrinfo = self.listener.getsockname()
-        h = addrinfo[0] # to support both IPv4 and IPv6
-        p = addrinfo[1]
-        self.logger.info("server started on [%s]:%s", h, p)
+        self.logger.info("server started on [%s]:%s", self.host, self.port)
         self.active = True
         if self.auto_register:
             t = threading.Thread(target = self._bg_register)

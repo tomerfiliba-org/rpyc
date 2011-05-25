@@ -74,20 +74,28 @@ class SocketStream(Stream):
     
     @classmethod
     def connect(cls, host, port, **kwargs):
+        if kwargs.pop("ipv6", False):
+            kwargs["family"] = socket.AF_INET6
         return cls(cls._connect(host, port, **kwargs))
 
     @classmethod
     def tlslite_connect(cls, host, port, username, password, **kwargs):
+        if kwargs.pop("ipv6", False):
+            kwargs["family"] = socket.AF_INET6
         s = cls._connect(host, port, **kwargs)
         s2 = tlsapi.TLSConnection(s)
         s2.fileno = lambda fd = s.fileno(): fd
         s2.handshakeClientSRP(username, password)
         return cls(s2)
+    
     @classmethod
     def ssl_connect(cls, host, port, ssl_kwargs, **kwargs):
+        if kwargs.pop("ipv6", False):
+            kwargs["family"] = socket.AF_INET6
         s = cls._connect(host, port, **kwargs)
         s2 = ssl.wrap_socket(s, **ssl_kwargs)
         return cls(s2)
+    
     @property
     def closed(self):
         return self.sock is ClosedFile

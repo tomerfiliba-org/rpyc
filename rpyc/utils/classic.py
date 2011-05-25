@@ -27,21 +27,24 @@ def connect_stdpipes():
 def connect_pipes(input, output):
     return factory.connect_pipes(input, output, SlaveService)
 
-def connect(host, port = DEFAULT_SERVER_PORT):
+def connect(host, port = DEFAULT_SERVER_PORT, ipv6 = False):
     """creates a socket connection to the given host and port"""
-    return factory.connect(host, port, SlaveService)
+    return factory.connect(host, port, SlaveService, ipv6 = ipv6)
 
-def tlslite_connect(host, username, password, port = DEFAULT_SERVER_PORT):
+def tlslite_connect(host, username, password, port = DEFAULT_SERVER_PORT, 
+        ipv6 = False):
     """creates a secure (TLS) socket connection to the given host and port,
     authenticating with the given username and password"""
-    return factory.tlslite_connect(host, port, username, password, SlaveService)
+    return factory.tlslite_connect(host, port, username, password, SlaveService, 
+        ipv6 = ipv6)
 
 def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None,
-        certfile = None, ca_certs = None, ssl_version = None):
+        certfile = None, ca_certs = None, ssl_version = None, ipv6 = False):
     """creates a secure (SSL) socket connection to the given host and port,
     authenticating with the given certfile and CA file"""
     return factory.ssl_connect(host, port, keyfile = keyfile, certfile = certfile,
-        ssl_version = ssl_version, ca_certs = ca_certs, service = SlaveService)
+        ssl_version = ssl_version, ca_certs = ca_certs, service = SlaveService,
+        ipv6 = ipv6)
 
 def ssh_connect(sshctx, remote_port):
     """connects to the remote server over an SSH tunnel"""

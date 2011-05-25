@@ -44,15 +44,19 @@ def connect_stdpipes(service = VoidService, config = {}):
     config - configuration dict"""
     return connect_stream(PipeStream.from_std(), service = service, config = config)
 
-def connect(host, port, service = VoidService, config = {}):
+def connect(host, port, service = VoidService, config = {}, ipv6 = False):
     """creates a socket-connection to the given host
     host - the hostname to connect to
     port - the TCP port to use
     service - the local service to expose (defaults to Void)
-    config - configuration dict"""
-    return Connection(service, Channel(SocketStream.connect(host, port)), config = config)
+    config - configuration dict
+    ipv6 - whether to use IPv6 or not
+    """
+    s = SocketStream.connect(host, port, ipv6 = ipv6)
+    return connect_stream(s, service, config)
 
-def tlslite_connect(host, port, username, password, service = VoidService, config = {}):
+def tlslite_connect(host, port, username, password, service = VoidService, config = {}, 
+        ipv6 = False):
     """creates a TLS-connection to the given host (encrypted and authenticated)
     username - the username used to authenticate the client
     password - the password used to authenticate the client
@@ -60,11 +64,11 @@ def tlslite_connect(host, port, username, password, service = VoidService, confi
     port - the TCP port to use
     service - the local service to expose (defaults to Void)
     config - configuration dict"""
-    s = SocketStream.tlslite_connect(host, port, username, password)
-    return Connection(service, Channel(s), config = config)
+    s = SocketStream.tlslite_connect(host, port, username, password, ipv6 = ipv6)
+    return connect_stream(s, service, config)
 
 def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
-        ssl_version = None, service = VoidService, config = {}):
+        ssl_version = None, service = VoidService, config = {}, ipv6 = False):
     """creates an SSL-wrapped connection to the given host (encrypted and
     authenticated).
     host - the hostname to connect to
@@ -74,19 +78,19 @@ def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
 
     keyfile, certfile, ca_certs, ssl_version -- arguments to ssl.wrap_socket.
     see that module's documentation for further info."""
-    kwargs = {"server_side" : False}
+    ssl_kwargs = {"server_side" : False}
     if keyfile:
-        kwargs["keyfile"] = keyfile
+        ssl_kwargs["keyfile"] = keyfile
     if certfile:
-        kwargs["certfile"] = certfile
+        ssl_kwargs["certfile"] = certfile
     if ca_certs:
-        kwargs["ca_certs"] = ca_certs
+        ssl_kwargs["ca_certs"] = ca_certs
     if ssl_version:
-        kwargs["ssl_version"] = ssl_version
+        ssl_kwargs["ssl_version"] = ssl_version
     else:
-        kwargs["ssl_version"] = ssl.PROTOCOL_TLSv1
-    s = SocketStream.ssl_connect(host, port, kwargs)
-    return Connection(service, Channel(s), config = config)
+        ssl_kwargs["ssl_version"] = ssl.PROTOCOL_TLSv1
+    s = SocketStream.ssl_connect(host, port, ssl_kwargs, ipv6 = ipv6)
+    return connect_stream(s, service, config)
 
 def _get_free_port():
     """attempts to find a free port"""
