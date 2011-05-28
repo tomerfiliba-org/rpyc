@@ -11,7 +11,7 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import sys, os, time
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -41,7 +41,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'RPyC'
-copyright = u'2011, Tomer Filiba'
+copyright = u'%d, Tomer Filiba' % (time.gmtime().tm_year,)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -104,7 +104,7 @@ html_theme = 'agogo'
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-html_title = "%s v%s documentation" % (project, version)
+html_title = "%s v%s Docs" % (project, version)
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None
