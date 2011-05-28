@@ -61,7 +61,7 @@ Breakage from 3.0.7:
 * Cosmetic touches to ``Connection``: separate ``serve`` into ``_recv`` and ``dispatch``
 
 * Shutdown socket before closing (``SHUT_RDWR``) to prevent ``TIME_WAIT`` and other
-  problems with various *nixes
+  problems with various Unixes
 
 * ``PipeStream``: use low-level file APIs (``os.read``, ``os.write``) to prevent
   stdio-level buffering that messed up ``select``

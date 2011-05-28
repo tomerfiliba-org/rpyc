@@ -1,5 +1,5 @@
 """
-various library utilities (also for compatibility with python2.4)
+compatibility module for various versions of python (2.4/3+/jython)
 """
 try:
     from struct import Struct
