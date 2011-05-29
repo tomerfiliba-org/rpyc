@@ -6,14 +6,10 @@
 .. toctree::
    :hidden:
    
-   index
-   
+   install
    tutorial
    api
    servers
-   
-   license
-   changelog
 
 Welcome
 =======
@@ -50,7 +46,7 @@ Features
   security model
 
 * **Integrates** with `TLS/SSL <http://en.wikipedia.org/wiki/Transport_Layer_Security>`_,
-  ``SSH`` and `inetd <http://en.wikipedia.org/wiki/inetd>`_.
+  `SSH <http://en.wikipedia.org/wiki/Secure_Shell>`_ and `inetd <http://en.wikipedia.org/wiki/inetd>`_.
 
 Use Cases
 ---------
