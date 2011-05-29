@@ -1,0 +1,33 @@
+{% extends "agogo/layout.html" %}
+
+{% block relbar1 %}
+    <div align="left" style="background-color: #ffffff;">
+        <a href="{{pathto(master_doc)}}"><img src="_static/logo.png" height="140px" /></a>
+    </div>
+    {{ super() }}
+{% endblock %}
+
+{% block sidebarsearch %}
+    {{ super() }}
+    <p> 
+        <script type="text/javascript" src="http://www.ohloh.net/p/26760/widgets/project_thin_badge.js"></script>
+    </p>
+{% endblock %}
+
+{% block footer %}
+{{ super() }}
+
+<!-- script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-23269139-1']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script -- >
+
+{% endblock %}
+

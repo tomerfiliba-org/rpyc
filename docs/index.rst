@@ -10,6 +10,11 @@
    tutorial
    api
    servers
+   howto
+   theory
+
+   license
+   changelog
 
 Welcome
 =======

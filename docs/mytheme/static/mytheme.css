@@ -1,0 +1,17 @@
+@import url("sphinxdoc.css");
+
+
+body {
+    min-width: 740px;
+    margin: 20px 140px 20px 140px;
+}
+
+a.reference.external {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+a.reference.internal {
+    font-weight: bold;
+    text-decoration: none;
+}

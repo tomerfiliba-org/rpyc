@@ -1,3 +1,5 @@
+.. _changelog:
+
 Release Change Log
 ==================
 
