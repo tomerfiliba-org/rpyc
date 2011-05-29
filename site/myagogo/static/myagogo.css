@@ -1,0 +1,18 @@
+@import url("agogo.css");
+
+a.reference.external {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+a.reference.internal {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+div.header h1 {
+    font-family: "Georgia", "Times New Roman", serif;
+    font-weight: normal;
+    font-size: 220%;
+    letter-spacing: .08em;
+}

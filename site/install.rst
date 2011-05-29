@@ -1,19 +1,27 @@
+.. _install:
+
+Download and Install
+====================
+
 .. toctree::
    :hidden:
-   
 
-Installing
-==========
-You can always download the latest releases of RPyC from the `sourceforge page
-<http://sourceforge.net/projects/rpyc/files/main>`_ or the project's `PyPI page
-<http://pypi.python.org/pypi/RPyC>`_. RPyC is distributed as a zip, a tar.gz, 
-and a win32 installer. Of course you can also use ``easy_install rpyc`` and 
-``pip install rpyc`` just as well.
+   changelog
 
-You may also want to check the :ref:`change log <changelog>`.
+You can always download the latest releases of RPyC from the project's 
+`sourceforge page <http://sourceforge.net/projects/rpyc/files/main>`_ or the 
+its `PyPI page <http://pypi.python.org/pypi/RPyC>`_. RPyC is distributed as a 
+``zip``, a ``tar.gz``, and a win32 installer. Of course you can also use 
+``easy_install rpyc`` and ``pip install rpyc`` just as well.
+
+You may also wish to read the :ref:`change log <changelog>` before installing 
+new versions.
+
 
 Development
 ===========
+
+.. _mailing-list:
 
 Mailing List
 ------------
@@ -49,8 +57,8 @@ them:
 
 * `TLSlite <http://trevp.net/tlslite/>`_ - Required for TLSlite support 
   (``VdbAuthenticator`` and ``tls_connect``). The project is no longer maintained,
-  but You can download versions ported to newer versions of ``python`` from our
-  `sourceforge page <http://sourceforge.net/projects/rpyc/files/tlslite/>`_ 
+  but you can download v0.3.8 `ported to newer versions of python 
+  <http://sourceforge.net/projects/rpyc/files/tlslite/>`_ 
 
   * `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_ - If installed, 
     will speed up TLSlite
@@ -68,5 +76,13 @@ them:
  
 * `zlib for IronPython <https://bitbucket.org/jdhardy/ironpythonzlib>`_ - Required
   for IronPython prior to v2.7
+
+
+License
+=======
+RPyC is released under the *MIT license*:
+
+  .. literalinclude:: ../LICENSE
+
 
 

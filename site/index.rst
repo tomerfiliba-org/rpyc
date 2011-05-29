@@ -8,13 +8,11 @@
    
    install
    tutorial
+   screencasts
+   
+   docs
    api
-   servers
-   howto
-   theory
 
-   license
-   changelog
 
 Welcome
 =======
@@ -28,6 +26,15 @@ RPyC makes use of `object-proxying <http://en.wikipedia.org/wiki/Proxy_pattern>`
 a technique that employs python's dynamic nature, to overcome the physical boundaries
 between processes and computers, so that remote objects can be manipulated as if 
 they were local. 
+
+Getting Started
+---------------
+:ref:`Installing <install>` RPyC is as easy as ``easy_install rpyc``.
+
+If you're new to RPyC, be sure to check out the :ref:`tutorial` and 
+:ref:`screencasts`. Next, you can refer to the :ref:`documentation`
+and :ref:`api-ref`, as well as the :ref:`mailing-list`.
+
 
 Features
 --------
@@ -66,5 +73,6 @@ Use Cases
 * Implement remote services (like `WSDL <http://en.wikipedia.org/wiki/WSDL>`_ 
   or `RMI <http://en.wikipedia.org/wiki/Java_remote_method_invocation>`_) 
   quickly and concisely (without the overhead and limitations of these technologies)
+
 
 
