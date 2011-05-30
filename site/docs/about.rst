@@ -10,12 +10,18 @@ Logo
 ----
 The logo is derived from the `Python logo <http://www.python.org/community/logos/>`_, with explicit permission. I created it using *Power Point*, and all the files are made available here:
 
-======================================   =========================================  =======================================
-Big                                      Medium                                     Small
-======================================   =========================================  =======================================
-.. image:: /_static/rpyc3-logo-big.png   .. image:: /_static/rpyc3-logo-medium.png  .. image:: /_static/rpyc3-logo-tiny.png
-======================================   =========================================  =======================================
+===========   ============  =============
+Big           Medium        Small
+===========   ============  =============
+|img-big|     |img-med|     |img-tiny|
+===========   ============  =============
 
-Also in :download:`Power Point <_static/rpyc3-logo.ppt>` format.
+.. |img-big| image:: /_static/rpyc3-logo-big.png
+
+.. |img-med| image:: /_static/rpyc3-logo-medium.png
+
+.. |img-tiny| image:: /_static/rpyc3-logo-tiny.png
+
+Also in :download:`Power Point </_static/rpyc3-logo.ppt>` format.
 
 
