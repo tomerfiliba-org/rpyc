@@ -1,6 +1,11 @@
-About
-=====
-RPyC was inspired by the work of **Eyal Lotem** on `pyinvoke <http://pybuild.sourceforge.net/pyinvoke.html>`_, which pioneered in the field of "dynamic RPC" (where there's no predefined contract between the two sides). The two projects, however, are completely unrelated in any other way. RPyC is developed and maintained by `Tomer Filiba <http://tomerfiliba.com>` (``tomerfiliba`` at ``gmail`` dot ``com``).
+About RPyC
+==========
+RPyC was inspired by the work of **Eyal Lotem** on 
+`pyinvoke <http://pybuild.sourceforge.net/pyinvoke.html>`_, which pioneered in 
+the field of "dynamic RPC" (where there's no predefined contract between the 
+two sides). The two projects, however, are completely unrelated in any other 
+way. RPyC is developed and maintained by `Tomer Filiba <http://tomerfiliba.com>`_
+(``tomerfiliba`` at ``gmail`` dot ``com``).
 
 Contributors
 ------------
@@ -8,20 +13,16 @@ Contributors
 
 Logo
 ----
-The logo is derived from the `Python logo <http://www.python.org/community/logos/>`_, with explicit permission. I created it using *Power Point*, and all the files are made available here:
+The logo is derived from the `Python logo <http://www.python.org/community/logos/>`_,
+with explicit permission. I created it using *Power Point* (sorry, I'm no graphic
+designer :), and all the files are made available here:
 
-===========   ============  =============
-Big           Medium        Small
-===========   ============  =============
-|img-big|     |img-med|     |img-tiny|
-===========   ============  =============
+* .. image:: /_static/rpyc3-logo-tiny.png
 
-.. |img-big| image:: /_static/rpyc3-logo-big.png
+* .. image:: /_static/rpyc3-logo-medium.png
 
-.. |img-med| image:: /_static/rpyc3-logo-medium.png
+* .. image:: /_static/rpyc3-logo-big.png
 
-.. |img-tiny| image:: /_static/rpyc3-logo-tiny.png
-
-Also in :download:`Power Point </_static/rpyc3-logo.ppt>` format.
+* Also in :download:`the original </_static/rpyc3-logo.ppt>` Power Point master.
 
 
