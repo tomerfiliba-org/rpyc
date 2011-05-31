@@ -1,3 +1,10 @@
+v3.2.0
+^^^^^^
+* Alex - IPv6 support
+* Sponce - added the ``ThreadPoolServer``, several fixes to weak-references and 
+  ``AsyncResult``
+* Sagiv Malihi - Bug fix in classic server
+
 v3.1.0
 ^^^^^^
 * Alex - better conventions, Jython support

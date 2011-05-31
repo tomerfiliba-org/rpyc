@@ -1,3 +1,5 @@
+.. _servers:
+
 RPyC Servers
 ============
 
@@ -18,4 +20,4 @@ Registry Server
 ^^^^^^^^^^^^^^^
 The registry server (``rpyc_registry``)
 
-
+Authenticators

@@ -1,3 +1,31 @@
+3.2.0?
+------
+* Added support for IPv6 (`#28 <https://github.com/tomerfiliba/rpyc/issues/28>`_)
+
+* Added SSH tunneling support (``ssh_connect``)
+
+* Several fixes to ``AsyncResult`` and weak references
+
+* Added the ``ThreadPoolServer``
+
+* Converted all ``CRLF`` to ``LF``
+
+* New documentation (both site and docstrings) rewritten in **Sphinx**
+
+  * Site has moved to http://rpyc.tomerfiliba.com. Wikidot was displaying way 
+    too many ads and didn't support uploading files over ``rsync``, which made
+    my life hard.
+
+  * New docs are part of the git repository. Updating the site is as easy as
+    ``make upload``
+
+* Known Issue `#41 <https://github.com/tomerfiliba/rpyc/issues/41>`_: Types that 
+  define ``__getslice__`` (with or without ``__getitem__``) are susceptible for
+  an exception when evaluating ``x[1:]`` where the client and server run on 
+  different bit-width (32/64) architectures, because python converts ``x[1:]`` 
+  to ``x[1:sys.maxint]`` (which is of course different on the two architectures).
+ 
+
 3.1.0
 ------
 
@@ -12,7 +40,7 @@ What's New:
 
 * Moves to a more conventional directory structure
 
-* Moves to more standard facilities (logging, nosetests)
+* Moves to more standard facilities (``logging``, ``nosetests``)
 
 * Solves a major performance issue with the ``BgServingThread`` (`#32 <https://github.com/tomerfiliba/rpyc/issues/32>`_),
   by removing the contention between the two threads that share the connection

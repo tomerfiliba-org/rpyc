@@ -17,6 +17,23 @@ its `PyPI page <http://pypi.python.org/pypi/RPyC>`_. RPyC is distributed as a
 You may also wish to read the :ref:`change log <changelog>` before installing 
 new versions.
 
+Platforms and Interpreters
+--------------------------
+RPyC is a pure-python library, and as such can run on any architecture and 
+platform that runs python (or one of its other implementations), both 32- 
+and 64-bit. This is also true for a client and its server, which may run on
+different architectures. The latest release supports:
+
+* Python (CPython) 2.4-2.7
+
+  * Adding support of Python 3 and above is underway. This has proved to be 
+    quite a challenge, as RPyC is tightly-coupled to the *object model* of the 
+    language, so the porting will likely take a while.
+
+* Jython 2.5 and later
+
+* IronPython 2.7 and later
+
 
 Development
 ===========
@@ -46,6 +63,8 @@ Patches are accepted **only** through github's `pull requests <http://help.githu
 which provide a much more organized way to share patches: simply fork the 
 project, commit your changes, and send a pull request. That way we can track,
 discuss, and integrate patches much more easily and concisely. 
+
+.. _dependencies:
 
 Dependencies
 ------------
@@ -77,6 +96,7 @@ them:
 * `zlib for IronPython <https://bitbucket.org/jdhardy/ironpythonzlib>`_ - Required
   for IronPython prior to v2.7
 
+.. _license:
 
 License
 =======

@@ -1,3 +1,5 @@
+.. _about:
+
 About RPyC
 ==========
 RPyC was inspired by the work of **Eyal Lotem** on 

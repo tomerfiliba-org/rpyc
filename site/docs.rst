@@ -4,13 +4,59 @@ Documentation
 =============
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
+   :hidden:
    
    docs/about
    docs/theory
    docs/howto
    docs/usecases
+   docs/guidelines
+   
    docs/servers
+   docs/classic
+   docs/services
+   docs/security
+   docs/secure-connection
+   
+
+Introduction
+------------
+* :ref:`A little about RPyC <about>` - related projects, contributors, and 
+  logo issues
+
+* :ref:`Theory of operation <theory>` - background on the inner workings of 
+  RPyC and the terminology 
+
+* :ref:`Use cases <use-cases>` - some common use-cases, demonstrating the power 
+  and ease of RPyC
+
+* :ref:`Guidelines <guidelines>` - guidelines for improving your work with RPyC
+
+Reference
+---------
+* :ref:`Servers <servers>` - using the built-in servers and writing custom ones 
+
+* :ref:`Classic RPyC <classic>` - using RPyC in *slave mode* (AKA *classic 
+  mode*), where the client has unrestricted control over the server.
+
+* :ref:`RPyC Services <services>` - writing well-defined services which restrict
+  the operations a client (or server) can carry out.
+
+* :ref:`Security Concerns <security>` - keeping security in mind when using
+  RPyC
+
+* :ref:`Secure Connections <ssl>` - create an encrypted and authenticated 
+  connection over SSL, SSH, or TLSLite
+
+
+
+
+
+
+
+
+
 
 
 
