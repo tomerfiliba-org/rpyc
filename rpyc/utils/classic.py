@@ -25,10 +25,21 @@ def connect_stdpipes():
     return factory.connect_stdpipes(SlaveService)
 
 def connect_pipes(input, output):
+    """
+    connects 
+    
+    :param input: the input pipe
+    :param output: the output pipe
+    
+    :returns: an RPyC connection exposing ``SlaveService``
+    """
     return factory.connect_pipes(input, output, SlaveService)
 
 def connect(host, port = DEFAULT_SERVER_PORT, ipv6 = False):
-    """creates a socket connection to the given host and port"""
+    """
+    creates a socket connection to the given host and port
+    
+    """
     return factory.connect(host, port, SlaveService, ipv6 = ipv6)
 
 def tlslite_connect(host, username, password, port = DEFAULT_SERVER_PORT, 
@@ -67,11 +78,12 @@ def connect_thread():
 
 def upload(conn, localpath, remotepath, filter = None, ignore_invalid = False, chunk_size = 16000):
     """uploads a file or a directory to the given remote path
-    localpath - the local file or directory
-    remotepath - the remote path
-    filter - a predicate that accepts the filename and determines whether
-    it should be uploaded; None means any file
-    chunk_size - the IO chunk size
+    
+    :param localpath: the local file or directory
+    :param remotepath: the remote path
+    :param filter: a predicate that accepts the filename and determines whether
+                   it should be uploaded; None means any file
+    :param chunk_size: the IO chunk size
     """
     if os.path.isdir(localpath):
         upload_dir(conn, localpath, remotepath, filter, chunk_size)
@@ -102,12 +114,14 @@ def upload_dir(conn, localpath, remotepath, filter = None, chunk_size = 16000):
             upload(conn, lfn, rfn, filter = filter, ignore_invalid = True, chunk_size = chunk_size)
 
 def download(conn, remotepath, localpath, filter = None, ignore_invalid = False, chunk_size = 16000):
-    """download a file or a directory to the given remote path
-    localpath - the local file or directory
-    remotepath - the remote path
-    filter - a predicate that accepts the filename and determines whether
-    it should be downloaded; None means any file
-    chunk_size - the IO chunk size
+    """
+    download a file or a directory to the given remote path
+    
+    :param localpath: the local file or directory
+    :param remotepath: the remote path
+    :param filter: a predicate that accepts the filename and determines whether
+                   it should be downloaded; None means any file
+    :param chunk_size: the IO chunk size
     """
     if conn.modules.os.path.isdir(remotepath):
         download_dir(conn, remotepath, localpath, filter)
@@ -138,7 +152,23 @@ def download_dir(conn, remotepath, localpath, filter = None, chunk_size = 16000)
             download(conn, rfn, lfn, filter = filter, ignore_invalid = True)
 
 def upload_package(conn, module, remotepath = None, chunk_size = 16000):
-    """uploads a module or a package to the remote party"""
+    """
+    uploads a module or a package to the remote party
+    
+    :param conn: the RPyC connection to use
+    :param module: the local module/package object to upload
+    :param remotepath: the remote path (if ``None``, will default to the 
+                       remote system's python library (as reported by 
+                       ``distutils``)
+    :param chunk_size: the IO chunk size
+    
+    example::
+    
+       import foo.bar
+       ...
+       rpyc.classic.upload_package(conn, foo.bar)
+    
+    """
     if remotepath is None:
         site = conn.modules["distutils.sysconfig"].get_python_lib()
         remotepath = conn.modules.os.path.join(site, module.__name__)
@@ -147,24 +177,39 @@ def upload_package(conn, module, remotepath = None, chunk_size = 16000):
 
 upload_module = upload_package
 
-def update_module(conn, module, chunk_size = 16000):
-    """replaces a module on the remote party"""
-    rmodule = conn.modules[module.__name__]
-    lf = inspect.getsourcefile(module)
-    rf = conn.modules.inspect.getsourcefile(rmodule)
-    upload_file(conn, lf, rf, chunk_size = chunk_size)
-    conn.modules.__builtin__.reload(rmodule)
+#def update_module(conn, module, chunk_size = 16000):
+#    """replaces a module on the remote party"""
+#    rmodule = conn.modules[module.__name__]
+#    lf = inspect.getsourcefile(module)
+#    rf = conn.modules.inspect.getsourcefile(rmodule)
+#    upload_file(conn, lf, rf, chunk_size = chunk_size)
+#    conn.modules.__builtin__.reload(rmodule)
 
 def obtain(proxy):
-    """obtains (recreates) a remote object proxy from the other party.
-    the object is moved by *value*, so changes made to it will not reflect
-    on the remote object"""
+    """obtains (copies) a remote object from a proxy object. the object is 
+    ``pickled`` on the remote side and ``unpickled`` locally, thus moved 
+    **by value**. changes made to the local object will not reflect remotely.
+        
+    :param proxy: an RPyC proxy object
+    
+    .. note:: the remote object to must be ``picklable``
+
+    :returns: a copy of the remote object
+    """
     return pickle.loads(pickle.dumps(proxy))
 
 def deliver(conn, localobj):
     """delivers (recreates) a local object on the other party. the object is
-    moved by *value*, so changes made to it will not reflect on the local
-    object. returns a proxy to the remote object"""
+    ``pickled`` locally and ``unpickled`` on the remote side, thus moved
+    **by value**. changes made to the remote object will not reflect locally.
+    
+    :param conn: the RPyC connection
+    :param localobj: the local object to deliver
+    
+    .. note:: the object must be ``picklable``
+    
+    :returns: a proxy to the remote object
+    """
     return conn.modules.cPickle.loads(pickle.dumps(localobj))
 
 class redirected_stdio(object):
@@ -211,7 +256,10 @@ class redirected_stdio(object):
 #        conn.modules.sys.stderr = orig_stderr
 
 def pm(conn):
-    """pdb.pm on a remote exception"""
+    """same as ``pdb.pm()`` but on a remote exception
+    
+    :param conn: the RPyC connection
+    """
     #pdb.post_mortem(conn.root.getconn()._last_traceback)
     redir = redirected_stdio(conn)
     try:
@@ -220,7 +268,11 @@ def pm(conn):
         redir.restore()
 
 def interact(conn, namespace = None):
-    """remote interactive interpreter"""
+    """remote interactive interpreter
+    
+    :param conn: the RPyC connection
+    :param namespace: the namespace to use (a ``dict``)
+    """
     if namespace is None:
         namespace = {}
     namespace["conn"] = conn
