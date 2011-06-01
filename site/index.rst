@@ -16,7 +16,7 @@
 
 Welcome
 =======
-**RPyC** (IPA: `/ɑɹ paɪ siː/ <http://en.wikipedia.org/wiki/IPA_for_English>`_,
+**RPyC** (`IPA: <http://en.wikipedia.org/wiki/IPA_for_English>`_ /ɑɹ paɪ siː/,
 pronounced like *are-pie-see*), or *Remote Python Call*, is a **transparent**
 `python <http://www.python.org>`_ library for **symmetrical**
 `remote procedure calls <http://en.wikipedia.org/wiki/Remote_procedure_calls>`_,
