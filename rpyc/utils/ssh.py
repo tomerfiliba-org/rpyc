@@ -1,4 +1,3 @@
-import socket
 from subprocess import Popen, PIPE
 
 
@@ -18,7 +17,21 @@ def shquote(text):
     res = "".join(('\\' + c if c in _funnychars else c) for c in text)
     return '"' + res + '"'
 
+class ProcessExecutionError(Exception):
+    """raised by :func:`SshContext.execute` should the executed process 
+    terminate with an error"""
+    pass
+    
+
 class SshTunnel(object):
+    """
+    Represents an active SSH tunnel (as created by ``ssh -L``).
+    
+    .. note:: 
+       Do not instantiate this class yourself -- use the :func:`SshContext.tunnel`
+       function for that.
+    """
+    
     PROGRAM = r"""import sys;sys.stdout.write("ready\n\n\n");sys.stdout.flush();sys.stdin.readline()"""
 
     def __init__(self, sshctx, loc_host, loc_port, rem_host, rem_port):
@@ -41,8 +54,10 @@ class SshTunnel(object):
         return "%s:%s --> (%s)%s:%s" % (self.loc_host, self.loc_port, self.sshctx.host,
             self.rem_host, self.rem_port)
     def is_open(self):
+        """returns True if the ``ssh`` process is alive, False otherwise"""
         return self.proc and self.proc.poll() is None
     def close(self):
+        """closes (terminates) the SSH tunnel"""
         if not self.is_open():
             return
         self.proc.stdin.write("foo\n\n\n")
@@ -52,6 +67,21 @@ class SshTunnel(object):
         self.proc = None
 
 class SshContext(object):
+    """
+    An *SSH context* encapsulates all the details required to establish an SSH 
+    connection to other host. It includes the host name, user name, TCP port, 
+    identity file, etc.
+    
+    Once constructed, it can serve as a factory for SSH operations, such as 
+    executing a remote program and getting its stdout, or uploading/downloading
+    files using ``scp``. It also serves for creating SSH tunnels. 
+    
+    Example::
+    
+        >>> sshctx = SshContext("mymachine", username="borg", keyfile="/home/foo/.ssh/mymachine-id")
+        >>> sshctx.execute("ls")
+        (0, "...", "")
+    """
     def __init__(self, host, user = None, port = None, keyfile = None,
             ssh_program = "ssh", ssh_env = None, ssh_cwd = None,
             scp_program = "scp", scp_env = None, scp_cwd = None):
@@ -86,6 +116,8 @@ class SshContext(object):
 
     def _process_scp_cmdline(self, kwargs):
         args = [self.scp_program]
+        if "r" not in kwargs:
+            kwargs["r"] = True
         if self.keyfile and "i" not in kwargs:
             kwargs["i"] = self.keyfile
         if self.port and "P" not in kwargs:
@@ -105,20 +137,65 @@ class SshContext(object):
         return args
 
     def popen(self, *args, **kwargs):
+        """Runs the given command line remotely (over SSH), returning the 
+        ``subprocess.Popen`` instance of the command
+        
+        :param args: the command line arguments
+        :param kwargs: additional keyword arguments passed to ``ssh``
+        
+        :returns: a ``Popen`` instance
+        
+        Example::
+            
+            proc = ctx.popen("ls", "-la")
+            proc.wait()
+        """
         cmdline = self._process_ssh_cmdline(kwargs)
         cmdline.extend(shquote(a) for a in args)
         return Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE,
             cwd = self.ssh_cwd, env = self.ssh_env, shell = False)
 
     def execute(self, *args, **kwargs):
+        """Runs the given command line remotely (over SSH), waits for it to finish,
+        returning the return code, stdout, and stderr of the executed process.
+        
+        :param args: the command line arguments
+        :param kwargs: additional keyword arguments passed to ``ssh``, except for
+                       ``retcode`` and ``input``.
+        :param retcode: *keyword only*, the expected return code (Defaults to 0 
+                        -- success). An exception is raised if the return code does
+                        not match the expected one, unless it is ``None``, in 
+                        which case it will not be tested.
+        :param input: *keyword only*, an input string that will be passed to 
+                      ``Popen.communicate``. Defaults to ``None``
+        
+        :raises: :class:`ProcessExecutionError` if the expected return code 
+                 is not matched
+        
+        :returns: a tuple of (return code, stdout, stderr)
+        
+        Example::
+            
+            rc, out, err = ctx.execute("ls", "-la")
+        """
         retcode = kwargs.pop("retcode", 0)
+        input = kwargs.pop("input", None)
         proc = self.popen(*args, **kwargs)
-        stdout, stderr = proc.communicate()
+        stdout, stderr = proc.communicate(input)
         if retcode is not None and proc.returncode != retcode:
-            raise ValueError("process failed", stdout, stderr)
+            raise ProcessExecutionError(proc.returncode, stdout, stderr)
         return proc.returncode, stdout, stderr
 
     def upload(self, src, dst, **kwargs):
+        """
+        Uploads *src* from the local machine to *dst* on the other side. By default, 
+        ``-r`` is given to ``scp``, so *src* can be either a file or a directory.
+        To override, pass ``r = False`` as a keyword argument. 
+        
+        :param src: the source path (on the local side)
+        :param dst: the destination path (on the remote side)
+        :param kwargs: any additional keyword arguments, passed to ``scp``.
+        """
         cmdline, host = self._process_scp_cmdline(kwargs)
         cmdline.append(src)
         cmdline.append("%s:%s" % (host, dst))
@@ -129,6 +206,15 @@ class SshContext(object):
             raise ValueError("upload failed", stdout, stderr)
 
     def download(self, src, dst, **kwargs):
+        """
+        Downloads *src* from the other side to *dst* on the local side. By default, 
+        ``-r`` is given to ``scp``, so *src* can be either a file or a directory. 
+        To override, pass ``r = False`` as a keyword argument.
+        
+        :param src: the source path (on the other side)
+        :param dst: the destination path (on the local side)
+        :param kwargs: any additional keyword arguments, passed to ``scp``.
+        """
         cmdline, host = self._process_scp_cmdline(kwargs)
         cmdline.append("%s:%s" % (host, src))
         cmdline.append(dst)
@@ -139,5 +225,15 @@ class SshContext(object):
             raise ValueError("upload failed", stdout, stderr)
 
     def tunnel(self, loc_port, rem_port, loc_host = "localhost", rem_host = "localhost"):
+        """
+        Creates an SSH tunnel from the local port to the remote one. This is
+        translated to ``ssh -L loc_host:loc_port:rem_host:rem_port``.
+        
+        :param loc_port: the local TCP port to forward
+        :param rem_port: the remote (server) TCP port, to which the local port 
+                         will be forwarded
+        
+        :returns: an class:`SshTunnel` instance
+        """
         return SshTunnel(self, loc_host, loc_port, rem_host, rem_port)
 

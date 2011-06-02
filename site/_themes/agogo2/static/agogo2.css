@@ -29,7 +29,19 @@ dl.class dt {
     background-color: #bbccdd;
 }
 
+dl.exception dt {
+    background-color: #ddbbcc;
+}
+
 dl.function dt {
+    background-color: #ccddcc;
+}
+
+dl.classmethod dt {
+    background-color: #ccddcc;
+}
+
+dl.staticmethod dt {
     background-color: #ccddcc;
 }
 

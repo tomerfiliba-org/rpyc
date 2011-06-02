@@ -5,8 +5,3 @@ Protocol
    :members:
 
 
-Protocol Constants
-==================
-
-.. automodule:: rpyc.core.consts
-   :members:

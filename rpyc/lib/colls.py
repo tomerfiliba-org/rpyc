@@ -82,7 +82,7 @@ class RefCountingColl(object):
         self._lock.acquire()
         try:
             slot = self._dict[key]
-            if slot[1] <= 1:
+            if slot[1] < 1:
                 del self._dict[key]
             else:
                 slot[1] -= 1

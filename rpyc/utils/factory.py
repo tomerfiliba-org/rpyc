@@ -105,12 +105,14 @@ def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
     :param port: the TCP port to use
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict
-    :param keyfile: passed to ssl.wrap_socket (see its docs)
-    :param certfile: passed to ssl.wrap_socket (see its docs)
-    :param ca_certs: passed to ssl.wrap_socket (see its docs)
-    :param ssl_version: passed to ssl.wrap_socket (see its docs)
+    :param keyfile: see wrap_socket_
+    :param certfile: see wrap_socket_
+    :param ca_certs: see wrap_socket_
+    :param ssl_version: see wrap_socket_
 
     :returns: an RPyC connection
+    
+    .. _wrap_socket: http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket
     """
     ssl_kwargs = {"server_side" : False}
     if keyfile:
@@ -136,9 +138,9 @@ def _get_free_port():
 
 def ssh_connect(sshctx, remote_port, service = VoidService, config = {}):
     """
-    connects to an rpyc server over an SSH tunnel
+    Connects to an RPyC server over an SSH tunnel
     
-    :param sshctx: an rpyc.utils.ssh.SshContext object
+    :param sshctx: an :class:`rpyc.utils.ssh.SshContext` instance
     :param remote_port: the port of the remote server
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict

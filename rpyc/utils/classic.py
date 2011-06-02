@@ -16,17 +16,36 @@ DEFAULT_SERVER_SSL_PORT = 18821
 # connecting
 #===============================================================================
 def connect_channel(channel):
+    """
+    Creates an RPyC connection over the given ``channel``
+    
+    :param channel: the :class:`rpyc.core.channel.Channel` instance
+    
+    :returns: an RPyC connection exposing ``SlaveService``
+    """
     return factory.connect_channel(channel, SlaveService)
 
 def connect_stream(stream):
+    """
+    Creates an RPyC connection over the given stream
+
+    :param channel: the :class:`rpyc.core.stream.Stream` instance
+    
+    :returns: an RPyC connection exposing ``SlaveService``
+    """
     return factory.connect_stream(stream, SlaveService)
 
 def connect_stdpipes():
+    """
+    Creates an RPyC connection over the standard pipes (``stdin`` and ``stdout``)
+    
+    :returns: an RPyC connection exposing ``SlaveService``
+    """
     return factory.connect_stdpipes(SlaveService)
 
 def connect_pipes(input, output):
     """
-    connects 
+    Creates an RPyC connection over two pipes
     
     :param input: the input pipe
     :param output: the output pipe
@@ -37,38 +56,80 @@ def connect_pipes(input, output):
 
 def connect(host, port = DEFAULT_SERVER_PORT, ipv6 = False):
     """
-    creates a socket connection to the given host and port
+    Creates a socket connection to the given host and port.
     
+    :param host: the host to connect to
+    :param port: the TCP port
+    :param ipv6: whether to create an IPv6 socket or IPv4
+    
+    :returns: an RPyC connection exposing ``SlaveService``
     """
     return factory.connect(host, port, SlaveService, ipv6 = ipv6)
 
 def tlslite_connect(host, username, password, port = DEFAULT_SERVER_PORT, 
         ipv6 = False):
-    """creates a secure (TLS) socket connection to the given host and port,
-    authenticating with the given username and password"""
+    """Creates a secure (``TLSlite``) socket connection to the given host 
+    and port, authenticating with the given username and password.
+    
+    :param host: the host to connect to
+    :param username: the username to use
+    :param password: the (plaintext) password to use
+    :param port: the TCP port to use
+    :param ipv6: whether to create an IPv6 socket or IPv4
+    
+    :returns: an RPyC connection exposing ``SlaveService``
+    """
     return factory.tlslite_connect(host, port, username, password, SlaveService, 
         ipv6 = ipv6)
 
 def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None,
         certfile = None, ca_certs = None, ssl_version = None, ipv6 = False):
-    """creates a secure (SSL) socket connection to the given host and port,
-    authenticating with the given certfile and CA file"""
+    """Creates a secure (``SSL``) socket connection to the given host and port,
+    authenticating with the given certfile and CA file.
+    
+    :param host: the host to connect to
+    :param port: the TCP port to use
+    :param keyfile: see wrap_socket_
+    :param certfile: see wrap_socket_
+    :param ca_certs: see wrap_socket_
+    :param ssl_version: see wrap_socket_
+    :param ipv6: whether to create an IPv6 socket or IPv4
+
+    :returns: an RPyC connection exposing ``SlaveService``
+
+    .. _wrap_socket: http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket
+    """
     return factory.ssl_connect(host, port, keyfile = keyfile, certfile = certfile,
         ssl_version = ssl_version, ca_certs = ca_certs, service = SlaveService,
         ipv6 = ipv6)
 
 def ssh_connect(sshctx, remote_port):
-    """connects to the remote server over an SSH tunnel"""
+    """Connects to the remote server over an SSH tunnel. See 
+    :func:`rpyc.utils.factory.ssh_connect`.
+    
+    :param sshctx: the :class:`rpyc.utils.ssh.SshContext` instance
+    :param remote_port: the remote TCP port
+    
+    :returns: an RPyC connection exposing ``SlaveService``
+    """
     return factory.ssh_connect(sshctx, remote_port, SlaveService)
 
 def connect_subproc():
-    """runs an rpyc classic server as a subprocess and return an rpyc
-    connection to it"""
+    """Runs an RPyC classic server as a subprocess and return an RPyC
+    connection to it over stdio
+    
+    :returns: an RPyC connection exposing ``SlaveService``
+    """
     return factory.connect_subproc([sys.executable, "-u", SERVER_FILE, "-q", "-m", "stdio"],
         SlaveService)
 
 def connect_thread():
-    """starts a SlaveService on a thread and connects to it"""
+    """
+    Starts a SlaveService on a thread and connects to it. Useful for testing 
+    purposes. See :func:`rpyc.utils.factory.connect_thread`
+    
+    :returns: an RPyC connection exposing ``SlaveService``
+    """
     return factory.connect_thread(SlaveService, remote_service = SlaveService)
 
 
@@ -177,14 +238,6 @@ def upload_package(conn, module, remotepath = None, chunk_size = 16000):
 
 upload_module = upload_package
 
-#def update_module(conn, module, chunk_size = 16000):
-#    """replaces a module on the remote party"""
-#    rmodule = conn.modules[module.__name__]
-#    lf = inspect.getsourcefile(module)
-#    rf = conn.modules.inspect.getsourcefile(rmodule)
-#    upload_file(conn, lf, rf, chunk_size = chunk_size)
-#    conn.modules.__builtin__.reload(rmodule)
-
 def obtain(proxy):
     """obtains (copies) a remote object from a proxy object. the object is 
     ``pickled`` on the remote side and ``unpickled`` locally, thus moved 
@@ -213,9 +266,46 @@ def deliver(conn, localobj):
     return conn.modules.cPickle.loads(pickle.dumps(localobj))
 
 class redirected_stdio(object):
-    """redirects the other party's stdin, stdout and stderr to those of the
-    local party, so remote STDIO will occur locally"""
+    """
+    Redirects the other party's ``stdin``, ``stdout`` and ``stderr`` to 
+    those of the local party, so remote IO will occur locally. It was 
+    originally written as a ``contextmanager``, but was turned into a class
+    for compatibility with python 2.4
+    
+    Here's the context-manager::
+    
+        @contextmanager
+        def redirected_stdio(conn):
+            orig_stdin = conn.modules.sys.stdin
+            orig_stdout = conn.modules.sys.stdout
+            orig_stderr = conn.modules.sys.stderr
+            try:
+                conn.modules.sys.stdin = sys.stdin
+                conn.modules.sys.stdout = sys.stdout
+                conn.modules.sys.stderr = sys.stderr
+                yield
+            finally:
+                conn.modules.sys.stdin = orig_stdin
+                conn.modules.sys.stdout = orig_stdout
+                conn.modules.sys.stderr = orig_stderr
+    
+    Example usage::
+    
+        with redirected_stdio(conn):
+            # remote IO will occur locally
+        
+    or ::
+        
+        redir = redirected_stdio(conn)
+        try:
+            # remote IO will occur locally
+        finally:
+            redir.restore()
+    """
     def __init__(self, conn):
+        """
+        :param conn: the RPyC connection whose stdio will be redirected
+        """
         self._restored = True
         self.conn = conn
         self.orig_stdin = self.conn.modules.sys.stdin
@@ -228,6 +318,7 @@ class redirected_stdio(object):
     def __del__(self):
         self.restore()
     def restore(self):
+        """Restores the redirection"""
         if self._restored:
             return
         self._restored = True
@@ -239,21 +330,6 @@ class redirected_stdio(object):
     def __exit__(self, t, v, tb):
         self.restore()
 
-#== compatibility with python 2.4 ==
-#@contextmanager
-#def redirected_stdio(conn):
-#    orig_stdin = conn.modules.sys.stdin
-#    orig_stdout = conn.modules.sys.stdout
-#    orig_stderr = conn.modules.sys.stderr
-#    try:
-#        conn.modules.sys.stdin = sys.stdin
-#        conn.modules.sys.stdout = sys.stdout
-#        conn.modules.sys.stderr = sys.stderr
-#        yield
-#    finally:
-#        conn.modules.sys.stdin = orig_stdin
-#        conn.modules.sys.stdout = orig_stdout
-#        conn.modules.sys.stderr = orig_stderr
 
 def pm(conn):
     """same as ``pdb.pm()`` but on a remote exception

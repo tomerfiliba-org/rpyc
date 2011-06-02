@@ -13,6 +13,7 @@ from rpyc.core.async import AsyncResult
 
 
 class PingError(Exception):
+    """The exception raised should :func:`Connection.ping` fail"""
     pass
 
 DEFAULT_CONFIG = dict(
@@ -55,14 +56,15 @@ DEFAULT_CONFIG = dict(
 _connection_id_generator = itertools.count(1)
 
 class Connection(object):
-    """The RPyC connection (also know as the RPyC protocol).
-    * service: the service to expose
-    * channel: the channcel over which messages are passed
-    * config: this connection's config dict (overriding parameters from the
-      default config dict)
-    * _lazy: whether or not to initialize the service with the creation of the
-      connection. default is True. if set to False, you will need to call
-      _init_service manually later
+    """The RPyC *connection* (AKA *protocol*).
+    
+    :param service: the :class:`Service <rpyc.core.service.Service>` to expose
+    :param channel: the :class:`Channel <rpyc.core.channel.Channel>` over which messages are passed
+    :param config: the connection's configuration dict (overriding parameters 
+                   from the default configuration)
+    :param _lazy: whether or not to initialize the service with the creation of
+                  the connection. Default is True. If set to False, you will 
+                  need to call :func:`_init_service` manually later
     """
     def __init__(self, service, channel, config = {}, _lazy = False):
         self._closed = True
@@ -119,7 +121,9 @@ class Connection(object):
         self._local_root = None
         #self._seqcounter = None
         #self._config.clear()
+    
     def close(self, _catchall = True):
+        """closes the connection, releasing all held resources"""
         if self._closed:
             return
         self._closed = True
@@ -136,12 +140,24 @@ class Connection(object):
 
     @property
     def closed(self):
+        """Indicates whether the connection has been closed or not"""
         return self._closed
     def fileno(self):
+        """Returns the connectin's underlying file descriptor"""
         return self._channel.fileno()
 
-    def ping(self, data = "the world is a vampire!" * 20, timeout = 3):
-        """assert that the other party is functioning properly"""
+    def ping(self, data = None, timeout = 3):
+        """       
+        Asserts that the other party is functioning properly, by making sure
+        the *data* is echoed back before the *timeout* expires
+        
+        :param data: the data to send (leave ``None`` for the default buffer)
+        :param timeout: the maximal time to wait for echo
+        
+        :raises: :class:`PingError` if the echoed data does not match
+        """
+        if data is None:
+            data = "abcdefghijklmnopqrstuvwxyz" * 20
         res = self.async_request(consts.HANDLE_PING, data, timeout = timeout)
         if res.value != data:
             raise PingError("echo mismatches sent data")
@@ -285,11 +301,11 @@ class Connection(object):
             raise ValueError("invalid message type: %r" % (msg,))
 
     def poll(self, timeout = 0):
-        """serve a single transaction, should one arrives in the given
-        interval. note that handling a request/reply may trigger nested
-        requests, which are all part of the transaction.
+        """Serves a single transaction, should one arrives in the given
+        interval. Note that handling a request/reply may trigger nested
+        requests, which are all part of a single transaction.
 
-        returns True if one was served, False otherwise"""
+        :returns: ``True`` if a transaction was served, ``False`` otherwise"""
         data = self._recv(timeout, wait_for_lock = False)
         if not data:
             return False
@@ -297,12 +313,14 @@ class Connection(object):
         return True
 
     def serve(self, timeout = 1):
-        """serve a single request or reply that arrives within the given
-        time frame (default is 1 sec). note that the dispatching of a request
+        """Serves a single request or reply that arrives within the given
+        time frame (default is 1 sec). Note that the dispatching of a request
         might trigger multiple (nested) requests, thus this function may be
-        reentrant. returns True if a request or reply were received, False
-        otherwise."""
-
+        reentrant. 
+        
+        :returns: ``True`` if a request or reply were received, ``False``
+                  otherwise.
+        """
         data = self._recv(timeout, wait_for_lock = True)
         if not data:
             return False
@@ -310,7 +328,8 @@ class Connection(object):
         return True
 
     def serve_all(self):
-        """serve all requests and replies while the connection is alive"""
+        """Serves all requests and replies for as long as the connection is 
+        alive."""
         try:
             try:
                 while True:
@@ -324,8 +343,11 @@ class Connection(object):
             self.close()
 
     def poll_all(self, timeout = 0):
-        """serve all requests and replies that arrive within the given interval.
-        returns True if at least one was served, False otherwise"""
+        """Serves all requests and replies that arrive within the given interval.
+        
+        :returns: ``True`` if at least transaction was served, ``False`` 
+                  otherwise
+        """
         at_least_once = False
         try:
             while self.poll(timeout):
@@ -338,7 +360,11 @@ class Connection(object):
     # requests
     #
     def sync_request(self, handler, *args):
-        """send a request and wait for the reply to arrive"""
+        """Sends a synchronous request (waits for the reply to arrive)
+        
+        :raises: any exception that the requets may be generated
+        :returns: the result of the request
+        """
         seq = self._send_request(handler, args)
         while seq not in self._sync_replies:
             self.serve(0.1)
@@ -352,8 +378,11 @@ class Connection(object):
         seq = self._send_request(handler, args)
         self._async_callbacks[seq] = callback
     def async_request(self, handler, *args, **kwargs):
-        """send a request and return an AsyncResult object, which will
-        eventually hold the reply"""
+        """Send an asynchronous request (does not wait for it to finish)
+        
+        :returns: an :class:`rpyc.core.async.AsyncResult` object, which will
+                  eventually hold the result (or exception)
+        """
         timeout = kwargs.pop("timeout", None)
         if kwargs:
             raise TypeError("got unexpected keyword argument %r" % (kwargs.keys()[0],))
@@ -365,7 +394,7 @@ class Connection(object):
 
     @property
     def root(self):
-        """fetch the root object of the other party"""
+        """Fetches the root object (service) of the other party"""
         if self._remote_root is None:
             self._remote_root = self.sync_request(consts.HANDLE_GETROOT)
         return self._remote_root
@@ -405,7 +434,7 @@ class Connection(object):
         return accessor(obj, name, *args)
 
     #
-    # handlers
+    # request handlers
     #
     def _handle_ping(self, data):
         return data

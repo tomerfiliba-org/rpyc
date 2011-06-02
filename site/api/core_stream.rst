@@ -10,3 +10,4 @@ Channel
 
 .. automodule:: rpyc.core.channel
    :members:
+

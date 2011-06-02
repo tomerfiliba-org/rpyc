@@ -1,32 +1,26 @@
 """
-authenticators: the server instance accepts an authenticator object,
-which is basically any callable (i.e., a function) that takes the newly
-connected socket and "authenticates" it.
-
-the authenticator should return a socket-like object with its associated
-credentials (a tuple), or raise AuthenticationError if it fails.
-
-a very trivial authenticator might be
+An *authenticator* is basically a callable object that takes a socket and
+"authenticates" it in some way. Upon success, it must return a tuple containing 
+a socket-like object and its credentials (any object), or raise an 
+:class:`AuthenticationError` upon failure. There are no constraints on what the
+authenticator may or may not do, for instance::
 
     def magic_word_authenticator(sock):
         if sock.recv(5) != "Ma6ik":
             raise AuthenticationError("wrong magic word")
         return sock, None
 
+RPyC comes bundled with an authenticator for ``SSL`` (using certificates) 
+and one for TLSLite's ``VerifierDB`` approach (username-password authentication).
+These authenticators, for instance, both verify the peer's identity and wrap the 
+socket with an encrypted transport (which replaces the original socket).
+
+Authenticators are used by :class:`servers <rpyc.utils.server.Server>` to 
+validate an incoming connection. Using them is pretty trivial ::
+
     s = ThreadedServer(...., authenticator = magic_word_authenticator)
+    s.start()
 
-your authenticator can return any socket-like object. for instance, it may
-authenticate the client and return a TLS/SSL-wrapped socket object that
-encrypts the transport.
-
-the credentials returned alongside with the new socket can be any object.
-it will be stored in the rpyc connection configruation under the key
-"credentials", and may be used later by the service logic. if no credentials
-are applicable, just return None as in the example above.
-
-rpyc includes integration with tlslite, a TLS/SSL library:
-the VdbAuthenticator class authenticates clients based on username-password
-pairs.
 """
 import os
 import sys
@@ -37,10 +31,24 @@ ssl = safe_import("ssl")
 
 
 class AuthenticationError(Exception):
+    """raised to signal a failed authentication attempt"""
     pass
 
 
 class SSLAuthenticator(object):
+    """An implementation of the authenticator protocol for ``SSL``. The given
+    socket is wrapped by ``ssl.wrap_socket`` and is validated based on 
+    certificates
+    
+    :param keyfile: the server's key file
+    :param certfile: the server's certificate file
+    :param ca_certs: the server's certificate authority file
+    :param ssl_version: the SSL version to use
+    
+    See `ssl.wrap_socket <http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket>`_
+    for more info.
+    """
+    
     def __init__(self, keyfile, certfile, ca_certs = None, ssl_version = None):
         self.keyfile = keyfile
         self.certfile = certfile
@@ -66,6 +74,10 @@ class SSLAuthenticator(object):
 
 
 class TlsliteVdbAuthenticator(object):
+    """
+    A Verifier Database authenticator, based on TLSlite's mechanisms.
+    Use :file:`scripts/rpyc_vdbconf.py` to manipulate VDB files.
+    """
     __slots__ = ["vdb"]
     BITS = 2048
 
@@ -74,6 +86,9 @@ class TlsliteVdbAuthenticator(object):
 
     @classmethod
     def from_dict(cls, users):
+        """factory method that creates a VDB from a dictionary mapping usernames
+        to their respective passwords"""
+        
         inst = cls(tlsapi.VerifierDB())
         for username, password in users.iteritems():
             inst.set_user(username, password)
@@ -94,6 +109,7 @@ class TlsliteVdbAuthenticator(object):
 
     @classmethod
     def from_file(cls, filename, mode = "w"):
+        """loads a VDB from file"""
         vdb = tlsapi.VerifierDB(filename)
         if os.path.exists(filename):
             cls._load_vdb_with_mode(vdb, mode)
@@ -105,15 +121,19 @@ class TlsliteVdbAuthenticator(object):
         return cls(vdb)
 
     def sync(self):
+        """sync the in-memory changes to DB"""
         self.vdb.db.sync()
 
     def set_user(self, username, password):
+        """adds/replaces the given username and sets its password"""
         self.vdb[username] = self.vdb.makeVerifier(username, password, self.BITS)
 
     def del_user(self, username):
+        """deletes the given username from the DB"""
         del self.vdb[username]
 
     def list_users(self):
+        """returns a list of all usernames"""
         return self.vdb.keys()
 
     def __call__(self, sock):
