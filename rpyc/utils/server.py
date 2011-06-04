@@ -57,6 +57,8 @@ class Server(object):
         self.backlog = backlog
         if auto_register is None:
             self.auto_register = bool(registrar)
+        else:
+            self.auto_register = auto_register
         self.protocol_config = protocol_config
         self.clients = set()
 
