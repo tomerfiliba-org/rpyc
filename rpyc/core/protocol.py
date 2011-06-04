@@ -52,6 +52,50 @@ DEFAULT_CONFIG = dict(
     connid = None,
     credentials = None,
 )
+"""
+The default configuration dictionary of the protocol. You can override these parameters
+by passing a different configuration dict to the :class:`Connection` class.
+
+.. note::
+   You only need to override the parameters you want to change. There's no need
+   to repeat parameters whose values remain unchanged.
+
+=====================================  ================  =====================================================
+Parameter                               Default value     Description
+=====================================  ================  =====================================================
+``allow_safe_attrs``                   ``True``          Whether to allow the use of *safe* attributes
+                                                         (only those listed as ``safe_attrs``)
+``allow_exposed_attrs``                ``True``          Whether to allow exposed attributes 
+                                                         (attributes that start with the ``exposed_prefix``)
+``allow_public_attrs``                 ``False``         Whether to allow public attributes
+                                                         (attributes that don't start with ``_``)
+``allow_all_attrs``                    ``False``         Whether to allow all attributes (including private)
+``safe_attrs``                         ``set([...])``    The set of attributes considered safe
+``exposed_prefix``                     ``"exposed_"``    The prefix of exposed attributes
+``allow_getattr``                      ``True``          Whether to allow getting of attributes (``getattr``)
+``allow_setattr``                      ``False``         Whether to allow setting of attributes (``setattr``)
+``allow_delattr``                      ``False``         Whether to allow deletion of attributes (``delattr``)
+``allow_pickle``                       ``False``         Whether to allow the use of ``pickle``
+
+``include_local_traceback``            ``True``          Whether to include the local traceback
+                                                         in the remote exception
+``instantiate_custom_exceptions``      ``False``         Whether to allow instantiation of
+                                                         custom exceptions (not the built in ones)
+``import_custom_exceptions``           ``False``         Whether to allow importing of 
+                                                         exceptions from not-yet-imported modules
+``instantiate_oldstyle_exceptions``    ``False``         Whether to allow instantiation of exceptions
+                                                         which don't derive from ``Exception``
+``propagate_SystemExit_locally``       ``False``         Whether to propagate ``SystemExit``
+                                                         locally or to the other party
+
+``connid``                             ``None``          **Runtime**: the RPyC connection ID (used
+                                                         mainly for debugging purposes) 
+``credentials``                        ``None``          **Runtime**: the credentails object that was returned
+                                                         by the server's :ref:`authenticator <authenticators>`
+                                                         or ``None``
+=====================================  ================  =====================================================
+"""
+
 
 _connection_id_generator = itertools.count(1)
 
@@ -61,7 +105,7 @@ class Connection(object):
     :param service: the :class:`Service <rpyc.core.service.Service>` to expose
     :param channel: the :class:`Channel <rpyc.core.channel.Channel>` over which messages are passed
     :param config: the connection's configuration dict (overriding parameters 
-                   from the default configuration)
+                   from the :data:`default configuration <DEFAULT_CONFIG>`)
     :param _lazy: whether or not to initialize the service with the creation of
                   the connection. Default is True. If set to False, you will 
                   need to call :func:`_init_service` manually later

@@ -1,5 +1,12 @@
-Classic Factories and Helpers
-=============================
+Classic
+=======
 
 .. automodule:: rpyc.utils.classic
    :members:
+
+Helpers
+=======
+
+.. automodule:: rpyc.utils.helpers
+   :members:
+

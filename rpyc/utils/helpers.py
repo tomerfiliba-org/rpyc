@@ -1,5 +1,5 @@
 """
-helpers and wrappers for common rpyc tasks
+Helpers and wrappers for common RPyC tasks
 """
 import time
 import threading
@@ -10,9 +10,29 @@ from rpyc.core.netref import syncreq, asyncreq
 
 
 def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
-    """buffering iterator - reads the remote iterator in chunks starting with
-    `chunk` up to `max_chunk`, multiplying by `factor` as an exponential
-    backoff"""
+    """Buffered iterator - reads the remote iterator in chunks starting with
+    *chunk*, multiplying the chunk size by *factor* every time, as an 
+    exponential-backoff, up to a chunk of *max_chunk* size.
+    
+    ``buffiter`` is very useful for tight loops, where you fetch an element 
+    from the other side with every iterator. Instead of being limited by the 
+    network's latency after every iteration, ``buffiter`` fetches a "chunk" 
+    of elements every time, reducing the amount of network I/Os.
+    
+    :param obj: An iterable object (supports ``iter()``)
+    :param chunk: the initial chunk size
+    :param max_chunk: the maximal chunk size
+    :param factor: the factor by which to multiply the chunk size after every 
+                   iterator (up to *max_chunk*). Must be >= 1.
+    
+    :returns: an iterator
+    
+    Example::
+        
+        cursor = db.get_cursor()
+        for id, name, dob in buffiter(cursor.select("Id", "Name", "DoB")):
+            print id, name, dob
+    """
     if factor < 1:
         raise ValueError("factor must be >= 1, got %r" % (factor,))
     it = iter(obj)
@@ -26,8 +46,8 @@ def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
             yield elem
 
 class _Async(object):
-    """creates an async proxy wrapper over an existing proxy. async proxies
-    are cached. invoking an async proxy will return an AsyncResult instead of
+    """Creates an async proxy wrapper over an existing proxy. Async proxies
+    are cached. Invoking an async proxy will return an AsyncResult instead of
     blocking"""
 
     __slots__ = ("proxy", "__weakref__")
@@ -40,6 +60,33 @@ class _Async(object):
 
 _async_proxies_cache = WeakValueDict()
 def async(proxy):
+    """
+    Returns an asynchronous "version" of the given proxy. Invoking the returned
+    proxy will not block; instead it will return an 
+    :class:`rpyc.core.async.AsyncResult` object that you can test for completion
+    
+    :param proxy: any **callable** RPyC proxy
+    
+    :returns: the proxy, wrapped by an asynchronous wrapper
+    
+    Example::
+    
+        async_sleep = rpyc.async(conn.modules.time.sleep)
+        res = async_sleep(5)
+    
+    .. _async_note:
+    
+    .. note:: 
+       In order to avoid GC-cycles, the returned asynchronous wrapper is cached 
+       as a weak reference. Therefore, do not use::
+          
+           rpyc.async(foo)(5)
+       
+       Always store the returned asynchronous wrapper in a variable, e.g. ::
+       
+           a_foo = rpyc.async(foo)
+           a_foo(5)
+    """
     pid = id(proxy)
     if pid in _async_proxies_cache:
         return _async_proxies_cache[pid]
@@ -54,9 +101,21 @@ def async(proxy):
 async.__doc__ = _Async.__doc__
 
 class timed(object):
-    """creates a timed asynchronous proxy. invoking the timed proxy will
-    run in the background and will raise an AsyncResultTimeout exception
-    if the computation does not terminate within the given timeout"""
+    """Creates a timed asynchronous proxy. Invoking the timed proxy will
+    run in the background and will raise an :class:`rpyc.core.async.AsyncResultTimeout` 
+    exception if the computation does not terminate within the given time frame
+    
+    :param proxy: any **callable** RPyC proxy
+    :param timeout: the maximal number of seconds to allow the operation to run
+    
+    :returns: a ``timed`` wrapped proxy
+    
+    Example::
+    
+        t_sleep = rpyc.timed(conn.modules.time.sleep, 6) # allow up to 6 seconds
+        t_sleep(4) # okay
+        t_sleep(8) # will time out and raise AsyncResultTimeout
+    """
 
     __slots__ = ("__weakref__", "proxy", "timeout")
     def __init__(self, proxy, timeout):
@@ -70,9 +129,16 @@ class timed(object):
         return "timed(%r, %r)" % (self.proxy.proxy, self.timeout)
 
 class BgServingThread(object):
-    """runs an RPyC server in the background to serve all requests and replies
-    that arrive on the given RPyC connection. the thread is created along with
-    the object; you can use the stop() method to stop the server thread"""
+    """Runs an RPyC server in the background to serve all requests and replies
+    that arrive on the given RPyC connection. The thread is started upon the
+    the instantiation of the ``BgServingThread`` object; you can use the 
+    :meth:`stop` method to stop the server thread
+    
+    Example::
+    
+        conn = rpyc.connect(...)
+        bg_server = BgServingThread(conn)
+    """
     # these numbers are magical...
     SERVE_INTERVAL = 0.0
     SLEEP_INTERVAL = 0.1

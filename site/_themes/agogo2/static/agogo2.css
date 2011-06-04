@@ -49,6 +49,10 @@ dl.attribute dt {
     background-color: #ddddcc;
 }
 
+dl.data dt {
+    background-color: #ddddcc;
+}
+
 dl.method dt {
     background-color: #ccddcc;
 }
@@ -61,7 +65,9 @@ dl.method dt em {
     font-family: monospace;
 }
 
-
+dd table.docutils {
+    border-collapse: collapse;
+}
 
 
 

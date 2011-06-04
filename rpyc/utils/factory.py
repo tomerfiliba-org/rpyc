@@ -208,7 +208,8 @@ def connect_subproc(args, service = VoidService, config = {}):
     return conn
 
 def connect_thread(service = VoidService, config = {}, remote_service = VoidService, remote_config = {}):
-    """starts an rpyc server on a thread and connects to it over a socket.
+    """starts an rpyc server on a new thread, bound to an arbitrary port, 
+    and connects to it over a socket.
     
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict

@@ -1,7 +1,5 @@
 API
 ===
-* servers, registry
-* helpers
 * brine, vinegar
 * netref
 

@@ -17,19 +17,46 @@ signal = safe_import("signal")
 
 
 class ThreadPoolFull(Exception):
+    """raised when the ThreadPoolServer's is overloaded (all threads in the 
+    thread pool are used)"""
     pass
 
 
 class Server(object):
+    """Base server implementation
+    
+    :param service: the :class:`service <service.Service>` to expose
+    :param hostname: the host to bind to. Default is IPADDR_ANY, but you may 
+                     want to restrict it only to ``localhost`` in some setups
+    :param ipv6: whether to create an IPv6 or IPv4 socket. The default is IPv4
+    :param port: the TCP port to bind to
+    :param backlog: the socket's backlog (passed to ``listen()``)
+    :param reuse_addr: whether or not to create the socket with the 
+                       ``SO_REUSEADDR`` option set. 
+    :param authenticator: the :ref:`authenticators` to use. If ``None``, no
+                          authentication is performed.
+    :param registrar: the :class:`registrar <rpyc.utils.registry.RegistryClient>` 
+                      to use. If ``None``, a default 
+                      `rpyc.utils.registry.UDPRegistryClient` will be used
+    :param auto_register: whether or not to register using the *registrar*.
+                          By default, the server will attempt to register only
+                          if a registrar was explicitly given. 
+    :param protocol_config: the :data:`configuration dictionary <rpyc.core.protocol.DEFAULT_CONFIG>` 
+                            that is passed to the RPyC connection
+    :param logger: the ``logger`` to use (of the built-in ``logging`` module).
+                   If ``None``, a default logger will be created.
+    """
+    
     def __init__(self, service, hostname = "", ipv6 = False, port = 0, 
             backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
-            auto_register = False, protocol_config = {}, logger = None):
+            auto_register = None, protocol_config = {}, logger = None):
         self.active = False
         self._closed = False
         self.service = service
         self.authenticator = authenticator
         self.backlog = backlog
-        self.auto_register = bool(registrar)
+        if auto_register is None:
+            self.auto_register = bool(registrar)
         self.protocol_config = protocol_config
         self.clients = set()
 
@@ -59,6 +86,8 @@ class Server(object):
         self.registrar = registrar
 
     def close(self):
+        """Closes (terminates) the server and all of its clients. If applicable, 
+        also unregisters from the registry server"""
         if self._closed:
             return
         self._closed = True
@@ -79,9 +108,11 @@ class Server(object):
         self.clients.clear()
 
     def fileno(self):
+        """returns the listener socket's file descriptor"""
         return self.listener.fileno()
 
     def accept(self):
+        """accepts an incoming socket connection (blocking)"""
         while True:
             try:
                 sock, addrinfo = self.listener.accept()
@@ -174,7 +205,7 @@ class Server(object):
                 self.logger.info("background auto-register thread finished")
 
     def start(self):
-        """starts the server. use close() to stop"""
+        """Starts the server (blocking). Use :meth:`close` to stop"""
         self.listener.listen(self.backlog)
         self.logger.info("server started on [%s]:%s", self.host, self.port)
         self.active = True
@@ -200,6 +231,12 @@ class Server(object):
 
 
 class ThreadedServer(Server):
+    """
+    A server that spawns a thread for each connection. Works on any platform
+    that supports threads.
+    
+    Parameters: see :class:`Server`
+    """
     def _accept_method(self, sock):
         t = threading.Thread(target = self._authenticate_and_serve_client, args = (sock,))
         t.setDaemon(True)
@@ -207,58 +244,65 @@ class ThreadedServer(Server):
 
 
 class ThreadPoolServer(Server):
-  '''This server is threaded like the ThreadedServer but reuses threads so that
-  recreation is not necessary for each request. The pool of threads has a fixed
-  size that can be set with the 'nbThreads' argument. Otherwise, the default is 20'''
-
-  def __init__(self, *args, **kwargs):
-    '''Initializes a ThreadPoolServer. In particular, instantiate the thread pool.'''
-    # get the number of threads in the pool
-    nbthreads = 20
-    if 'nbThreads' in kwargs:
-      nbthreads = kwargs['nbThreads']
-      del kwargs['nbThreads']
-    # init the parent
-    Server.__init__(self, *args, **kwargs)
-    # create a queue where requests will be pending until a thread is ready
-    self._client_queue = Queue.Queue(nbthreads)
-    # declare the pool as already active
-    self.active = True
-    # setup the thread pool
-    for i in range(nbthreads):
-      t = threading.Thread(target = self._authenticate_and_serve_clients, args=(self._client_queue,))
-      t.daemon = True
-      t.start()
-
-  def _authenticate_and_serve_clients(self, queue):
-    '''Main method run by the threads of the thread pool. It gets work from the
-    internal queue and calls the _authenticate_and_serve_client method'''
-    while self.active:
-      try:
-        sock = queue.get(True, 1)
-        self._authenticate_and_serve_client(sock)
-      except Queue.Empty:
-        # we've timed out, let's just retry. We only use the timeout so that this
-        # thread can stop even if there is nothing in the queue
-        pass
-      except Exception, e:
-        # "Caught exception in Worker thread" message
-        self.logger.info("failed to serve client, caught exception : %s", str(e))
-        # wait a bit so that we do not loop too fast in case of error
-        time.sleep(.2)
-
-  def _accept_method(self, sock):
-    '''Implementation of the accept method : only pushes the work to the internal queue.
-    In case the queue is full, raises an AsynResultTimeout error'''
-    try:
-      # try to put the request in the queue
-      self._client_queue.put_nowait(sock)
-    except Queue.Full:
-      # queue was full, reject request
-      raise ThreadPoolFull("server is overloaded")
+    """This server is threaded like the ThreadedServer but reuses threads so that
+    recreation is not necessary for each request. The pool of threads has a fixed
+    size that can be set with the 'nbThreads' argument. Otherwise, the default is 20"""
+    
+    def __init__(self, *args, **kwargs):
+        '''Initializes a ThreadPoolServer. In particular, instantiate the thread pool.'''
+        # get the number of threads in the pool
+        nbthreads = 20
+        if 'nbThreads' in kwargs:
+            nbthreads = kwargs['nbThreads']
+            del kwargs['nbThreads']
+        # init the parent
+        Server.__init__(self, *args, **kwargs)
+        # create a queue where requests will be pending until a thread is ready
+        self._client_queue = Queue.Queue(nbthreads)
+        # declare the pool as already active
+        self.active = True
+        # setup the thread pool
+        for i in range(nbthreads):
+            t = threading.Thread(target = self._authenticate_and_serve_clients, args=(self._client_queue,))
+            t.daemon = True
+            t.start()
+    
+    def _authenticate_and_serve_clients(self, queue):
+        '''Main method run by the threads of the thread pool. It gets work from the
+        internal queue and calls the _authenticate_and_serve_client method'''
+        while self.active:
+            try:
+                sock = queue.get(True, 1)
+                self._authenticate_and_serve_client(sock)
+            except Queue.Empty:
+                # we've timed out, let's just retry. We only use the timeout so that this
+                # thread can stop even if there is nothing in the queue
+                pass
+            except Exception, e:
+                # "Caught exception in Worker thread" message
+                self.logger.info("failed to serve client, caught exception : %s", str(e))
+                # wait a bit so that we do not loop too fast in case of error
+                time.sleep(.2)
+    
+    def _accept_method(self, sock):
+        '''Implementation of the accept method : only pushes the work to the internal queue.
+        In case the queue is full, raises an AsynResultTimeout error'''
+        try:
+            # try to put the request in the queue
+            self._client_queue.put_nowait(sock)
+        except Queue.Full:
+            # queue was full, reject request
+            raise ThreadPoolFull("server is overloaded")
 
 
 class ForkingServer(Server):
+    """
+    A server that forks a child process for each connection. Available on 
+    POSIX compatible systems only.
+    
+    Parameters: see :class:`Server`
+    """
+    
     def __init__(self, *args, **kwargs):
         if not signal:
             raise OSError("ForkingServer not supported on this platform")

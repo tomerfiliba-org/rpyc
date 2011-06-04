@@ -1,5 +1,15 @@
 """
-rpyc registry server implementation
+RPyC **registry server** implementation. The registry is much like 
+`Avahi <http://en.wikipedia.org/wiki/Avahi_(software)>`_ or 
+`Bonjour <http://en.wikipedia.org/wiki/Bonjour_(software)>`_, but tailored to
+the needs of RPyC. Also, neither of them supports (or supported) Windows,
+and Bonjour has a restrictive license. Moreover, they are too "powerful" for 
+what RPyC needed and required too complex a setup.
+
+If anyone wants to implement the RPyC registry using Avahi, Bonjour, or any 
+other zeroconf implementation -- I'll be happy to include them. 
+
+Refer to :file:`rpyc/scripts/rpyc_registry.py` for more info.
 """
 import sys
 import socket
@@ -18,6 +28,8 @@ REGISTRY_PORT           = 18811
 #------------------------------------------------------------------------------
 
 class RegistryServer(object):
+    """Base registry server"""
+    
     def __init__(self, listenersock, pruning_timeout = None, logger = None):
         self.sock = listenersock
         self.port = self.sock.getsockname()[1]
@@ -34,14 +46,15 @@ class RegistryServer(object):
         raise NotImplementedError()
 
     def on_service_added(self, name, addrinfo):
-        """called when a new service joins the registry (but on keepalives).
+        """called when a new service joins the registry (but not on keepalives).
         override this to add custom logic"""
 
     def on_service_removed(self, name, addrinfo):
         """called when a service unregisters or is pruned.
         override this to add custom logic"""
 
-    def add_service(self, name, addrinfo):
+    def _add_service(self, name, addrinfo):
+        """updates the service's keep-alive time stamp"""
         if name not in self.services:
             self.services[name] = {}
         is_new = addrinfo not in self.services
@@ -52,7 +65,8 @@ class RegistryServer(object):
             except Exception:
                 self.logger.exception('error executing service add callback')
 
-    def remove_service(self, name, addrinfo):
+    def _remove_service(self, name, addrinfo):
+        """removes a single server of the given service"""
         self.services[name].pop(addrinfo, None)
         if not self.services[name]:
             del self.services[name]
@@ -62,6 +76,7 @@ class RegistryServer(object):
             self.logger.exception('error executing service remove callback')
 
     def cmd_query(self, host, name):
+        """implementation of the ``query`` command"""
         name = name.upper()
         self.logger.debug("querying for %r", name)
         if name not in self.services:
@@ -74,7 +89,7 @@ class RegistryServer(object):
         for addrinfo, t in all_servers:
             if t < oldest:
                 self.logger.debug("discarding stale %s:%s", *addrinfo)
-                self.remove_service(name, addrinfo)
+                self._remove_service(name, addrinfo)
             else:
                 servers.append(addrinfo)
 
@@ -82,15 +97,17 @@ class RegistryServer(object):
         return tuple(servers)
 
     def cmd_register(self, host, names, port):
+        """implementation of the ``register`` command"""
         self.logger.debug("registering %s:%s as %s", host, port, ", ".join(names))
         for name in names:
-            self.add_service(name.upper(), (host, port))
+            self._add_service(name.upper(), (host, port))
         return "OK"
 
     def cmd_unregister(self, host, port):
+        """implementation of the ``unregister`` command"""
         self.logger.debug("unregistering %s:%s", host, port)
         for name in self.services.keys():
-            self.remove_service(name, (host, port))
+            self._remove_service(name, (host, port))
         return "OK"
 
     def _recv(self):
@@ -125,6 +142,7 @@ class RegistryServer(object):
                 self._send(brine.dump(reply), addrinfo)
 
     def start(self):
+        """Starts the registry server (blocks)"""
         if self.active:
             raise ValueError("server is already running")
         if self.sock is None:
@@ -143,12 +161,16 @@ class RegistryServer(object):
             self.sock = None
 
     def close(self):
+        """Closes (terminates) the registry server"""
         if not self.active:
             raise ValueError("server is not running")
         self.logger.debug("stopping server...")
         self.active = False
 
 class UDPRegistryServer(RegistryServer):
+    """UDP-based registry server. The server listens to UDP broadcasts and
+    answers them. Useful in local networks, were broadcasts are allowed"""
+    
     def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT,
             pruning_timeout = None, logger = None):
 
@@ -171,6 +193,10 @@ class UDPRegistryServer(RegistryServer):
             pass
 
 class TCPRegistryServer(RegistryServer):
+    """TCP-based registry server. The server listens to a certain TCP port and
+    answers requests. Useful when you need to cross routers in the network, since
+    they block UDP broadcasts"""
+    
     def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT,
             pruning_timeout = None, logger = None, reuse_addr = True):
 
@@ -206,6 +232,8 @@ class TCPRegistryServer(RegistryServer):
 # clients (registrars)
 #------------------------------------------------------------------------------
 class RegistryClient(object):
+    """Base registry client. Also known as **registrar**"""
+    
     REREGISTER_INTERVAL = 60
 
     def __init__(self, ip, port, timeout, logger = None):
@@ -220,15 +248,45 @@ class RegistryClient(object):
         raise NotImplementedError()
 
     def discover(self, name):
+        """Sends a query for the specified service name.
+        
+        :param name: the service name (or one of its aliases)
+        
+        :returns: a list of ``(host, port)`` tuples
+        """
         raise NotImplementedError()
 
     def register(self, aliases, port):
+        """Registers the given service aliases with the given TCP port. This 
+        API is intended to be called only by an RPyC server.
+        
+        :param aliases: the :class:`service's <rpyc.core.service.Service>` aliases
+        :param port: the listening TCP port of the server
+        """
         raise NotImplementedError()
 
     def unregister(self, port):
+        """Unregisters the given RPyC server. This API is intended to be called
+        only by an RPyC server.
+        
+        :param port: the listening TCP port of the RPyC server to unregister
+        """
         raise NotImplementedError()
 
 class UDPRegistryClient(RegistryClient):
+    """UDP-based registry clients. By default, it sends UDP broadcasts (requires 
+    special user privileges on certain OS's) and collects the replies. You can 
+    also specify the IP address to send to.
+    
+    Example::
+    
+        registrar = UDPRegistryClient()
+        list_of_servers = registrar.discover("foo")
+
+    .. note::
+       Consider using :func:`rpyc.utils.factory.discover` instead
+    """
+    
     def __init__(self, ip = "255.255.255.255", port = REGISTRY_PORT, timeout = 2,
     bcast = None, logger = None):
         RegistryClient.__init__(self, ip = ip, port = port, timeout = timeout,
@@ -299,6 +357,18 @@ class UDPRegistryClient(RegistryClient):
 
 
 class TCPRegistryClient(RegistryClient):
+    """TCP-based registry client. You must specify the host (registry server)
+    to connect to.  
+    
+    Example::
+    
+        registrar = TCPRegistryClient("localhost")
+        list_of_servers = registrar.discover("foo")
+    
+    .. note::
+       Consider using :func:`rpyc.utils.factory.discover` instead
+    """
+    
     def __init__(self, ip, port = REGISTRY_PORT, timeout = 2, logger = None):
         RegistryClient.__init__(self, ip = ip, port = port, timeout = timeout,
             logger = logger)
