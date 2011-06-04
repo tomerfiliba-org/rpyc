@@ -11,11 +11,15 @@ a.reference.internal {
 }
 
 div.header h1 {
-    font-family: "Georgia", "Times New Roman", serif;
+    font-family: "Trebuchet MS", "Georgia", "Times New Roman", serif;
     font-weight: normal;
-    font-size: 220%;
-    letter-spacing: .08em;
+    font-size: 3.2em;
+    letter-spacing: .05em;
 }
+
+/*div.header h1 a {
+    color: #ffde52;
+}*/
 
 tt.descclassname {
     display:none;

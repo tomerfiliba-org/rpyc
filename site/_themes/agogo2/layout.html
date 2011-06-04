@@ -1,15 +1,47 @@
 {% extends "agogo/layout.html" %}
 
-{% block relbar1 %}
-    <!-- div align="left" style="background-color: #ffffff;">
-        <a href="{{pathto(master_doc)}}"><img src="_static/logo.png" height="140px" /></a>
-    </div -->
-    {{ super() }}
+{% block header %}
+    <p style="position: absolute; left: 17px; top: 12px;">
+    <a href="http://tomerfiliba.com"><img src="{{ pathto('_static/fish2.png', 1) }}" alt="Tomer Filiba" width="40%"/></a>
+    <br/>
+    <small>tomer filiba</small>
+    </p>
+
+    <div class="header-wrapper">
+      <div class="header">
+
+        {%- if logo %}
+          <p class="logo"><a href="{{ pathto(master_doc) }}">
+            <img class="logo" src="{{ pathto('_static/' + logo, 1) }}" alt="Logo"/>
+          </a></p>
+        {%- endif %}
+        
+        {%- block headertitle %}
+          <table border="0"><tr>
+          <td style="padding-top: 15px;">
+          <h1><a href="{{ pathto(master_doc) }}">RPyC</a></h1>
+          </td>
+          <td>
+          <em>&nbsp;&nbsp;&nbsp;&nbsp;Unbounded Computing</em>
+          </td>
+          </tr></table>
+        {%- endblock %}
+        
+       </div>
+    </div>
 {% endblock %}
 
-{% block sidebarsearch %}
+{% block sidebartoc %}
     {{ super() }}
     
+    <ul><li class="toctree-l1">
+    <a class="reference internal" href="{{ pathto('genindex') }}">Site Index</a>
+    </li></ul>
+
+{% endblock %}
+
+
+{% block sidebarsearch %}
     <p> 
         <script type="text/javascript" src="http://www.ohloh.net/p/26760/widgets/project_thin_badge.js"></script>
     </p>
@@ -17,10 +49,10 @@
 
 {% block footer %}
     {{ super() }}
-    
-    <!-- script type="text/javascript">
+
+    <script type="text/javascript">
       var _gaq = _gaq || [];
-      _gaq.push(['_setAccount', 'UA-23269139-1']);
+      _gaq.push(['_setAccount', 'UA-6100995-3']);
       _gaq.push(['_trackPageview']);
     
       (function() {
@@ -28,6 +60,8 @@
         ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
         var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
       })();
-    </script -- >
+    
+    </script>    
+
 {% endblock %}
 

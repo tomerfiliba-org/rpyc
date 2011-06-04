@@ -1,5 +1,6 @@
 """
-**NetRef**: a transparent *network reference*.
+**NetRef**: a transparent *network reference*. This module contains quite a lot
+of *magic*, so keep reading only if your
 """
 import sys
 import inspect
