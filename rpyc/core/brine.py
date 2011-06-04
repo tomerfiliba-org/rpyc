@@ -1,9 +1,25 @@
 """
-brine - a simple, fast and secure object serializer for immutable objects,
-optimized for small integers [-48..160).
-the following types are supported: int, long, bool, str, float, unicode,
-slice, complex, tuple(of simple types), forzenset(of simple types)
-as well as the following singletons: None, NotImplemented, Ellipsis
+**Brine** is a simple, fast and secure object serializer for **immutable** objects.
+The following types are supported: ``int``, ``long``, ``bool``, ``str``, ``float``,
+``unicode``, ``bytes``, ``slice``, ``complex``, ``tuple`` (of simple types), 
+``forzenset`` (of simple types) as well as the following singletons: ``None``, 
+``NotImplemented``, and ``Ellipsis``.
+
+Example::
+
+    >>> x = ("he", 7, u"llo", 8, (), 900, None, True, Ellipsis, 18.2, 18.2j + 13,
+    ... slice(1,2,3), frozenset([5,6,7]), NotImplemented)
+    >>> dumpable(x)
+    True
+    >>> y = dump(x)
+    >>> y.encode("hex")
+    >>> yy[:60]
+    '140e0b686557080c6c6c6f58021603393030000306184032333333333333'
+    >>> yy[60:]
+    '1b402a000000000000403233333333333319125152531a1255565705'
+    >>> z = load(y)
+    >>> x == z
+    True
 """
 from cStringIO import StringIO
 from rpyc.lib.compat import Struct, all
@@ -271,20 +287,35 @@ def _load(stream):
 # API
 #===============================================================================
 def dump(obj):
-    """dumps the given object to a byte-string representation"""
+    """Converts (dumps) the given object to a byte-string representation
+    
+    :param obj: any :func:`dumpable` object
+    
+    :returns: a byte-string representation of the object
+    """
     stream = []
     _dump(obj, stream)
     return "".join(stream)
 
 def load(data):
-    """loads the given byte-string representation to an object"""
+    """Recreates (loads) an object from its byte-string representation
+    
+    :param data: the byte-string representation of an object
+    
+    :returns: the dumped object
+    """
     stream = StringIO(data)
     return _load(stream)
 
 simple_types = frozenset([type(None), int, long, bool, str, float, unicode,
     slice, complex, type(NotImplemented), type(Ellipsis)])
+
 def dumpable(obj):
-    """indicates whether the object is dumpable by brine"""
+    """Indicates whether the given object is *dumpable* by brine
+    
+    :returns: ``True`` if the object is dumpable (e.g., dumps would succeed),
+              ``False`` otherwise
+    """
     if type(obj) in simple_types:
         return True
     if type(obj) in (tuple, frozenset):
@@ -293,10 +324,6 @@ def dumpable(obj):
 
 
 if __name__ == "__main__":
-    x = ("he", 7, u"llo", 8, (), 900, None, True, Ellipsis, 18.2, 18.2j + 13,
-        slice(1,2,3), frozenset([5,6,7]), NotImplemented)
-    assert dumpable(x)
-    y = dump(x)
-    z = load(y)
-    assert x == z
+    import doctest
+    doctest.testmod()
 

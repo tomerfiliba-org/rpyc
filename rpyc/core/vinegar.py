@@ -1,8 +1,12 @@
 """
-vinegar ('when things go sour'): safe serialization of exceptions.
+**Vinegar** ("when things go sour") is a safe serializer for exceptions.
+The :data`configuration parameters <rpyc.core.protocol.DEFAULT_CONFIG>` control
+its mode of operation, for instance, whether to allow *old-style* exceptions 
+(that do not derive from ``Exception``), whether to allow the :func:`load` to
+import custom modules (imposes a security risk), etc. 
 
-note that by changing the configuration parameters, this module can be
-made non-secure
+Note that by changing the configuration parameters, this module can be made 
+non-secure. Keep this in mind.
 """
 import sys
 import exceptions
@@ -13,13 +17,28 @@ from rpyc.core import consts
 
 
 class GenericException(Exception):
+    """A 'generic exception' that is raised when the exception the gotten from
+    the other party cannot be instantiated locally"""
     pass
 
 _generic_exceptions_cache = {}
 
-STOP_ITERATION_MAGIC = 0
-
 def dump(typ, val, tb, include_local_traceback):
+    """Dumps the given exceptions info, as returned by ``sys.exc_info()``
+    
+    :param typ: the exception's type (class)
+    :param val: the exceptions' value (instance)
+    :param tb: the exception's traceback (a ``traceback`` object)
+    :param include_local_traceback: whether or not to include the local traceback
+                                    in the dumped info. This may expose the other
+                                    side to implementation details (code) and 
+                                    package structure, and may theoretically impose
+                                    a security risk.
+    
+    :returns: A tuple of ``((module name, exception name), arguments, attributes, 
+              traceback text)``. This tuple can be safely passed to 
+              :func:`brine.dump <rpyc.core.brine.dump>`
+    """
     if type(typ) is str:
         return typ
     if typ is StopIteration:
@@ -52,6 +71,30 @@ except NameError:
     BaseException = Exception
 
 def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantiate_oldstyle_exceptions):
+    """
+    Loads a dumped exception (the tuple returned by :func:`dump`) info a 
+    throwable exception object. If the exception cannot be instantiated for any
+    reason (i.e., the security parameters do not allow it, or the exception 
+    class simply doesn't exist on the local machine), a :class:`GenericException`
+    instance will be returned instead, containing all of the original exception's
+    details.
+    
+    :param val: the dumped exception
+    :param import_custom_exceptions: whether to allow this function to import
+                                     custom modules (imposes a security risk)
+    :param instantiate_custom_exceptions: whether to allow this function to 
+                                          instantiate "custom exceptions" (i.e.,
+                                          not one of the built-in exceptions,
+                                          such as ``ValueError``, ``OSError``, etc.)
+    :param instantiate_oldstyle_exceptions: whether to allow this function to 
+                                            instantiate exception classes that 
+                                            do not derive from ``BaseException``.
+                                            This is required to support old-style
+                                            exceptions.
+    
+    :returns: A throwable exception object
+    """
+    
     if val == consts.EXC_STOP_ITERATION:
         return StopIteration # optimization
     if type(val) is str:
@@ -113,6 +156,10 @@ else:
     _orig_excepthook = None
 
 def rpyc_excepthook(typ, val, tb):
+    """RPyC-enabled ``excepthook`` (installed to ``sys.excepthook``) upon import.
+    This function is called when an exception reaches the "top level" handler,
+    and will display the remote traceback (if contained within the exception)
+    as well. Not intended to be invoked directly"""
     if hasattr(val, "_remote_tb"):
         sys.stderr.write("======= Remote traceback =======\n")
         tbtext = "\n--------------------------------\n\n".join(val._remote_tb)
@@ -121,10 +168,13 @@ def rpyc_excepthook(typ, val, tb):
     _orig_excepthook(typ, val, tb)
 
 def install_rpyc_excepthook():
+    """Installs the :func:`rpyc_excepthook` from ``sys.excepthook``; this function
+    is called automatically upon import"""
     if _orig_excepthook is not None:
         sys.excepthook = rpyc_excepthook
 
 def uninstall_rpyc_excepthook():
+    """Uninstalls the :func:`rpyc_excepthook` from ``sys.excepthook``"""
     if _orig_excepthook is not None:
         sys.excepthook = _orig_excepthook
 

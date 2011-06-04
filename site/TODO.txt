@@ -1,6 +1,5 @@
 API
 ===
-* brine, vinegar
 * netref
 
 Docs

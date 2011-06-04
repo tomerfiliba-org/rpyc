@@ -1,5 +1,5 @@
 """
-NetRef - transparent network references implementation.
+**NetRef**: a transparent *network reference*.
 """
 import sys
 import inspect
@@ -36,14 +36,17 @@ _normalized_builtin_types = dict(((t.__name__, t.__module__), t)
     for t in _builtin_types)
 
 def syncreq(proxy, handler, *args):
-    """performs a synchronous request on the given proxy object"""
+    """Performs a synchronous request on the given proxy object.
+    Not intended to be invoked directly"""
     conn = object.__getattribute__(proxy, "____conn__")
     oid = object.__getattribute__(proxy, "____oid__")
     return conn().sync_request(handler, oid, *args)
 
 def asyncreq(proxy, handler, *args):
-    """performs an asynchronous request on the given proxy object,
-    retuning an AsyncResult"""
+    """Performs an asynchronous request on the given proxy object.
+    Not intended to be invoked directly.
+    
+    :returns: an :class:`rpyc.core.async.AsyncResult`"""
     conn = object.__getattribute__(proxy, "____conn__")
     connection = conn()
     if not connection:
@@ -52,7 +55,7 @@ def asyncreq(proxy, handler, *args):
     return connection.async_request(handler, oid, *args)
 
 class NetrefMetaclass(type):
-    """a metaclass just to customize the __repr__ of netref classes"""
+    """A *metaclass* used to customize the ``__repr__`` of ``netref`` classes"""
     __slots__ = ()
     def __repr__(self):
         if self.__module__:
@@ -61,7 +64,7 @@ class NetrefMetaclass(type):
             return "<netref class '%s'>" % (self.__name__,)
 
 class BaseNetref(object):
-    """the base netref object, from which all netref classes derive"""
+    """The base netref class, from which all netref classes derive"""
     __metaclass__ = NetrefMetaclass
     __slots__ = ["____conn__", "____oid__", "__weakref__"]
     def __init__(self, conn, oid):

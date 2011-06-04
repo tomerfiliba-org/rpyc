@@ -1,8 +1,3 @@
-.. RPyC documentation master file, created by
-   sphinx-quickstart on Sat May 28 10:06:21 2011.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 .. toctree::
    :hidden:
 
@@ -30,7 +25,7 @@ they were local.
 .. figure:: _static/screenshot.png
    :align: center
    
-   An screenshot of a Windows client connecting to a Linux server.
+   A screenshot of a Windows client connecting to a Linux server.
    
    :sub:`Note how text written to the server's stdout is actually printed on 
    the server's console.`
