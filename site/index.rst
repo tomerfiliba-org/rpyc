@@ -27,6 +27,14 @@ a technique that employs python's dynamic nature, to overcome the physical bound
 between processes and computers, so that remote objects can be manipulated as if
 they were local.
 
+.. figure:: _static/screenshot.png
+   :align: center
+   
+   An screenshot of a Windows client connecting to a Linux server.
+   
+   :sub:`Note how text written to the server's stdout is actually printed on 
+   the server's console.`
+
 Getting Started
 ---------------
 :ref:`Installing <install>` RPyC is as easy as ``easy_install rpyc``.
@@ -34,7 +42,6 @@ Getting Started
 If you're new to RPyC, be sure to check out the :ref:`tutorial` and
 :ref:`screencasts`. Next, you can refer to the :ref:`documentation`
 and :ref:`api-ref`, as well as the :ref:`mailing-list`.
-
 
 Features
 --------
