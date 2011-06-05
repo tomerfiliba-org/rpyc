@@ -1,11 +1,9 @@
 {% extends "agogo/layout.html" %}
 
 {% block header %}
-    <p style="position: absolute; left: 17px; top: 12px;">
-    <a href="http://tomerfiliba.com"><img src="{{ pathto('_static/fish2.png', 1) }}" alt="Tomer Filiba" width="40%"/></a>
-    <br/>
-    <small>tomer filiba</small>
-    </p>
+    <!--p style="float:right; margin-top:5px; margin-right:20px;">
+    <a href="http://tomerfiliba.com"><img src="{{ pathto('_static/fish-text-white.png', 1) }}" title="Tomer Filiba"/></a>
+    </p-->
 
     <div class="header-wrapper">
       <div class="header">
@@ -17,14 +15,7 @@
         {%- endif %}
         
         {%- block headertitle %}
-          <table border="0"><tr>
-          <td style="padding-top: 15px;">
-          <h1><a href="{{ pathto(master_doc) }}">RPyC</a></h1>
-          </td>
-          <td>
-          <em>&nbsp;&nbsp;&nbsp;&nbsp;Unbounded Computing</em>
-          </td>
-          </tr></table>
+          <a href="{{ pathto(master_doc) }}"><img src="{{ pathto('_static/rpyc-banner.png', 1) }}" title="RPyC - Unbounded Computing"/></a>
         {%- endblock %}
         
        </div>
@@ -42,9 +33,21 @@
 
 
 {% block sidebarsearch %}
-    <p> 
+    <!--p> 
         <script type="text/javascript" src="http://www.ohloh.net/p/26760/widgets/project_thin_badge.js"></script>
-    </p>
+    </p-->
+    
+    <table border="0px" width="100%" style="margin-top:25px;">
+        <tr>
+            <td valign="center" align="center">
+            <script type="text/javascript" src="http://www.ohloh.net/p/26760/widgets/project_thin_badge.js"></script>
+            </td>
+            <td valign="center" align="center">
+            <a href="http://tomerfiliba.com"><img src="{{ pathto('_static/fish-text-black.png', 1) }}" title="Tomer Filiba"/></a>
+            </td>
+        </tr>
+    </table>
+    
 {% endblock %}
 
 {% block footer %}

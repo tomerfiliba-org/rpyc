@@ -1,6 +1,6 @@
 """
 **NetRef**: a transparent *network reference*. This module contains quite a lot
-of *magic*, so keep reading only if your
+of *magic*, so beware.
 """
 import sys
 import inspect
@@ -16,6 +16,7 @@ _local_netref_attrs = frozenset([
     '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__',
     '__weakref__', '__dict__', '__members__', '__methods__',
 ])
+"""the set of attributes that are local to the netref object"""
 
 _builtin_types = [
     type, object, types.InstanceType, types.ClassType, bool, complex, dict,
@@ -32,13 +33,23 @@ _builtin_types = [
     type(iter(xrange(10))), # rangeiterator
     type(iter(set())),      # setiterator
 ]
+"""a list of types considered built-in (shared between connections)"""
 
 _normalized_builtin_types = dict(((t.__name__, t.__module__), t)
     for t in _builtin_types)
 
 def syncreq(proxy, handler, *args):
     """Performs a synchronous request on the given proxy object.
-    Not intended to be invoked directly"""
+    Not intended to be invoked directly.
+    
+    :param proxy: the proxy on which to issue the request
+    :param handler: the request handler (one of the ``HANDLE_XXX`` members of 
+                    ``rpyc.protocol.consts``)
+    :param args: arguments to the handler
+    
+    :raises: any exception raised by the operation will be raised
+    :returns: the result of the operation
+    """
     conn = object.__getattribute__(proxy, "____conn__")
     oid = object.__getattribute__(proxy, "____oid__")
     return conn().sync_request(handler, oid, *args)
@@ -46,8 +57,15 @@ def syncreq(proxy, handler, *args):
 def asyncreq(proxy, handler, *args):
     """Performs an asynchronous request on the given proxy object.
     Not intended to be invoked directly.
+
+    :param proxy: the proxy on which to issue the request
+    :param handler: the request handler (one of the ``HANDLE_XXX`` members of 
+                    ``rpyc.protocol.consts``)
+    :param args: arguments to the handler
     
-    :returns: an :class:`rpyc.core.async.AsyncResult`"""
+    :returns: an :class:`AsyncResult <rpyc.core.async.AsyncResult>` representing
+              the operation
+    """
     conn = object.__getattribute__(proxy, "____conn__")
     connection = conn()
     if not connection:
@@ -56,7 +74,10 @@ def asyncreq(proxy, handler, *args):
     return connection.async_request(handler, oid, *args)
 
 class NetrefMetaclass(type):
-    """A *metaclass* used to customize the ``__repr__`` of ``netref`` classes"""
+    """A *metaclass* used to customize the ``__repr__`` of ``netref`` classes.
+    It is quite useless, but it makes debugging and interactive programming 
+    easier"""
+    
     __slots__ = ()
     def __repr__(self):
         if self.__module__:
@@ -65,7 +86,19 @@ class NetrefMetaclass(type):
             return "<netref class '%s'>" % (self.__name__,)
 
 class BaseNetref(object):
-    """The base netref class, from which all netref classes derive"""
+    """The base netref class, from which all netref classes derive. Some netref
+    classes are "pre-generated" and cached upon importing this module (those 
+    defined in the :data:`_builtin_types`), and they are shared between all 
+    connections. 
+    
+    The rest of the netref classes are created by :meth:`rpyc.core.protocl.Connection._unbox`,
+    and are private to the connection.
+    
+    Do not use this class directly; use :func:`class_factory` instead.
+    
+    :param conn: the :class:`rpyc.core.protocol.Connection` instance
+    :param oid: the unique object ID of the remote object
+    """
     __metaclass__ = NetrefMetaclass
     __slots__ = ["____conn__", "____oid__", "__weakref__"]
     def __init__(self, conn, oid):
@@ -76,6 +109,7 @@ class BaseNetref(object):
             asyncreq(self, consts.HANDLE_DEL)
         except Exception:
             # raised in a destructor, most likely on program termination,
+            # when the connection might have already been closed.
             # it's safe to ignore all exceptions here
             pass
 
@@ -120,11 +154,15 @@ class BaseNetref(object):
         return syncreq(self, consts.HANDLE_REPR)
     def __str__(self):
         return syncreq(self, consts.HANDLE_STR)
-    # support for pickle
+    
+    # support for pickling netrefs
     def __reduce_ex__(self, proto):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
 
 def _make_method(name, doc):
+    """creates a method with the given name and docstring that invokes
+    :func:`syncreq` on its `self` argument"""
+    
     name = str(name)                                      # IronPython issue #10
     if name == "__call__":
         def __call__(_self, *args, **kwargs):
@@ -141,8 +179,14 @@ def _make_method(name, doc):
         return method
 
 def inspect_methods(obj):
-    """returns a list of (method name, docstring) tuples of all the methods of
-    the given object"""
+    """introspects the given (local) object, returning a list of all of its
+    methods (going up the MRO).
+    
+    :param obj: any local (not proxy) python object
+    
+    :returns: a list of ``(method name, docstring)`` tuples of all the methods
+              of the given object
+    """
     methods = {}
     attrs = {}
     if isinstance(obj, type):
@@ -158,6 +202,15 @@ def inspect_methods(obj):
     return methods.items()
 
 def class_factory(clsname, modname, methods):
+    """Creates a netref class proxying the given class
+    
+    :param clsname: the class's name
+    :param modname: the class's module name
+    :param methods: a list of ``(method name, docstring)`` tuples, of the methods
+                    that the class defines
+    
+    :returns: a netref class
+    """
     clsname = str(clsname)                                # IronPython issue #10
     modname = str(modname)                                # IronPython issue #10
     ns = {"__slots__" : ()}
@@ -176,6 +229,10 @@ def class_factory(clsname, modname, methods):
     return type(clsname, (BaseNetref,), ns)
 
 builtin_classes_cache = {}
+"""The cache of built-in netref classes (each of the types listed in 
+:data:`_builtin_types`). These are shared between all RPyC connections"""
+
+# init the builtin_classes_cache
 for cls in _builtin_types:
     builtin_classes_cache[cls.__name__, cls.__module__] = class_factory(
         cls.__name__, cls.__module__, inspect_methods(cls))

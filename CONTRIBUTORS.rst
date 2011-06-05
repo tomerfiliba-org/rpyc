@@ -4,6 +4,7 @@ v3.2.0
 * Sponce - added the ``ThreadPoolServer``, several fixes to weak-references and 
   ``AsyncResult``
 * Sagiv Malihi - Bug fix in classic server
+* Miguel Alarcos - issue `#8 <https://github.com/tomerfiliba/rpyc/issues/8>`_
 
 v3.1.0
 ^^^^^^

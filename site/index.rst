@@ -35,8 +35,8 @@ Getting Started
 :ref:`Installing <install>` RPyC is as easy as ``easy_install rpyc``.
 
 If you're new to RPyC, be sure to check out the :ref:`tutorial` and
-:ref:`screencasts`. Next, you can refer to the :ref:`documentation`
-and :ref:`api-ref`, as well as the :ref:`mailing-list`.
+:ref:`screencasts`. Next, refer to the :ref:`documentation` and :ref:`api-ref`,
+as well as the :ref:`mailing-list`.
 
 Features
 --------

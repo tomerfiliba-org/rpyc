@@ -1,5 +1,5 @@
-3.2.0?
-------
+3.2.0
+-----
 * Added support for IPv6 (`#28 <https://github.com/tomerfiliba/rpyc/issues/28>`_)
 
 * Added SSH tunneling support (``ssh_connect``)
@@ -8,23 +8,22 @@
 
 * Added the ``ThreadPoolServer``
 
+* Fixes issue `#8 <https://github.com/tomerfiliba/rpyc/issues/8>`_
+
+* Fixes issue `#41 <https://github.com/tomerfiliba/rpyc/issues/41>`_
+
 * Converted all ``CRLF`` to ``LF``
 
-* New documentation (both site and docstrings) rewritten in **Sphinx**
+* **New documentation** (both site and docstrings) rewritten in **Sphinx**
 
-  * Site has moved to http://rpyc.tomerfiliba.com. Wikidot was displaying way 
-    too many ads and didn't support uploading files over ``rsync``, which made
-    my life hard.
+  * Site has moved to `http://rpyc.sourceforge.net`_. Wikidot had served us well
+    over the past three years, but they began displaying way too many ads and 
+    didn't support uploading files over ``rsync``, which made my life hard.
 
   * New docs are part of the git repository. Updating the site is as easy as
     ``make upload``
 
-* Known Issue `#41 <https://github.com/tomerfiliba/rpyc/issues/41>`_: Types that 
-  define ``__getslice__`` (with or without ``__getitem__``) are susceptible for
-  an exception when evaluating ``x[1:]`` where the client and server run on 
-  different bit-width (32/64) architectures, because python converts ``x[1:]`` 
-  to ``x[1:sys.maxint]`` (which is of course different on the two architectures).
- 
+* **Python 3.0-3.2** support
 
 3.1.0
 ------
