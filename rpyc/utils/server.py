@@ -203,6 +203,24 @@ class ThreadedServer(Server):
         t.setDaemon(True)
         t.start()
 
+# the select package does not provide a poll interface on all platform,
+# so we wrap it on platforms that do not provide it
+if hasattr(select, 'poll'):
+    def wrappedPoll():
+        return select.poll()
+else:
+    class PollObject(object):
+        def __init__(self):
+            self.waitlist = []
+        def unregister(self, fd):
+            self.waitlist.remove(fd)
+        def register(self, fd, flags):
+            self.waitlist.append(fd)
+        def poll(self, timeout):
+            rlist, wlist, xlist = select.select(self.waitlist, [], [], timeout)
+            return [(fd, select.POLLIN) for fd in rlist]
+    def wrappedPoll():
+        return PollObject()
 
 class ThreadPoolServer(Server):
     '''This server is threaded like the ThreadedServer but reuses threads so that
@@ -240,7 +258,7 @@ class ThreadPoolServer(Server):
             t.start()
             self.workers.append(t)
         # a polling object to be used be the polling thread
-        self.poll_object = select.poll()
+        self.poll_object = wrappedPoll()
         # a dictionnary fd -> connection
         self.fd_to_conn = {}
         # setup a thread for polling inactive connections
@@ -289,12 +307,12 @@ class ThreadPoolServer(Server):
 
     def _handle_poll_result(self, connlist):
         '''adds a connection to the set of inactive ones'''
-        for fd, event_unused in connlist:
+        for fd, event in connlist:
             try:
                 # remove connection from the inactive ones
                 self._remove_from_inactive_connection(fd)
                 # Is it an error ?
-                if (event_unused & (select.POLLNVAL|select.POLLHUP|select.POLLERR)) != 0:
+                if (event & (select.POLLNVAL|select.POLLHUP|select.POLLERR)) != 0:
                     # it was an error, connection was closed. Do the same on our side
                     self._drop_connection(fd)
                 else:
