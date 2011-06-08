@@ -130,7 +130,8 @@ doctest:
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
 upload: clean html
-	rsync -r $(BUILDDIR)/html tomerfiliba.com:webapps/rpyc
+	#rsync -r $(BUILDDIR)/html tomerfiliba.com:webapps/rpyc
+	rsync -r $(BUILDDIR)/html gangesmaster,rpyc@web.sourceforge.net:htdocs/
 
 
 
