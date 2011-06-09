@@ -130,12 +130,12 @@ def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
     if ca_certs is not None:
         ssl_kwargs["ca_certs"] = ca_certs
         ssl_kwargs["cert_reqs"] = ssl.CERT_REQUIRED
+    if cert_reqs is not None:
+        ssl_kwargs["cert_reqs"] = cert_reqs
     if ssl_version is None:
         ssl_kwargs["ssl_version"] = ssl.PROTOCOL_TLSv1
     else:
         ssl_kwargs["ssl_version"] = ssl_version
-    if cert_reqs is not None:
-        ssl_kwargs["cert_reqs"] = cert_reqs
     if ciphers is not None:
         ssl_kwargs["ciphers"] = ciphers
     s = SocketStream.ssl_connect(host, port, ssl_kwargs, ipv6 = ipv6)

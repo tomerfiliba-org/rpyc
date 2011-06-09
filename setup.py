@@ -19,7 +19,7 @@ setup(name = "RPyC",
     author = "Tomer Filiba",
     author_email = "tomerfiliba@gmail.com",
     license = "MIT",
-    url = "http://rpyc.wikidot.com",
+    url = "http://rpyc.sourceforge.net",
     download_url = "http://sourceforge.net/projects/rpyc/files/main/%s" % (version_string,),
     packages = [
         'rpyc',

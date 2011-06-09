@@ -1,5 +1,5 @@
 Remote Python Call (RPyC) by Tomer Filiba
-http://rpyc.wikidot.com
+http://rpyc.sourceforge.net
 Released under an MIT license
 
 A symmetric library for transparent RPC, clustering and distributed computing
