@@ -83,21 +83,30 @@ def tlslite_connect(host, username, password, port = DEFAULT_SERVER_PORT,
         ipv6 = ipv6)
 
 def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None,
-        certfile = None, ca_certs = None, ssl_version = None, ipv6 = False):
+        certfile = None, ca_certs = None, cert_reqs = None, ssl_version = None, 
+        ciphers = None, ipv6 = False):
     """Creates a secure (``SSL``) socket connection to the given host and port,
     authenticating with the given certfile and CA file.
     
     :param host: the host to connect to
     :param port: the TCP port to use
-    :param keyfile: see wrap_socket_
-    :param certfile: see wrap_socket_
-    :param ca_certs: see wrap_socket_
-    :param ssl_version: see wrap_socket_
-    :param ipv6: whether to create an IPv6 socket or IPv4
+    :param ipv6: whether to create an IPv6 socket or an IPv4 one
+    
+    The following arguments are passed directly to 
+    `ssl.wrap_socket <http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket>`_:
+    
+    :param keyfile: see ``ssl.wrap_socket``. May be ``None``
+    :param certfile: see ``ssl.wrap_socket``. May be ``None``
+    :param ca_certs: see ``ssl.wrap_socket``. May be ``None``
+    :param cert_reqs: see ``ssl.wrap_socket``. By default, if ``ca_cert`` is specified,
+                      the requirement is set to ``CERT_REQUIRED``; otherwise it is 
+                      set to ``CERT_NONE``
+    :param ssl_version: see ``ssl.wrap_socket``. The default is ``PROTOCOL_TLSv1``
+    :param ciphers: see ``ssl.wrap_socket``. May be ``None``. New in Python 2.7/3.2
 
     :returns: an RPyC connection exposing ``SlaveService``
 
-    .. _wrap_socket: http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket
+    .. _wrap_socket: 
     """
     return factory.ssl_connect(host, port, keyfile = keyfile, certfile = certfile,
         ssl_version = ssl_version, ca_certs = ca_certs, service = SlaveService,

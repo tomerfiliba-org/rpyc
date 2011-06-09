@@ -96,7 +96,8 @@ def tlslite_connect(host, port, username, password, service = VoidService, confi
     return connect_stream(s, service, config)
 
 def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
-        ssl_version = None, service = VoidService, config = {}, ipv6 = False):
+        cert_reqs = None, ssl_version = None, ciphers = None,
+        service = VoidService, config = {}, ipv6 = False):
     """
     creates an SSL-wrapped connection to the given host (encrypted and
     authenticated).
@@ -105,26 +106,38 @@ def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
     :param port: the TCP port to use
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict
-    :param keyfile: see wrap_socket_
-    :param certfile: see wrap_socket_
-    :param ca_certs: see wrap_socket_
-    :param ssl_version: see wrap_socket_
+    :param ipv6: whether to create an IPv6 socket or an IPv4 one
+    
+    The following arguments are passed directly to 
+    `ssl.wrap_socket <http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket>`_:
+    
+    :param keyfile: see ``ssl.wrap_socket``. May be ``None``
+    :param certfile: see ``ssl.wrap_socket``. May be ``None``
+    :param ca_certs: see ``ssl.wrap_socket``. May be ``None``
+    :param cert_reqs: see ``ssl.wrap_socket``. By default, if ``ca_cert`` is specified,
+                      the requirement is set to ``CERT_REQUIRED``; otherwise it is 
+                      set to ``CERT_NONE``
+    :param ssl_version: see ``ssl.wrap_socket``. The default is ``PROTOCOL_TLSv1``
+    :param ciphers: see ``ssl.wrap_socket``. May be ``None``. New in Python 2.7/3.2
 
     :returns: an RPyC connection
-    
-    .. _wrap_socket: http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket
     """
     ssl_kwargs = {"server_side" : False}
-    if keyfile:
+    if keyfile is not None:
         ssl_kwargs["keyfile"] = keyfile
-    if certfile:
+    if certfile is not None:
         ssl_kwargs["certfile"] = certfile
-    if ca_certs:
+    if ca_certs is not None:
         ssl_kwargs["ca_certs"] = ca_certs
-    if ssl_version:
-        ssl_kwargs["ssl_version"] = ssl_version
-    else:
+        ssl_kwargs["cert_reqs"] = ssl.CERT_REQUIRED
+    if ssl_version is None:
         ssl_kwargs["ssl_version"] = ssl.PROTOCOL_TLSv1
+    else:
+        ssl_kwargs["ssl_version"] = ssl_version
+    if cert_reqs is not None:
+        ssl_kwargs["cert_reqs"] = cert_reqs
+    if ciphers is not None:
+        ssl_kwargs["ciphers"] = ciphers
     s = SocketStream.ssl_connect(host, port, ssl_kwargs, ipv6 = ipv6)
     return connect_stream(s, service, config)
 
