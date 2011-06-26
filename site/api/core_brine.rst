@@ -1,9 +1,12 @@
+.. _api-brine:
+
 Brine
 =====
 
 .. automodule:: rpyc.core.brine
    :members:
 
+.. _api-vinegar:
 
 Vinegar
 =======

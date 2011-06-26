@@ -1,3 +1,5 @@
+.. _api-ssh:
+
 RPyC over SSH
 =============
 

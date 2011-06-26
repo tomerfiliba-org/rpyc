@@ -1,3 +1,5 @@
+.. _api-service:
+
 Service
 =======
 

@@ -91,7 +91,7 @@ Parameter                               Default value     Description
 ``connid``                             ``None``          **Runtime**: the RPyC connection ID (used
                                                          mainly for debugging purposes) 
 ``credentials``                        ``None``          **Runtime**: the credentails object that was returned
-                                                         by the server's :ref:`authenticator <authenticators>`
+                                                         by the server's :ref:`authenticator <api-authenticators>`
                                                          or ``None``
 =====================================  ================  =====================================================
 """

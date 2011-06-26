@@ -3,7 +3,6 @@ Docs
 * classic
 * guidelines
 * how to
-* servers
 * services
 * security
 * secure-connection

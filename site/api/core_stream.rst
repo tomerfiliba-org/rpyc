@@ -1,9 +1,13 @@
+.. _api-stream:
+
 Streams
 =======
 
 .. automodule:: rpyc.core.stream
    :members:
 
+
+.. _api-channel:
 
 Channel
 =======

@@ -27,20 +27,18 @@ class Server(object):
     :param ipv6: whether to create an IPv6 or IPv4 socket. The default is IPv4
     :param port: the TCP port to bind to
     :param backlog: the socket's backlog (passed to ``listen()``)
-    :param reuse_addr: whether or not to create the socket with the 
-                       ``SO_REUSEADDR`` option set. 
-    :param authenticator: the :ref:`authenticators` to use. If ``None``, no
-                          authentication is performed.
-    :param registrar: the :class:`registrar <rpyc.utils.registry.RegistryClient>` 
-                      to use. If ``None``, a default 
-                      `rpyc.utils.registry.UDPRegistryClient` will be used
-    :param auto_register: whether or not to register using the *registrar*.
-                          By default, the server will attempt to register only
-                          if a registrar was explicitly given. 
+    :param reuse_addr: whether or not to create the socket with the ``SO_REUSEADDR`` option set. 
+    :param authenticator: the :ref:`api-authenticators` to use. If ``None``, no authentication 
+                          is performed.
+    :param registrar: the :class:`registrar <rpyc.utils.registry.RegistryClient>` to use. 
+                          If ``None``, a default :class:`rpyc.utils.registry.UDPRegistryClient`
+                          will be used
+    :param auto_register: whether or not to register using the *registrar*. By default, the 
+                          server will attempt to register only if a registrar was explicitly given. 
     :param protocol_config: the :data:`configuration dictionary <rpyc.core.protocol.DEFAULT_CONFIG>` 
                             that is passed to the RPyC connection
-    :param logger: the ``logger`` to use (of the built-in ``logging`` module).
-                   If ``None``, a default logger will be created.
+    :param logger: the ``logger`` to use (of the built-in ``logging`` module). If ``None``, a 
+                   default logger will be created.
     """
     
     def __init__(self, service, hostname = "", ipv6 = False, port = 0, 

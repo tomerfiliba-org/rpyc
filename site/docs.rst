@@ -3,6 +3,9 @@
 Documentation
 =============
 
+Introduction
+------------
+
 .. toctree::
    :maxdepth: 1
    :hidden:
@@ -12,16 +15,8 @@ Documentation
    docs/howto
    docs/usecases
    docs/guidelines
-   
-   docs/servers
-   docs/classic
-   docs/services
-   docs/security
-   docs/secure-connection
-   
 
-Introduction
-------------
+
 * :ref:`A little about RPyC <about>` - related projects, contributors, and 
   logo issues
 
@@ -35,6 +30,18 @@ Introduction
 
 Reference
 ---------
+
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   docs/servers
+   docs/classic
+   docs/services
+   docs/security
+   docs/secure-connection
+
+
 * :ref:`Servers <servers>` - using the built-in servers and writing custom ones 
 
 * :ref:`Classic RPyC <classic>` - using RPyC in *slave mode* (AKA *classic 

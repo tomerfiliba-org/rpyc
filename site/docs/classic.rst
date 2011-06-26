@@ -2,3 +2,5 @@
 
 Classic
 =======
+:ref:`api-classic`
+

@@ -1,4 +1,4 @@
-.. _authenticators:
+.. _api-authenticators:
 
 Authenticators
 ==============
