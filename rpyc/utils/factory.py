@@ -78,23 +78,6 @@ def connect(host, port, service = VoidService, config = {}, ipv6 = False):
     s = SocketStream.connect(host, port, ipv6 = ipv6)
     return connect_stream(s, service, config)
 
-def tlslite_connect(host, port, username, password, service = VoidService, config = {}, 
-        ipv6 = False):
-    """
-    creates a TLS-connection to the given host (encrypted and authenticated)
-    
-    :param username: the username used to authenticate the client
-    :param password: the password used to authenticate the client
-    :param host: the hostname to connect to
-    :param port: the TCP port to use
-    :param service: the local service to expose (defaults to Void)
-    :param config: configuration dict
-    
-    :returns: an RPyC connection
-    """
-    s = SocketStream.tlslite_connect(host, port, username, password, ipv6 = ipv6)
-    return connect_stream(s, service, config)
-
 def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
         cert_reqs = None, ssl_version = None, ciphers = None,
         service = VoidService, config = {}, ipv6 = False):

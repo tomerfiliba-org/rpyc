@@ -66,22 +66,6 @@ def connect(host, port = DEFAULT_SERVER_PORT, ipv6 = False):
     """
     return factory.connect(host, port, SlaveService, ipv6 = ipv6)
 
-def tlslite_connect(host, username, password, port = DEFAULT_SERVER_PORT, 
-        ipv6 = False):
-    """Creates a secure (``TLSlite``) socket connection to the given host 
-    and port, authenticating with the given username and password.
-    
-    :param host: the host to connect to
-    :param username: the username to use
-    :param password: the (plaintext) password to use
-    :param port: the TCP port to use
-    :param ipv6: whether to create an IPv6 socket or IPv4
-    
-    :returns: an RPyC connection exposing ``SlaveService``
-    """
-    return factory.tlslite_connect(host, port, username, password, SlaveService, 
-        ipv6 = ipv6)
-
 def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None,
         certfile = None, ca_certs = None, cert_reqs = None, ssl_version = None, 
         ciphers = None, ipv6 = False):

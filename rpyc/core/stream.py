@@ -13,7 +13,6 @@ win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 msvcrt = safe_import("msvcrt")
 ssl = safe_import("ssl")
-tlsapi = safe_import("tlslite.api")
 
 
 retry_errnos = (errno.EAGAIN, errno.EWOULDBLOCK)
@@ -106,31 +105,6 @@ class SocketStream(Stream):
             kwargs["family"] = socket.AF_INET6
         return cls(cls._connect(host, port, **kwargs))
 
-    @classmethod
-    def tlslite_connect(cls, host, port, username, password, **kwargs):
-        """factory method that creates a ``SocketStream`` over a TLSlite-wrapped
-        socket, connected to *host* and *port* with the given credentials.
-        
-        :param host: the host name
-        :param port: the TCP port
-        :param username: the username to use
-        :param password: the password to use (plaintext)
-        :param kwargs: additional keyword arguments: ``family``, ``socktype``,
-                       ``proto``, ``timeout``, ``nodelay``, passed directly to 
-                       the ``socket`` constructor, or ``ipv6``.
-        :param ipv6: if True, creates an IPv6 socket (``AF_INET6``); otherwise
-                     an IPv4 (``AF_INET``) socket is created
-        
-        :returns: a :class:`SocketStream`
-        """
-        if kwargs.pop("ipv6", False):
-            kwargs["family"] = socket.AF_INET6
-        s = cls._connect(host, port, **kwargs)
-        s2 = tlsapi.TLSConnection(s)
-        s2.fileno = lambda fd = s.fileno(): fd
-        s2.handshakeClientSRP(username, password)
-        return cls(s2)
-    
     @classmethod
     def ssl_connect(cls, host, port, ssl_kwargs, **kwargs):
         """factory method that creates a ``SocketStream`` over an SSL-wrapped 

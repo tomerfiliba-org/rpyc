@@ -1,18 +1,20 @@
 """
 An *authenticator* is basically a callable object that takes a socket and
 "authenticates" it in some way. Upon success, it must return a tuple containing 
-a socket-like object and its credentials (any object), or raise an 
-:class:`AuthenticationError` upon failure. There are no constraints on what the
-authenticator may or may not do, for instance::
+a **socket-like** object and its **credentials** (any object), or raise an 
+:class:`AuthenticationError` upon failure. The credentials are any object you wish to
+associate with the authentication, and it's stored in the connection's 
+:data`configuration dict <rpyc.core.protocol.DEFAULT_CONFIG>` under the key "credentials".
+
+There are no constraints on what the authenticators, for instance::
 
     def magic_word_authenticator(sock):
         if sock.recv(5) != "Ma6ik":
             raise AuthenticationError("wrong magic word")
         return sock, None
 
-RPyC comes bundled with an authenticator for ``SSL`` (using certificates) 
-and one for TLSLite's ``VerifierDB`` approach (username-password authentication).
-These authenticators, for instance, both verify the peer's identity and wrap the 
+RPyC comes bundled with an authenticator for ``SSL`` (using certificates). 
+This authenticator, for instance, both verifies the peer's identity and wraps the 
 socket with an encrypted transport (which replaces the original socket).
 
 Authenticators are used by :class:`servers <rpyc.utils.server.Server>` to 
@@ -20,13 +22,9 @@ validate an incoming connection. Using them is pretty trivial ::
 
     s = ThreadedServer(...., authenticator = magic_word_authenticator)
     s.start()
-
 """
-import os
 import sys
-import anydbm
 from rpyc.lib import safe_import
-tlsapi = safe_import("tlslite.api")
 ssl = safe_import("ssl")
 
 class AuthenticationError(Exception):
@@ -85,76 +83,4 @@ class SSLAuthenticator(object):
         return sock2, sock2.getpeercert()
 
 
-class TlsliteVdbAuthenticator(object):
-    """
-    A Verifier Database authenticator, based on TLSlite's mechanisms.
-    Use :file:`scripts/rpyc_vdbconf.py` to manipulate VDB files.
-    """
-    __slots__ = ["vdb"]
-    BITS = 2048
-
-    def __init__(self, vdb):
-        self.vdb = vdb
-
-    @classmethod
-    def from_dict(cls, users):
-        """factory method that creates a VDB from a dictionary mapping usernames
-        to their respective passwords"""
-        
-        inst = cls(tlsapi.VerifierDB())
-        for username, password in users.iteritems():
-            inst.set_user(username, password)
-        return inst
-
-    @classmethod
-    def _load_vdb_with_mode(cls, vdb, mode):
-        """taken from tlslite/BaseDB.py -- patched for file mode"""
-        # {{
-        db = anydbm.open(vdb.filename, mode)
-        try:
-            if db["--Reserved--type"] != vdb.type:
-                raise ValueError("Not a %s database" % (vdb.type,))
-        except KeyError:
-            raise ValueError("Not a recognized database")
-        vdb.db = db
-        # }}
-
-    @classmethod
-    def from_file(cls, filename, mode = "w"):
-        """loads a VDB from file"""
-        vdb = tlsapi.VerifierDB(filename)
-        if os.path.exists(filename):
-            cls._load_vdb_with_mode(vdb, mode)
-        else:
-            if mode not in "ncw":
-                raise ValueError("%s does not exist but mode does not allow "
-                    "writing (%r)" % (filename, mode))
-            vdb.create()
-        return cls(vdb)
-
-    def sync(self):
-        """sync the in-memory changes to DB"""
-        self.vdb.db.sync()
-
-    def set_user(self, username, password):
-        """adds/replaces the given username and sets its password"""
-        self.vdb[username] = self.vdb.makeVerifier(username, password, self.BITS)
-
-    def del_user(self, username):
-        """deletes the given username from the DB"""
-        del self.vdb[username]
-
-    def list_users(self):
-        """returns a list of all usernames"""
-        return self.vdb.keys()
-
-    def __call__(self, sock):
-        sock2 = tlsapi.TLSConnection(sock)
-        sock2.fileno = lambda fd = sock.fileno(): fd    # tlslite omitted fileno
-        try:
-            sock2.handshakeServer(verifierDB = self.vdb)
-        except Exception:
-            ex = sys.exc_info()[1]
-            raise AuthenticationError(str(ex))
-        return sock2, sock2.allegedSrpUsername
 

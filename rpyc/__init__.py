@@ -45,8 +45,8 @@ from rpyc.core import (SocketStream, TunneledSocketStream, PipeStream, Channel,
     Connection, Service, BaseNetref, AsyncResult, GenericException,
     AsyncResultTimeout, VoidService, SlaveService)
 from rpyc.utils.factory import (connect_stream, connect_channel, connect_pipes,
-    connect_stdpipes, connect, tlslite_connect, ssl_connect, discover,
-    connect_by_service, connect_subproc, connect_thread)
+    connect_stdpipes, connect, ssl_connect, discover, connect_by_service, connect_subproc, 
+    connect_thread)
 from rpyc.utils.helpers import async, timed, buffiter, BgServingThread
 from rpyc.utils import classic
 from rpyc.version import version, version_string, release_date

@@ -4,7 +4,6 @@ classic rpyc server (threaded, forking or std) running a SlaveService
 usage:
     rpyc_classic.py                         # default settings
     rpyc_classic.py -m forking -p 12345     # custom settings
-    rpyc_classic.py --vdb file.vdb          # tlslite-authenticated server
 
     # ssl-authenticated server (keyfile and certfile are required)
     rpyc_classic.py --ssl-keyfile keyfile.pem --ssl-certfile certfile.pem --ssl-cafile cafile.pem
@@ -17,7 +16,7 @@ from rpyc.utils.server import ThreadedServer, ForkingServer
 from rpyc.utils.classic import DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT
 from rpyc.utils.registry import REGISTRY_PORT
 from rpyc.utils.registry import UDPRegistryClient, TCPRegistryClient
-from rpyc.utils.authenticators import TlsliteVdbAuthenticator, SSLAuthenticator
+from rpyc.utils.authenticators import SSLAuthenticator
 from rpyc.lib import setup_logger
 from rpyc.core import SlaveService
 
@@ -49,14 +48,6 @@ parser.add_option("--logfile", action="store", dest="logfile", type="str",
 parser.add_option("-q", "--quiet", action="store_true", dest="quiet",
     default=False,
     help="quiet mode (no logging). in stdio mode, writes to /dev/null")
-#
-# TLSlite
-#
-parser.add_option("--vdb", action="store", dest="vdbfile", metavar="FILENAME",
-    default=None, help="starts an TLS/SSL authenticated server (using tlslite);"
-    "the credentials are loaded from the vdb file. if not given, the server"
-    "is not secure (unauthenticated). use vdbconf.py to manage vdb files"
-)
 #
 # SSL
 #
@@ -103,12 +94,7 @@ def get_options():
     else:
         parser.error("invalid registry type %r" % (options.regtype,))
 
-    if options.vdbfile:
-        if not os.path.exists(options.vdbfile):
-            parser.error("vdb file does not exist")
-        options.authenticator = TlsliteVdbAuthenticator.from_file(options.vdbfile, mode = "r")
-        options.port = DEFAULT_SERVER_PORT
-    elif options.ssl_keyfile or options.ssl_certfile or options.ssl_cafile:
+    if options.ssl_keyfile or options.ssl_certfile or options.ssl_cafile:
         if not options.ssl_keyfile:
             parser.error("SSL: keyfile required")
         if not options.ssl_certfile:
