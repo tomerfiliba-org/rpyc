@@ -94,6 +94,8 @@ used with conjunction with ``--vdb``.
   it's given, it enables client-side authentication.
 
 
+.. _custom-servers:
+
 Custom RPyC Servers
 -------------------
 Starting an RPyC server that exposes your service is quite easy -- when you construct the 
@@ -114,22 +116,6 @@ You can use the following snippet::
       server.start()
 
 Refer to :class:`rpyc.utils.server.Server` for the list all possible arguments.  
-
-.. _vdbconf:
-
-vdbconf
--------
-Verifier DB command-line configuration tool for TLSlite's Verifier DB. A Verifier DB (VDB) is a
-file containing usernames and their associated password, in a format compatible with TLSlite. 
-The tool can **list** existing users in a ``vdb`` file, **add** a new user and set its associated
-password, **update** the user's password, and **delete** a user from the ``vdb`` file.
-
-Switches
-^^^^^^^^
-* ``-l`` - list users
-* ``-a <USERNAME>`` - add or update user (password is read interactively using ``getpass``)
-* ``-d <USERNAME>`` - delete a user
-
 
 Registry Server
 ---------------
