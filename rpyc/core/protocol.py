@@ -10,6 +10,7 @@ from threading import Lock
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
+import socket
 
 
 class PingError(Exception):
@@ -378,7 +379,7 @@ class Connection(object):
             try:
                 while True:
                     self.serve(0.1)
-            except select.error:
+            except (socket.error, select.error):
                 if not self.closed:
                     raise
             except EOFError:

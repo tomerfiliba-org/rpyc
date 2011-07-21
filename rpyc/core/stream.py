@@ -169,10 +169,11 @@ class SocketStream(Stream):
         try:
             return self.sock.fileno()
         except socket.error:
+            self.close()
             ex = sys.exc_info()[1]
             if ex.errno == errno.EBADF:
                 raise EOFError()
-        
+    
     def read(self, count):
         data = []
         while count > 0:
