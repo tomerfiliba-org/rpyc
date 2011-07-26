@@ -3,10 +3,9 @@ Docs
 * classic
 * guidelines
 * how to
-* services
-* security
 * theory
 * usecases
+* async
 
 Tutorial
 ========

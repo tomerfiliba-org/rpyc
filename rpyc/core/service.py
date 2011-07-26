@@ -152,3 +152,4 @@ class SlaveService(Service):
         """returns the local connection instance to the other side"""
         return self._conn
 
+

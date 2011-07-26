@@ -40,42 +40,95 @@ When a client connects, it can access any of the exposed members of the service 
         pass
 
 As you can see, the ``root`` attribute of the connection gives you access to the service
-that's exposed by the other party. For security concerns, only access is only granted to
+that's exposed by the other party. For security concerns, access is only granted to
 ``exposed_`` members. For instance, the ``foo`` method above is inaccessible (attempting to
 call it will result in an ``AttributeError``).
 
-RPyC is a symmetric protocol, which means both ends of the connection can act as clients
-or servers
+Implementing Services
+---------------------
+As previously explained, all ``exposed_`` members of your service class will be available to
+the other party. This applies to methods, but in fact, it applies to any attribute. For instance,
+you may expose a class::
 
+    class MyService(rpyc.Service):
+        class exposed_MyClass(object):
+            def __init__(self, a, b):
+                self.a = a 
+                self.b = b
+            def exposed_foo(self):
+                return self.a + self.b
 
-ALIASES
-on_connect(self)
-on_disconnect(self)
+If you wish to change the name of your service, or specify a list of aliases, set the ``ALIASES``
+(class-level) attribute to a list of names. For instance::
 
+    class MyService(rpyc.Service):
+        ALIASES = ["foo", "bar", "spam"]
 
-Symmetry
---------
+The first name in this list is considered the "proper name" of the service, while the rest
+are considered aliases. This distinction is meaningless to the protocol and the registry server.
 
+Your service class may also define two special methods: ``on_connect(self)`` and 
+``on_disconnect(self)``. These methods are invoked, not surprisingly, when a connection
+has been established, and when it's been disconnected. Note that during ``on_disconnect``, 
+the connection is already dead, so you can no longer access any remote objects.
+
+Other than that, your service instance has the ``_conn`` attribute, which represents the
+:class:`connection <rpyc.core.protocol.Connection>` that it serves. This attribute already 
+exists when ``on_connected`` is called.
+
+.. note::
+   Try to avoid overriding the ``__init__`` method of the service. Place all initialization-related
+   code in ``on_connect``.
 
 Built-in Services
 -----------------
-RPyC comes bundled with two basic services:
+RPyC comes bundled with two built-in services:
+
 * :class:`VoidService <rpyc.core.service.VoidService>`, which is an empty "do-nothing" 
   service. It's useful when you want only one side of the connection to provide a service,
   while the other side a "consumer".
-* :class:`SlaveService <rpyc.core.service.SlaveService>`, which
+
+* :class:`SlaveService <rpyc.core.service.SlaveService>`, which implements 
+  :ref:`Classic Mode<classic>` RPyC.
+
+Decoupled Services
+------------------
+RPyC is a symmetric protocol, which means both ends of the connection can act as clients
+or servers -- in other words -- both ends may expose (possibly different) services. Normally, 
+only the server exposes a service, while the client exposes the ``VoidService``, but this is
+not constrained in any way. For instance, in the classic mode, both ends expose the 
+``SlaveService``; this allows each party to execute arbitrary code on its peer. Although
+it's not the most common use case, two-sides services are quite useful. Consider this client::
+
+    class ClientService(rpyc.Service):
+        def exposed_foo(self):
+            return "foo" 
+    
+    conn = rpyc.connect("hostname", 12345, service = ClientService)
+
+And this server::
+
+    class ServerService(rpyc.Service):
+        def exposed_bar(self):
+            return self._conn.root.foo() + "bar" 
+
+The client can invoke ``conn.root.bar()`` on the server, which will, in turn, invoke ``foo`` back
+on the client. The final result would be ``"foobar"``. 
+
+Another approach is to pass **callback functions**. Consider this server::
+
+    class ServerService(rpyc.Service):
+        def exposed_bar(self, func):
+            return func() + "bar" 
+
+And this client::
+
+    def foofunc():
+        return "foo"
+    
+    conn = rpyc.connect("hostname", 12345)
+    conn.root.bar(foofunc)
 
 
-
-Configuration Parameters
-------------------------
-
-Attribute Access
-----------------
-
-_rpyc_getattr(self, name)
-_rpyc_delattr(self, name)
-_rpyc_setattr(self, name, value)
-
-
+See also :ref:`config-params-security`
 

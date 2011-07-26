@@ -45,6 +45,43 @@ def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
         for elem in items:
             yield elem
 
+def restricted(obj, attrs, wattrs = None):
+    """Returns a 'restricted' version of an object, i.e., allowing access only to a subset of its
+    attributes. This is useful when returning a "broad" or "dangerous" object, where you don't 
+    want the other party to have access to all of its attributes.
+    
+    :param obj: any object
+    :param attrs: the set of attributes exposed for reading (``getattr``) or writing (``setattr``).
+                  The same set will serve both for reading and writing, unless wattrs is explicitly
+                  given.
+    :param wattrs: the set of attributes exposed for writing (``setattr``). If ``None``, 
+                   ``wattrs`` will default to ``attrs``. To disable setting attributes completely,
+                   set to an empty tuple ``()``.
+    :returns: a restricted view of the object
+    
+    Example::
+    
+        class MyService(rpyc.Service):
+            def exposed_open(self, filename):
+                f = open(filename, "r")
+                return rpyc.restricted(f, ["read", "close"])   # disallow access to `seek` or `write`
+    
+    """
+    if wattrs is None:
+        wattrs = attrs
+    class Restricted(object):
+        def _rpyc_getattr(self, name):
+            if name not in attrs:
+                raise AttributeError(name)
+            return getattr(obj, name)
+        __getattr__ = _rpyc_getattr
+        def _rpyc_setattr(self, name, value):
+            if name not in wattrs:
+                raise AttributeError(name)
+            setattr(obj, name, value)
+        __setattr__ = _rpyc_setattr
+    return Restricted()
+
 class _Async(object):
     """Creates an async proxy wrapper over an existing proxy. Async proxies
     are cached. Invoking an async proxy will return an AsyncResult instead of
