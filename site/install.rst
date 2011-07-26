@@ -78,15 +78,10 @@ them:
 * `TLSlite <http://trevp.net/tlslite/>`_ - Required for TLSlite support 
   (``VdbAuthenticator`` and ``tls_connect``). The project is no longer maintained,
   but you can download v0.3.8 `ported to newer versions of python 
-  <http://sourceforge.net/projects/rpyc/files/tlslite/>`_. Note that TLSLite is
-  :ref:`considered deprecated <tlslite>`, since :ref:`SSL support <ssl>` has 
-  been added
-
-  * `PyCrypto <https://www.dlitz.net/software/pycrypto/>`_ - If installed, 
-    will speed up TLSlite
-    
-  * `PyOpenSSL <https://launchpad.net/pyopenssl>`_ - If installed, will speed 
-    up TLSlite
+  <http://sourceforge.net/projects/rpyc/files/tlslite/>`_. 
+  
+  Note that **TLSLite has been deprecated** as of v3.2.0, and can only be used with v3.1.0 
+  and below.
 
 * `ssl-wrapper <http://pypi.python.org/pypi/ssl/>`_ - Required for SSL support 
   on python prior to v2.6 (``ssl_connect``)

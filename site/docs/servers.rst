@@ -75,12 +75,6 @@ The following switches are only relevant in conjunction with ``--register``:
   broadcast (``255.255.255.255``); for TCP, this parameter is **required**.
 
 
-TLSlite switches
-^^^^^^^^^^^^^^^^
-* ``--vdb=FILENAME`` - the :ref:`Verifier DB file <vdbconf>` to use for authentication. Enables 
-  the TLSlike authenticator (see below); cannot be used in conjunction with any of the ``--ssl``
-  switches
-
 SSL switches
 ^^^^^^^^^^^^
 If any of the following switches is given, the server uses the SSL authenticator. These cannot be 
