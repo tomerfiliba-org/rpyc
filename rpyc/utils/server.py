@@ -71,6 +71,8 @@ class Server(object):
             self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         self.listener.bind((hostname, port))
+        # hack so we can receive Ctrl+C on windows
+        self.listener.settimeout(0.5)
         sockname = self.listener.getsockname()
         self.host, self.port = sockname[0], sockname[1]
 
@@ -209,9 +211,6 @@ class Server(object):
             t = threading.Thread(target = self._bg_register)
             t.setDaemon(True)
             t.start()
-        #if sys.platform == "win32":
-        # hack so we can receive Ctrl+C on windows
-        self.listener.settimeout(0.5)
         try:
             try:
                 while True:
