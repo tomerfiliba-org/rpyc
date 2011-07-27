@@ -4,9 +4,14 @@
 
 * Added SSH tunneling support (``ssh_connect``)
 
+* Added ``restricted`` object wrapping
+
 * Several fixes to ``AsyncResult`` and weak references
 
 * Added the ``ThreadPoolServer``
+
+* Fixed some minor (harmless) races that caused tracebacks occasionally when 
+  server-threads terminated
 
 * Fixes issue `#8 <https://github.com/tomerfiliba/rpyc/issues/8>`_
 
@@ -14,9 +19,11 @@
 
 * Converted all ``CRLF`` to ``LF``
 
-* **New documentation** (both site and docstrings) rewritten in **Sphinx**
+* Dropped TLSlite integration. We've been dragging this corpse for too long.
 
-  * Site has moved to `http://rpyc.sourceforge.net`_. Wikidot had served us well
+* **New documentation** (both the website and docstrings) written in **Sphinx**
+
+  * The site has moved to `http://rpyc.sourceforge.net`_. Wikidot had served us well
     over the past three years, but they began displaying way too many ads and 
     didn't support uploading files over ``rsync``, which made my life hard.
 

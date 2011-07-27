@@ -48,7 +48,7 @@ Features
   server to invoke `callbacks <http://en.wikipedia.org/wiki/Callback_(computer_science)>`_
   on the client side.
 
-* **Synchronous** and **asynchronous** invocation
+* **Synchronous** and :ref:`asynchronous <async>` operation
 
 * **Platform Agnostic** - 32/64 bit, little/big endian, Windows/Linux/Solaris/Mac...
   access objects across different architectures.

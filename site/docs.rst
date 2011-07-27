@@ -38,6 +38,7 @@ Reference
    docs/servers
    docs/classic
    docs/services
+   docs/async
    docs/security
    docs/secure-connection
 
@@ -50,11 +51,14 @@ Reference
 * :ref:`RPyC Services <services>` - writing well-defined services which restrict
   the operations a client (or server) can carry out.
 
+* :ref:`Asynchronous Operation <async>` - invoking operations in the background,
+  without having to wait for them to finish.
+
 * :ref:`Security Concerns <security>` - keeping security in mind when using
   RPyC
 
 * :ref:`Secure Connections <ssl>` - create an encrypted and authenticated 
-  connection over SSL, SSH, or TLSLite
+  connection over SSL or SSH
 
 
 

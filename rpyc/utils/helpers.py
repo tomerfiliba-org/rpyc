@@ -114,9 +114,9 @@ def async(proxy):
     .. _async_note:
     
     .. note:: 
-       In order to avoid GC-cycles, the returned asynchronous wrapper is cached 
-       as a weak reference. Therefore, do not use::
-          
+       In order to avoid overloading the GC, the returned asynchronous wrapper is 
+       cached as a weak reference. Therefore, do not use::
+           
            rpyc.async(foo)(5)
        
        Always store the returned asynchronous wrapper in a variable, e.g. ::
@@ -175,6 +175,8 @@ class BgServingThread(object):
     
         conn = rpyc.connect(...)
         bg_server = BgServingThread(conn)
+        ...
+        bg_server.stop()
     """
     # these numbers are magical...
     SERVE_INTERVAL = 0.0
