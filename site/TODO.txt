@@ -1,11 +1,9 @@
 Docs
 ====
-* classic
 * guidelines
 * how to
 * theory
 * usecases
-* async
 
 Tutorial
 ========

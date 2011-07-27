@@ -75,6 +75,7 @@ machine to the host machine, using the credentials given by the ``SshContext``, 
 this tunnel to create the actual RPyC connection. 
 
 The tunneled-connection consists of three parts:
+
 * A socket from port X on the client machine (the RPyC client) to port Y on the client machine
   (first side of the tunnel)
 

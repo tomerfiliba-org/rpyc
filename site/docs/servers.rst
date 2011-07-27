@@ -22,6 +22,8 @@ If you wish to implement new servers (say, reactor-based, etc.), you can derive 
    incoming connections. See :ref:`api-authenticators` for more info. 
 
 
+.. _classic-server:
+
 Classic Server
 --------------
 RPyC comes "bundled" with a :ref:`classic`-mode server -- :file:`rpyc_classic.py`. This executable 
