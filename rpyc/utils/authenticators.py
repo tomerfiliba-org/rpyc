@@ -63,7 +63,7 @@ class SSLAuthenticator(object):
             else:
                 self.cert_reqs = ssl.CERT_NONE
         else:
-            self.cert_reqs = ssl.CERT_NONE
+            self.cert_reqs = cert_reqs
         if ssl_version is None:
             self.ssl_version = ssl.PROTOCOL_TLSv1
         else:
