@@ -177,7 +177,6 @@ class Server(object):
             config = dict(self.protocol_config, credentials = credentials)
             conn = Connection(self.service, Channel(SocketStream(sock)),
                 config = config, _lazy = True)
-            conn._init_service()
             conn.serve_all()
         finally:
             self.logger.info("goodbye [%s]:%s", h, p)
