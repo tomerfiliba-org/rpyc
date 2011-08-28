@@ -1,8 +1,6 @@
 Docs
 ====
 * guidelines
-* how to
-* theory
 * usecases
 
 Tutorial
