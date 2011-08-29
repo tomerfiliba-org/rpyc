@@ -129,10 +129,8 @@ doctest:
 	@echo "Testing of doctests in the sources finished, look at the " \
 	      "results in $(BUILDDIR)/doctest/output.txt."
 
-upload: clean html
-	#rsync -r $(BUILDDIR)/html tomerfiliba.com:webapps/rpyc
-	rsync -r $(BUILDDIR)/html gangesmaster,rpyc@web.sourceforge.net:htdocs/
-
+upload: html
+	rsync -r -v $(BUILDDIR)/html/ gangesmaster,rpyc@web.sourceforge.net:htdocs/
 
 
 

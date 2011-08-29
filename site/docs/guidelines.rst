@@ -2,3 +2,8 @@
 
 Guidelines
 ==========
+
+TBD:
+
+* BgThreadedServer
+* Multithreading

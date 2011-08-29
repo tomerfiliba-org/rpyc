@@ -113,6 +113,8 @@ You can use the following snippet::
 
 Refer to :class:`rpyc.utils.server.Server` for the list all possible arguments.  
 
+.. _registry-server:
+
 Registry Server
 ---------------
 RPyC comes with a simple command-line registry server, which can be configured quite extensively

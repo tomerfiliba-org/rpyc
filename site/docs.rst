@@ -15,16 +15,19 @@ Introduction
    docs/howto
    docs/usecases
    docs/guidelines
+   docs/capabilities
 
 
 * :ref:`A little about RPyC <about>` - related projects, contributors, and 
   logo issues
 
-* :ref:`Theory of operation <theory>` - background on the inner workings of 
+* :ref:`Theory of Operation <theory>` - background on the inner workings of 
   RPyC and the terminology 
 
 * :ref:`Use cases <use-cases>` - some common use-cases, demonstrating the power 
   and ease of RPyC
+
+* :ref:`How to's <howto>` - solutions to specific problems
 
 * :ref:`Guidelines <guidelines>` - guidelines for improving your work with RPyC
 
