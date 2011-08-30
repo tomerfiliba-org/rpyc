@@ -216,6 +216,8 @@ def upload_package(conn, module, remotepath = None, chunk_size = 16000):
                        ``distutils``)
     :param chunk_size: the IO chunk size
     
+    .. note:: ``upload_module`` is just an alias to ``upload_package``
+    
     example::
     
        import foo.bar
@@ -238,7 +240,7 @@ def obtain(proxy):
         
     :param proxy: an RPyC proxy object
     
-    .. note:: the remote object to must be ``picklable``
+    .. note:: the remote object to must be ``pickle``-able
 
     :returns: a copy of the remote object
     """
