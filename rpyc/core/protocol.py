@@ -391,18 +391,19 @@ class Connection(object):
     def poll_all(self, timeout = 0):
         """Serves all requests and replies that arrive within the given interval.
         
-        :returns: ``True`` if at least transaction was served, ``False`` 
-                  otherwise
+        :returns: ``True`` if at least transaction was served, ``False`` otherwise
         """
         at_least_once = False
-        t_start = time.time()
+        t0 = time.time()
+        duration = timeout
         try:
             while True:
-                t_remaining = t_start + timeout - time.time()
-                if t_remaining < 0:
-                    break
-                if self.poll(t_remaining):
+                if self.poll(duration):
                     at_least_once = True
+                if timeout is not None:
+                    duration = t0 + timeout - time.time()
+                    if duration < 0:
+                        break
         except EOFError:
             pass
         return at_least_once
