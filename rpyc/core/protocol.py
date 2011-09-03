@@ -11,6 +11,7 @@ from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
 import socket
+import time
 
 
 class PingError(Exception):
@@ -394,9 +395,14 @@ class Connection(object):
                   otherwise
         """
         at_least_once = False
+        t_start = time.time()
         try:
-            while self.poll(timeout):
-                at_least_once = True
+            while True:
+                t_remaining = t_start + timeout - time.time()
+                if t_remaining < 0:
+                    break
+                if self.poll(t_remaining):
+                    at_least_once = True
         except EOFError:
             pass
         return at_least_once
