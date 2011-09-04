@@ -30,14 +30,12 @@ setup(name = "RPyC",
     scripts = [
         os.path.join("rpyc", "scripts", "rpyc_classic.py"),
         os.path.join("rpyc", "scripts", "rpyc_registry.py"),
-        os.path.join("rpyc", "scripts", "rpyc_vdbconf.py"),
     ],
     platforms = ["POSIX", "Windows"],
     use_2to3 = True,
     zip_ok = False,
     #entry_points = {
     #    "console_scripts": [
-    #         "rpyc_vdbconf = rpyc.scripts.vdbconf:main",
     #         "rpyc_classic = rpyc.scripts.rpyc_classic:main",
     #         "rpyc_registry = rpyc.scripts.rpyc_classic:main",
     #    ]
