@@ -41,7 +41,7 @@ class SSLAuthenticator(object):
     :param certfile: the server's certificate file
     :param ca_certs: the server's certificate authority file
     :param cert_reqs: the certificate requirements. By default, if ``ca_cert`` is
-                      specified the requirement is set to ``CERT_REQUIRED``; 
+                      specified, the requirement is set to ``CERT_REQUIRED``; 
                       otherwise it is set to ``CERT_NONE``
     :param ciphers: the list of ciphers to use, or ``None``, if you do not wish
                     to restrict the available ciphers. New in Python 2.7/3.2
