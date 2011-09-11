@@ -539,6 +539,17 @@ class Connection(object):
         except StopIteration:
             pass
         return tuple(items)
+    def _handle_oldslicing(self, oid, attempt, fallback, start, stop, args):
+        try:
+            # first try __xxxitem__
+            getitem = self._handle_getattr(oid, attempt)
+            return getitem(slice(start, stop), *args)
+        except Exception:
+            # fallback to __xxxslice__. see issue #41
+            if stop is None:
+                stop = sys.maxint
+            getslice = self._handle_getattr(oid, fallback)
+            return getslice(start, stop, *args)
 
     # collect handlers
     _HANDLERS = {}

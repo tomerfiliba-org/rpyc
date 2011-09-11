@@ -163,6 +163,8 @@ def _make_method(name, doc):
     """creates a method with the given name and docstring that invokes
     :func:`syncreq` on its `self` argument"""
     
+    slicers = {"__getslice__" : "__getitem__", "__delslice__" : "__delitem__", "__setslice__" : "__setitem__"}
+    
     name = str(name)                                      # IronPython issue #10
     if name == "__call__":
         def __call__(_self, *args, **kwargs):
@@ -170,6 +172,14 @@ def _make_method(name, doc):
             return syncreq(_self, consts.HANDLE_CALL, args, kwargs)
         __call__.__doc__ = doc
         return __call__
+    elif name in slicers:                                 # 32/64 bit issue #41
+        def method(self, start, stop, *args):
+            if stop == sys.maxint:
+                stop = None
+            return syncreq(self, consts.HANDLE_OLDSLICING, slicers[name], name, start, stop, args)
+        method.__name__ = name
+        method.__doc__ = doc
+        return method
     else:
         def method(_self, *args, **kwargs):
             kwargs = tuple(kwargs.items())
