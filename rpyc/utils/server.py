@@ -144,7 +144,7 @@ class Server(object):
                 h = addrinfo[0]
                 p = addrinfo[1]
                 try:
-                    sock, credentials = self.authenticator(sock)
+                    sock2, credentials = self.authenticator(sock)
                 except AuthenticationError:
                     self.logger.info("[%s]:%s failed to authenticate, rejecting connection", h, p)
                     return
@@ -152,8 +152,9 @@ class Server(object):
                     self.logger.info("[%s]:%s authenticated successfully", h, p)
             else:
                 credentials = None
+                sock2 = sock
             try:
-                self._serve_client(sock, credentials)
+                self._serve_client(sock2, credentials)
             except Exception:
                 self.logger.exception("client connection terminated abruptly")
                 raise
