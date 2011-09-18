@@ -173,6 +173,14 @@ class BaseNetref(object):
     def __reduce_ex__(self, proto):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
 
+if not isinstance(BaseNetref, NetrefMetaclass):
+    # python 2 and 3 compatible metaclass...
+    ns = dict(BaseNetref.__dict__)
+    for slot in BaseNetref.__slots__:
+        ns.pop(slot) 
+    BaseNetref = NetrefMetaclass(BaseNetref.__name__, BaseNetref.__bases__, ns) 
+
+
 def _make_method(name, doc):
     """creates a method with the given name and docstring that invokes
     :func:`syncreq` on its `self` argument"""

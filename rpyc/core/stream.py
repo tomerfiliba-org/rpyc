@@ -147,6 +147,8 @@ class SocketStream(Stream):
             ex = sys.exc_info()[1]
             if ex.errno == errno.EBADF:
                 raise EOFError()
+            else:
+                raise
     
     def read(self, count):
         data = []
@@ -157,7 +159,7 @@ class SocketStream(Stream):
                 continue
             except socket.error:
                 ex = sys.exc_info()[1]
-                if ex[0] in retry_errnos:
+                if ex.errno in retry_errnos:
                     # windows just has to be a bitch
                     continue
                 self.close()

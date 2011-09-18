@@ -6,7 +6,7 @@ Note that the services by both parties need not be symmetric, e.g., one side may
 exposed *service A*, while the other may expose *service B*. As long as the two
 can interoperate, you're good to go.
 """
-from rpyc.lib.compat import execute
+from rpyc.lib.compat import execute, is_py3k
 
 
 class Service(object):
@@ -139,7 +139,10 @@ class SlaveService(Service):
         self._conn.eval = self._conn.root.eval
         self._conn.execute = self._conn.root.execute
         self._conn.namespace = self._conn.root.namespace
-        self._conn.builtin = self._conn.modules.__builtin__
+        if is_py3k:
+            self._conn.builtin = self._conn.modules.builtins
+        else:
+            self._conn.builtin = self._conn.modules.__builtin__
 
     def exposed_execute(self, text):
         """execute arbitrary code (using ``exec``)"""

@@ -21,6 +21,7 @@ except ImportError:
 
 from rpyc.core import brine
 from rpyc.core import consts
+from rpyc.lib.compat import is_py3k
 
 
 try:
@@ -28,7 +29,6 @@ try:
 except NameError:
     # python 2.4 compatible
     BaseException = Exception
-
 
 class GenericException(Exception):
     """A 'generic exception' that is raised when the exception the gotten from
@@ -116,7 +116,12 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
             pass
     
     if instantiate_custom_exceptions:
-        cls = getattr(sys.modules[modname], clsname, None)
+        if modname in sys.modules:
+            cls = getattr(sys.modules[modname], clsname, None)
+        elif not is_py3k and modname == "builtins":
+            cls = getattr(exceptions_module, clsname, None)
+        else:
+            cls = None
     elif modname == exceptions_module.__name__:
         cls = getattr(exceptions_module, clsname, None)
     else:

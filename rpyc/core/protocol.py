@@ -9,7 +9,7 @@ import socket
 import time
 
 from threading import Lock
-from rpyc.lib.compat import pickle, next
+from rpyc.lib.compat import pickle, next, is_py3k
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
@@ -472,10 +472,15 @@ class Connection(object):
         return False
 
     def _access_attr(self, oid, name, args, overrider, param, default):
-        if type(name) is unicode:
-            name = str(name) # IronPython issue #10
-        elif type(name) is not str:
-            raise TypeError("attr name must be a string")
+        if is_py3k:
+            if type(name) is bytes:
+                name = str(name, "utf8")
+            elif type(name) is not str:
+                raise TypeError("name must be a string")
+        else:
+            if type(name) not in (str, unicode):
+                raise TypeError("name must be a string")
+            name = str(name) # IronPython issue #10 + py3k issue
         obj = self._local_objects[oid]
         accessor = getattr(type(obj), overrider, None)
         if accessor is None:
