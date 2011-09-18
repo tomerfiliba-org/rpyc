@@ -3,7 +3,7 @@
 rather than an endless stream of bytes, and adds support for compression.
 """
 from rpyc.lib import safe_import
-from rpyc.lib.compat import Struct
+from rpyc.lib.compat import Struct, BYTES_LITERAL
 zlib = safe_import("zlib")
 
 # * 64 bit length field?
@@ -20,7 +20,7 @@ class Channel(object):
     COMPRESSION_THRESHOLD = 3000
     COMPRESSION_LEVEL = 1
     FRAME_HEADER = Struct("!LB")
-    FLUSHER = "\n" # cause any line-buffered layers below us to flush
+    FLUSHER = BYTES_LITERAL("\n") # cause any line-buffered layers below us to flush
     __slots__ = ["stream", "compress"]
 
     def __init__(self, stream, compress = True):

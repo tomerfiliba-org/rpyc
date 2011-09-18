@@ -8,7 +8,10 @@ import time
 import threading
 import errno
 import logging
-import Queue
+try:
+    import Queue
+except ImportError:
+    import queue as Queue
 from rpyc.core import SocketStream, Channel, Connection
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
@@ -354,11 +357,12 @@ class ThreadPoolServer(Server):
                 active_clients = self.poll_object.poll(1)
                 # for each client that became active, put them in the active queue
                 self._handle_poll_result(active_clients)
-            except Exception, e:
+            except Exception:
+                ex = sys.exc_info()[1]
                 # "Caught exception in Worker thread" message
-                self.logger.warning("failed to poll clients, caught exception : %s", str(e))
+                self.logger.warning("failed to poll clients, caught exception : %s", str(ex))
                 # wait a bit so that we do not loop too fast in case of error
-                time.sleep(.2)
+                time.sleep(0.2)
 
     def _serve_requests(self, fd):
         '''Serves requests from the given connection and puts it back to the appropriate queue'''
@@ -397,11 +401,12 @@ class ThreadPoolServer(Server):
                 # we've timed out, let's just retry. We only use the timeout so that this
                 # thread can stop even if there is nothing in the queue
                 pass
-            except Exception, e:
+            except Exception:
+                ex = sys.exc_info()[1]
                 # "Caught exception in Worker thread" message
-                self.logger.warning("failed to serve client, caught exception : %s", str(e))
+                self.logger.warning("failed to serve client, caught exception : %s", str(ex))
                 # wait a bit so that we do not loop too fast in case of error
-                time.sleep(.2)
+                time.sleep(0.2)
 
     def _authenticate_and_build_connection(self, sock):
         '''Authenticate a client and if it succees, wraps the socket in a connection object.
@@ -434,8 +439,9 @@ class ThreadPoolServer(Server):
                 self.fd_to_conn[fd] = conn
                 self._add_inactive_connection(fd)
                 self.clients.clear()
-        except Exception, e:
-            self.logger.warning("failed to serve client, caught exception : %s", str(e))
+        except Exception:
+            ex = sys.exc_info()[1]
+            self.logger.warning("failed to serve client, caught exception : %s", str(ex))
 
 
 class ForkingServer(Server):

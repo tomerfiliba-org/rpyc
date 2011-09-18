@@ -8,7 +8,7 @@ import socket
 import time
 import errno
 from rpyc.lib import safe_import
-from rpyc.lib.compat import select
+from rpyc.lib.compat import select, BYTES_LITERAL
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 msvcrt = safe_import("msvcrt")
@@ -167,7 +167,7 @@ class SocketStream(Stream):
                 raise EOFError("connection closed by peer")
             data.append(buf)
             count -= len(buf)
-        return "".join(data)
+        return BYTES_LITERAL("").join(data)
     def write(self, data):
         try:
             while data:
@@ -245,7 +245,7 @@ class PipeStream(Stream):
             ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
-        return "".join(data)
+        return BYTES_LITERAL("").join(data)
     def write(self, data):
         try:
             while data:
@@ -318,7 +318,7 @@ class Win32PipeStream(Stream):
             ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
-        return "".join(data)
+        return BYTES_LITERAL("").join(data)
     def write(self, data):
         try:
             while data:

@@ -19,39 +19,42 @@ Example::
     >>> x == z
     True
 """
-from rpyc.lib.compat import Struct, StringIO, all, is_py3k
+from rpyc.lib.compat import Struct, BytesIO, all, is_py3k, BYTES_LITERAL
 
 
 # singletons
-TAG_NONE = "\x00"
-TAG_EMPTY_STR = "\x01"
-TAG_EMPTY_TUPLE = "\x02"
-TAG_TRUE = "\x03"
-TAG_FALSE = "\x04"
-TAG_NOT_IMPLEMENTED = "\x05"
-TAG_ELLIPSIS = "\x06"
+TAG_NONE = BYTES_LITERAL("\x00")
+TAG_EMPTY_STR = BYTES_LITERAL("\x01")
+TAG_EMPTY_TUPLE = BYTES_LITERAL("\x02")
+TAG_TRUE = BYTES_LITERAL("\x03")
+TAG_FALSE = BYTES_LITERAL("\x04")
+TAG_NOT_IMPLEMENTED = BYTES_LITERAL("\x05")
+TAG_ELLIPSIS = BYTES_LITERAL("\x06")
 # types
-TAG_UNICODE = "\x08"
-TAG_LONG = "\x09"
-TAG_STR1 = "\x0a"
-TAG_STR2 = "\x0b"
-TAG_STR3 = "\x0c"
-TAG_STR4 = "\x0d"
-TAG_STR_L1 = "\x0e"
-TAG_STR_L4 = "\x0f"
-TAG_TUP1 = "\x10"
-TAG_TUP2 = "\x11"
-TAG_TUP3 = "\x12"
-TAG_TUP4 = "\x13"
-TAG_TUP_L1 = "\x14"
-TAG_TUP_L4 = "\x15"
-TAG_INT_L1 = "\x16"
-TAG_INT_L4 = "\x17"
-TAG_FLOAT = "\x18"
-TAG_SLICE = "\x19"
-TAG_FSET = "\x1a"
-TAG_COMPLEX = "\x1b"
-IMM_INTS = dict((i, chr(i + 0x50)) for i in range(-0x30, 0xa0))
+TAG_UNICODE = BYTES_LITERAL("\x08")
+TAG_LONG = BYTES_LITERAL("\x09")
+TAG_STR1 = BYTES_LITERAL("\x0a")
+TAG_STR2 = BYTES_LITERAL("\x0b")
+TAG_STR3 = BYTES_LITERAL("\x0c")
+TAG_STR4 = BYTES_LITERAL("\x0d")
+TAG_STR_L1 = BYTES_LITERAL("\x0e")
+TAG_STR_L4 = BYTES_LITERAL("\x0f")
+TAG_TUP1 = BYTES_LITERAL("\x10")
+TAG_TUP2 = BYTES_LITERAL("\x11")
+TAG_TUP3 = BYTES_LITERAL("\x12")
+TAG_TUP4 = BYTES_LITERAL("\x13")
+TAG_TUP_L1 = BYTES_LITERAL("\x14")
+TAG_TUP_L4 = BYTES_LITERAL("\x15")
+TAG_INT_L1 = BYTES_LITERAL("\x16")
+TAG_INT_L4 = BYTES_LITERAL("\x17")
+TAG_FLOAT = BYTES_LITERAL("\x18")
+TAG_SLICE = BYTES_LITERAL("\x19")
+TAG_FSET = BYTES_LITERAL("\x1a")
+TAG_COMPLEX = BYTES_LITERAL("\x1b")
+if is_py3k:
+    IMM_INTS = dict((i, bytes([i + 0x50])) for i in range(-0x30, 0xa0))
+else:
+    IMM_INTS = dict((i, chr(i + 0x50)) for i in range(-0x30, 0xa0))
 
 I1 = Struct("!B")
 I4 = Struct("!L")
@@ -105,7 +108,7 @@ def _dump_int(obj, stream):
     if obj in IMM_INTS:
         stream.append(IMM_INTS[obj])
     else:
-        obj = str(obj)
+        obj = BYTES_LITERAL(str(obj))
         l = len(obj)
         if l < 256:
             stream.append(TAG_INT_L1 + I1.pack(l) + obj)
@@ -140,7 +143,7 @@ if is_py3k:
             stream.append(TAG_STR_L4 + I4.pack(l) + obj)
 
     @register(_dump_registry, str)
-    def _dump_unicode(obj, stream):
+    def _dump_str(obj, stream):
         stream.append(TAG_UNICODE)
         _dump_bytes(obj.encode("utf8"), stream)
 else:
@@ -325,7 +328,7 @@ def dump(obj):
     """
     stream = []
     _dump(obj, stream)
-    return "".join(stream)
+    return BYTES_LITERAL("").join(stream)
 
 def load(data):
     """Recreates (loads) an object from its byte-string representation
@@ -334,7 +337,7 @@ def load(data):
     
     :returns: the dumped object
     """
-    stream = StringIO(data)
+    stream = BytesIO(data)
     return _load(stream)
 
 if is_py3k:

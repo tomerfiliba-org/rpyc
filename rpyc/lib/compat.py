@@ -8,10 +8,13 @@ is_py3k = (sys.version_info[0] >= 3)
 
 if is_py3k:
     exec("execute = exec")
+    def BYTES_LITERAL(text):
+        return bytes(text, "utf8")
 else:
     exec("""def execute(code, globals = None, locals = None):
-                exec code in globals, locals
-    """)
+                exec code in globals, locals""")
+    def BYTES_LITERAL(text):
+        return text
 
 try:
     from struct import Struct #@UnusedImport
@@ -28,9 +31,15 @@ except ImportError:
             return struct.unpack(self.format, data)
 
 try:
-    from cStringIO import StringIO
+    from cStringIO import StringIO as BytesIO
 except ImportError:
-    from io import StringIO #@UnusedImport
+    from io import BytesIO #@UnusedImport
+
+try:
+    next = next
+except NameError:
+    def next(iterator):
+        return iterator.next()
 
 try:
     all = all

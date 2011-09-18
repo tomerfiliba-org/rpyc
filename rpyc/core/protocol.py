@@ -9,7 +9,7 @@ import socket
 import time
 
 from threading import Lock
-from rpyc.lib.compat import pickle
+from rpyc.lib.compat import pickle, next
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
@@ -39,7 +39,7 @@ DEFAULT_CONFIG = dict(
         '__rpow__', '__rrshift__', '__rshift__', '__rsub__', '__rtruediv__',
         '__rxor__', '__setitem__', '__setslice__', '__str__', '__sub__',
         '__truediv__', '__xor__', 'next', '__length_hint__', '__enter__',
-        '__exit__', ]),
+        '__exit__', '__next__',]),
     exposed_prefix = "exposed_",
     allow_getattr = True,
     allow_setattr = False,
@@ -118,7 +118,7 @@ class Connection(object):
         self._config = DEFAULT_CONFIG.copy()
         self._config.update(config)
         if self._config["connid"] is None:
-            self._config["connid"] = "conn%d" % (_connection_id_generator.next(),)
+            self._config["connid"] = "conn%d" % (next(_connection_id_generator),)
 
         self._channel = channel
         self._seqcounter = itertools.count()
@@ -217,7 +217,7 @@ class Connection(object):
         finally:
             self._sendlock.release()
     def _send_request(self, handler, args):
-        seq = self._seqcounter.next()
+        seq = next(self._seqcounter)
         self._send(consts.MSG_REQUEST, seq, (handler, self._box(args)))
         return seq
     def _send_reply(self, seq, obj):
@@ -535,7 +535,7 @@ class Connection(object):
         i = 0
         try:
             while i < count:
-                items.append(obj.next())
+                items.append(next(obj))
                 i += 1
         except StopIteration:
             pass

@@ -28,7 +28,7 @@
 * **New documentation** (both the website and docstrings) written in **Sphinx**
 
   * The site has moved to `sourceforge <http://rpyc.sourceforge.net>`_. Wikidot 
-    has served us well over the past three years, but they began displaying way too 
+    had served us well over the past three years, but they began displaying way too 
     many ads and didn't support uploading files over ``rsync``, which made my life hard.
 
   * New docs are part of the git repository. Updating the site is as easy as
