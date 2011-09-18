@@ -13,13 +13,17 @@
 * Fixed some minor (harmless) races that caused tracebacks occasionally when 
   server-threads terminated
 
-* Fixes issue `#8 <https://github.com/tomerfiliba/rpyc/issues/8>`_
+* Fixes issues `#8 <https://github.com/tomerfiliba/rpyc/issues/8>`_, 
+  `#41 <https://github.com/tomerfiliba/rpyc/issues/41>`_, 
+  `#42 <https://github.com/tomerfiliba/rpyc/issues/42>`_, 
+  `#43 <https://github.com/tomerfiliba/rpyc/issues/43>`_,
+  `#46 <https://github.com/tomerfiliba/rpyc/issues/46>`_, and
+  `#49 <https://github.com/tomerfiliba/rpyc/issues/49>`_. 
 
-* Fixes issue `#41 <https://github.com/tomerfiliba/rpyc/issues/41>`_
+* Converted all ``CRLF`` to ``LF`` (`#40 <https://github.com/tomerfiliba/rpyc/issues/40>`_)
 
-* Converted all ``CRLF`` to ``LF``
-
-* Dropped TLSlite integration. We've been dragging this corpse for too long.
+* Dropped TLSlite integration (`#45 <https://github.com/tomerfiliba/rpyc/issues/45>`_).
+  We've been dragging this corpse for too long.
 
 * **New documentation** (both the website and docstrings) written in **Sphinx**
 

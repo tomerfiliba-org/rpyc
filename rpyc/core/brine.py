@@ -19,8 +19,7 @@ Example::
     >>> x == z
     True
 """
-from cStringIO import StringIO
-from rpyc.lib.compat import Struct, all
+from rpyc.lib.compat import Struct, StringIO, all, is_py3k
 
 
 # singletons
@@ -61,7 +60,7 @@ C16 = Struct("!dd")
 
 _dump_registry = {}
 _load_registry = {}
-IMM_INTS_LOADER = dict((v, k) for k, v in IMM_INTS.iteritems())
+IMM_INTS_LOADER = dict((v, k) for k, v in IMM_INTS.items())
 
 def register(coll, key):
     def deco(func):
@@ -113,29 +112,6 @@ def _dump_int(obj, stream):
         else:
             stream.append(TAG_INT_L4 + I4.pack(l) + obj)
 
-@register(_dump_registry, long)
-def _dump_long(obj, stream):
-    stream.append(TAG_LONG)
-    _dump_int(obj, stream)
-
-@register(_dump_registry, str)
-def _dump_str(obj, stream):
-    l = len(obj)
-    if l == 0:
-        stream.append(TAG_EMPTY_STR)
-    elif l == 1:
-        stream.append(TAG_STR1 + obj)
-    elif l == 2:
-        stream.append(TAG_STR2 + obj)
-    elif l == 3:
-        stream.append(TAG_STR3 + obj)
-    elif l == 4:
-        stream.append(TAG_STR4 + obj)
-    elif l < 256:
-        stream.append(TAG_STR_L1 + I1.pack(l) + obj)
-    else:
-        stream.append(TAG_STR_L4 + I4.pack(l) + obj)
-
 @register(_dump_registry, float)
 def _dump_float(obj, stream):
     stream.append(TAG_FLOAT + F8.pack(obj))
@@ -144,10 +120,58 @@ def _dump_float(obj, stream):
 def _dump_complex(obj, stream):
     stream.append(TAG_COMPLEX + C16.pack(obj.real, obj.imag))
 
-@register(_dump_registry, unicode)
-def _dump_unicode(obj, stream):
-    stream.append(TAG_UNICODE)
-    _dump_str(obj.encode("utf8"), stream)
+if is_py3k:
+    @register(_dump_registry, bytes)
+    def _dump_bytes(obj, stream):
+        l = len(obj)
+        if l == 0:
+            stream.append(TAG_EMPTY_STR)
+        elif l == 1:
+            stream.append(TAG_STR1 + obj)
+        elif l == 2:
+            stream.append(TAG_STR2 + obj)
+        elif l == 3:
+            stream.append(TAG_STR3 + obj)
+        elif l == 4:
+            stream.append(TAG_STR4 + obj)
+        elif l < 256:
+            stream.append(TAG_STR_L1 + I1.pack(l) + obj)
+        else:
+            stream.append(TAG_STR_L4 + I4.pack(l) + obj)
+
+    @register(_dump_registry, str)
+    def _dump_unicode(obj, stream):
+        stream.append(TAG_UNICODE)
+        _dump_bytes(obj.encode("utf8"), stream)
+else:
+    @register(_dump_registry, str)
+    def _dump_str(obj, stream):
+        l = len(obj)
+        if l == 0:
+            stream.append(TAG_EMPTY_STR)
+        elif l == 1:
+            stream.append(TAG_STR1 + obj)
+        elif l == 2:
+            stream.append(TAG_STR2 + obj)
+        elif l == 3:
+            stream.append(TAG_STR3 + obj)
+        elif l == 4:
+            stream.append(TAG_STR4 + obj)
+        elif l < 256:
+            stream.append(TAG_STR_L1 + I1.pack(l) + obj)
+        else:
+            stream.append(TAG_STR_L4 + I4.pack(l) + obj)
+
+    @register(_dump_registry, unicode)
+    def _dump_unicode(obj, stream):
+        stream.append(TAG_UNICODE)
+        _dump_str(obj.encode("utf8"), stream)
+
+    @register(_dump_registry, long)
+    def _dump_long(obj, stream):
+        stream.append(TAG_LONG)
+        _dump_int(obj, stream)
+
 
 @register(_dump_registry, tuple)
 def _dump_tuple(obj, stream):
@@ -199,14 +223,17 @@ def _load_empty_tuple(stream):
 @register(_load_registry, TAG_EMPTY_STR)
 def _load_empty_str(stream):
     return ""
-@register(_load_registry, TAG_UNICODE)
-def _load_unicode(stream):
-    obj = _load(stream)
-    return obj.decode("utf-8")
-@register(_load_registry, TAG_LONG)
-def _load_long(stream):
-    obj = _load(stream)
-    return long(obj)
+
+if is_py3k:
+    @register(_load_registry, TAG_LONG)
+    def _load_long(stream):
+        obj = _load(stream)
+        return int(obj)
+else:
+    @register(_load_registry, TAG_LONG)
+    def _load_long(stream):
+        obj = _load(stream)
+        return long(obj)
 
 @register(_load_registry, TAG_FLOAT)
 def _load_float(stream):
@@ -236,6 +263,11 @@ def _load_str_l1(stream):
 def _load_str_l4(stream):
     l, = I4.unpack(stream.read(4))
     return stream.read(l)
+
+@register(_load_registry, TAG_UNICODE)
+def _load_unicode(stream):
+    obj = _load(stream)
+    return obj.decode("utf-8")
 
 @register(_load_registry, TAG_TUP1)
 def _load_tup1(stream):
@@ -305,8 +337,12 @@ def load(data):
     stream = StringIO(data)
     return _load(stream)
 
-simple_types = frozenset([type(None), int, long, bool, str, float, unicode,
-    slice, complex, type(NotImplemented), type(Ellipsis)])
+if is_py3k:
+    simple_types = frozenset([type(None), int, bool, float, bytes, str, 
+        slice, complex, type(NotImplemented), type(Ellipsis)])
+else:
+    simple_types = frozenset([type(None), int, long, bool, float, str, unicode,
+        slice, complex, type(NotImplemented), type(Ellipsis)])
 
 def dumpable(obj):
     """Indicates whether the given object is *dumpable* by brine

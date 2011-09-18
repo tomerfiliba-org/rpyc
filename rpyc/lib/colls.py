@@ -36,7 +36,7 @@ class WeakValueDict(object):
     def __delitem__(self, key):
         del self._dict[key]
     def iterkeys(self):
-        return self._dict.iterkeys()
+        return self._dict.keys()
     def keys(self):
         return self._dict.keys()
     def itervalues(self):

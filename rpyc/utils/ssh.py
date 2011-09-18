@@ -104,7 +104,7 @@ class SshContext(object):
 
     def _convert_kwargs_to_args(self, kwargs):
         args = []
-        for k, v in kwargs.iteritems():
+        for k, v in kwargs.items():
             if v is True:
                 args.append("-%s" % (k,))
             elif v is False:

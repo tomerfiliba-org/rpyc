@@ -6,6 +6,8 @@ Note that the services by both parties need not be symmetric, e.g., one side may
 exposed *service A*, while the other may expose *service B*. As long as the two
 can interoperate, you're good to go.
 """
+from rpyc.lib.compat import execute
+
 
 class Service(object):
     """The service base-class. Derive from this class to implement custom RPyC
@@ -141,7 +143,7 @@ class SlaveService(Service):
 
     def exposed_execute(self, text):
         """execute arbitrary code (using ``exec``)"""
-        exec text in self.exposed_namespace
+        execute(text, self.exposed_namespace)
     def exposed_eval(self, text):
         """evaluate arbitrary code (using ``eval``)"""
         return eval(text, self.exposed_namespace)

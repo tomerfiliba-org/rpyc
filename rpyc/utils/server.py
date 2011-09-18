@@ -285,7 +285,7 @@ class ThreadPoolServer(Server):
         # setup a thread for polling inactive connections
         self.polling_thread = threading.Thread(target = self._poll_inactive_clients)
         self.polling_thread.setName('PollingThread')
-        self.polling_thread.daemon = True
+        self.polling_thread.setDaemon(True)
         self.polling_thread.start()
 
     def close(self):

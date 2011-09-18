@@ -2,8 +2,19 @@
 compatibility module for various versions of python (2.4/3+/jython)
 and various platforms (posix/windows)
 """
+import sys
+
+is_py3k = (sys.version_info[0] >= 3)
+
+if is_py3k:
+    exec("execute = exec")
+else:
+    exec("""def execute(code, globals = None, locals = None):
+                exec code in globals, locals
+    """)
+
 try:
-    from struct import Struct
+    from struct import Struct #@UnusedImport
 except ImportError:
     import struct
     class Struct(object):
@@ -17,6 +28,11 @@ except ImportError:
             return struct.unpack(self.format, data)
 
 try:
+    from cStringIO import StringIO
+except ImportError:
+    from io import StringIO #@UnusedImport
+
+try:
     all = all
 except NameError:
     def all(seq):
@@ -24,6 +40,11 @@ except NameError:
             if not elem:
                 return False
         return True
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle #@UnusedImport
 
 try:
     callable = callable

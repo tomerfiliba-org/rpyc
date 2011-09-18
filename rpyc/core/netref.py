@@ -5,7 +5,7 @@ of *magic*, so beware.
 import sys
 import inspect
 import types
-import cPickle as pickle
+from rpyc.lib.compat import pickle, is_py3k
 from rpyc.core import consts
 
 
@@ -19,21 +19,35 @@ _local_netref_attrs = frozenset([
 """the set of attributes that are local to the netref object"""
 
 _builtin_types = [
-    type, object, types.InstanceType, types.ClassType, bool, complex, dict,
-    file, float, int, list, long, slice, str, basestring, tuple, unicode,
-    str, set, frozenset, Exception, types.NoneType, types.DictProxyType,
-    types.BuiltinFunctionType, types.GeneratorType, types.MethodType,
-    types.CodeType, types.FrameType, types.TracebackType, xrange,
+    type, object, bool, complex, dict, float, int, list, slice, str, tuple, set, 
+    frozenset, Exception, type(None), types.BuiltinFunctionType, types.GeneratorType,
+    types.MethodType, types.CodeType, types.FrameType, types.TracebackType, 
     types.ModuleType, types.FunctionType,
 
     type(int.__add__),      # wrapper_descriptor
     type((1).__add__),      # method-wrapper
     type(iter([])),         # listiterator
     type(iter(())),         # tupleiterator
-    type(iter(xrange(10))), # rangeiterator
     type(iter(set())),      # setiterator
 ]
 """a list of types considered built-in (shared between connections)"""
+
+try:
+    BaseException
+except NameError:
+    pass
+else:
+    _builtin_types.append(BaseException)
+
+if is_py3k:
+    _builtin_types.extend([
+        bytes, bytearray, type(iter(range(10))), memoryview,
+    ])
+else:
+    _builtin_types.extend([
+        basestring, unicode, long, xrange, type(iter(xrange(10))), file,
+        types.InstanceType, types.ClassType, types.DictProxyType,
+    ])
 
 _normalized_builtin_types = dict(((t.__name__, t.__module__), t)
     for t in _builtin_types)
@@ -206,7 +220,7 @@ def inspect_methods(obj):
         mros = reversed(type(obj).__mro__)
     for basecls in mros:
         attrs.update(basecls.__dict__)
-    for name, attr in attrs.iteritems():
+    for name, attr in attrs.items():
         if name not in _local_netref_attrs and hasattr(attr, "__call__"):
             methods[name] = inspect.getdoc(attr)
     return methods.items()

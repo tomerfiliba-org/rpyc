@@ -9,11 +9,25 @@ Note that by changing the configuration parameters, this module can be made
 non-secure. Keep this in mind.
 """
 import sys
-import exceptions
 import traceback
-from types import InstanceType, ClassType
+try:
+    import exceptions as exceptions_module
+except ImportError:
+    import builtins as exceptions_module
+try:
+    from types import InstanceType, ClassType
+except ImportError:
+    ClassType = type
+
 from rpyc.core import brine
 from rpyc.core import consts
+
+
+try:
+    BaseException
+except NameError:
+    # python 2.4 compatible
+    BaseException = Exception
 
 
 class GenericException(Exception):
@@ -39,10 +53,10 @@ def dump(typ, val, tb, include_local_traceback):
               traceback text)``. This tuple can be safely passed to 
               :func:`brine.dump <rpyc.core.brine.dump>`
     """
-    if type(typ) is str:
-        return typ
     if typ is StopIteration:
         return consts.EXC_STOP_ITERATION # optimization
+    if type(typ) is str:
+        return typ
 
     if include_local_traceback:
         tbtext = "".join(traceback.format_exception(typ, val, tb))
@@ -63,12 +77,6 @@ def dump(typ, val, tb, include_local_traceback):
                 attrval = repr(attrval)
             attrs.append((name, attrval))
     return (typ.__module__, typ.__name__), tuple(args), tuple(attrs), tbtext
-
-try:
-    BaseException
-except NameError:
-    # python 2.4 compatible
-    BaseException = Exception
 
 def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantiate_oldstyle_exceptions):
     """
@@ -103,13 +111,14 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     (modname, clsname), args, attrs, tbtext = val
     if import_custom_exceptions and modname not in sys.modules:
         try:
-            mod = __import__(modname, None, None, "*")
+            __import__(modname, None, None, "*")
         except ImportError:
             pass
+    
     if instantiate_custom_exceptions:
         cls = getattr(sys.modules[modname], clsname, None)
-    elif modname == "exceptions":
-        cls = getattr(exceptions, clsname, None)
+    elif modname == exceptions_module.__name__:
+        cls = getattr(exceptions_module, clsname, None)
     else:
         cls = None
 
@@ -131,7 +140,7 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
         cls = _generic_exceptions_cache[fullname]
 
     # support old-style exception classes
-    if isinstance(cls, ClassType):
+    if ClassType is not type and isinstance(cls, ClassType):
         exc = InstanceType(cls)
     else:
         exc = cls.__new__(cls)

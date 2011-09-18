@@ -5,13 +5,14 @@ import sys
 import select
 import weakref
 import itertools
-import cPickle as pickle
+import socket
+import time
+
 from threading import Lock
+from rpyc.lib.compat import pickle
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
-import socket
-import time
 
 
 class PingError(Exception):
@@ -553,7 +554,7 @@ class Connection(object):
 
     # collect handlers
     _HANDLERS = {}
-    for name, obj in locals().items():
+    for name, obj in dict(locals()).items():
         if name.startswith("_handle_"):
             name2 = "HANDLE_" + name[8:].upper()
             if hasattr(consts, name2):

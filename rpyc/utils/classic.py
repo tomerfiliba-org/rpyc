@@ -1,8 +1,8 @@
 import sys
 import os
 import inspect
-import cPickle as pickle
 import rpyc
+from rpyc.lib.compat import pickle
 from rpyc import SlaveService
 from rpyc.utils import factory
 
@@ -258,7 +258,7 @@ def deliver(conn, localobj):
     
     :returns: a proxy to the remote object
     """
-    return conn.modules.cPickle.loads(pickle.dumps(localobj))
+    return conn.modules["rpyc.lib.compat"].pickle.loads(pickle.dumps(localobj))
 
 class redirected_stdio(object):
     """
