@@ -215,7 +215,7 @@ class TCPRegistryServer(RegistryServer):
         return logging.getLogger("REGSRV/TCP/%d" % (self.port,))
 
     def _recv(self):
-        sock2 = self.sock.accept()[0]
+        sock2, _ = self.sock.accept()
         addrinfo = sock2.getpeername()
         data = sock2.recv(MAX_DGRAM_SIZE)
         self._connected_sockets[addrinfo] = sock2
@@ -224,9 +224,12 @@ class TCPRegistryServer(RegistryServer):
     def _send(self, data, addrinfo):
         sock2 = self._connected_sockets.pop(addrinfo)
         try:
-            sock2.send(data)
-        except (socket.error, socket.timeout):
-            pass
+            try:
+                sock2.send(data)
+            except (socket.error, socket.timeout):
+                pass
+        finally:
+            sock2.close()
 
 #------------------------------------------------------------------------------
 # clients (registrars)
@@ -300,13 +303,14 @@ class UDPRegistryClient(RegistryClient):
 
     def discover(self, name):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        if self.bcast:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-        data = brine.dump(("RPYC", "QUERY", (name,)))
-        sock.sendto(data, (self.ip, self.port))
-        sock.settimeout(self.timeout)
 
         try:
+            if self.bcast:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+            data = brine.dump(("RPYC", "QUERY", (name,)))
+            sock.sendto(data, (self.ip, self.port))
+            sock.settimeout(self.timeout)
+
             try:
                 data, _ = sock.recvfrom(MAX_DGRAM_SIZE)
             except (socket.error, socket.timeout):
@@ -320,40 +324,44 @@ class UDPRegistryClient(RegistryClient):
     def register(self, aliases, port):
         self.logger.info("registering on %s:%s", self.ip, self.port)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        if self.bcast:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-        data = brine.dump(("RPYC", "REGISTER", (aliases, port)))
-        sock.sendto(data, (self.ip, self.port))
-
-        tmax = time.time() + self.timeout
-        while time.time() < tmax:
-            sock.settimeout(tmax - time.time())
-            try:
-                data, (rip, rport) = sock.recvfrom(MAX_DGRAM_SIZE)
-            except socket.timeout:
+        try:
+            if self.bcast:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+            data = brine.dump(("RPYC", "REGISTER", (aliases, port)))
+            sock.sendto(data, (self.ip, self.port))
+    
+            tmax = time.time() + self.timeout
+            while time.time() < tmax:
+                sock.settimeout(tmax - time.time())
+                try:
+                    data, (rip, rport) = sock.recvfrom(MAX_DGRAM_SIZE)
+                except socket.timeout:
+                    self.logger.warn("no registry acknowledged")
+                    break
+                if rport != self.port:
+                    continue
+                try:
+                    reply = brine.load(data)
+                except Exception:
+                    continue
+                if reply == "OK":
+                    self.logger.info("registry %s:%s acknowledged", rip, rport)
+                    break
+            else:
                 self.logger.warn("no registry acknowledged")
-                break
-            if rport != self.port:
-                continue
-            try:
-                reply = brine.load(data)
-            except Exception:
-                continue
-            if reply == "OK":
-                self.logger.info("registry %s:%s acknowledged", rip, rport)
-                break
-        else:
-            self.logger.warn("no registry acknowledged")
-        sock.close()
+        finally:
+            sock.close()
 
     def unregister(self, port):
         self.logger.info("unregistering from %s:%s", self.ip, self.port)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        if self.bcast:
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-        data = brine.dump(("RPYC", "UNREGISTER", (port,)))
-        sock.sendto(data, (self.ip, self.port))
-        sock.close()
+        try:
+            if self.bcast:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+            data = brine.dump(("RPYC", "UNREGISTER", (port,)))
+            sock.sendto(data, (self.ip, self.port))
+        finally:
+            sock.close()
 
 
 class TCPRegistryClient(RegistryClient):
@@ -379,11 +387,11 @@ class TCPRegistryClient(RegistryClient):
     def discover(self, name):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(self.timeout)
-        data = brine.dump(("RPYC", "QUERY", (name,)))
-        sock.connect((self.ip, self.port))
-        sock.send(data)
-
         try:
+            data = brine.dump(("RPYC", "QUERY", (name,)))
+            sock.connect((self.ip, self.port))
+            sock.send(data)
+            
             try:
                 data = sock.recv(MAX_DGRAM_SIZE)
             except (socket.error, socket.timeout):
@@ -426,11 +434,13 @@ class TCPRegistryClient(RegistryClient):
         self.logger.info("unregistering from %s:%s", self.ip, self.port)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.settimeout(self.timeout)
-        data = brine.dump(("RPYC", "UNREGISTER", (port,)))
         try:
-            sock.connect((self.ip, self.port))
-            sock.send(data)
-        except (socket.error, socket.timeout):
-            self.logger.warn("could not connect to registry")
-        sock.close()
+            data = brine.dump(("RPYC", "UNREGISTER", (port,)))
+            try:
+                sock.connect((self.ip, self.port))
+                sock.send(data)
+            except (socket.error, socket.timeout):
+                self.logger.warn("could not connect to registry")
+        finally:
+            sock.close()
 

@@ -16,7 +16,7 @@ from rpyc.core import SocketStream, Channel, Connection
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
 from rpyc.lib import safe_import
-from rpyc.lib.compat import poll
+from rpyc.lib.compat import poll, get_exc_errno
 signal = safe_import("signal")
 
 
@@ -121,7 +121,12 @@ class Server(object):
                 pass
             except socket.error:
                 ex = sys.exc_info()[1]
-                if ex[0] == errno.EINTR:
+                if hasattr(ex, "errno"):
+                    if get_exc_errno(ex) == errno.EINTR:
+                        pass
+                    else:
+                        raise EOFError()
+                elif ex[0] == errno.EINTR:
                     pass
                 else:
                     raise EOFError()

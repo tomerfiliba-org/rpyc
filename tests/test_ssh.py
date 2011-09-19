@@ -2,13 +2,14 @@ import rpyc
 import time
 import threading
 import sys
+import unittest
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
 from rpyc.utils.ssh import SshContext
 
 
-class Test_Ssh(object):
-    def setup(self):
+class Test_Ssh(unittest.TestCase):
+    def setUp(self):
         # setup an SSH context. on linux this would be as simple as
         # sshctx = SshContext("myhost")
         # assuming your user is configured to connect using authorized_keys
@@ -25,18 +26,24 @@ class Test_Ssh(object):
             self.server = ThreadedServer(SlaveService, hostname = "localhost", 
                 ipv6 = False, port = 0, auto_register=False)
             t = threading.Thread(target=self.server.start)
+            t.setDaemon(True)
             t.start()
             time.sleep(0.5)
             sshctx = SshContext("localhost")
             self.conn = rpyc.classic.ssh_connect(sshctx, self.server.port)
 
-    def teardown(self):
+    def tearDown(self):
         self.conn.close()
         if self.server:
             self.server.close()
 
     def test_simple(self):
-        print "server's pid =", self.conn.modules.os.getpid()
+        print( "server's pid =", self.conn.modules.os.getpid())
         self.conn.modules.sys.stdout.write("hello over ssh\n")
         self.conn.modules.sys.stdout.flush()
+
+
+if __name__ == "__main__":
+    unittest.main()
+
 

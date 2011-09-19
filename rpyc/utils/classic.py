@@ -149,7 +149,7 @@ def upload(conn, localpath, remotepath, filter = None, ignore_invalid = False, c
 
 def upload_file(conn, localpath, remotepath, chunk_size = 16000):
     lf = open(localpath, "rb")
-    rf = conn.modules.__builtin__.open(remotepath, "wb")
+    rf = conn.builtin.open(remotepath, "wb")
     while True:
         buf = lf.read(chunk_size)
         if not buf:
@@ -186,7 +186,7 @@ def download(conn, remotepath, localpath, filter = None, ignore_invalid = False,
             raise ValueError("cannot download %r" % (remotepath,))
 
 def download_file(conn, remotepath, localpath, chunk_size = 16000):
-    rf = conn.modules.__builtin__.open(remotepath, "rb")
+    rf = conn.builtin.open(remotepath, "rb")
     lf = open(localpath, "wb")
     while True:
         buf = rf.read(chunk_size)

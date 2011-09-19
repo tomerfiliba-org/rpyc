@@ -288,10 +288,17 @@ def _load_tup4(stream):
 def _load_tup_l1(stream):
     l, = I1.unpack(stream.read(1))
     return tuple(_load(stream) for i in range(l))
-@register(_load_registry, TAG_TUP_L4)
-def _load_tup_l4(stream):
-    l, = I4.unpack(stream.read(4))
-    return tuple(_load(stream) for i in xrange(l))
+
+if is_py3k:
+    @register(_load_registry, TAG_TUP_L4)
+    def _load_tup_l4(stream):
+        l, = I4.unpack(stream.read(4))
+        return tuple(_load(stream) for i in range(l))
+else:
+    @register(_load_registry, TAG_TUP_L4)
+    def _load_tup_l4(stream):
+        l, = I4.unpack(stream.read(4))
+        return tuple(_load(stream) for i in xrange(l))
 
 @register(_load_registry, TAG_SLICE)
 def _load_slice(stream):

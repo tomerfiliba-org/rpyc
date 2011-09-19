@@ -74,6 +74,11 @@ else:
     else:
         from select import select
 
+def get_exc_errno(exc):
+    if hasattr(exc, "errno"):
+        return exc.errno
+    else:
+        return exc[0]
 
 if hasattr(select_module, "poll"):
     class PollingPoll(object):

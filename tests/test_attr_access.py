@@ -1,4 +1,5 @@
 import rpyc
+import unittest
 from rpyc.utils.server import ThreadedServer
 from threading import Thread
 
@@ -18,6 +19,17 @@ class YourClass(object):
         return "baba"
     def gaga(self):
         return "gaga"
+
+try:
+    long
+except NameError:
+    long = int
+    unicode = str
+
+try:
+    bytes
+except NameError:
+    bytes = str
 
 class Protector(object):
     def __init__(self, safetypes = (int, list, bool, tuple, str, float, long, unicode, bytes)):
@@ -49,28 +61,23 @@ class MyService(rpyc.Service):
         protector.register(YourClass, ["lala", "baba"])
         return protector.wrap(YourClass())
 
-class Test_Restricted(object):
-    def setup(self):
+class TestRestricted(unittest.TestCase):
+    def setUp(self):
         self.server = ThreadedServer(MyService, port = 0)
         self.thd = Thread(target = self.server.start)
         self.thd.start()
         self.conn = rpyc.connect("localhost", self.server.port)
 
-    def teardown(self):
+    def tearDown(self):
         self.conn.close()
         self.server.close()
         self.thd.join()
 
     def test_restricted(self):
         obj = self.conn.root.get_one()
-        assert obj.foo() == "foo"
-        assert obj.bar() == "bar"
-        try:
-            obj.spam()
-        except AttributeError:
-            pass
-        else:
-            assert False, "expected an attribute error!"
+        self.assertEqual(obj.foo(), "foo")
+        self.assertEqual(obj.bar(), "bar")
+        self.assertRaises(AttributeError, lambda: obj.spam)
 
 #    def test_type_protector(self):
 #        obj = self.conn.root.get_two()
@@ -93,6 +100,8 @@ class Test_Restricted(object):
 #        
 
 
+if __name__ == "__main__":
+    unittest.main()
 
 
 

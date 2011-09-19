@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 import threading
 import time
-
+import unittest
 import rpyc
 
 class MyService(rpyc.Service):
@@ -27,12 +27,12 @@ class MyService(rpyc.Service):
         time.sleep(2)
         return x * 17
 
-class Test_Multithreaded(object):
-    def setup(self):
+class Test_Multithreaded(unittest.TestCase):
+    def setUp(self):
         self.conn = rpyc.connect_thread(remote_service=MyService)
         self.bgserver = rpyc.BgServingThread(self.conn)
 
-    def teardown(self):
+    def tearDown(self):
         self.bgserver.stop()
         self.conn.close()
 
@@ -47,5 +47,11 @@ class Test_Multithreaded(object):
             print( "foo%s = %s" % (i, self.conn.root.foo(i)) )
         invoker.stop()
         print( "callback called %s times" % (counter[0],) )
-        assert counter[0] >= 5
+        self.assertTrue(counter[0] >= 5)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
 

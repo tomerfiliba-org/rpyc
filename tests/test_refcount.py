@@ -1,12 +1,13 @@
 import rpyc
 import gc
+import unittest
 
 
-class Test_Refcount(object):
-    def setup(self):
+class TestRefcount(unittest.TestCase):
+    def setUp(self):
         self.conn = rpyc.classic.connect_thread()
 
-    def teardown(self):
+    def tearDown(self):
         self.conn.close()
 
     def test_refcount(self):
@@ -22,17 +23,22 @@ class DummyObject(object):
         d1 = rDummyObject("d1")
         d2 = rDummyObject("d2")
         d3 = rDummyObject("d3")
-        d4 = rDummyObject("d4")
+        d4 = rDummyObject("d4") #@UnusedVariable
         d2_copy = d2
         del d1
         del d3
         gc.collect()
-        assert set(self.conn.namespace["deleted_objects"]) == set(["d1", "d3"])
+        self.assertEqual(set(self.conn.namespace["deleted_objects"]), set(["d1", "d3"]))
         del d2
         gc.collect()
-        assert set(self.conn.namespace["deleted_objects"]) == set(["d1", "d3"])
+        self.assertEqual(set(self.conn.namespace["deleted_objects"]), set(["d1", "d3"]))
         del d2_copy
         gc.collect()
-        assert set(self.conn.namespace["deleted_objects"]) == set(["d1", "d2", "d3"])
+        self.assertEqual(set(self.conn.namespace["deleted_objects"]), set(["d1", "d2", "d3"]))
+
+
+if __name__ == "__main__":
+    unittest.main()
+
 
 

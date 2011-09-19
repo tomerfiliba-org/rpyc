@@ -143,6 +143,7 @@ class SlaveService(Service):
             self._conn.builtin = self._conn.modules.builtins
         else:
             self._conn.builtin = self._conn.modules.__builtin__
+        self._conn.builtins = self._conn.builtin
 
     def exposed_execute(self, text):
         """execute arbitrary code (using ``exec``)"""

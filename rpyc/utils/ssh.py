@@ -1,5 +1,7 @@
+import os
+import signal
 from subprocess import Popen, PIPE
-
+from rpyc.lib.compat import BYTES_LITERAL
 
 # modified from the stdlib pipes module for windows
 _safechars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@%_-+=:,./'
@@ -14,7 +16,12 @@ def shquote(text):
         return text
     if "'" not in text:
         return "'" + text + "'"
-    res = "".join(('\\' + c if c in _funnychars else c) for c in text)
+    def escaped(c):
+        if c in _funnychars:
+            return '\\' + c 
+        else:
+            return c
+    res = "".join(escaped(c) for c in text)
     return '"' + res + '"'
 
 class ProcessExecutionError(Exception):
@@ -43,8 +50,8 @@ class SshTunnel(object):
         self.proc = sshctx.popen("python", "-u", "-c", self.PROGRAM,
             L = "[%s]:%s:[%s]:%s" % (loc_host, loc_port, rem_host, rem_port))
         banner = self.proc.stdout.readline().strip()
-        if banner != "ready":
-            raise ValueError("tunnel failed")
+        if banner != BYTES_LITERAL("ready"):
+            raise ValueError("tunnel failed", banner)
     def __del__(self):
         try:
             self.close()
@@ -60,9 +67,14 @@ class SshTunnel(object):
         """closes (terminates) the SSH tunnel"""
         if not self.is_open():
             return
-        self.proc.stdin.write("foo\n\n\n")
+        self.proc.stdin.write(BYTES_LITERAL("foo\n\n\n"))
         self.proc.stdin.close()
-        self.proc.kill()
+        self.proc.stdout.close()
+        self.proc.stderr.close()
+        try:
+            self.proc.kill()
+        except AttributeError:
+            os.kill(self.proc.pid, signal.SIGTERM)
         self.proc.wait()
         self.proc = None
 
@@ -97,7 +109,11 @@ class SshContext(object):
         self.scp_cwd = scp_cwd
 
     def __str__(self):
-        uri = "ssh://" + ("%s@%s" % (self.user, self.host) if self.user else self.host)
+        uri = "ssh://"
+        if self.user:
+            uri += "%s@%s" % (self.user, self.host)
+        else:
+            uri += self.host
         if self.port:
             uri += ":%d" % (self.port)
         return uri
@@ -123,7 +139,10 @@ class SshContext(object):
         if self.port and "P" not in kwargs:
             kwargs["P"] = self.port
         args.extend(self._convert_kwargs_to_args(kwargs))
-        host = "%s@%s" % (self.user, self.host) if self.user else self.host
+        if self.user:
+            host = "%s@%s" % (self.user, self.host)
+        else:
+            host = self.host
         return args, host
 
     def _process_ssh_cmdline(self, kwargs):
@@ -133,7 +152,10 @@ class SshContext(object):
         if self.port and "p" not in kwargs:
             kwargs["p"] = self.port
         args.extend(self._convert_kwargs_to_args(kwargs))
-        args.append("%s@%s" % (self.user, self.host) if self.user else self.host)
+        if self.user:
+            args.append("%s@%s" % (self.user, self.host))
+        else:
+            args.append(self.host)
         return args
 
     def popen(self, *args, **kwargs):

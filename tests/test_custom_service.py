@@ -2,6 +2,7 @@ import math
 import time
 
 import rpyc
+import unittest
 
 on_connect_called = False
 on_disconnect_called = False
@@ -13,6 +14,9 @@ class MyMeta(type):
 class MyClass(object):
     __metaclass__ = MyMeta
 
+if not isinstance(MyMeta, MyMeta):
+    # python 3 compatibility
+    MyClass = MyMeta(MyClass.__name__, MyClass.__bases__, dict(MyClass.__dict__))
 
 class MyService(rpyc.Service):
     def on_connect(self):
@@ -37,20 +41,25 @@ class MyService(rpyc.Service):
     def exposed_getmeta(self):
         return MyClass()
 
-class Test_CustomService(object):
+
+class TestCustomService(unittest.TestCase):
     config = {}
 
-    def setup(self):
+    def setUp(self):
+        global on_connect_called
         self.conn = rpyc.connect_thread(remote_service=MyService)
         self.conn.root # this will block until the service is initialized,
         # so we can be sure on_connect_called is True by that time
-        assert on_connect_called
+        self.assertTrue(on_connect_called)
+        on_connect_called = False
 
-    def teardown(self):
+    def tearDown(self):
+        global on_disconnect_called
         self.conn.close()
         time.sleep(0.5) # this will wait a little, making sure
         # on_disconnect_called is already True
-        assert on_disconnect_called
+        self.assertTrue(on_disconnect_called)
+        on_disconnect_called = False
 
     def test_aliases(self):
         print( "service name: %s" % (self.conn.root.get_service_name(),) )
@@ -63,20 +72,21 @@ class Test_CustomService(object):
         self.conn.root.exposed_distance
         self.conn.root.getlist
         self.conn.root.exposed_getlist
-        try:
-            self.conn.root.foobar() # this is not an exposed attribute
-        except AttributeError, ex:
-            print( "exception is: %s" % (ex,) )
-        else:
-            self.fail("expected AttributeError")
+        # this is not an exposed attribute:
+        self.assertRaises(AttributeError, lambda: self.conn.root.foobar()) 
 
     def test_safeattrs(self):
         x = self.conn.root.getlist()
         #self.require(x == [1, 2, 3]) -- can't compare remote objects, sorry
         #self.require(x * 2 == [1, 2, 3, 1, 2, 3])
-        assert [y*2 for y in x] == [2, 4, 6]
+        self.assertEqual([y*2 for y in x], [2, 4, 6])
 
     def test_metaclasses(self):
         x = self.conn.root.getmeta()
         print( x )
+
+
+if __name__ == "__main__":
+    unittest.main()
+
 

@@ -64,6 +64,7 @@ def dump(typ, val, tb, include_local_traceback):
         tbtext = "<traceback denied>"
     attrs = []
     args = []
+    ignored_attrs = frozenset(["_remote_tb", "with_traceback"])
     for name in dir(val):
         if name == "args":
             for a in val.args:
@@ -71,7 +72,9 @@ def dump(typ, val, tb, include_local_traceback):
                     args.append(a)
                 else:
                     args.append(repr(a))
-        elif not name.startswith("_") or name == "_remote_tb":
+        elif name.startswith("_") or name in ignored_attrs:
+            continue
+        else:
             attrval = getattr(val, name)
             if not brine.dumpable(attrval):
                 attrval = repr(attrval)

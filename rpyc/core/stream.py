@@ -8,7 +8,7 @@ import socket
 import time
 import errno
 from rpyc.lib import safe_import
-from rpyc.lib.compat import select, BYTES_LITERAL
+from rpyc.lib.compat import select, BYTES_LITERAL, get_exc_errno
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 msvcrt = safe_import("msvcrt")
@@ -145,7 +145,7 @@ class SocketStream(Stream):
         except socket.error:
             self.close()
             ex = sys.exc_info()[1]
-            if ex.errno == errno.EBADF:
+            if get_exc_errno(ex) == errno.EBADF:
                 raise EOFError()
             else:
                 raise
@@ -159,7 +159,7 @@ class SocketStream(Stream):
                 continue
             except socket.error:
                 ex = sys.exc_info()[1]
-                if ex.errno in retry_errnos:
+                if get_exc_errno(ex) in retry_errnos:
                     # windows just has to be a bitch
                     continue
                 self.close()

@@ -1,5 +1,6 @@
 import sys
 import time
+import unittest
 from threading import Thread
 
 from nose import SkipTest
@@ -10,7 +11,7 @@ import rpyc
 from rpyc.core.stream import PipeStream, NamedPipeStream
 
 
-class Test_Pipes(object):
+class Test_Pipes(unittest.TestCase):
     def test_basic_io(self):
         p1, p2 = PipeStream.create_pair()
         p1.write("hello")
@@ -40,14 +41,14 @@ class Test_Pipes(object):
 
 
 class Test_NamedPipe(object):
-    def setup(self):
+    def setUp(self):
         self.pipe_server_thread = Thread(target=self.pipe_server)
         self.pipe_server_thread.start()
         time.sleep(1) # make sure server is accepting already
         self.np_client = NamedPipeStream.create_client("floop")
         self.client = rpyc.connect_stream(self.np_client)
 
-    def teardown(self):
+    def tearDown(self):
         self.client.close()
         self.server.close()
         self.pipe_server_thread.join()
@@ -63,3 +64,6 @@ class Test_NamedPipe(object):
         assert self.server.root.get_service_name() == "VOID"
         t.stop()
 
+
+if __name__ == "__main__":
+    unittest.main()
