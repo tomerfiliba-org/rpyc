@@ -9,18 +9,19 @@ if sys.platform != "win32":
 
 import rpyc
 from rpyc.core.stream import PipeStream, NamedPipeStream
+from rpyc.lib.compat import BYTES_LITERAL
 
 
 class Test_Pipes(unittest.TestCase):
     def test_basic_io(self):
         p1, p2 = PipeStream.create_pair()
-        p1.write("hello")
+        p1.write(BYTES_LITERAL("hello"))
         assert p2.poll(0)
-        assert p2.read(5) == "hello"
+        assert p2.read(5) == BYTES_LITERAL("hello")
         assert not p2.poll(0)
-        p2.write("world")
+        p2.write(BYTES_LITERAL("world"))
         assert p1.poll(0)
-        assert p1.read(5) == "world"
+        assert p1.read(5) == BYTES_LITERAL("world")
         assert not p1.poll(0)
         p1.close()
         p2.close()
