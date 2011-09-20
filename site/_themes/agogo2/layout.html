@@ -29,9 +29,10 @@
 {% block sidebartoc %}
     {{ super() }}
     
-    <ul><li class="toctree-l1">
-    <a class="reference internal" href="{{ pathto('genindex') }}">Site Index</a>
-    </li></ul>
+    <ul>
+    <li class="toctree-l1"><a class="reference internal" href="{{ pathto('genindex') }}">Site Index</a></li>
+    <li class="toctree-l1"><a class="reference internal" href="http://tomerfiliba.com/rpyc-blog">Development Blog</a></li>
+    </ul>
 
 {% endblock %}
 
@@ -57,24 +58,13 @@
             <a href="http://www.facebook.com/pages/RPyC/119586464792338"><img src="{{pathto('_static/facebook-logo.png', 1) }}" width="45px" title="Facebook Fan Page"/></a>
             </td>
             <td valign="center" align="center">
-            <!--script type="text/javascript" src="http://www.ohloh.net/p/26760/widgets/project_partner_badge.js"></script-->
-            <a href="http://www.ohloh.net/p/rpyc?ref=WidgetProjectPartnerBadge" target="_top">
-                <img alt="Ohloh project report for RPyC" border="0" height="33" src="http://www.ohloh.net/p/rpyc/widgets/project_partner_badge.gif" width="120">
+            <!--script type="text/javascript" src="http://www.ohloh.net/p/26760/widgets/project_thin_badge.js"></script-->
+            <a href="http://www.ohloh.net/p/rpyc?ref=WidgetProjectThinBadge" target="_top">
+                <img alt="Ohloh project report for RPyC" border="0" height="16" src="http://www.ohloh.net/p/rpyc/widgets/project_thin_badge.gif" width="100">
             </a>
             </td>
         </tr>
 
-        <!--tr>
-            <td valign="center" align="center">
-            <a href="http://www.facebook.com/pages/RPyC/119586464792338"><img src="{{pathto('_static/facebook-logo.png', 1) }}" width="45px" title="Facebook Fan Page"/></a>
-            </td>
-            <td valign="center" align="center">
-            <div id="fb-root"></div>
-            <script src="http://connect.facebook.net/en_US/all.js#appId=216759095013762&amp;xfbml=1"></script>
-            <fb:like href="http://www.facebook.com/pages/RPyC/119586464792338" send="false" 
-            layout="button_count" width="" show_faces="true" font=""></fb:like>
-            </td>
-        </tr-->
     </table>
     
 {% endblock %}
