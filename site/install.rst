@@ -9,8 +9,8 @@ Download and Install
    changelog
 
 You can always download the latest releases of RPyC from the project's 
-`sourceforge page <http://sourceforge.net/projects/rpyc/files/main>`_ or the 
-its `PyPI page <http://pypi.python.org/pypi/RPyC>`_. RPyC is distributed as a 
+`sourceforge page <http://sourceforge.net/projects/rpyc/files/main>`_ or 
+its `PyPI page <http://pypi.python.org/pypi/rpyc>`_. RPyC is distributed as a 
 ``zip``, a ``tar.gz``, and a win32 installer. Of course you can also use 
 ``easy_install rpyc`` and ``pip install rpyc`` just as well.
 
@@ -24,16 +24,9 @@ platform that runs python (or one of its other implementations), both 32-
 and 64-bit. This is also true for a client and its server, which may run on
 different architectures. The latest release supports:
 
-* **Python** (CPython) 2.4-2.7
-
-    Adding support of Python 3 is underway, but it had proved to be quite a 
-    challenge, as RPyC is tightly-coupled to Python's object model and 
-    implementation details.
-
+* **Python** (CPython) 2.4-2.7 as well as 3.0-3.2
 * **Jython** 2.5 and later
-
 * **IronPython** 2.7 and later
-
 
 Development
 ===========
@@ -75,24 +68,26 @@ box for "simple" use. However, RPyC integrates with some other projects to
 provide more features, and if you wish to use any of those, you must install
 them:
 
-* `TLSlite <http://trevp.net/tlslite/>`_ - Required for TLSlite support 
-  (``VdbAuthenticator`` and ``tls_connect``). The project is no longer maintained,
-  but you can download v0.3.8 `ported to newer versions of python 
-  <http://sourceforge.net/projects/rpyc/files/tlslite/>`_. 
-  
-  Note that **TLSLite has been deprecated** as of v3.2.0, and can only be used with v3.1.0 
-  and below.
-
-* `ssl-wrapper <http://pypi.python.org/pypi/ssl/>`_ - Required for SSL support 
-  on python prior to v2.6 (``ssl_connect``)
-
-* SSH client - Required for :ref:`RPyC-over-SSH <ssh-tunneling>` (``ssh_connect``)
-
 * `PyWin32 <http://sourceforge.net/projects/pywin32/files/pywin32/>`_ - Required 
   for ``PipeStream`` on Windows 
 
-* `zlib for IronPython <https://bitbucket.org/jdhardy/ironpythonzlib>`_ - Required
-  for IronPython prior to v2.7
+* SSH client - Required for :ref:`RPyC-over-SSH <ssh-tunneling>` (``ssh_connect``)
+
+* Compatibiliy dependencies:
+
+  * `ssl-wrapper <http://pypi.python.org/pypi/ssl/>`_ - Required for SSL support 
+    on python prior to v2.6 (``ssl_connect``)
+
+  * `TLSlite <http://trevp.net/tlslite/>`_ - Required for TLSlite support 
+    (``VdbAuthenticator`` and ``tls_connect``). The project is no longer maintained,
+    but you can download v0.3.8 `ported to newer versions of python 
+    <http://sourceforge.net/projects/rpyc/files/tlslite/>`_. 
+  
+    .. note::
+       **TLSLite has been deprecated** as of v3.2.0, and can only be used with v3.1.0 and below.
+
+  * `zlib for IronPython <https://bitbucket.org/jdhardy/ironpythonzlib>`_ - Required
+    for IronPython prior to v2.7
 
 .. _license:
 

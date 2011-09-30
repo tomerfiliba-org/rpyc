@@ -24,19 +24,24 @@ def main(publish = False):
 
     # generate zip, tar.gz, and win32 installer
     if publish:
+        print("registering...")
         run(["python", "setup.py", "register"])
+        print("uploading zip and tar.gz")
         run(["python", "setup.py", "sdist", "--formats=zip,gztar", "upload"])
+        print("uploading win installer")
         run(["python", "setup.py", "bdist_wininst", "--plat-name=win32", "upload"])
 
         # upload to sourceforge
+        print("uploading to sourceforge")
         dst = "gangesmaster,rpyc@frs.sourceforge.net:/home/frs/project/r/rp/rpyc/main/%s/" % (version_string,)
-        run(["scp"] + ["dist/%s" % (f,) for f in os.listdir("dist")] + [dst])
+        run(["rsync", "-rv", "dist/", dst])
     else:
         run(["python", "setup.py", "sdist", "--formats=zip,gztar"])
         run(["python", "setup.py", "bdist_wininst", "--plat-name=win32"])
 
     shutil.rmtree("build", ignore_errors = True)
     shutil.rmtree("RPyC.egg-info", ignore_errors = True)
+    shutil.rmtree("rpyc.egg-info", ignore_errors = True)
 
 
 
