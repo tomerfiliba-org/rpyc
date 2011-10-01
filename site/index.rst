@@ -27,8 +27,8 @@ they were local.
    
    A screenshot of a Windows client connecting to a Linux server.
    
-   :sub:`Note how text written to the server's \`\`stdout\`\` is actually printed on 
-   the server's console.`
+   Note that text written to the server's ``stdout`` is actually printed on 
+   the server's console.
 
 Getting Started
 ---------------
