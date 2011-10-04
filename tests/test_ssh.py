@@ -29,8 +29,8 @@ class Test_Ssh(unittest.TestCase):
             t.setDaemon(True)
             t.start()
             time.sleep(0.5)
-            sshctx = SshContext("localhost")
-            self.conn = rpyc.classic.ssh_connect(sshctx, self.server.port)
+            self.sshctx = SshContext("localhost")
+            self.conn = rpyc.classic.ssh_connect(self.sshctx, self.server.port)
 
     def tearDown(self):
         self.conn.close()
@@ -42,6 +42,11 @@ class Test_Ssh(unittest.TestCase):
         self.conn.modules.sys.stdout.write("hello over ssh\n")
         self.conn.modules.sys.stdout.flush()
 
+    def test_connect(self):
+        conn2 = rpyc.ssh_connect(self.sshctx, self.server.port, 
+                                 service=SlaveService)
+        conn2.modules.sys.stdout.write("hello through rpyc.ssh_connect()\n")
+        conn2.modules.sys.stdout.flush()
 
 if __name__ == "__main__":
     unittest.main()
