@@ -28,6 +28,30 @@ different architectures. The latest release supports:
 * **Jython** 2.5 and later
 * **IronPython** 2.7 and later
 
+Cross-Interpreter Compatibility
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note that you **cannot** connect from a **Python 2.x** interpreter to a **3.x**
+one, or vice versa. This is because Python 3 introduces major changes to
+the object model used by Python 2.x: some types were removed, added or
+unified into others. Byte- and Unicode- strings gave me a nightmare (and they 
+still account for many bugs in the core interpreter). On top of that, 
+many built-in modules and functions were renamed or removed, and many new 
+language features were added. These changes render the two major versions 
+of Python incompatible with one another, and sadly, this cannot be bridged 
+automatically by RPyC at the serialization layer. 
+
+It's not that I didn't try -- it's just too hard a feat. It's bascially like 
+writing a 100% working `2to3 <http://docs.python.org/library/2to3.html>`_ tool, 
+alongside with a matching ``3to2`` one; and that, I reckon, is comparable to 
+the *halting problem* (of course I might be wrong here, but it still doesn't 
+make it feasible).
+
+.. note::
+   As a side note, do not try to mix different versions of RPyC (e.g., connecting
+   a client machine running RPyC 3.1.0 to a server running RPyC 3.2.0). The 
+   wire-protocol has seen little changes since the release of RPyC 3.0, but the
+   library itself has changed drastically. This might work, but don't count on it.
+
 Development
 ===========
 
