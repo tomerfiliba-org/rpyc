@@ -46,6 +46,13 @@ alongside with a matching ``3to2`` one; and that, I reckon, is comparable to
 the *halting problem* (of course I might be wrong here, but it still doesn't 
 make it feasible).
 
+Big words aside -- you can connect a Python 2.x interpreter to a Python 2.y
+one, as long as you only use types/modules/features supported by both; and
+you can connect a Python 3.x interpreter to a Python 3.y one, under the same
+assumption, but you cannot connect a Python 2.x interpreter to a 3.y one.
+Trying to do so will results in all kinds of `strange exceptions 
+<https://github.com/tomerfiliba/rpyc/issues/54>`_, so beware.
+
 .. note::
    As a side note, do not try to mix different versions of RPyC (e.g., connecting
    a client machine running RPyC 3.1.0 to a server running RPyC 3.2.0). The 
