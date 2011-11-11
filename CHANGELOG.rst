@@ -1,3 +1,9 @@
+3.2.1
+-----
+* Adding missing import (`#52 <https://github.com/tomerfiliba/rpyc/issues/52>`_)
+
+* Fixing site documentation issue (`#54 <https://github.com/tomerfiliba/rpyc/issues/54>`_)
+
 3.2.0
 -----
 * Added support for IPv6 (`#28 <https://github.com/tomerfiliba/rpyc/issues/28>`_)
