@@ -1,3 +1,7 @@
+v3.2.1
+^^^^^^
+* Robert Hayward - adding missing import
+
 v3.2.0
 ^^^^^^
 * Alex - IPv6 support
