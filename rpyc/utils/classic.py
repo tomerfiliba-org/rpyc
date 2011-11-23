@@ -127,8 +127,8 @@ def connect_thread():
 
 def connect_multiprocess(args = {}):
     """
-    Starts a SlaveService on a multiporcess process and connects to it. 
-    Useful for testing purposes and running multicore c ode thats uses shared
+    Starts a SlaveService on a multiprocess process and connects to it.
+    Useful for testing purposes and running multicore code thats uses shared
     memory. See :func:`rpyc.utils.factory.connect_multiprocess`
     
     :returns: an RPyC connection exposing ``SlaveService``
