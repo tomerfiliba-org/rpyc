@@ -4,7 +4,6 @@ cases)
 """
 import socket
 import threading
-from multiprocessing import Process
 try:
     from thread import interrupt_main
 except ImportError:
@@ -252,6 +251,8 @@ def connect_multiprocess(service = VoidService, config = {}, remote_service = Vo
     
     Contributed by *@tvanzyl*
     """
+    from multiprocessing import Process
+    
     listener = socket.socket()
     listener.bind(("localhost", 0))
     listener.listen(1)
@@ -265,8 +266,11 @@ def connect_multiprocess(service = VoidService, config = {}, remote_service = Vo
                 conn._local_root.exposed_namespace[k] = args[k]
             conn.serve_all()
         except KeyboardInterrupt:
-            interrupt_main()            
+            interrupt_main()
+    
     t = Process(target = server)
     t.start()
     host, port = listener.getsockname()
     return connect(host, port, service = service, config = config)
+
+
