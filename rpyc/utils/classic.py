@@ -125,6 +125,16 @@ def connect_thread():
     """
     return factory.connect_thread(SlaveService, remote_service = SlaveService)
 
+def connect_multiprocess(args = {}):
+    """
+    Starts a SlaveService on a multiporcess process and connects to it. 
+    Useful for testing purposes and running multicore c ode thats uses shared
+    memory. See :func:`rpyc.utils.factory.connect_multiprocess`
+    
+    :returns: an RPyC connection exposing ``SlaveService``
+    """
+    return factory.connect_multiprocess(SlaveService, remote_service = SlaveService, args=args)
+
 
 #===============================================================================
 # remoting utilities

@@ -4,6 +4,7 @@ cases)
 """
 import socket
 import threading
+from multiprocessing import Process
 try:
     from thread import interrupt_main
 except ImportError:
@@ -237,3 +238,35 @@ def connect_thread(service = VoidService, config = {}, remote_service = VoidServ
     host, port = listener.getsockname()
     return connect(host, port, service = service, config = config)
 
+def connect_multiprocess(service = VoidService, config = {}, remote_service = VoidService, remote_config = {}, args={}):
+    """starts an rpyc server on a new process, bound to an arbitrary port, 
+    and connects to it over a socket. Basically a copy of connect_thread.
+    Hopwever if args is used and if these are shared memory then changes
+    will be bi-directional. That is we now have access to shsred memmory.
+    
+    :param service: the local service to expose (defaults to Void)
+    :param config: configuration dict
+    :param server_service: the remote service to expose (of the server; defaults to Void)
+    :param server_config: remote configuration dict (of the server)
+    :param args: namespace dict of local vars to pass in
+    
+    Contributed by *@tvanzyl*
+    """
+    listener = socket.socket()
+    listener.bind(("localhost", 0))
+    listener.listen(1)
+    
+    def server(listener=listener, args=args):
+        client = listener.accept()[0]
+        listener.close()
+        conn = connect_stream(SocketStream(client), service = remote_service, config = remote_config)        
+        try:
+            for k in args:
+                conn._local_root.exposed_namespace[k] = args[k]
+            conn.serve_all()
+        except KeyboardInterrupt:
+            interrupt_main()            
+    t = Process(target = server)
+    t.start()
+    host, port = listener.getsockname()
+    return connect(host, port, service = service, config = config)
