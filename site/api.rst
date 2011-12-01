@@ -82,7 +82,8 @@ Client-Side
 
 * :ref:`api-classic` - *Classic-mode* factories and utilities
 
-* :ref:`api-helpers` - Various helpers (``timed``, ``async``, ``buffiter``, etc.)
+* :ref:`api-helpers` - Various helpers (``timed``, ``async``, ``buffiter``, ``BgServingThread``, 
+  etc.)
 
 * :ref:`api-ssh` - Wrappers for SSH, required for establishing RPyC connections over SSH tunnels.
   In order to establish such a connection, use :func:`rpyc.utils.factory.ssh_connect`.

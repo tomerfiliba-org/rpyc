@@ -50,6 +50,8 @@ def restricted(obj, attrs, wattrs = None):
     attributes. This is useful when returning a "broad" or "dangerous" object, where you don't 
     want the other party to have access to all of its attributes.
     
+    .. versionadded:: 3.2
+    
     :param obj: any object
     :param attrs: the set of attributes exposed for reading (``getattr``) or writing (``setattr``).
                   The same set will serve both for reading and writing, unless wattrs is explicitly
@@ -64,7 +66,7 @@ def restricted(obj, attrs, wattrs = None):
         class MyService(rpyc.Service):
             def exposed_open(self, filename):
                 f = open(filename, "r")
-                return rpyc.restricted(f, ["read", "close"])   # disallow access to `seek` or `write`
+                return rpyc.restricted(f, {"read", "close"})   # disallow access to `seek` or `write`
     
     """
     if wattrs is None:
@@ -177,6 +179,11 @@ class BgServingThread(object):
         bg_server = BgServingThread(conn)
         ...
         bg_server.stop()
+        
+    .. note:: 
+       For a more detailed explanation of asynchronous operation and the role of the 
+       ``BgServingThread``, see :ref:`tut5`
+    
     """
     # these numbers are magical...
     SERVE_INTERVAL = 0.0

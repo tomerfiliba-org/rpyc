@@ -211,8 +211,8 @@ class SshContext(object):
     def upload(self, src, dst, **kwargs):
         """
         Uploads *src* from the local machine to *dst* on the other side. By default, 
-        ``-r`` is given to ``scp``, so *src* can be either a file or a directory.
-        To override, pass ``r = False`` as a keyword argument. 
+        ``-r`` (recursive copy) is given to ``scp``, so *src* can be either a file or 
+        a directory. To override this behavior, pass ``r = False`` as a keyword argument. 
         
         :param src: the source path (on the local side)
         :param dst: the destination path (on the remote side)
@@ -230,8 +230,8 @@ class SshContext(object):
     def download(self, src, dst, **kwargs):
         """
         Downloads *src* from the other side to *dst* on the local side. By default, 
-        ``-r`` is given to ``scp``, so *src* can be either a file or a directory. 
-        To override, pass ``r = False`` as a keyword argument.
+        ``-r`` (recursive copy) is given to ``scp``, so *src* can be either a file or 
+        a directory. To override this behavior, pass ``r = False`` as a keyword argument.
         
         :param src: the source path (on the other side)
         :param dst: the destination path (on the local side)
@@ -255,7 +255,7 @@ class SshContext(object):
         :param rem_port: the remote (server) TCP port, to which the local port 
                          will be forwarded
         
-        :returns: an class:`SshTunnel` instance
+        :returns: an :class:`SshTunnel` instance
         """
         return SshTunnel(self, loc_host, loc_port, rem_host, rem_port)
 

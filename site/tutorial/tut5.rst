@@ -101,6 +101,8 @@ And here's a more interesting snippet::
     ValueError: invalid literal for int() with base 10: 'this is not a valid number'
     >>> 
 
+.. _tut5-events:
+
 Events
 ------
 Combining ``async`` and callbacks yields a rather interesting result: *async callbacks*, 

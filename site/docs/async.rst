@@ -79,4 +79,26 @@ Example
     timed_sleep(10)
 
 
+Background Serving Thread
+-------------------------
+:class:`BgServingThread <rpyc.utils.helpers.BgServingThread>` is a helper class that simply starts
+a background thread to serve incoming requests. Using it is quite simple::
+
+    bgsrv = rpyc.BgServingThread(conn)
+    # ...
+    # now you can do blocking stuff, while incoming requests are handled in the background
+    # ...
+    bgsrv.stop()
+
+Using the ``BgServingThread`` allows your code (normally the client-side) to perform blocking
+calls, while still being able to process incoming request (normally from the server). This allows
+the server to send "events" (i.e., invoke callbacks on the client side) while the client is busy
+doing other things.
+
+For a detailed example show-casing the ``BgServingThread``, see :ref:`tut5-events` in the 
+tutorial.
+
+
+
+
 
