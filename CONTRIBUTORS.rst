@@ -1,6 +1,7 @@
 v3.2.1
 ^^^^^^
 * Robert Hayward - adding missing import
+* [pyscripter](https://github.com/pyscripter) - investigating python 3 incompatibilities
 
 v3.2.0
 ^^^^^^
