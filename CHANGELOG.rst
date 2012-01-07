@@ -4,6 +4,10 @@
 
 * Fixing site documentation issue (`#54 <https://github.com/tomerfiliba/rpyc/issues/54>`_)
 
+* Fixing Python 3 incompatibilities (`#58 <https://github.com/tomerfiliba/rpyc/issues/58>`_, 
+  `#59 <https://github.com/tomerfiliba/rpyc/issues/59>`_, 
+  `#60 <https://github.com/tomerfiliba/rpyc/issues/60>`_)
+
 3.2.0
 -----
 * Added support for IPv6 (`#28 <https://github.com/tomerfiliba/rpyc/issues/28>`_)

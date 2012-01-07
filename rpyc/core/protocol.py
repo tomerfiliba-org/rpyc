@@ -9,7 +9,7 @@ import socket
 import time
 
 from threading import Lock
-from rpyc.lib.compat import pickle, next, is_py3k
+from rpyc.lib.compat import pickle, next, is_py3k, maxint
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
@@ -25,7 +25,7 @@ DEFAULT_CONFIG = dict(
     allow_exposed_attrs = True,
     allow_public_attrs = False,
     allow_all_attrs = False,
-    safe_attrs = set(['__abs__', '__add__', '__and__', '__cmp__', '__contains__',
+    safe_attrs = set(['__abs__', '__add__', '__and__', '__bool__', '__cmp__', '__contains__',
         '__delitem__', '__delslice__', '__div__', '__divmod__', '__doc__',
         '__eq__', '__float__', '__floordiv__', '__ge__', '__getitem__',
         '__getslice__', '__gt__', '__hash__', '__hex__', '__iadd__', '__iand__',
@@ -438,7 +438,7 @@ class Connection(object):
         """
         timeout = kwargs.pop("timeout", None)
         if kwargs:
-            raise TypeError("got unexpected keyword argument %r" % (kwargs.keys()[0],))
+            raise TypeError("got unexpected keyword argument(s) %s" % (list(kwargs.keys()),))
         res = AsyncResult(weakref.proxy(self))
         self._async_request(handler, args, res)
         if timeout is not None:
@@ -553,7 +553,7 @@ class Connection(object):
         except Exception:
             # fallback to __xxxslice__. see issue #41
             if stop is None:
-                stop = sys.maxint
+                stop = maxint
             getslice = self._handle_getattr(oid, fallback)
             return getslice(start, stop, *args)
 

@@ -8,7 +8,7 @@ import socket
 import time
 import errno
 from rpyc.lib import safe_import
-from rpyc.lib.compat import select, BYTES_LITERAL, get_exc_errno
+from rpyc.lib.compat import select, BYTES_LITERAL, get_exc_errno, maxint
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 msvcrt = safe_import("msvcrt")
@@ -339,7 +339,7 @@ class Win32PipeStream(Stream):
     def poll(self, timeout, interval = 0.1):
         """a poor man's version of select()"""
         if timeout is None:
-            timeout = sys.maxint
+            timeout = maxint
         length = 0
         tmax = time.time() + timeout
         try:

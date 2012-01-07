@@ -10,11 +10,13 @@ if is_py3k:
     exec("execute = exec")
     def BYTES_LITERAL(text):
         return bytes(text, "utf8")
+    maxint = sys.maxsize
 else:
     exec("""def execute(code, globals = None, locals = None):
                 exec code in globals, locals""")
     def BYTES_LITERAL(text):
         return text
+    maxint = sys.maxint
 
 try:
     from struct import Struct #@UnusedImport
