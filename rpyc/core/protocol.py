@@ -512,7 +512,7 @@ class Connection(object):
         obj = self._local_objects[oid]
         try:
             return type(obj).__cmp__(obj, other)
-        except TypeError:
+        except (AttributeError, TypeError):
             return NotImplemented
     def _handle_hash(self, oid):
         return hash(self._local_objects[oid])
