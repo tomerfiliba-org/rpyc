@@ -2,7 +2,7 @@ v3.2.1
 ^^^^^^
 * Robert Hayward - adding missing import
 * `pyscripter <https://github.com/pyscripter>`_ - investigating python 3 incompatibilities
-* `xanep <https://github.com/xanep>`_ - handling `__cmp__` correctly
+* `xanep <https://github.com/xanep>`_ - handling ``__cmp__`` correctly
 
 v3.2.0
 ^^^^^^
