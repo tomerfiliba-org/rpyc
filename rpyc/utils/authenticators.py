@@ -4,7 +4,7 @@ An *authenticator* is basically a callable object that takes a socket and
 a **socket-like** object and its **credentials** (any object), or raise an 
 :class:`AuthenticationError` upon failure. The credentials are any object you wish to
 associate with the authentication, and it's stored in the connection's 
-:data`configuration dict <rpyc.core.protocol.DEFAULT_CONFIG>` under the key "credentials".
+:data:`configuration dict <rpyc.core.protocol.DEFAULT_CONFIG>` under the key "credentials".
 
 There are no constraints on what the authenticators, for instance::
 
