@@ -348,11 +348,11 @@ def load(data):
     return _load(stream)
 
 if is_py3k:
-    simple_types = frozenset([type(None), int, bool, float, bytes, str, 
-        slice, complex, type(NotImplemented), type(Ellipsis)])
+    simple_types = frozenset([type(None), int, bool, float, bytes, str, complex, 
+        type(NotImplemented), type(Ellipsis)])
 else:
-    simple_types = frozenset([type(None), int, long, bool, float, str, unicode,
-        slice, complex, type(NotImplemented), type(Ellipsis)])
+    simple_types = frozenset([type(None), int, long, bool, float, str, unicode, complex, 
+        type(NotImplemented), type(Ellipsis)])
 
 def dumpable(obj):
     """Indicates whether the given object is *dumpable* by brine
@@ -364,6 +364,8 @@ def dumpable(obj):
         return True
     if type(obj) in (tuple, frozenset):
         return all(dumpable(item) for item in obj)
+    if type(obj) is slice:
+        return dumpable(obj.start) and dumpable(obj.stop) and dumpable(obj.step)
     return False
 
 

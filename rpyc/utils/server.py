@@ -183,7 +183,8 @@ class Server(object):
         else:
             self.logger.info("welcome [%s]:%s", h, p)
         try:
-            config = dict(self.protocol_config, credentials = credentials)
+            config = dict(self.protocol_config, credentials = credentials, 
+                endpoints = (sock.getsockname(), addrinfo))
             conn = Connection(self.service, Channel(SocketStream(sock)),
                 config = config, _lazy = True)
             conn._init_service()

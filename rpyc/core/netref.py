@@ -64,9 +64,11 @@ def syncreq(proxy, handler, *args):
     :raises: any exception raised by the operation will be raised
     :returns: the result of the operation
     """
-    conn = object.__getattribute__(proxy, "____conn__")
+    conn = object.__getattribute__(proxy, "____conn__")()
+    if not conn:
+        raise ReferenceError('weakly-referenced object no longer exists')
     oid = object.__getattribute__(proxy, "____oid__")
-    return conn().sync_request(handler, oid, *args)
+    return conn.sync_request(handler, oid, *args)
 
 def asyncreq(proxy, handler, *args):
     """Performs an asynchronous request on the given proxy object.
@@ -80,12 +82,11 @@ def asyncreq(proxy, handler, *args):
     :returns: an :class:`AsyncResult <rpyc.core.async.AsyncResult>` representing
               the operation
     """
-    conn = object.__getattribute__(proxy, "____conn__")
-    connection = conn()
-    if not connection:
+    conn = object.__getattribute__(proxy, "____conn__")()
+    if not conn:
         raise ReferenceError('weakly-referenced object no longer exists')
     oid = object.__getattribute__(proxy, "____oid__")
-    return connection.async_request(handler, oid, *args)
+    return conn.async_request(handler, oid, *args)
 
 class NetrefMetaclass(type):
     """A *metaclass* used to customize the ``__repr__`` of ``netref`` classes.

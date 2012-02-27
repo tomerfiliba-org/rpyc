@@ -91,21 +91,18 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     details.
     
     :param val: the dumped exception
-    :param import_custom_exceptions: whether to allow this function to import
-                                     custom modules (imposes a security risk)
-    :param instantiate_custom_exceptions: whether to allow this function to 
-                                          instantiate "custom exceptions" (i.e.,
-                                          not one of the built-in exceptions,
+    :param import_custom_exceptions: whether to allow this function to import custom modules 
+                                     (imposes a security risk)
+    :param instantiate_custom_exceptions: whether to allow this function to instantiate "custom 
+                                          exceptions" (i.e., not one of the built-in exceptions,
                                           such as ``ValueError``, ``OSError``, etc.)
-    :param instantiate_oldstyle_exceptions: whether to allow this function to 
-                                            instantiate exception classes that 
-                                            do not derive from ``BaseException``.
-                                            This is required to support old-style
-                                            exceptions.
+    :param instantiate_oldstyle_exceptions: whether to allow this function to instantiate exception 
+                                            classes that do not derive from ``BaseException``.
+                                            This is required to support old-style exceptions. 
+                                            Not applicable for Python 3 and above.
     
     :returns: A throwable exception object
     """
-    
     if val == consts.EXC_STOP_ITERATION:
         return StopIteration # optimization
     if type(val) is str:
@@ -121,8 +118,6 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     if instantiate_custom_exceptions:
         if modname in sys.modules:
             cls = getattr(sys.modules[modname], clsname, None)
-        elif not is_py3k and modname == "builtins":
-            cls = getattr(exceptions_module, clsname, None)
         else:
             cls = None
     elif modname == exceptions_module.__name__:
@@ -130,12 +125,16 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     else:
         cls = None
 
-    if not isinstance(cls, (type, ClassType)):
-        cls = None
-    elif issubclass(cls, ClassType) and not instantiate_oldstyle_exceptions:
-        cls = None
-    elif not issubclass(cls, BaseException):
-        cls = None
+    if is_py3k:
+        if not isinstance(cls, type) or not issubclass(cls, BaseException):
+            cls = None
+    else:
+        if not isinstance(cls, (type, ClassType)):
+            cls = None
+        elif issubclass(cls, ClassType) and not instantiate_oldstyle_exceptions:
+            cls = None
+        elif not issubclass(cls, BaseException):
+            cls = None
 
     if cls is None:
         fullname = "%s.%s" % (modname, clsname)

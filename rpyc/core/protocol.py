@@ -54,6 +54,7 @@ DEFAULT_CONFIG = dict(
     allow_pickle = False,
     connid = None,
     credentials = None,
+    endpoints = None,
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
@@ -64,7 +65,7 @@ by passing a different configuration dict to the :class:`Connection` class.
    to repeat parameters whose values remain unchanged.
 
 =====================================  ================  =====================================================
-Parameter                               Default value     Description
+Parameter                              Default value     Description
 =====================================  ================  =====================================================
 ``allow_safe_attrs``                   ``True``          Whether to allow the use of *safe* attributes
                                                          (only those listed as ``safe_attrs``)
@@ -87,15 +88,22 @@ Parameter                               Default value     Description
 ``import_custom_exceptions``           ``False``         Whether to allow importing of 
                                                          exceptions from not-yet-imported modules
 ``instantiate_oldstyle_exceptions``    ``False``         Whether to allow instantiation of exceptions
-                                                         which don't derive from ``Exception``
+                                                         which don't derive from ``Exception``. This
+                                                         is not applicable for Python 3 and later.
 ``propagate_SystemExit_locally``       ``False``         Whether to propagate ``SystemExit``
-                                                         locally or to the other party
+                                                         locally (kill the server) or to the other 
+                                                         party (kill the client)
 
 ``connid``                             ``None``          **Runtime**: the RPyC connection ID (used
                                                          mainly for debugging purposes) 
 ``credentials``                        ``None``          **Runtime**: the credentails object that was returned
                                                          by the server's :ref:`authenticator <api-authenticators>`
                                                          or ``None``
+``endpoints``                          ``None``          **Runtime**: The connection's endpoints. This is a tuple 
+                                                         made of the local socket endpoint (``getsockname``) and the 
+                                                         remote one (``getpeername``). This is set by the server
+                                                         upon accepting a connection; client side connections
+                                                         do no have this configuration option set.
 =====================================  ================  =====================================================
 """
 
