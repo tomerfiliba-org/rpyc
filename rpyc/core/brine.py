@@ -13,8 +13,7 @@ Example::
     True
     >>> y = dump(x)
     >>> y.encode("hex")
-    '140e0b686557080c6c6c6f580216033930300003061840323333333333331b402a0000000000\\
-    00403233333333333319125152531a1255565705'
+    '140e0b686557080c6c6c6f580216033930300003061840323333333333331b402a000000000000403233333333333319125152531a1255565705'
     >>> z = load(y)
     >>> x == z
     True
@@ -223,9 +222,15 @@ def _load_false(stream):
 @register(_load_registry, TAG_EMPTY_TUPLE)
 def _load_empty_tuple(stream):
     return ()
-@register(_load_registry, TAG_EMPTY_STR)
-def _load_empty_str(stream):
-    return ""
+
+if is_py3k:
+    @register(_load_registry, TAG_EMPTY_STR)
+    def _load_empty_str(stream):
+        return BYTES_LITERAL("")
+else:
+    @register(_load_registry, TAG_EMPTY_STR)
+    def _load_empty_str(stream):
+        return ""
 
 if is_py3k:
     @register(_load_registry, TAG_LONG)
@@ -357,7 +362,7 @@ else:
 def dumpable(obj):
     """Indicates whether the given object is *dumpable* by brine
     
-    :returns: ``True`` if the object is dumpable (e.g., dumps would succeed),
+    :returns: ``True`` if the object is dumpable (e.g., :func:`dump` would succeed),
               ``False`` otherwise
     """
     if type(obj) in simple_types:
