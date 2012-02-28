@@ -7,7 +7,8 @@
 * Fixing Python 3 incompatibilities (`#58 <https://github.com/tomerfiliba/rpyc/issues/58>`_, 
   `#59 <https://github.com/tomerfiliba/rpyc/issues/59>`_, 
   `#60 <https://github.com/tomerfiliba/rpyc/issues/60>`_,
-  `#61 <https://github.com/tomerfiliba/rpyc/issues/61>`_)
+  `#61 <https://github.com/tomerfiliba/rpyc/issues/61>`_,
+  `#66 <https://github.com/tomerfiliba/rpyc/issues/66>`_)
 
 * Fixing ``slice`` issue (`#62 <https://github.com/tomerfiliba/rpyc/issues/62>`_)
 
