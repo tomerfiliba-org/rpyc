@@ -82,6 +82,11 @@ def get_exc_errno(exc):
     else:
         return exc[0]
 
+if select_module:
+    select_error = select_module.error
+else:
+    select_error = IOError
+
 if hasattr(select_module, "poll"):
     class PollingPoll(object):
         def __init__(self):

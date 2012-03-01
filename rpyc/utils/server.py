@@ -69,8 +69,8 @@ class Server(object):
         
         if reuse_addr and sys.platform != "win32":
             # warning: reuseaddr is not what you'd expect on windows!
-            # it allows you to bind an already bound port, results in 
-            # "unexpected behavior"
+            # it allows you to bind an already bound port, resulting in "unexpected behavior"
+            # (quoting MSDN)
             self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         self.listener.bind((hostname, port))

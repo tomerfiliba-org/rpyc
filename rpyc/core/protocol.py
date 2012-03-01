@@ -2,14 +2,13 @@
 The RPyC protocol
 """
 import sys
-import select
 import weakref
 import itertools
 import socket
 import time
 
 from threading import Lock
-from rpyc.lib.compat import pickle, next, is_py3k, maxint
+from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
@@ -389,7 +388,7 @@ class Connection(object):
             try:
                 while True:
                     self.serve(0.1)
-            except (socket.error, select.error):
+            except (socket.error, select_error, IOError):
                 if not self.closed:
                     raise
             except EOFError:
@@ -400,7 +399,7 @@ class Connection(object):
     def poll_all(self, timeout = 0):
         """Serves all requests and replies that arrive within the given interval.
         
-        :returns: ``True`` if at least transaction was served, ``False`` otherwise
+        :returns: ``True`` if at least a single transaction was served, ``False`` otherwise
         """
         at_least_once = False
         t0 = time.time()
