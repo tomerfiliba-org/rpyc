@@ -28,7 +28,16 @@ class ProcessExecutionError(Exception):
     """raised by :func:`SshContext.execute` should the executed process 
     terminate with an error"""
     pass
-    
+
+import subprocess
+def _get_startupinfo():
+    if subprocess.mswindows:
+        sui = subprocess.STARTUPINFO()
+        sui.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        sui.wShowWindow = subprocess.SW_HIDE
+        return sui
+    else:
+        return None
 
 class SshTunnel(object):
     """
@@ -175,7 +184,8 @@ class SshContext(object):
         cmdline = self._process_ssh_cmdline(kwargs)
         cmdline.extend(shquote(a) for a in args)
         return Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE,
-            cwd = self.ssh_cwd, env = self.ssh_env, shell = False)
+            cwd = self.ssh_cwd, env = self.ssh_env, shell = False, 
+            startupinfo = _get_startupinfo())
 
     def execute(self, *args, **kwargs):
         """Runs the given command line remotely (over SSH), waits for it to finish,
@@ -221,8 +231,8 @@ class SshContext(object):
         cmdline, host = self._process_scp_cmdline(kwargs)
         cmdline.append(src)
         cmdline.append("%s:%s" % (host, dst))
-        proc = Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE,
-            cwd = self.scp_cwd, env = self.scp_env)
+        proc = Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE, shell = False,
+            cwd = self.scp_cwd, env = self.scp_env, startupinfo = _get_startupinfo())
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
             raise ValueError("upload failed", stdout, stderr)
@@ -240,8 +250,8 @@ class SshContext(object):
         cmdline, host = self._process_scp_cmdline(kwargs)
         cmdline.append("%s:%s" % (host, src))
         cmdline.append(dst)
-        proc = Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE,
-            cwd = self.scp_cwd, env = self.scp_env)
+        proc = Popen(cmdline, stdin = PIPE, stdout = PIPE, stderr = PIPE, shell = False,
+            cwd = self.scp_cwd, env = self.scp_env, startupinfo = _get_startupinfo())
         stdout, stderr = proc.communicate()
         if proc.returncode != 0:
             raise ValueError("upload failed", stdout, stderr)
