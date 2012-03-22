@@ -11,37 +11,29 @@ if sys.version_info < (2, 4):
     sys.exit("requires python 2.4 and up")
 
 here = os.path.dirname(__file__)
-exec(open(os.path.join(here, 'rpyc', 'version.py')))
+exec(open(os.path.join(here, 'rpyc', 'version.py')).read())
 
-setup(name="RPyC",
-    version = version_string,
+setup(name = "rpyc",
+    version = version_string, #@UndefinedVariable
     description = "Remote Python Call (RPyC), a transparent and symmetric RPC library",
     author = "Tomer Filiba",
     author_email = "tomerfiliba@gmail.com",
     license = "MIT",
-    url = "http://rpyc.wikidot.com",
-    download_url = "http://sourceforge.net/projects/rpyc/files/main/%s" % (version_string,),
+    url = "http://rpyc.sourceforge.net",
+    download_url = "http://sourceforge.net/projects/rpyc/files/main/%s" % (version_string,), #@UndefinedVariable
     packages = [
-        'rpyc', 
-        'rpyc.core', 
+        'rpyc',
+        'rpyc.core',
         'rpyc.lib',
-        'rpyc.utils', 
+        'rpyc.utils',
     ],
     scripts = [
         os.path.join("rpyc", "scripts", "rpyc_classic.py"),
         os.path.join("rpyc", "scripts", "rpyc_registry.py"),
-        os.path.join("rpyc", "scripts", "rpyc_vdbconf.py"),
     ],
     platforms = ["POSIX", "Windows"],
-    use_2to3 = True,
+    use_2to3 = False,
     zip_ok = False,
-    #entry_points = {
-    #    "console_scripts": [
-    #         "rpyc_vdbconf = rpyc.scripts.vdbconf:main",
-    #         "rpyc_classic = rpyc.scripts.rpyc_classic:main",
-    #         "rpyc_registry = rpyc.scripts.rpyc_classic:main",
-    #    ]
-    #},
     long_description = ("A symmetric library for transparent RPC, clustering and "
         "distributed computing for python, built around the concept of remote "
         "services and object proxying"),
@@ -51,7 +43,15 @@ setup(name="RPyC",
         "Intended Audience :: System Administrators",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.4",
+        "Programming Language :: Python :: 2.5",
+        "Programming Language :: Python :: 2.6",
+        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.0",
+        "Programming Language :: Python :: 3.1",
+        "Programming Language :: Python :: 3.2",
         "Topic :: Internet",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Software Development :: Object Brokering",
@@ -63,5 +63,4 @@ setup(name="RPyC",
         "Topic :: System :: Systems Administration",
     ],
 )
-
 

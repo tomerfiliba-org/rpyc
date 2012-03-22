@@ -1,19 +1,18 @@
 import os
 import tempfile
 import shutil
+import unittest
 from nose import SkipTest
 import rpyc
 
-class Test_Remoting(object):
-    def __init__(self):
-        pass
 
-    def setup(self):
+class Test_Remoting(unittest.TestCase):
+    def setUp(self):
         self.conn = rpyc.classic.connect_thread()
-    
-    def teardown(self):
+
+    def tearDown(self):
         self.conn.close()
-    
+
     def test_files(self):
         base = tempfile.mkdtemp()
         base1 = os.path.join(base, "1")
@@ -21,39 +20,46 @@ class Test_Remoting(object):
         base3 = os.path.join(base, "3")
         os.mkdir(base1)
         for i in range(10):
-            open(os.path.join(base1, "foofoo%d" % (i,)), "w")
+            f = open(os.path.join(base1, "foofoo%d" % (i,)), "w")
+            f.close()
         os.mkdir(os.path.join(base1, "somedir1"))
-        
+
         rpyc.classic.upload(self.conn, base1, base2)
-        assert os.listdir(base1) == os.listdir(base2)
-        
+        self.assertEqual(os.listdir(base1), os.listdir(base2))
+
         rpyc.classic.download(self.conn, base2, base3)
-        assert os.listdir(base2) == os.listdir(base3)
-        
+        self.assertEqual(os.listdir(base2), os.listdir(base3))
+
         shutil.rmtree(base)
-    
+
     def test_distribution(self):
-        print "TODO: upload package"
-        print "TODO: update module"
-        
+        raise SkipTest("TODO: upload a package and a module")
+
     def test_interactive(self):
         raise SkipTest("Need to be manually")
-        print "type Ctrl+D to exit (Ctrl+Z on Windows)"
+        print( "type Ctrl+D to exit (Ctrl+Z on Windows)" )
         rpyc.classic.interact(self.conn)
-    
+
     def test_post_mortem(self):
         raise SkipTest("Need to be manually")
         try:
             self.conn.modules.sys.path[100000]
         except IndexError:
-            print "type 'q' to exit"
-            rpyc.utils.classic.post_mortem(self.conn)
+            print( "type 'q' to exit" )
+            rpyc.classic.pm(self.conn)
             raise
         else:
-            assert False, "expected an exception"
-    
+            self.fail("expected an exception")
+
     def test_migration(self):
         l = rpyc.classic.obtain(self.conn.modules.sys.path)
-        assert type(l) is list
+        self.assertTrue(type(l) is list)
         rl = rpyc.classic.deliver(self.conn, l)
-        assert isinstance(rl, rpyc.BaseNetref)
+        self.assertTrue(isinstance(rl, rpyc.BaseNetref))
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+

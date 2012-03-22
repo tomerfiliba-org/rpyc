@@ -1,3 +1,6 @@
+"""
+A library of various helpers functions and classes
+"""
 import logging
 
 
@@ -23,6 +26,8 @@ def setup_logger(options):
     logging_options = {}
     if options.quiet:
         logging_options['level'] = logging.ERROR
+    else:
+        logging_options['level'] = logging.DEBUG
     if options.logfile:
         logging_options['file'] = options.logfile
     logging.basicConfig(**logging_options)

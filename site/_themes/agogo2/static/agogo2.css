@@ -1,0 +1,69 @@
+@import url("agogo.css");
+
+a.reference.external {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+a.reference.internal {
+    font-weight: bold;
+    text-decoration: none;
+}
+
+tt.descclassname {
+    display:none;
+}
+
+tt.descname {
+    font-size: 150%;
+}
+
+dl.class dt {
+    background-color: #bbccdd;
+}
+
+dl.exception dt {
+    background-color: #ddbbcc;
+}
+
+dl.function dt {
+    background-color: #ccddcc;
+}
+
+dl.classmethod dt {
+    background-color: #ccddcc;
+}
+
+dl.staticmethod dt {
+    background-color: #ccddcc;
+}
+
+dl.attribute dt {
+    background-color: #ddddcc;
+}
+
+dl.data dt {
+    background-color: #ddddcc;
+}
+
+dl.method dt {
+    background-color: #ccddcc;
+}
+
+dl.function dt em {
+    font-family: monospace;
+}
+
+dl.method dt em {
+    font-family: monospace;
+}
+
+dd table.docutils {
+    border-collapse: collapse;
+}
+
+
+
+
+
+

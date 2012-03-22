@@ -1,0 +1,89 @@
+{% extends "agogo/layout.html" %}
+
+{% block header %}
+    <!--p style="float:right; margin-top:5px; margin-right:20px;">
+    <a href="http://tomerfiliba.com"><img src="{{ pathto('_static/fish-text-white.png', 1) }}" title="Tomer Filiba"/></a>
+    </p-->
+    
+    <!--p style="float:right; margin-top:5px; margin-right:20px;">
+    <a href="http://www.facebook.com/pages/RPyC/119586464792338"><img src="{{pathto('_static/facebook-logo.png', 1) }}" width="45px" title="Facebook Fan Page"/></a>
+    </p-->
+
+    <div class="header-wrapper">
+      <div class="header">
+
+        {%- if logo %}
+          <p class="logo"><a href="{{ pathto(master_doc) }}">
+            <img class="logo" src="{{ pathto('_static/' + logo, 1) }}" alt="Logo"/>
+          </a></p>
+        {%- endif %}
+        
+        {%- block headertitle %}
+          <a href="{{ pathto(master_doc) }}"><img src="{{ pathto('_static/rpyc-banner.png', 1) }}" title="RPyC - Unbounded Computing"/></a>
+        {%- endblock %}
+        
+       </div>
+    </div>
+{% endblock %}
+
+{% block sidebartoc %}
+    {{ super() }}
+    
+    <ul>
+    <li class="toctree-l1"><a class="reference internal" href="{{ pathto('genindex') }}">Site Index</a></li>
+    <li class="toctree-l1"><a class="reference internal" href="http://tomerfiliba.com/rpyc-blog">Development Blog</a></li>
+    </ul>
+
+{% endblock %}
+
+
+{% block sidebarsearch %}
+    <table border="0px" width="100%" style="margin-top:25px;" cellspacing="5px">
+        <tr>
+            <td valign="center" align="center">
+            <a href="http://github.com/tomerfiliba/rpyc"><img src="{{ pathto('_static/github-logo.png', 1) }}" title="Github Repository" width/></a>
+            </td>
+            <td valign="center" align="center">
+            <a href="http://tomerfiliba.com"><img src="{{ pathto('_static/fish-text-black.png', 1) }}" title="Tomer Filiba"/></a>
+            </td>
+        </tr>
+        <tr>
+            <!--td valign="center" align="center">
+            <a href="http://www.facebook.com/pages/RPyC/119586464792338"><img src="{{pathto('_static/facebook-logo.png', 1) }}" width="45px" title="Facebook Fan Page"/></a>
+            </td>
+            <td valign="center" align="center">
+            <script type="text/javascript" src="http://www.ohloh.net/p/26760/widgets/project_thin_badge.js"></script>
+            </td-->
+            <td valign="center" align="center">
+            <a href="http://www.facebook.com/pages/RPyC/119586464792338"><img src="{{pathto('_static/facebook-logo.png', 1) }}" width="45px" title="Facebook Fan Page"/></a>
+            </td>
+            <td valign="center" align="center">
+            <!--script type="text/javascript" src="http://www.ohloh.net/p/26760/widgets/project_thin_badge.js"></script-->
+            <a href="http://www.ohloh.net/p/rpyc?ref=WidgetProjectThinBadge" target="_top">
+                <img alt="Ohloh project report for RPyC" border="0" height="16" src="http://www.ohloh.net/p/rpyc/widgets/project_thin_badge.gif" width="100">
+            </a>
+            </td>
+        </tr>
+
+    </table>
+    
+{% endblock %}
+
+{% block footer %}
+    {{ super() }}
+
+    <script type="text/javascript">
+      var _gaq = _gaq || [];
+      _gaq.push(['_setAccount', 'UA-6100995-3']);
+      _gaq.push(['_trackPageview']);
+    
+      (function() {
+        var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+      })();
+    
+    </script>    
+
+{% endblock %}
+

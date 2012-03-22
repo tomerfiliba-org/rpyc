@@ -1,18 +1,21 @@
 """
-The RPyC protocol 
+The RPyC protocol
 """
 import sys
-import select
 import weakref
 import itertools
-import cPickle as pickle
+import socket
+import time
+
 from threading import Lock
+from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
 
 
 class PingError(Exception):
+    """The exception raised should :func:`Connection.ping` fail"""
     pass
 
 DEFAULT_CONFIG = dict(
@@ -21,21 +24,21 @@ DEFAULT_CONFIG = dict(
     allow_exposed_attrs = True,
     allow_public_attrs = False,
     allow_all_attrs = False,
-    safe_attrs = set(['__abs__', '__add__', '__and__', '__cmp__', '__contains__', 
-        '__delitem__', '__delslice__', '__div__', '__divmod__', '__doc__', 
-        '__eq__', '__float__', '__floordiv__', '__ge__', '__getitem__', 
+    safe_attrs = set(['__abs__', '__add__', '__and__', '__bool__', '__cmp__', '__contains__',
+        '__delitem__', '__delslice__', '__div__', '__divmod__', '__doc__',
+        '__eq__', '__float__', '__floordiv__', '__ge__', '__getitem__',
         '__getslice__', '__gt__', '__hash__', '__hex__', '__iadd__', '__iand__',
-        '__idiv__', '__ifloordiv__', '__ilshift__', '__imod__', '__imul__', 
+        '__idiv__', '__ifloordiv__', '__ilshift__', '__imod__', '__imul__',
         '__index__', '__int__', '__invert__', '__ior__', '__ipow__', '__irshift__',
-        '__isub__', '__iter__', '__itruediv__', '__ixor__', '__le__', '__len__', 
-        '__long__', '__lshift__', '__lt__', '__mod__', '__mul__', '__ne__', 
-        '__neg__', '__new__', '__nonzero__', '__oct__', '__or__', '__pos__', 
+        '__isub__', '__iter__', '__itruediv__', '__ixor__', '__le__', '__len__',
+        '__long__', '__lshift__', '__lt__', '__mod__', '__mul__', '__ne__',
+        '__neg__', '__new__', '__nonzero__', '__oct__', '__or__', '__pos__',
         '__pow__', '__radd__', '__rand__', '__rdiv__', '__rdivmod__', '__repr__',
-        '__rfloordiv__', '__rlshift__', '__rmod__', '__rmul__', '__ror__', 
-        '__rpow__', '__rrshift__', '__rshift__', '__rsub__', '__rtruediv__', 
-        '__rxor__', '__setitem__', '__setslice__', '__str__', '__sub__', 
-        '__truediv__', '__xor__', 'next', '__length_hint__', '__enter__', 
-        '__exit__', ]),
+        '__rfloordiv__', '__rlshift__', '__rmod__', '__rmul__', '__ror__',
+        '__rpow__', '__rrshift__', '__rshift__', '__rsub__', '__rtruediv__',
+        '__rxor__', '__setitem__', '__setslice__', '__str__', '__sub__',
+        '__truediv__', '__xor__', 'next', '__length_hint__', '__enter__',
+        '__exit__', '__next__',]),
     exposed_prefix = "exposed_",
     allow_getattr = True,
     allow_setattr = False,
@@ -50,27 +53,80 @@ DEFAULT_CONFIG = dict(
     allow_pickle = False,
     connid = None,
     credentials = None,
+    endpoints = None,
 )
+"""
+The default configuration dictionary of the protocol. You can override these parameters
+by passing a different configuration dict to the :class:`Connection` class.
+
+.. note::
+   You only need to override the parameters you want to change. There's no need
+   to repeat parameters whose values remain unchanged.
+
+=====================================  ================  =====================================================
+Parameter                              Default value     Description
+=====================================  ================  =====================================================
+``allow_safe_attrs``                   ``True``          Whether to allow the use of *safe* attributes
+                                                         (only those listed as ``safe_attrs``)
+``allow_exposed_attrs``                ``True``          Whether to allow exposed attributes 
+                                                         (attributes that start with the ``exposed_prefix``)
+``allow_public_attrs``                 ``False``         Whether to allow public attributes
+                                                         (attributes that don't start with ``_``)
+``allow_all_attrs``                    ``False``         Whether to allow all attributes (including private)
+``safe_attrs``                         ``set([...])``    The set of attributes considered safe
+``exposed_prefix``                     ``"exposed_"``    The prefix of exposed attributes
+``allow_getattr``                      ``True``          Whether to allow getting of attributes (``getattr``)
+``allow_setattr``                      ``False``         Whether to allow setting of attributes (``setattr``)
+``allow_delattr``                      ``False``         Whether to allow deletion of attributes (``delattr``)
+``allow_pickle``                       ``False``         Whether to allow the use of ``pickle``
+
+``include_local_traceback``            ``True``          Whether to include the local traceback
+                                                         in the remote exception
+``instantiate_custom_exceptions``      ``False``         Whether to allow instantiation of
+                                                         custom exceptions (not the built in ones)
+``import_custom_exceptions``           ``False``         Whether to allow importing of 
+                                                         exceptions from not-yet-imported modules
+``instantiate_oldstyle_exceptions``    ``False``         Whether to allow instantiation of exceptions
+                                                         which don't derive from ``Exception``. This
+                                                         is not applicable for Python 3 and later.
+``propagate_SystemExit_locally``       ``False``         Whether to propagate ``SystemExit``
+                                                         locally (kill the server) or to the other 
+                                                         party (kill the client)
+
+``connid``                             ``None``          **Runtime**: the RPyC connection ID (used
+                                                         mainly for debugging purposes) 
+``credentials``                        ``None``          **Runtime**: the credentails object that was returned
+                                                         by the server's :ref:`authenticator <api-authenticators>`
+                                                         or ``None``
+``endpoints``                          ``None``          **Runtime**: The connection's endpoints. This is a tuple 
+                                                         made of the local socket endpoint (``getsockname``) and the 
+                                                         remote one (``getpeername``). This is set by the server
+                                                         upon accepting a connection; client side connections
+                                                         do no have this configuration option set.
+=====================================  ================  =====================================================
+"""
+
 
 _connection_id_generator = itertools.count(1)
 
 class Connection(object):
-    """The RPyC connection (also know as the RPyC protocol). 
-    * service: the service to expose
-    * channel: the channcel over which messages are passed
-    * config: this connection's config dict (overriding parameters from the 
-      default config dict)
-    * _lazy: whether or not to initialize the service with the creation of the
-      connection. default is True. if set to False, you will need to call
-      _init_service manually later
+    """The RPyC *connection* (AKA *protocol*).
+    
+    :param service: the :class:`Service <rpyc.core.service.Service>` to expose
+    :param channel: the :class:`Channel <rpyc.core.channel.Channel>` over which messages are passed
+    :param config: the connection's configuration dict (overriding parameters 
+                   from the :data:`default configuration <DEFAULT_CONFIG>`)
+    :param _lazy: whether or not to initialize the service with the creation of
+                  the connection. Default is True. If set to False, you will 
+                  need to call :func:`_init_service` manually later
     """
     def __init__(self, service, channel, config = {}, _lazy = False):
         self._closed = True
         self._config = DEFAULT_CONFIG.copy()
         self._config.update(config)
         if self._config["connid"] is None:
-            self._config["connid"] = "conn%d" % (_connection_id_generator.next(),)
-        
+            self._config["connid"] = "conn%d" % (next(_connection_id_generator),)
+
         self._channel = channel
         self._seqcounter = itertools.count()
         self._recvlock = Lock()
@@ -88,7 +144,7 @@ class Connection(object):
         self._closed = False
     def _init_service(self):
         self._local_root.on_connect()
-    
+
     def __del__(self):
         self.close()
     def __enter__(self):
@@ -98,9 +154,9 @@ class Connection(object):
     def __repr__(self):
         a, b = object.__repr__(self).split(" object ")
         return "%s %r object %s" % (a, self._config["connid"], b)
-    
+
     #
-    # IO 
+    # IO
     #
     def _cleanup(self, _anyway = True):
         if self._closed and not _anyway:
@@ -119,33 +175,47 @@ class Connection(object):
         self._local_root = None
         #self._seqcounter = None
         #self._config.clear()
+    
     def close(self, _catchall = True):
+        """closes the connection, releasing all held resources"""
         if self._closed:
             return
         self._closed = True
         try:
             try:
                 self._async_request(consts.HANDLE_CLOSE)
-            except EOFError: 
+            except EOFError:
                 pass
             except Exception:
                 if not _catchall:
                     raise
         finally:
             self._cleanup(_anyway = True)
-    
+
     @property
     def closed(self):
+        """Indicates whether the connection has been closed or not"""
         return self._closed
     def fileno(self):
+        """Returns the connectin's underlying file descriptor"""
         return self._channel.fileno()
-    
-    def ping(self, data = "the world is a vampire!" * 20, timeout = 3):
-        """assert that the other party is functioning properly"""
+
+    def ping(self, data = None, timeout = 3):
+        """       
+        Asserts that the other party is functioning properly, by making sure
+        the *data* is echoed back before the *timeout* expires
+        
+        :param data: the data to send (leave ``None`` for the default buffer)
+        :param timeout: the maximal time to wait for echo
+        
+        :raises: :class:`PingError` if the echoed data does not match
+        """
+        if data is None:
+            data = "abcdefghijklmnopqrstuvwxyz" * 20
         res = self.async_request(consts.HANDLE_PING, data, timeout = timeout)
         if res.value != data:
             raise PingError("echo mismatches sent data")
-    
+
     def _send(self, msg, seq, args):
         data = brine.dump((msg, seq, args))
         self._sendlock.acquire()
@@ -154,16 +224,16 @@ class Connection(object):
         finally:
             self._sendlock.release()
     def _send_request(self, handler, args):
-        seq = self._seqcounter.next()
+        seq = next(self._seqcounter)
         self._send(consts.MSG_REQUEST, seq, (handler, self._box(args)))
         return seq
     def _send_reply(self, seq, obj):
         self._send(consts.MSG_REPLY, seq, self._box(obj))
     def _send_exception(self, seq, exctype, excval, exctb):
-        exc = vinegar.dump(exctype, excval, exctb, 
+        exc = vinegar.dump(exctype, excval, exctb,
             include_local_traceback = self._config["include_local_traceback"])
         self._send(consts.MSG_EXCEPTION, seq, exc)
-    
+
     #
     # boxing
     #
@@ -184,7 +254,7 @@ class Connection(object):
                 # see issue #16
                 cls = type(obj)
             return consts.LABEL_REMOTE_REF, (id(obj), cls.__name__, cls.__module__)
-    
+
     def _unbox(self, package):
         """recreate a local object representation of the remote object: if the
         object is passed by value, just return it; if the object is passed by
@@ -204,7 +274,7 @@ class Connection(object):
             self._proxy_cache[oid] = proxy
             return proxy
         raise ValueError("invalid label %r" % (label,))
-    
+
     def _netref_factory(self, oid, clsname, modname):
         typeinfo = (clsname, modname)
         if typeinfo in self._netref_classes_cache:
@@ -216,7 +286,7 @@ class Connection(object):
             cls = netref.class_factory(clsname, modname, info)
             self._netref_classes_cache[typeinfo] = cls
         return cls(weakref.ref(self), oid)
-    
+
     #
     # dispatching
     #
@@ -228,6 +298,7 @@ class Connection(object):
         except KeyboardInterrupt:
             raise
         except:
+            # need to catch old style exceptions too
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
             if t is SystemExit and self._config["propagate_SystemExit_locally"]:
@@ -235,24 +306,24 @@ class Connection(object):
             self._send_exception(seq, t, v, tb)
         else:
             self._send_reply(seq, res)
-    
+
     def _dispatch_reply(self, seq, raw):
         obj = self._unbox(raw)
         if seq in self._async_callbacks:
             self._async_callbacks.pop(seq)(False, obj)
         else:
             self._sync_replies[seq] = (False, obj)
-    
+
     def _dispatch_exception(self, seq, raw):
-        obj = vinegar.load(raw, 
-            import_custom_exceptions = self._config["import_custom_exceptions"], 
+        obj = vinegar.load(raw,
+            import_custom_exceptions = self._config["import_custom_exceptions"],
             instantiate_custom_exceptions = self._config["instantiate_custom_exceptions"],
             instantiate_oldstyle_exceptions = self._config["instantiate_oldstyle_exceptions"])
         if seq in self._async_callbacks:
             self._async_callbacks.pop(seq)(True, obj)
         else:
             self._sync_replies[seq] = (True, obj)
-    
+
     #
     # serving
     #
@@ -271,7 +342,7 @@ class Connection(object):
         finally:
             self._recvlock.release()
         return data
-        
+
     def _dispatch(self, data):
         msg, seq, args = brine.load(data)
         if msg == consts.MSG_REQUEST:
@@ -284,60 +355,76 @@ class Connection(object):
             raise ValueError("invalid message type: %r" % (msg,))
 
     def poll(self, timeout = 0):
-        """serve a single transaction, should one arrives in the given 
-        interval. note that handling a request/reply may trigger nested 
-        requests, which are all part of the transaction.
-        
-        returns True if one was served, False otherwise"""
+        """Serves a single transaction, should one arrives in the given
+        interval. Note that handling a request/reply may trigger nested
+        requests, which are all part of a single transaction.
+
+        :returns: ``True`` if a transaction was served, ``False`` otherwise"""
         data = self._recv(timeout, wait_for_lock = False)
         if not data:
             return False
         self._dispatch(data)
         return True
-    
+
     def serve(self, timeout = 1):
-        """serve a single request or reply that arrives within the given 
-        time frame (default is 1 sec). note that the dispatching of a request
-        might trigger multiple (nested) requests, thus this function may be 
-        reentrant. returns True if a request or reply were received, False 
-        otherwise."""
+        """Serves a single request or reply that arrives within the given
+        time frame (default is 1 sec). Note that the dispatching of a request
+        might trigger multiple (nested) requests, thus this function may be
+        reentrant. 
         
+        :returns: ``True`` if a request or reply were received, ``False``
+                  otherwise.
+        """
         data = self._recv(timeout, wait_for_lock = True)
         if not data:
             return False
         self._dispatch(data)
         return True
-    
+
     def serve_all(self):
-        """serve all requests and replies while the connection is alive"""
+        """Serves all requests and replies for as long as the connection is 
+        alive."""
         try:
             try:
                 while True:
                     self.serve(0.1)
-            except select.error:
+            except (socket.error, select_error, IOError):
                 if not self.closed:
                     raise
             except EOFError:
                 pass
         finally:
             self.close()
-    
+
     def poll_all(self, timeout = 0):
-        """serve all requests and replies that arrive within the given interval.
-        returns True if at least one was served, False otherwise"""
+        """Serves all requests and replies that arrive within the given interval.
+        
+        :returns: ``True`` if at least a single transaction was served, ``False`` otherwise
+        """
         at_least_once = False
+        t0 = time.time()
+        duration = timeout
         try:
-            while self.poll(timeout):
-                at_least_once = True
+            while True:
+                if self.poll(duration):
+                    at_least_once = True
+                if timeout is not None:
+                    duration = t0 + timeout - time.time()
+                    if duration < 0:
+                        break
         except EOFError:
             pass
         return at_least_once
-    
+
     #
     # requests
     #
     def sync_request(self, handler, *args):
-        """send a request and wait for the reply to arrive"""
+        """Sends a synchronous request (waits for the reply to arrive)
+        
+        :raises: any exception that the requets may be generated
+        :returns: the result of the request
+        """
         seq = self._send_request(handler, args)
         while seq not in self._sync_replies:
             self.serve(0.1)
@@ -346,29 +433,32 @@ class Connection(object):
             raise obj
         else:
             return obj
-    
+
     def _async_request(self, handler, args = (), callback = (lambda a, b: None)):
         seq = self._send_request(handler, args)
         self._async_callbacks[seq] = callback
     def async_request(self, handler, *args, **kwargs):
-        """send a request and return an AsyncResult object, which will 
-        eventually hold the reply"""
+        """Send an asynchronous request (does not wait for it to finish)
+        
+        :returns: an :class:`rpyc.core.async.AsyncResult` object, which will
+                  eventually hold the result (or exception)
+        """
         timeout = kwargs.pop("timeout", None)
         if kwargs:
-            raise TypeError("got unexpected keyword argument %r" % (kwargs.keys()[0],))
+            raise TypeError("got unexpected keyword argument(s) %s" % (list(kwargs.keys()),))
         res = AsyncResult(weakref.proxy(self))
         self._async_request(handler, args, res)
         if timeout is not None:
             res.set_expiry(timeout)
         return res
-    
+
     @property
     def root(self):
-        """fetch the root object of the other party"""
+        """Fetches the root object (service) of the other party"""
         if self._remote_root is None:
             self._remote_root = self.sync_request(consts.HANDLE_GETROOT)
         return self._remote_root
-    
+
     #
     # attribute access
     #
@@ -387,10 +477,17 @@ class Connection(object):
         if self._config["allow_public_attrs"] and not name.startswith("_"):
             return name
         return False
-    
+
     def _access_attr(self, oid, name, args, overrider, param, default):
-        if type(name) is not str:
-            raise TypeError("attr name must be a string")
+        if is_py3k:
+            if type(name) is bytes:
+                name = str(name, "utf8")
+            elif type(name) is not str:
+                raise TypeError("name must be a string")
+        else:
+            if type(name) not in (str, unicode):
+                raise TypeError("name must be a string")
+            name = str(name) # IronPython issue #10 + py3k issue
         obj = self._local_objects[oid]
         accessor = getattr(type(obj), overrider, None)
         if accessor is None:
@@ -400,9 +497,9 @@ class Connection(object):
             accessor = default
             name = name2
         return accessor(obj, name, *args)
-    
+
     #
-    # handlers
+    # request handlers
     #
     def _handle_ping(self, data):
         return data
@@ -422,7 +519,7 @@ class Connection(object):
         obj = self._local_objects[oid]
         try:
             return type(obj).__cmp__(obj, other)
-        except TypeError:
+        except (AttributeError, TypeError):
             return NotImplemented
     def _handle_hash(self, oid):
         return hash(self._local_objects[oid])
@@ -441,7 +538,7 @@ class Connection(object):
     def _handle_callattr(self, oid, name, args, kwargs):
         return self._handle_getattr(oid, name)(*args, **dict(kwargs))
     def _handle_pickle(self, oid, proto):
-        if not self._config["allow_pickle"]: 
+        if not self._config["allow_pickle"]:
             raise ValueError("pickling is disabled")
         return pickle.dumps(self._local_objects[oid], proto)
     def _handle_buffiter(self, oid, count):
@@ -450,15 +547,26 @@ class Connection(object):
         i = 0
         try:
             while i < count:
-                items.append(obj.next())
+                items.append(next(obj))
                 i += 1
         except StopIteration:
             pass
         return tuple(items)
-    
+    def _handle_oldslicing(self, oid, attempt, fallback, start, stop, args):
+        try:
+            # first try __xxxitem__
+            getitem = self._handle_getattr(oid, attempt)
+            return getitem(slice(start, stop), *args)
+        except Exception:
+            # fallback to __xxxslice__. see issue #41
+            if stop is None:
+                stop = maxint
+            getslice = self._handle_getattr(oid, fallback)
+            return getslice(start, stop, *args)
+
     # collect handlers
     _HANDLERS = {}
-    for name, obj in locals().items():
+    for name, obj in dict(locals()).items():
         if name.startswith("_handle_"):
             name2 = "HANDLE_" + name[8:].upper()
             if hasattr(consts, name2):
@@ -466,5 +574,4 @@ class Connection(object):
             else:
                 raise NameError("no constant defined for %r", name)
     del name, name2, obj
-
 

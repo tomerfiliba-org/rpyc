@@ -36,7 +36,7 @@ class WeakValueDict(object):
     def __delitem__(self, key):
         del self._dict[key]
     def iterkeys(self):
-        return self._dict.iterkeys()
+        return self._dict.keys()
     def keys(self):
         return self._dict.keys()
     def itervalues(self):
@@ -82,7 +82,7 @@ class RefCountingColl(object):
         self._lock.acquire()
         try:
             slot = self._dict[key]
-            if slot[1] <= 1:
+            if slot[1] < 1:
                 del self._dict[key]
             else:
                 slot[1] -= 1
@@ -95,5 +95,4 @@ class RefCountingColl(object):
             return self._dict[key][0]
         finally:
             self._lock.release()
-
 

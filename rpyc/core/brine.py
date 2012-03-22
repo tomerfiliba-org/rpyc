@@ -1,44 +1,59 @@
 """
-brine - a simple, fast and secure object serializer for immutable objects,
-optimized for small integers [-48..160).
-the following types are supported: int, long, bool, str, float, unicode, 
-slice, complex, tuple(of simple types), forzenset(of simple types)
-as well as the following singletons: None, NotImplemented, Ellipsis
+**Brine** is a simple, fast and secure object serializer for **immutable** objects.
+The following types are supported: ``int``, ``long``, ``bool``, ``str``, ``float``,
+``unicode``, ``bytes``, ``slice``, ``complex``, ``tuple`` (of simple types), 
+``forzenset`` (of simple types) as well as the following singletons: ``None``, 
+``NotImplemented``, and ``Ellipsis``.
+
+Example::
+
+    >>> x = ("he", 7, u"llo", 8, (), 900, None, True, Ellipsis, 18.2, 18.2j + 13,
+    ... slice(1,2,3), frozenset([5,6,7]), NotImplemented)
+    >>> dumpable(x)
+    True
+    >>> y = dump(x)
+    >>> y.encode("hex")
+    '140e0b686557080c6c6c6f580216033930300003061840323333333333331b402a000000000000403233333333333319125152531a1255565705'
+    >>> z = load(y)
+    >>> x == z
+    True
 """
-from cStringIO import StringIO
-from rpyc.lib.compat import Struct, all
+from rpyc.lib.compat import Struct, BytesIO, all, is_py3k, BYTES_LITERAL
 
 
 # singletons
-TAG_NONE = "\x00"
-TAG_EMPTY_STR = "\x01"
-TAG_EMPTY_TUPLE = "\x02"
-TAG_TRUE = "\x03"
-TAG_FALSE = "\x04"
-TAG_NOT_IMPLEMENTED = "\x05"
-TAG_ELLIPSIS = "\x06"
+TAG_NONE = BYTES_LITERAL("\x00")
+TAG_EMPTY_STR = BYTES_LITERAL("\x01")
+TAG_EMPTY_TUPLE = BYTES_LITERAL("\x02")
+TAG_TRUE = BYTES_LITERAL("\x03")
+TAG_FALSE = BYTES_LITERAL("\x04")
+TAG_NOT_IMPLEMENTED = BYTES_LITERAL("\x05")
+TAG_ELLIPSIS = BYTES_LITERAL("\x06")
 # types
-TAG_UNICODE = "\x08"
-TAG_LONG = "\x09"
-TAG_STR1 = "\x0a"
-TAG_STR2 = "\x0b"
-TAG_STR3 = "\x0c"
-TAG_STR4 = "\x0d"
-TAG_STR_L1 = "\x0e"
-TAG_STR_L4 = "\x0f"
-TAG_TUP1 = "\x10"
-TAG_TUP2 = "\x11"
-TAG_TUP3 = "\x12"
-TAG_TUP4 = "\x13"
-TAG_TUP_L1 = "\x14"
-TAG_TUP_L4 = "\x15"
-TAG_INT_L1 = "\x16"
-TAG_INT_L4 = "\x17"
-TAG_FLOAT = "\x18"
-TAG_SLICE = "\x19"
-TAG_FSET = "\x1a"
-TAG_COMPLEX = "\x1b"
-IMM_INTS = dict((i, chr(i + 0x50)) for i in range(-0x30, 0xa0))
+TAG_UNICODE = BYTES_LITERAL("\x08")
+TAG_LONG = BYTES_LITERAL("\x09")
+TAG_STR1 = BYTES_LITERAL("\x0a")
+TAG_STR2 = BYTES_LITERAL("\x0b")
+TAG_STR3 = BYTES_LITERAL("\x0c")
+TAG_STR4 = BYTES_LITERAL("\x0d")
+TAG_STR_L1 = BYTES_LITERAL("\x0e")
+TAG_STR_L4 = BYTES_LITERAL("\x0f")
+TAG_TUP1 = BYTES_LITERAL("\x10")
+TAG_TUP2 = BYTES_LITERAL("\x11")
+TAG_TUP3 = BYTES_LITERAL("\x12")
+TAG_TUP4 = BYTES_LITERAL("\x13")
+TAG_TUP_L1 = BYTES_LITERAL("\x14")
+TAG_TUP_L4 = BYTES_LITERAL("\x15")
+TAG_INT_L1 = BYTES_LITERAL("\x16")
+TAG_INT_L4 = BYTES_LITERAL("\x17")
+TAG_FLOAT = BYTES_LITERAL("\x18")
+TAG_SLICE = BYTES_LITERAL("\x19")
+TAG_FSET = BYTES_LITERAL("\x1a")
+TAG_COMPLEX = BYTES_LITERAL("\x1b")
+if is_py3k:
+    IMM_INTS = dict((i, bytes([i + 0x50])) for i in range(-0x30, 0xa0))
+else:
+    IMM_INTS = dict((i, chr(i + 0x50)) for i in range(-0x30, 0xa0))
 
 I1 = Struct("!B")
 I4 = Struct("!L")
@@ -47,7 +62,7 @@ C16 = Struct("!dd")
 
 _dump_registry = {}
 _load_registry = {}
-IMM_INTS_LOADER = dict((v, k) for k, v in IMM_INTS.iteritems())
+IMM_INTS_LOADER = dict((v, k) for k, v in IMM_INTS.items())
 
 def register(coll, key):
     def deco(func):
@@ -92,35 +107,12 @@ def _dump_int(obj, stream):
     if obj in IMM_INTS:
         stream.append(IMM_INTS[obj])
     else:
-        obj = str(obj)
+        obj = BYTES_LITERAL(str(obj))
         l = len(obj)
         if l < 256:
             stream.append(TAG_INT_L1 + I1.pack(l) + obj)
         else:
             stream.append(TAG_INT_L4 + I4.pack(l) + obj)
-
-@register(_dump_registry, long)
-def _dump_long(obj, stream):
-    stream.append(TAG_LONG)
-    _dump_int(obj, stream)
-
-@register(_dump_registry, str)
-def _dump_str(obj, stream):
-    l = len(obj)
-    if l == 0:
-        stream.append(TAG_EMPTY_STR)
-    elif l == 1:
-        stream.append(TAG_STR1 + obj)
-    elif l == 2:
-        stream.append(TAG_STR2 + obj)
-    elif l == 3:
-        stream.append(TAG_STR3 + obj)
-    elif l == 4:
-        stream.append(TAG_STR4 + obj)
-    elif l < 256:
-        stream.append(TAG_STR_L1 + I1.pack(l) + obj)
-    else:
-        stream.append(TAG_STR_L4 + I4.pack(l) + obj)
 
 @register(_dump_registry, float)
 def _dump_float(obj, stream):
@@ -130,10 +122,58 @@ def _dump_float(obj, stream):
 def _dump_complex(obj, stream):
     stream.append(TAG_COMPLEX + C16.pack(obj.real, obj.imag))
 
-@register(_dump_registry, unicode)
-def _dump_unicode(obj, stream):
-    stream.append(TAG_UNICODE)
-    _dump_str(obj.encode("utf8"), stream)
+if is_py3k:
+    @register(_dump_registry, bytes)
+    def _dump_bytes(obj, stream):
+        l = len(obj)
+        if l == 0:
+            stream.append(TAG_EMPTY_STR)
+        elif l == 1:
+            stream.append(TAG_STR1 + obj)
+        elif l == 2:
+            stream.append(TAG_STR2 + obj)
+        elif l == 3:
+            stream.append(TAG_STR3 + obj)
+        elif l == 4:
+            stream.append(TAG_STR4 + obj)
+        elif l < 256:
+            stream.append(TAG_STR_L1 + I1.pack(l) + obj)
+        else:
+            stream.append(TAG_STR_L4 + I4.pack(l) + obj)
+
+    @register(_dump_registry, str)
+    def _dump_str(obj, stream):
+        stream.append(TAG_UNICODE)
+        _dump_bytes(obj.encode("utf8"), stream)
+else:
+    @register(_dump_registry, str)
+    def _dump_str(obj, stream):
+        l = len(obj)
+        if l == 0:
+            stream.append(TAG_EMPTY_STR)
+        elif l == 1:
+            stream.append(TAG_STR1 + obj)
+        elif l == 2:
+            stream.append(TAG_STR2 + obj)
+        elif l == 3:
+            stream.append(TAG_STR3 + obj)
+        elif l == 4:
+            stream.append(TAG_STR4 + obj)
+        elif l < 256:
+            stream.append(TAG_STR_L1 + I1.pack(l) + obj)
+        else:
+            stream.append(TAG_STR_L4 + I4.pack(l) + obj)
+
+    @register(_dump_registry, unicode)
+    def _dump_unicode(obj, stream):
+        stream.append(TAG_UNICODE)
+        _dump_str(obj.encode("utf8"), stream)
+
+    @register(_dump_registry, long)
+    def _dump_long(obj, stream):
+        stream.append(TAG_LONG)
+        _dump_int(obj, stream)
+
 
 @register(_dump_registry, tuple)
 def _dump_tuple(obj, stream):
@@ -182,17 +222,26 @@ def _load_false(stream):
 @register(_load_registry, TAG_EMPTY_TUPLE)
 def _load_empty_tuple(stream):
     return ()
-@register(_load_registry, TAG_EMPTY_STR)
-def _load_empty_str(stream):
-    return ""
-@register(_load_registry, TAG_UNICODE)
-def _load_unicode(stream):
-    obj = _load(stream)
-    return obj.decode("utf-8")
-@register(_load_registry, TAG_LONG)
-def _load_long(stream):
-    obj = _load(stream)
-    return long(obj)
+
+if is_py3k:
+    @register(_load_registry, TAG_EMPTY_STR)
+    def _load_empty_str(stream):
+        return BYTES_LITERAL("")
+else:
+    @register(_load_registry, TAG_EMPTY_STR)
+    def _load_empty_str(stream):
+        return ""
+
+if is_py3k:
+    @register(_load_registry, TAG_LONG)
+    def _load_long(stream):
+        obj = _load(stream)
+        return int(obj)
+else:
+    @register(_load_registry, TAG_LONG)
+    def _load_long(stream):
+        obj = _load(stream)
+        return long(obj)
 
 @register(_load_registry, TAG_FLOAT)
 def _load_float(stream):
@@ -223,6 +272,11 @@ def _load_str_l4(stream):
     l, = I4.unpack(stream.read(4))
     return stream.read(l)
 
+@register(_load_registry, TAG_UNICODE)
+def _load_unicode(stream):
+    obj = _load(stream)
+    return obj.decode("utf-8")
+
 @register(_load_registry, TAG_TUP1)
 def _load_tup1(stream):
     return (_load(stream),)
@@ -239,10 +293,17 @@ def _load_tup4(stream):
 def _load_tup_l1(stream):
     l, = I1.unpack(stream.read(1))
     return tuple(_load(stream) for i in range(l))
-@register(_load_registry, TAG_TUP_L4)
-def _load_tup_l4(stream):
-    l, = I4.unpack(stream.read(4))
-    return tuple(_load(stream) for i in xrange(l))
+
+if is_py3k:
+    @register(_load_registry, TAG_TUP_L4)
+    def _load_tup_l4(stream):
+        l, = I4.unpack(stream.read(4))
+        return tuple(_load(stream) for i in range(l))
+else:
+    @register(_load_registry, TAG_TUP_L4)
+    def _load_tup_l4(stream):
+        l, = I4.unpack(stream.read(4))
+        return tuple(_load(stream) for i in xrange(l))
 
 @register(_load_registry, TAG_SLICE)
 def _load_slice(stream):
@@ -271,40 +332,49 @@ def _load(stream):
 # API
 #===============================================================================
 def dump(obj):
-    """dumps the given object to a byte-string representation"""
+    """Converts (dumps) the given object to a byte-string representation
+    
+    :param obj: any :func:`dumpable` object
+    
+    :returns: a byte-string representation of the object
+    """
     stream = []
     _dump(obj, stream)
-    return "".join(stream)
+    return BYTES_LITERAL("").join(stream)
 
 def load(data):
-    """loads the given byte-string representation to an object"""
-    stream = StringIO(data)
+    """Recreates (loads) an object from its byte-string representation
+    
+    :param data: the byte-string representation of an object
+    
+    :returns: the dumped object
+    """
+    stream = BytesIO(data)
     return _load(stream)
 
-simple_types = frozenset([type(None), int, long, bool, str, float, unicode, 
-    slice, complex, type(NotImplemented), type(Ellipsis)])
+if is_py3k:
+    simple_types = frozenset([type(None), int, bool, float, bytes, str, complex, 
+        type(NotImplemented), type(Ellipsis)])
+else:
+    simple_types = frozenset([type(None), int, long, bool, float, str, unicode, complex, 
+        type(NotImplemented), type(Ellipsis)])
+
 def dumpable(obj):
-    """indicates whether the object is dumpable by brine"""
+    """Indicates whether the given object is *dumpable* by brine
+    
+    :returns: ``True`` if the object is dumpable (e.g., :func:`dump` would succeed),
+              ``False`` otherwise
+    """
     if type(obj) in simple_types:
         return True
     if type(obj) in (tuple, frozenset):
         return all(dumpable(item) for item in obj)
+    if type(obj) is slice:
+        return dumpable(obj.start) and dumpable(obj.stop) and dumpable(obj.step)
     return False
 
 
 if __name__ == "__main__":
-    x = ("he", 7, u"llo", 8, (), 900, None, True, Ellipsis, 18.2, 18.2j + 13, 
-        slice(1,2,3), frozenset([5,6,7]), NotImplemented)
-    assert dumpable(x)
-    y = dump(x)
-    z = load(y)
-    assert x == z
-    
-
-
-
-
-
-
-
+    import doctest
+    doctest.testmod()
 
