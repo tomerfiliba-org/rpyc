@@ -58,12 +58,14 @@ class Stream(object):
         """
         raise NotImplementedError()
 
-
+class EOF_and_AttributeError(EOFError, AttributeError):
+    pass
+    
 class ClosedFile(object):
     """Represents a closed file object (singleton)"""
     __slots__ = ()
     def __getattr__(self, name):
-        raise EOFError("stream has been closed")
+        raise EOF_and_AttributeError("stream has been closed")
     def close(self):
         pass
     @property
