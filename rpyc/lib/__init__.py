@@ -9,7 +9,7 @@ class MissingModule(object):
     def __init__(self, name):
         self.__name = name
     def __getattr__(self, name):
-        raise ImportError("module %r not found" % (self.__name,))
+        raise AttributeError("module %r not found" % (self.__name,))
     def __bool__(self):
         return False
     __nonzero__ = __bool__
