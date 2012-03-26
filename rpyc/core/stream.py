@@ -63,6 +63,8 @@ class ClosedFile(object):
     """Represents a closed file object (singleton)"""
     __slots__ = ()
     def __getattr__(self, name):
+        if name.startswith("__"): # issue 71
+            raise AttributeError("stream has been closed")
         raise EOFError("stream has been closed")
     def close(self):
         pass
