@@ -1,6 +1,7 @@
 v3.2.2
 ^^^^^^
 * Anselm Kruis - Make RPyC more introspection-friendly
+* Rüdiger Kessel - SSH on windows patch
 
 v3.2.1
 ^^^^^^
