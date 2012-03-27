@@ -2,6 +2,7 @@
 -----
 * Fixes an issue with introspection when an ``AttributeError`` is expected 
   (`#71 <https://github.com/tomerfiliba/rpyc/issues/71>`_)
+* Windows: make SSH tunnels windowless (`#68 <https://github.com/tomerfiliba/rpyc/issues/68>`_)
 
 3.2.1
 -----
