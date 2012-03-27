@@ -1,3 +1,8 @@
+3.2.2
+-----
+* Fixes an issue with introspection when an ``AttributeError`` is expected 
+  (`#71 <https://github.com/tomerfiliba/rpyc/issues/71>`_)
+
 3.2.1
 -----
 * Adding missing import (`#52 <https://github.com/tomerfiliba/rpyc/issues/52>`_)
