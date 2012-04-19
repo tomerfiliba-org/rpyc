@@ -61,8 +61,8 @@
 3.1.0
 ------
 
-What's New:
-^^^^^^^^^^^
+What's New
+^^^^^^^^^^
 * Supports CPython 2.4-2.7, IronPython, and Jython
 
 * `tlslite <http://sourceforge.net/projects/rpyc/files/tlslite>`_ has been ported to
@@ -91,8 +91,8 @@ What's New:
 
 * Fixes typos, running pylint, etc.
 
-Breakage from 3.0.7:
-^^^^^^^^^^^^^^^^^^^^
+Breakage from 3.0.7
+^^^^^^^^^^^^^^^^^^^
 * Removing egg builds (we're pure python, and eggs just messed up the build)
 
 * Package layout changed drastically, and some files were renamed
