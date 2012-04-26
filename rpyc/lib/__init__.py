@@ -1,6 +1,7 @@
 """
 A library of various helpers functions and classes
 """
+import sys
 import logging
 
 
@@ -21,8 +22,13 @@ def safe_import(name):
         mod = __import__(name, None, None, "*")
     except ImportError:
         mod = MissingModule(name)
+    except Exception:
+        # issue 72: IronPython on Mono
+        if sys.platform == "cli" and name == "signal": #os.name == "posix":
+            mod = MissingModule(name)
+        else:
+            raise
     return mod
-
 
 def setup_logger(options):
     logging_options = {}
