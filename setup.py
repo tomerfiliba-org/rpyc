@@ -33,7 +33,7 @@ setup(name = "rpyc",
     ],
     platforms = ["POSIX", "Windows"],
     use_2to3 = False,
-    zip_ok = False,
+    zip_safe = False,
     long_description = ("A symmetric library for transparent RPC, clustering and "
         "distributed computing for python, built around the concept of remote "
         "services and object proxying"),
