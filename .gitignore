@@ -4,3 +4,4 @@
 .settings
 dist
 MANIFEST
+__pycache__

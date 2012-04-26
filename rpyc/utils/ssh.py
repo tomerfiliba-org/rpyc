@@ -1,7 +1,8 @@
 import os
-import signal
 from subprocess import Popen, PIPE
+from rpyc.lib import safe_import
 from rpyc.lib.compat import BYTES_LITERAL
+signal = safe_import("signal")
 
 # modified from the stdlib pipes module for windows
 _safechars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@%_-+=:,./'
@@ -83,7 +84,8 @@ class SshTunnel(object):
         try:
             self.proc.kill()
         except AttributeError:
-            os.kill(self.proc.pid, signal.SIGTERM)
+            if signal:
+                os.kill(self.proc.pid, signal.SIGTERM)
         self.proc.wait()
         self.proc = None
 
