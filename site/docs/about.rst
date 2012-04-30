@@ -7,7 +7,11 @@ RPyC was inspired by the work of **Eyal Lotem** on
 the field of "dynamic RPC" (where there's no predefined contract between the 
 two sides). The two projects, however, are completely unrelated in any other 
 way. RPyC is developed and maintained by `Tomer Filiba <http://tomerfiliba.com>`_
-(``tomerfiliba`` at ``gmail`` dot ``com``).
+(tomerfiliba@gmail.com).
+
+.. note::
+   Please do not send questions directly to my email -- use our
+   `mailing list <https://groups.google.com/forum/?fromgroups#!forum/rpyc>`_ instead.
 
 Contributors
 ------------
