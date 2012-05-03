@@ -4,6 +4,7 @@ The RPyC protocol
 import sys
 import weakref
 import itertools
+import logging
 import socket
 import time
 
@@ -13,6 +14,7 @@ from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
 
+_logger = logging.getLogger("PROTO")
 
 class PingError(Exception):
     """The exception raised should :func:`Connection.ping` fail"""
@@ -299,6 +301,7 @@ class Connection(object):
             raise
         except:
             # need to catch old style exceptions too
+            _logger.debug("Exception caught", exc_info=True)
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
             if t is SystemExit and self._config["propagate_SystemExit_locally"]:
