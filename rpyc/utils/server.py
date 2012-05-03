@@ -82,6 +82,8 @@ class Server(object):
         if logger is None:
             logger = logging.getLogger("%s/%d" % (self.service.get_service_name(), self.port))
         self.logger = logger
+        if "logger" not in self.protocol_config:
+            self.protocol_config["logger"] = self.logger
         if registrar is None:
             registrar = UDPRegistryClient(logger = self.logger)
         self.registrar = registrar
