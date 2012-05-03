@@ -4,7 +4,6 @@ The RPyC protocol
 import sys
 import weakref
 import itertools
-import logging
 import socket
 import time
 
@@ -13,8 +12,6 @@ from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
-
-_logger = logging.getLogger("PROTO")
 
 class PingError(Exception):
     """The exception raised should :func:`Connection.ping` fail"""
@@ -51,6 +48,7 @@ DEFAULT_CONFIG = dict(
     import_custom_exceptions = False,
     instantiate_oldstyle_exceptions = False, # which don't derive from Exception
     propagate_SystemExit_locally = False, # whether to propagate SystemExit locally or to the other party
+    log_exceptions = True,
     # MISC
     allow_pickle = False,
     connid = None,
@@ -94,6 +92,9 @@ Parameter                              Default value     Description
 ``propagate_SystemExit_locally``       ``False``         Whether to propagate ``SystemExit``
                                                          locally (kill the server) or to the other 
                                                          party (kill the client)
+``logger``                             ``None``          The logger instance to use to log exceptions
+                                                         (before they are sent to the other party)
+                                                         and other events. If ``None``, no logging takes place.
 
 ``connid``                             ``None``          **Runtime**: the RPyC connection ID (used
                                                          mainly for debugging purposes) 
@@ -301,7 +302,8 @@ class Connection(object):
             raise
         except:
             # need to catch old style exceptions too
-            _logger.debug("Exception caught", exc_info=True)
+            if self._config["logger"] is not None:
+                self._config["logger"].debug("Exception caught", exc_info=True)
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
             if t is SystemExit and self._config["propagate_SystemExit_locally"]:
