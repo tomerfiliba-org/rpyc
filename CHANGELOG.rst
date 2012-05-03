@@ -1,5 +1,6 @@
 3.2.2
 -----
+* The server now logs all exceptions (`#73 <https://github.com/tomerfiliba/rpyc/issues/73>`_)
 * Fixes a compatibility issue with IronPython on Mono
   (`#72 <https://github.com/tomerfiliba/rpyc/issues/72>`_)
 * Fixes an issue with introspection when an ``AttributeError`` is expected
