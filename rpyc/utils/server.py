@@ -74,8 +74,10 @@ class Server(object):
             self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         self.listener.bind((hostname, port))
-        # hack so we can receive Ctrl+C on windows
-        self.listener.settimeout(0.5)
+        if sys.platform == "win32":
+            # hack so we can receive Ctrl+C on windows
+            self.listener.settimeout(0.5)
+        # hack for IPv6 (the tuple can be longer than 2)
         sockname = self.listener.getsockname()
         self.host, self.port = sockname[0], sockname[1]
 
