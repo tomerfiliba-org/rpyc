@@ -36,13 +36,24 @@ class Stream(object):
         """indicates whether the stream has data to read (within *timeout* 
         seconds)"""
         try:
-            rl, _, _ = select([self], [], [], timeout)
+            rl, _, _ = self._select([self], [], [], timeout)
         except ValueError:
             # i got this once: "ValueError: file descriptor cannot be a negative integer (-1)"
             # let's translate it to select.error
             ex = sys.exc_info()[1]
             raise select_error(str(ex))
         return bool(rl)
+    def _select(self, reads, writes, exc, timeout):
+        end_time = None if timeout is None else time.time() + timeout
+        while True:
+            try:
+                return select(reads, writes, exc, timeout)
+            except socket.error:
+                ex = sys.exc_info()[1]
+                if get_exc_errno(ex) != errno.EINTR:
+                    raise
+                if end_time is not None:
+                    timeout = max(0, end_time - time.time())
     def read(self, count):
         """reads **exactly** *count* bytes, or raise EOFError
         
