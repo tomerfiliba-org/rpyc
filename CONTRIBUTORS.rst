@@ -1,6 +1,6 @@
 v3.2.2
 ^^^^^^
-* Rotem Yaari - Add logging of exceptions to the protocol layer
+* Rotem Yaari - Add logging of exceptions to the protocol layer, investigate ``EINTR`` issue
 * Anselm Kruis - Make RPyC more introspection-friendly
 * Rüdiger Kessel - SSH on windows patch
 
