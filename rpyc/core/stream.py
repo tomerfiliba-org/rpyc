@@ -38,7 +38,7 @@ class Stream(object):
         try:
             rl, _, _ = select([self], [], [], timeout)
         except ValueError:
-            # i got this once: "ValueError: file descriptor cannot be a negative integer (-1)"
+            # i get this some times: "ValueError: file descriptor cannot be a negative integer (-1)"
             # let's translate it to select.error
             ex = sys.exc_info()[1]
             raise select_error(str(ex))

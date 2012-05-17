@@ -54,6 +54,7 @@ DEFAULT_CONFIG = dict(
     connid = None,
     credentials = None,
     endpoints = None,
+    logger = None,
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
@@ -172,7 +173,6 @@ class Connection(object):
         self._local_objects.clear()
         self._proxy_cache.clear()
         self._netref_classes_cache.clear()
-        self._last_traceback = None
         self._last_traceback = None
         self._remote_root = None
         self._local_root = None
@@ -302,10 +302,10 @@ class Connection(object):
             raise
         except:
             # need to catch old style exceptions too
-            if self._config["logger"] is not None:
-                self._config["logger"].debug("Exception caught", exc_info=True)
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
+            if self._config["logger"]:
+                self._config["logger"].debug("Exception caught", exc_info=True)
             if t is SystemExit and self._config["propagate_SystemExit_locally"]:
                 raise
             self._send_exception(seq, t, v, tb)

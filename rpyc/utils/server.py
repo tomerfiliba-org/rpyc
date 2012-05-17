@@ -102,6 +102,8 @@ class Server(object):
                 self.registrar.unregister(self.port)
             except Exception:
                 self.logger.exception("error unregistering services")
+        self.listener.settimeout(0)
+        self.listener.shutdown(socket.SHUT_RDWR)
         self.listener.close()
         self.logger.info("listener closed")
         for c in set(self.clients):
@@ -125,12 +127,7 @@ class Server(object):
                 pass
             except socket.error:
                 ex = sys.exc_info()[1]
-                if hasattr(ex, "errno"):
-                    if get_exc_errno(ex) == errno.EINTR:
-                        pass
-                    else:
-                        raise EOFError()
-                elif ex[0] == errno.EINTR:
+                if get_exc_errno(ex) == errno.EINTR:
                     pass
                 else:
                     raise EOFError()
