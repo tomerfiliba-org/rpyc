@@ -102,8 +102,10 @@ class Server(object):
                 self.registrar.unregister(self.port)
             except Exception:
                 self.logger.exception("error unregistering services")
-        self.listener.settimeout(0)
-        self.listener.shutdown(socket.SHUT_RDWR)
+        try:
+            self.listener.shutdown(socket.SHUT_RDWR)
+        except EnvironmentError:
+            pass
         self.listener.close()
         self.logger.info("listener closed")
         for c in set(self.clients):
