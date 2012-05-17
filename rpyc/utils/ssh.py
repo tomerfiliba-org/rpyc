@@ -33,9 +33,10 @@ class ProcessExecutionError(Exception):
 import subprocess
 def _get_startupinfo():
     if subprocess.mswindows:
+        import _subprocess
         sui = subprocess.STARTUPINFO()
-        sui.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-        sui.wShowWindow = subprocess.SW_HIDE
+        sui.dwFlags |= _subprocess.STARTF_USESHOWWINDOW #@UndefinedVariable
+        sui.wShowWindow = _subprocess.SW_HIDE #@UndefinedVariable
         return sui
     else:
         return None
