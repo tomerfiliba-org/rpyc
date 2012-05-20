@@ -8,6 +8,22 @@
    docs
    api
 
+.. raw:: html
+
+   <div style="margin-left: auto; margin-right: auto; margin-bottom:1em; margin-top: 1em;
+               display: block; padding: 1em; border: 1px solid #DDD; background-color: #EEEECC;">
+   <p><strong>Sticky</strong></p> 
+   
+   <p><a class="reference external" href="http://tomerfiliba.com/blog/RPyC-3.2.2">Version 3.2.2</a> 
+   was released on June 1st</p>
+   
+   <p>Please use the 
+   <a class="reference external" href="https://groups.google.com/forum/?fromgroups#!forum/rpyc">mailing list</a> 
+   to ask questions, and use 
+   <a class="reference external" href="https://github.com/tomerfiliba/rpyc/issues">issues</a> 
+   to report problems</p>
+   
+   </div>
 
 Welcome
 =======
