@@ -104,7 +104,7 @@ class Server(object):
                 self.logger.exception("error unregistering services")
         try:
             self.listener.shutdown(socket.SHUT_RDWR)
-        except EnvironmentError:
+        except (EnvironmentError, socket.error):
             pass
         self.listener.close()
         self.logger.info("listener closed")
