@@ -8,7 +8,7 @@ import unittest
 
 class Test_ThreadedServer(unittest.TestCase):
     def setUp(self):
-        self.server = ThreadedServer(SlaveService, port=18874, auto_register=False)
+        self.server = ThreadedServer(SlaveService, port=18878, auto_register=False)
         self.server.logger.quiet = False
         t = threading.Thread(target=self.server.start)
         t.start()
@@ -18,7 +18,7 @@ class Test_ThreadedServer(unittest.TestCase):
         self.server.close()
 
     def test_conenction(self):
-        c = rpyc.classic.connect("localhost", port=18874)
+        c = rpyc.classic.connect("localhost", port=18878)
         print( c.modules.sys )
         print( c.modules["xml.dom.minidom"].parseString("<a/>") )
         c.execute("x = 5")
