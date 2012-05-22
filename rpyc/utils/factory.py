@@ -3,11 +3,17 @@ RPyC connection factories: ease the creation of a connection for the common
 cases)
 """
 import socket
+
 import threading
 try:
     from thread import interrupt_main
 except ImportError:
-    from _thread import interrupt_main
+    try:
+        from _thread import interrupt_main
+    except ImportError:
+        # assume jython (#83)
+        from java.lang import System
+        interrupt_main = System.exit
 
 from rpyc import Connection, Channel, SocketStream, TunneledSocketStream, PipeStream, VoidService
 from rpyc.utils.registry import UDPRegistryClient
