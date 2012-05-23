@@ -34,9 +34,7 @@ setup(name = "rpyc",
     platforms = ["POSIX", "Windows"],
     use_2to3 = False,
     zip_safe = False,
-    long_description = ("A symmetric library for transparent RPC, clustering and "
-        "distributed computing for python, built around the concept of remote "
-        "services and object proxying"),
+    long_description = open(os.path.join(here, "README.rst"), "r").read(),
     classifiers = [
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
