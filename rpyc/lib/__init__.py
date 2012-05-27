@@ -30,13 +30,13 @@ def safe_import(name):
             raise
     return mod
 
-def setup_logger(options):
-    logging_options = {}
-    if options.quiet:
-        logging_options['level'] = logging.ERROR
+def setup_logger(quiet = False, logfile = None):
+    opts = {}
+    if quiet:
+        opts['level'] = logging.ERROR
     else:
-        logging_options['level'] = logging.DEBUG
-    if options.logfile:
-        logging_options['file'] = options.logfile
-    logging.basicConfig(**logging_options)
+        opts['level'] = logging.DEBUG
+    if logfile:
+        opts['file'] = logfile
+    logging.basicConfig(**opts)
 
