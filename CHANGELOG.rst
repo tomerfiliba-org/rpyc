@@ -1,6 +1,6 @@
 3.2.2
 -----
-* The server now logs all exceptions (`#73 <https://github.com/tomerfiliba/rpyc/issues/73>`_)
+* Windows: make SSH tunnels windowless (`#68 <https://github.com/tomerfiliba/rpyc/issues/68>`_)
 
 * Fixes a compatibility issue with IronPython on Mono
   (`#72 <https://github.com/tomerfiliba/rpyc/issues/72>`_)
@@ -8,10 +8,12 @@
 * Fixes an issue with introspection when an ``AttributeError`` is expected
   (`#71 <https://github.com/tomerfiliba/rpyc/issues/71>`_)
 
-* Windows: make SSH tunnels windowless (`#68 <https://github.com/tomerfiliba/rpyc/issues/68>`_)
+* The server now logs all exceptions (`#73 <https://github.com/tomerfiliba/rpyc/issues/73>`_)
 
 * Forking server: call ``siginterrupt(False)`` in forked child 
   (`#76 <https://github.com/tomerfiliba/rpyc/issues/76>`_)
+
+* Shutting down the old wikidot site 
 
 3.2.1
 -----
