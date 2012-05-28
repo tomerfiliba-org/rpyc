@@ -94,16 +94,16 @@ def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None,
         ssl_version = ssl_version, ca_certs = ca_certs, service = SlaveService,
         ipv6 = ipv6)
 
-def ssh_connect(sshctx, remote_port):
+def ssh_connect(remote_machine, remote_port):
     """Connects to the remote server over an SSH tunnel. See 
-    :func:`rpyc.utils.factory.ssh_connect`.
+    :func:`rpyc.utils.factory.ssh_connect` for more info.
     
-    :param sshctx: the :class:`rpyc.utils.ssh.SshContext` instance
+    :param remote_machine: the :class:`plumbum.remote.RemoteMachine` instance
     :param remote_port: the remote TCP port
     
     :returns: an RPyC connection exposing ``SlaveService``
     """
-    return factory.ssh_connect(sshctx, remote_port, SlaveService)
+    return factory.ssh_connect(remote_machine, remote_port, SlaveService)
 
 def connect_subproc(server_file = None):
     """Runs an RPyC classic server as a subprocess and returns an RPyC
