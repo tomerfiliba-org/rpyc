@@ -1,3 +1,26 @@
+3.3.0
+-----
+* RPyC integrates with `plumbum <http://pypi.python.org/pypi/plumbum>`_; plumbum is required
+  for some features, like ``rpyc_classic.py`` and *zero deploy*, but the core of the library
+  doesn't require it. It is, of course, advised to have it installed.
+
+* ``SshContext``, ``SshTunnel`` classes killed in favor of plumbum's SSH tunneling. The interface
+  doesn't change much, except that ``ssh_connect`` now accept a ``plumbum.SshMachine`` instance
+  instead of ``SshContext``.
+
+* Zero deploy: deploy RPyC to a remote machine over an SSH connection and form an SSH tunnel 
+  connected to it, in just one line of code. All you need is SSH access and a python interpreter
+  installed on the remote machine.
+
+* Dropping python 2.4 support. RPyC now requires python 2.5 - 3.3.
+
+* rpycd - a well-behaved daemon for ``rpyc_classic.py``, based on 
+  `python-daemon <http://pypi.python.org/pypi/python-daemon/>`_
+
+* Removing the ``BgServerThread`` in place of a "global background reactor thread" that handles 
+  all incoming transport from all connections. This should solve all threading issues.
+
+
 3.2.2
 -----
 * Windows: make SSH tunnels windowless (`#68 <https://github.com/tomerfiliba/rpyc/issues/68>`_)
