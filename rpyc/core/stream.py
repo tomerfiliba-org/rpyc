@@ -189,7 +189,7 @@ class SocketStream(Stream):
             raise EOFError(ex)
 
 class TunneledSocketStream(SocketStream):
-    """A socket stream over an :class:`rpyc.utils.ssh.SshTunnel`"""
+    """A socket stream over an SSH tunnel (terminates the tunnel when the connection closes)"""
     
     __slots__ = ("tun",)
     def __init__(self, sock):
