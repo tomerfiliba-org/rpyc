@@ -17,8 +17,9 @@
 * rpycd - a well-behaved daemon for ``rpyc_classic.py``, based on 
   `python-daemon <http://pypi.python.org/pypi/python-daemon/>`_
 
-* Removing the ``BgServerThread`` in place of a "global background reactor thread" that handles 
-  all incoming transport from all connections. This should solve all threading issues.
+* Removing the ``BgServerThread`` and all polling/timeout hacks in favor of a "global background 
+  reactor thread" that handles all incoming transport from all connections. This should solve 
+  all threading issues once and for all.
 
 
 3.2.2
