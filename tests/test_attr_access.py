@@ -1,5 +1,6 @@
 import rpyc
 import unittest
+import time
 from rpyc.utils.server import ThreadedServer
 from threading import Thread
 
@@ -66,6 +67,7 @@ class TestRestricted(unittest.TestCase):
         self.server = ThreadedServer(MyService, port = 0)
         self.thd = Thread(target = self.server.start)
         self.thd.start()
+        time.sleep(1)
         self.conn = rpyc.connect("localhost", self.server.port)
 
     def tearDown(self):

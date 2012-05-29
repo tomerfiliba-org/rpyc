@@ -15,6 +15,8 @@
 
 * Shutting down the old wikidot site 
 
+* Adding `Travis CI <http://travis-ci.org/#!/tomerfiliba/rpyc>`_ integration
+
 3.2.1
 -----
 * Adding missing import (`#52 <https://github.com/tomerfiliba/rpyc/issues/52>`_)

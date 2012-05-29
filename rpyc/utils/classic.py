@@ -1,13 +1,11 @@
 import sys
 import os
 import inspect
-import rpyc
 from rpyc.lib.compat import pickle
 from rpyc import SlaveService
 from rpyc.utils import factory
 
 
-SERVER_FILE = os.path.join(os.path.dirname(rpyc.__file__), "scripts", "rpyc_classic.py")
 DEFAULT_SERVER_PORT = 18812
 DEFAULT_SERVER_SSL_PORT = 18821
 
@@ -107,13 +105,20 @@ def ssh_connect(sshctx, remote_port):
     """
     return factory.ssh_connect(sshctx, remote_port, SlaveService)
 
-def connect_subproc():
-    """Runs an RPyC classic server as a subprocess and return an RPyC
+def connect_subproc(server_file = None):
+    """Runs an RPyC classic server as a subprocess and returns an RPyC
     connection to it over stdio
+    
+    :param server_file: The full path to the server script (``rpyc_classic.py``). 
+                        If not given, ``which rpyc_classic.py`` will be attempted.
     
     :returns: an RPyC connection exposing ``SlaveService``
     """
-    return factory.connect_subproc([sys.executable, "-u", SERVER_FILE, "-q", "-m", "stdio"],
+    if server_file is None:
+        server_file = os.popen("which rpyc_classic.py").read().strip()
+        if not server_file:
+            raise ValueError("server_file not given and could not be inferred")
+    return factory.connect_subproc([sys.executable, "-u", server_file, "-q", "-m", "stdio"],
         SlaveService)
 
 def connect_thread():

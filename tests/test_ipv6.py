@@ -1,10 +1,10 @@
 import rpyc
-from rpyc.utils.server import ThreadedServer
-from rpyc import SlaveService
 import threading
 import socket
 import unittest
-
+import time
+from rpyc.utils.server import ThreadedServer
+from rpyc import SlaveService
 from nose import SkipTest
 
 if not getattr(socket, "has_ipv6", False):
@@ -17,6 +17,7 @@ class Test_IPv6(unittest.TestCase):
         self.server.logger.quiet = True
         self.thd = threading.Thread(target = self.server.start)
         self.thd.start()
+        time.sleep(1)
 
     def tearDown(self):
         self.server.close()

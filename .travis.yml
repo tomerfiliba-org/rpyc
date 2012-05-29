@@ -1,0 +1,28 @@
+language: python
+python:
+    - "2.5"
+    - "2.6"
+    - "2.7"
+    - "3.1"
+    - "3.2"
+
+install: 
+    - pip install six
+    - pip install -e git+git://github.com/tomerfiliba/plumbum.git#egg=plumbum
+
+before_script:
+    - "echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config"
+    - "echo StrictHostKeyChecking no >> ~/.ssh/config"
+    - "ssh-keygen -q -f ~/.ssh/id_rsa -N ''"
+    - "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys"
+    - "export PYTHONPATH=$PYTHONPATH:`pwd`"
+    - "uname -a"
+    - "hostname"
+    - "cd tests"
+
+script: nosetests -vv
+
+notifications:
+    email:
+        on_success: change
+        on_failure: change

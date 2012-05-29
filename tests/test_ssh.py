@@ -6,7 +6,7 @@ import os
 import unittest
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
-from rpyc.utils.ssh import SshContext
+from plumbum import SshMachine
 
 
 class Test_Ssh(unittest.TestCase):
@@ -14,7 +14,7 @@ class Test_Ssh(unittest.TestCase):
         if sys.platform == "win32":
             self.server = None
             os.environ["HOME"] = os.path.expanduser("~")
-            self.sshctx = SshContext("hollywood.xiv.ibm.com")
+            self.remote_machine = SshMachine("localhost")
         else:
             # assume "ssh localhost" is configured to run without asking for password 
             self.server = ThreadedServer(SlaveService, hostname = "localhost", 
@@ -23,20 +23,20 @@ class Test_Ssh(unittest.TestCase):
             t.setDaemon(True)
             t.start()
             time.sleep(0.5)
-            self.sshctx = SshContext("localhost")
+            self.remote_machine = SshMachine("localhost")
 
     def tearDown(self):
         if self.server:
             self.server.close()
 
     def test_simple(self):
-        conn = rpyc.classic.ssh_connect(self.sshctx, 18888)
+        conn = rpyc.classic.ssh_connect(self.remote_machine, 18888)
         print( "server's pid =", conn.modules.os.getpid())
         conn.modules.sys.stdout.write("hello over ssh\n")
         conn.modules.sys.stdout.flush()
 
     def test_connect(self):
-        conn2 = rpyc.ssh_connect(self.sshctx, 18888, service=SlaveService)
+        conn2 = rpyc.ssh_connect(self.remote_machine, 18888, service=SlaveService)
         conn2.modules.sys.stdout.write("hello through rpyc.ssh_connect()\n")
         conn2.modules.sys.stdout.flush()
 
