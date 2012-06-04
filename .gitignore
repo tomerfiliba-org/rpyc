@@ -5,3 +5,4 @@
 dist
 MANIFEST
 __pycache__
+rpyc.egg-info
