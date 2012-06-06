@@ -30,13 +30,6 @@ except NameError:
     # python 2.4 compatible
     BaseException = Exception
 
-class GenericException(Exception):
-    """A 'generic exception' that is raised when the exception the gotten from
-    the other party cannot be instantiated locally"""
-    pass
-
-_generic_exceptions_cache = {}
-
 def dump(typ, val, tb, include_local_traceback):
     """Dumps the given exceptions info, as returned by ``sys.exc_info()``
     
@@ -146,10 +139,7 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
                 _generic_exceptions_cache[fullname] = type(fullname, (GenericException,), fakemodule)
         cls = _generic_exceptions_cache[fullname]
 
-    # monkey-patch the exception class' __str__ to support _remote_tb
-    if cls.__str__ is not _rpyc_compatible_exception_str:
-        cls.__orig_str__ = cls.__str__
-        cls.__str__ = _rpyc_compatible_exception_str
+    cls = _get_exception_class(cls)
     
     # support old-style exception classes
     if ClassType is not type and isinstance(cls, ClassType):
@@ -160,16 +150,32 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     exc.args = args
     for name, attrval in attrs:
         setattr(exc, name, attrval)
-    if hasattr(exc, "_remote_tb"):
-        exc._remote_tb += (tbtext,)
-    else:
-        exc._remote_tb = (tbtext,)
+    exc._remote_tb = tbtext
     return exc
 
-def _rpyc_compatible_exception_str(exc):
-    text = exc.__orig_str__()
-    if hasattr(exc, "_remote_tb"):
-        text += "\n\n======= Remote Traceback =======\n"
-        text += "\n--------------------------------\n\n".join(exc._remote_tb)
-    return text
+
+class GenericException(Exception):
+    """A 'generic exception' that is raised when the exception the gotten from
+    the other party cannot be instantiated locally"""
+    pass
+
+_generic_exceptions_cache = {}
+_exception_classes_cache = {}
+
+def _get_exception_class(cls):
+    if cls in _exception_classes_cache:
+        return _exception_classes_cache[cls]
+
+    # subclass the exception class' to provide a version of __str__ that supports _remote_tb
+    class Derived(cls):
+        def __str__(self):
+            text = cls.__str__(self)
+            if hasattr(self, "_remote_tb"):
+                text += "\n\n========= Remote Traceback (%d) =========\n%s" % (
+                    self._remote_tb.count("\n\n========= Remote Traceback") + 1, self._remote_tb)
+            return text
+    Derived.__name__ = cls.__name__
+    Derived.__module__ = cls.__module__
+    _exception_classes_cache[cls] = Derived
+    return Derived
 
