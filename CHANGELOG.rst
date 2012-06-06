@@ -1,3 +1,10 @@
+3.2.3
+-----
+* Fix (`issue #76 <https://github.com/tomerfiliba/rpyc/issues/76>`_) for real, this time
+
+* Remove RPyC's ``excepthook`` in favor of chaining the exception's remote tracebacks in the
+  exception class' ``__str__`` method. This solves numerous issues with logging and debugging.
+
 3.2.2
 -----
 * Windows: make SSH tunnels windowless (`#68 <https://github.com/tomerfiliba/rpyc/issues/68>`_)
