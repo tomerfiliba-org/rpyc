@@ -146,6 +146,11 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
                 _generic_exceptions_cache[fullname] = type(fullname, (GenericException,), fakemodule)
         cls = _generic_exceptions_cache[fullname]
 
+    # monkey-patch the exception class' __str__ to support _remote_tb
+    if cls.__str__ is not _rpyc_compatible_exception_str:
+        cls.__orig_str__ = cls.__str__
+        cls.__str__ = _rpyc_compatible_exception_str
+    
     # support old-style exception classes
     if ClassType is not type and isinstance(cls, ClassType):
         exc = InstanceType(cls)
@@ -161,36 +166,10 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
         exc._remote_tb = (tbtext,)
     return exc
 
-
-#===============================================================================
-# customized except hook
-#===============================================================================
-if hasattr(sys, "excepthook"):
-    _orig_excepthook = sys.excepthook
-else:
-    # ironpython forgot to implement excepthook, scheisse
-    _orig_excepthook = None
-
-def rpyc_excepthook(typ, val, tb):
-    """RPyC-enabled ``excepthook`` (installed to ``sys.excepthook``) upon import.
-    This function is called when an exception reaches the "top level" handler,
-    and will display the remote traceback (if contained within the exception)
-    as well. Not intended to be invoked directly"""
-    if hasattr(val, "_remote_tb"):
-        sys.stderr.write("======= Remote traceback =======\n")
-        tbtext = "\n--------------------------------\n\n".join(val._remote_tb)
-        sys.stderr.write(tbtext)
-        sys.stderr.write("\n======= Local exception ========\n")
-    _orig_excepthook(typ, val, tb)
-
-def install_rpyc_excepthook():
-    """Installs the :func:`rpyc_excepthook` from ``sys.excepthook``; this function
-    is called automatically upon import"""
-    if _orig_excepthook is not None:
-        sys.excepthook = rpyc_excepthook
-
-def uninstall_rpyc_excepthook():
-    """Uninstalls the :func:`rpyc_excepthook` from ``sys.excepthook``"""
-    if _orig_excepthook is not None:
-        sys.excepthook = _orig_excepthook
+def _rpyc_compatible_exception_str(exc):
+    text = exc.__orig_str__()
+    if hasattr(exc, "_remote_tb"):
+        text += "\n\n======= Remote Traceback =======\n"
+        text += "\n--------------------------------\n\n".join(exc._remote_tb)
+    return text
 
