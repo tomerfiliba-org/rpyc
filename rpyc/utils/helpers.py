@@ -204,6 +204,7 @@ class BgServingThread(object):
                 self._conn.serve(self.SERVE_INTERVAL)
                 time.sleep(self.SLEEP_INTERVAL) # to reduce contention
         except Exception:
+            self._active = False
             if self._active:
                 raise
     def stop(self):
