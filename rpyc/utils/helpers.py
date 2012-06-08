@@ -204,8 +204,8 @@ class BgServingThread(object):
                 self._conn.serve(self.SERVE_INTERVAL)
                 time.sleep(self.SLEEP_INTERVAL) # to reduce contention
         except Exception:
-            self._active = False
             if self._active:
+                self._active = False
                 raise
     def stop(self):
         """stop the server thread. once stopped, it cannot be resumed. you will
