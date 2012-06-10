@@ -238,6 +238,18 @@ class Server(object):
             self.close()
 
 
+class OneShotServer(Server):
+    """
+    A server that handles a single connection (blockingly), and terminates after that
+    
+    Parameters: see :class:`Server`
+    """
+    def _accept_method(self, sock):
+        try:
+            self._authenticate_and_serve_client(sock)
+        finally:
+            self.close()
+
 class ThreadedServer(Server):
     """
     A server that spawns a thread for each connection. Works on any platform
