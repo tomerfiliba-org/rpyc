@@ -169,11 +169,17 @@ def _get_exception_class(cls):
     # subclass the exception class' to provide a version of __str__ that supports _remote_tb
     class Derived(cls):
         def __str__(self):
-            text = cls.__str__(self)
+            try:
+                text = cls.__str__(self)
+            except Exception:
+                text = "<Unprintable exception>"
             if hasattr(self, "_remote_tb"):
                 text += "\n\n========= Remote Traceback (%d) =========\n%s" % (
                     self._remote_tb.count("\n\n========= Remote Traceback") + 1, self._remote_tb)
             return text
+        def __repr__(self):
+            return str(self)
+    
     Derived.__name__ = cls.__name__
     Derived.__module__ = cls.__module__
     _exception_classes_cache[cls] = Derived
