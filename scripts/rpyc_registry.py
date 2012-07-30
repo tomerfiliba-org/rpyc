@@ -15,6 +15,8 @@ class RegistryServer(cli.Application):
     mode = cli.SwitchAttr(["-m", "--mode"], cli.Set("UDP", "TCP"), default = "UDP",
         help = "Serving mode")
     
+    ipv6 = cli.Flag(["-6", "--ipv6"], help="use ipv6 instead of ipv4")
+
     port = cli.SwitchAttr(["-p", "--port"], cli.Range(0, 65535), default = REGISTRY_PORT, 
         help = "The UDP/TCP listener port")
     
@@ -28,7 +30,8 @@ class RegistryServer(cli.Application):
 
     def main(self):
         if self.mode == "UDP":
-            server = UDPRegistryServer(port = self.port, pruning_timeout = self.pruning_timeout)
+            server = UDPRegistryServer(host = '::' if self.ipv6 else '0.0.0.0', port = self.port, 
+                pruning_timeout = self.pruning_timeout)
         elif self.mode == "TCP":
             server = TCPRegistryServer(port = self.port, pruning_timeout = self.pruning_timeout)
         setup_logger(self.quiet, self.logfile)

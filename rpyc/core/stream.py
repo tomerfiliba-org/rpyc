@@ -87,9 +87,11 @@ class SocketStream(Stream):
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM,
             proto = 0, timeout = 3, nodelay = False):
+        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, family, 
+            socktype, proto)[0]
         s = socket.socket(family, socktype, proto)
         s.settimeout(timeout)
-        s.connect((host, port))
+        s.connect(sockaddr)
         if nodelay:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         return s
