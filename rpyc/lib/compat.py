@@ -116,7 +116,7 @@ if hasattr(select_module, "poll"):
                     mask += "h"
                 if evt & select_module.POLLNVAL:
                     mask += "n"
-                processed.append(fd)
+                processed.append((fd, mask))
             return processed
     
     poll = PollingPoll
