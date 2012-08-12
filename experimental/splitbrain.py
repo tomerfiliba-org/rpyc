@@ -42,7 +42,7 @@ class Splitbrain(object):
                 setattr(__builtin__, bltin, getattr(self.conn.builtin, bltin))
 
         for psys in self.patched_sys:
-            if hasattr(__builtin__, psys): 
+            if hasattr(sys, psys): 
                 setattr(sys, psys, getattr(self.conn.modules.sys, psys))
 
         for mod in sys.modules.values():
@@ -50,16 +50,16 @@ class Splitbrain(object):
                     not mod.__name__ in self.patched_modules):
                 self._patch_module(mod)
         
-        orig_import = __builtin__.__import__
-        def splitbrain_import(name, *args, **kwargs):
-            print "SPLITBRAIN IMPORT", name
-            if name in self.overriden_modules:
-                mod = self.conn.modules[name]
-            else:
-                mod = orig_import(name, *args, **kwargs)
-                self._patch_module(mod)
-            return mod
-        __builtin__.__import__ = splitbrain_import
+        #orig_import = __builtin__.__import__
+        #def splitbrain_import(name, *args, **kwargs):
+        #    print "SPLITBRAIN IMPORT", name
+        #    if name in self.overriden_modules:
+        #        mod = self.conn.modules[name]
+        #    else:
+        #        mod = orig_import(name, *args, **kwargs)
+        #        self._patch_module(mod)
+        #    return mod
+        #__builtin__.__import__ = splitbrain_import
 
     def __enter__(self):
         self.subint.__enter__()
