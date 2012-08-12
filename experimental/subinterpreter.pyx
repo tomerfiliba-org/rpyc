@@ -1,16 +1,28 @@
-from cpython cimport PyObject, PyThreadState, PyFrameObject
-from cpython cimport PyThreadState_Swap, PyThreadState_Get, Py_XINCREF, Py_XDECREF
+from cpython cimport (PyObject, PyThreadState, PyFrameObject, PyInterpreterState, 
+    PyThreadState_Get, Py_XINCREF, Py_XDECREF, PyImport_AddModule, PyImport_ImportModule)
 
 
 cdef extern from "Python.h":
-    PyThreadState* Py_NewInterpreter()
-    void Py_EndInterpreter(PyThreadState *tstate)
+    PyObject * _PyImport_FindExtension(char *name, char *filename)
+    void _PyImportHooks_Init()
+    PyObject * PyDict_New()
+    PyObject * PyList_New(int length)
+    PyObject * PyModule_GetDict(PyObject * mod)
+    int PyDict_SetItemString(PyObject *p, char *key, PyObject *val)
+    PyObject * PyDict_GetItemString(PyObject *p, char *key)
+    void PySys_SetPath(char *path)
+    char* Py_GetPath()
+    PyObject * PyDict_Copy(PyObject * p)
+    void PyErr_PrintEx(int set_last)
+    void PyErr_Clear()
+    PyObject * PyErr_Occurred()
+    void PySys_SetObject(char * name, PyObject * obj)
 
 ctypedef struct MyFrameObject:
     Py_ssize_t ob_refcnt
     PyObject *ob_type
     Py_ssize_t ob_size
-    PyObject *f_back
+    MyFrameObject *f_back
     PyObject *f_code
     PyObject *f_builtins
     PyObject *f_globals
@@ -23,79 +35,127 @@ ctypedef struct MyFrameObject:
     PyObject *f_exc_traceback
     MyThreadState *f_tstate
 
+ctypedef struct MyInterpreterState:
+    void *next
+    void *tstate_head
+    PyObject *modules
+    PyObject *sysdict
+    PyObject *builtins
+    PyObject *modules_reloading
+    PyObject *codec_search_path
+    PyObject *codec_search_cache
+    PyObject *codec_error_registry
+
 ctypedef struct MyThreadState:
     void *next
-    void *interp
+    MyInterpreterState *interp
     MyFrameObject *frame
+    int recursion_depth
+    int tracing
+    int use_tracing
+    void * c_profilefunc
+    void * c_tracefunc
+    PyObject *c_profileobj
+    PyObject *c_traceobj
+    PyObject *curexc_type
+    PyObject *curexc_value
+    PyObject *curexc_traceback
+    PyObject *exc_type
+    PyObject *exc_value
+    PyObject *exc_traceback
+    PyObject *dict
+    int tick_counter
+    int gilstate_counter
+    PyObject *async_exc 
 
 
 cdef PyThreadState * main_interpreter = PyThreadState_Get()
 
 cdef class SubInterpreter(object):
-    cdef MyThreadState * tstate
-    cdef MyThreadState * prev_tstate
+    cdef PyObject * prev_modules
+    cdef PyObject * prev_modules_reloading
+    cdef PyObject * prev_sysdict
+    cdef PyObject * prev_builtins
 
     def __cinit__(self):
-        cdef PyThreadState * curr
-        self.tstate = NULL
-        self.prev_tstate = NULL
-        
-        curr = PyThreadState_Get()
-        self.tstate = <MyThreadState*>Py_NewInterpreter()
-        PyThreadState_Swap(curr)
-        
-        if self.tstate is NULL:
-            raise SystemError("Py_NewInterpreter failed")
-    
-    def __dealloc__(self):
-        self.close()
-
-    def close(self):
-        cdef PyThreadState * prev
-        if self.tstate is not NULL:
-            prev = PyThreadState_Get()
-            if prev == <PyThreadState*>self.tstate:
-                prev = main_interpreter
-            
-            self.tstate.frame = NULL
-            PyThreadState_Swap(<PyThreadState*>self.tstate)
-            Py_EndInterpreter(<PyThreadState*>self.tstate)
-            PyThreadState_Swap(prev)
-            self.tstate = NULL
-            self.prev_tstate = NULL
+        self.prev_modules = NULL
+        self.prev_modules_reloading = NULL
+        self.prev_sysdict = NULL
+        self.prev_builtins = NULL
 
     def __enter__(self):
-        if self.prev_tstate is not NULL:
+        if self.prev_modules is not NULL:
             raise ValueError("Subinterpreter already active")
         
-        self.prev_tstate = <MyThreadState*>PyThreadState_Get()
-        PyThreadState_Swap(<PyThreadState*>self.tstate)
-        self.prev_tstate.frame.f_tstate = self.tstate
-        self.tstate.frame = self.prev_tstate.frame
-        self.prev_tstate.frame = NULL
+        cdef MyThreadState * tstate = <MyThreadState *>PyThreadState_Get()
+        self.prev_modules = tstate.interp.modules
+        self.prev_modules_reloading = tstate.interp.modules_reloading
+        self.prev_sysdict = tstate.interp.sysdict
+        self.prev_builtins = tstate.interp.builtins
+        
+        tstate.interp.modules = PyDict_New()
+        tstate.interp.modules_reloading = PyDict_New()
+
+        cdef PyObject * bimod = _PyImport_FindExtension("__builtin__", "__builtin__")
+        tstate.interp.builtins = PyModule_GetDict(bimod)
+        Py_XINCREF(tstate.interp.builtins)
+        
+        cdef MyFrameObject * f = tstate.frame
+        while f is not NULL:
+            #print ">>>", <int>f
+            Py_XINCREF(tstate.interp.builtins)
+            f.f_builtins = tstate.interp.builtins
+            if f == f.f_back:
+                f = NULL
+            else:
+                f = f.f_back
+        
+        cdef PyObject * sysmod = _PyImport_FindExtension("sys", "sys")
+        tstate.interp.sysdict = PyModule_GetDict(sysmod)
+        Py_XINCREF(tstate.interp.sysdict)
+
+        PySys_SetObject("modules", tstate.interp.modules);
+        PySys_SetPath(Py_GetPath())
+        _PyImportHooks_Init()
+        
+        cdef PyObject * mainmod = PyImport_AddModule("__main__")
+        cdef PyObject * maindict = PyModule_GetDict(mainmod)
+        PyDict_SetItemString(maindict, "__builtins__", bimod)
+        Py_XDECREF(bimod)
+        
+        PyImport_ImportModule("site")
+
         return self
 
     def __exit__(self, t, v, tb):
-        if self.prev_tstate is NULL:
+        if self.prev_modules is NULL:
             raise ValueError("Subinterpreter not currently active")
 
-        PyThreadState_Swap(<PyThreadState*>self.prev_tstate)
-        self.prev_tstate.frame = self.tstate.frame
-        self.tstate.frame = NULL
-
-        self.prev_tstate.frame.f_tstate = self.prev_tstate
-        Py_XDECREF(self.prev_tstate.frame.f_exc_type)
-        Py_XDECREF(self.prev_tstate.frame.f_exc_value)
-        Py_XDECREF(self.prev_tstate.frame.f_exc_traceback)
-        self.prev_tstate.frame.f_exc_type = <PyObject*>t
-        self.prev_tstate.frame.f_exc_value = <PyObject*>v
-        self.prev_tstate.frame.f_exc_traceback = <PyObject*>tb
-        Py_XINCREF(self.prev_tstate.frame.f_exc_type)
-        Py_XINCREF(self.prev_tstate.frame.f_exc_value)
-        Py_XINCREF(self.prev_tstate.frame.f_exc_traceback)
+        cdef MyThreadState * tstate = <MyThreadState *>PyThreadState_Get()
+        Py_XDECREF(tstate.interp.modules)
+        Py_XDECREF(tstate.interp.modules_reloading)
+        Py_XDECREF(tstate.interp.sysdict)
+        Py_XDECREF(tstate.interp.builtins)
         
-        self.prev_tstate = NULL
-
-
+        tstate.interp.modules = self.prev_modules
+        tstate.interp.modules_reloading = self.prev_modules_reloading
+        tstate.interp.sysdict = self.prev_sysdict
+        tstate.interp.builtins = self.prev_builtins
+        
+        #tstate.frame.f_builtins = tstate.interp.builtins
+        cdef MyFrameObject * f = tstate.frame
+        while f is not NULL:
+            #print "<<<", <int>f
+            f.f_builtins = tstate.interp.builtins
+            #Py_XDECREF(tstate.interp.builtins)
+            if f == f.f_back:
+                f = NULL
+            else:
+                f = f.f_back
+        
+        self.prev_modules = NULL
+        self.prev_modules_reloading = NULL
+        self.prev_sysdict = NULL
+        self.prev_builtins = NULL
 
 
