@@ -104,6 +104,13 @@ class ModuleNamespace(object):
     def __init__(self, getmodule):
         self.__getmodule = getmodule
         self.__cache = {}
+    def __contains__(self, name):
+        try:
+            self[name]
+        except ImportError:
+            return False
+        else:
+            return True
     def __getitem__(self, name):
         if type(name) is tuple:
             name = ".".join(name)
