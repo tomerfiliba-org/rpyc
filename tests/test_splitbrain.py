@@ -24,7 +24,7 @@ class SplitbrainTest(unittest.TestCase):
         time.sleep(1)
         self.proc.terminate()
     
-    def test(self):
+    def test_splitbrain(self):
         sb = Splitbrain(self.conn)
         here = os.getcwd()
         self.conn.modules.os.chdir("/")

@@ -1,23 +1,28 @@
 import sys
-import __builtin__
+try:
+    import __builtin__ as builtins
+except ImportError:
+    import builtins
 import threading
 from types import ModuleType
 
 
-router = threading.local()
-router.modules = {}
-
 PATCHED_MODULES = ["os", "subprocess", "socket", "_socket", "select", "urllib", "platform", 
     "tempfile", "posix", "nt", "io", "_io", "ssl", "_ssl", "signal", "os.path", "posixpath",
     "ntpath", "stat", "sysconfig"]
+
 PATCHED_ATTRIBUTES = {
     "sys" : ["byteorder", "platform", 'stderr', 'stdin', 'stdout', 'getfilesystemencoding',
             'getdefaultencoding'],
-    "__builtin__" : ["open", "execfile", "file"]
+    "__builtin__" : ["open", "execfile", "file"],
+    "builtins" : ["open", "execfile", "file"],
 }
 
 class BaseRoutedModule(ModuleType):
     pass
+
+router = threading.local()
+router.modules = {}
 
 def build_routed_module(modname, realmod):
     def getmod():
@@ -77,13 +82,14 @@ def patch(patched_modules = PATCHED_MODULES, patched_attributes = PATCHED_ATTRIB
             mod = __import__(modname)
         except ImportError:
             pass
-        sys.modules[modname] = build_routed_attr_module(modname, mod, frozenset(attrlist))
+        else:
+            sys.modules[modname] = build_routed_attr_module(modname, mod, frozenset(attrlist))
 
 
 class Splitbrain(object):
     def __init__(self, conn):
         self.conn = conn
-        self._stack = [{}, __builtin__.__import__]
+        self._stack = [{}, builtins.__import__]
     
     def _rpyc_import(self, name, *args):
         _, orig_import = self._stack[-1]
@@ -95,12 +101,12 @@ class Splitbrain(object):
             return sys.modules[name]
     
     def activate(self):
-        self._stack.append((router.modules, __builtin__.__import__))
+        self._stack.append((router.modules, builtins.__import__))
         router.modules = self.conn.modules
-        __builtin__.__import__ = self._rpyc_import
+        builtins.__import__ = self._rpyc_import
     
     def restore(self):
-        router.modules, __builtin__.__import__ = self._stack.pop(-1)
+        router.modules, builtins.__import__ = self._stack.pop(-1)
     
     def __enter__(self):
         self.activate()
@@ -113,7 +119,7 @@ class Splitbrain(object):
 #    import rpyc
 #    patch()
 #
-#    myhost = Splitbrain(rpyc.classic.connect("tp-tomerf.il.xiv.ibm.com"))
+#    myhost = Splitbrain(rpyc.classic.connect("win-box"))
 #    
 #    import platform
 #    print platform.platform()
