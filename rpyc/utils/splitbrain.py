@@ -10,7 +10,8 @@ from types import ModuleType
 
 PATCHED_MODULES = ["os", "subprocess", "socket", "_socket", "select", "urllib", "platform", 
     "tempfile", "posix", "nt", "io", "_io", "ssl", "_ssl", "signal", "os.path", "posixpath",
-    "ntpath", "stat", "sysconfig"]
+    "ntpath", "stat", "sysconfig", "tarfile", "zipfile", "commands", "glob", "shutil",
+    "pexpect"]
 
 PATCHED_ATTRIBUTES = {
     "sys" : ["byteorder", "platform", "getfilesystemencoding", "getdefaultencoding"],
