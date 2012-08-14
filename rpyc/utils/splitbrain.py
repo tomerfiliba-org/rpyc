@@ -186,6 +186,32 @@ class Splitbrain(object):
         if self._stack:
             self.restore()
 
+class DontCare(object):
+    def __getattr__(self, name):
+        return self
+    def __delattr__(self, name):
+        pass
+    def __setattr__(self, name, value):
+        pass
+    def __call__(self, *a, **k):
+        pass
+DontCare = DontCare()
+
+class Singlebrain(Splitbrain):
+    def __init__(self):
+        Splitbrain.__init__(self, DontCare)
+
+    def activate(self):
+        self._stack.append((getattr(router, "modules", None), 
+            getattr(router, "builtins", None), getattr(router, "importer", orig_import),
+            None, None, None))
+        del router.importer
+        del router.modules
+        del router.builtins
+
+singlebrain = Singlebrain()
+
+
 
 #if __name__ == "__main__":
 #    import rpyc
@@ -193,43 +219,75 @@ class Splitbrain(object):
 #
 #    import sys
 #    import platform
+#    import os
 #    print platform.platform()
 #    print sys.platform
 #
-#    with open("test.txt", "w") as f:
-#        f.write("hello")
-#        
-#    myhost = Splitbrain(rpyc.classic.connect("linuxbox"))
-#    with myhost:
-#        print platform.platform()
-#        print sys.platform
-#        import termios
-#        print termios.tcsendbreak
+#    myhost1 = Splitbrain(rpyc.classic.connect("windowsbox"))
+#    myhost2 = Splitbrain(rpyc.classic.connect("localhost"))
+#    
+#    print "XXX", os.getcwd()
+#    
+#    with myhost1:
+#        print 1, platform.platform()
 #        
 #        import subprocess
-#        p = subprocess.Popen(["ls"], stdout = -1)
-#        print repr(p.stdout.read())
+#        p = subprocess.Popen("notepad.exe")
 #        p.wait()
-#
-#        with open("/etc/bash.bashrc", "r") as f:
-#            print f.readline()
-#    
-#    print platform.platform()
-#    print sys.platform
-#    
-#    subprocess.Popen
-#
-#    try:
-#        termios.tcsendbreak
-#    except AttributeError as ex:
-#        print ex
-#    else:
-#        raise AssertionError("termios.tcsendbreak shouldn't be accessible here")
-#
-#    with open("test.txt", "r") as f:
-#        assert f.read() == "hello"
+#        print os.getcwd()
 #        
-#    myhost.close()
+#        with myhost2:
+#            print 2, platform.platform()
+#            print os.getcwd()
+#            with myhost1:
+#                print 2.5, platform.platform()
+#                print os.getcwd()
+#        
+#        with singlebrain:
+#            print "XXXX", os.getcwd()
+#        
+#        print 3, platform.platform()
+#        print os.getcwd()
+#    
+#    print 4, platform.platform()
+#    print os.getcwd()
+#    
+#        import win32file
+#        print win32file.CreateFile
+#    
+#    p = subprocess.Popen("notepad.exe")
+#    p.wait()
+#    
+#    try:
+#        print win32file.CreateFile
+#    except AttributeError as ex:
+#        print ex  
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
