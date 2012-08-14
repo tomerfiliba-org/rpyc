@@ -186,49 +186,49 @@ class Splitbrain(object):
             self.restore()
 
 
-if __name__ == "__main__":
-    import rpyc
-    patch()
-
-    import sys
-    import platform
-    print platform.platform()
-    print sys.platform
-
-    with open("test.txt", "w") as f:
-        f.write("hello")
-        
-    myhost = Splitbrain(rpyc.classic.connect("linuxbox"))
-    with myhost:
-        print platform.platform()
-        print sys.platform
-        import termios
-        print termios.tcsendbreak
-        
-        import subprocess
-        p = subprocess.Popen(["ls"], stdout = -1)
-        print repr(p.stdout.read())
-        p.wait()
-
-        with open("/etc/bash.bashrc", "r") as f:
-            print f.readline()
-    
-    print platform.platform()
-    print sys.platform
-    
-    subprocess.Popen
-
-    try:
-        termios.tcsendbreak
-    except AttributeError as ex:
-        print ex
-    else:
-        raise AssertionError("termios.tcsendbreak shouldn't be accessible here")
-
-    with open("test.txt", "r") as f:
-        assert f.read() == "hello"
-        
-    myhost.close()
+#if __name__ == "__main__":
+#    import rpyc
+#    patch()
+#
+#    import sys
+#    import platform
+#    print platform.platform()
+#    print sys.platform
+#
+#    with open("test.txt", "w") as f:
+#        f.write("hello")
+#        
+#    myhost = Splitbrain(rpyc.classic.connect("linuxbox"))
+#    with myhost:
+#        print platform.platform()
+#        print sys.platform
+#        import termios
+#        print termios.tcsendbreak
+#        
+#        import subprocess
+#        p = subprocess.Popen(["ls"], stdout = -1)
+#        print repr(p.stdout.read())
+#        p.wait()
+#
+#        with open("/etc/bash.bashrc", "r") as f:
+#            print f.readline()
+#    
+#    print platform.platform()
+#    print sys.platform
+#    
+#    subprocess.Popen
+#
+#    try:
+#        termios.tcsendbreak
+#    except AttributeError as ex:
+#        print ex
+#    else:
+#        raise AssertionError("termios.tcsendbreak shouldn't be accessible here")
+#
+#    with open("test.txt", "r") as f:
+#        assert f.read() == "hello"
+#        
+#    myhost.close()
 
 
 
