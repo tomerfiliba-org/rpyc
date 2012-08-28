@@ -11,7 +11,7 @@ from types import ModuleType
 PATCHED_MODULES = ["os", "subprocess", "socket", "_socket", "select", "urllib", "platform", 
     "tempfile", "posix", "nt", "io", "_io", "ssl", "_ssl", "signal", "os.path", "posixpath",
     "ntpath", "stat", "sysconfig", "tarfile", "zipfile", "commands", "glob", "shutil",
-    "pexpect"]
+    "resource", "struct", "tty", "pty", "fcntl", "termios", ]
 
 PATCHED_ATTRIBUTES = {
     "sys" : ["byteorder", "platform", "getfilesystemencoding", "getdefaultencoding"],
@@ -128,7 +128,7 @@ class NullModule(object):
 
 
 class Splitbrain(object):
-    def __init__(self, conn):
+    def __init__(self, conn, extra_modules = []):
         self.conn = conn
         self._stack = []
         self._stack_index = 0
