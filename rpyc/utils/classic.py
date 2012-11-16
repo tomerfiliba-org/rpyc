@@ -243,7 +243,7 @@ def upload_package(conn, module, remotepath = None, chunk_size = 16000):
     if remotepath is None:
         site = conn.modules["distutils.sysconfig"].get_python_lib()
         remotepath = conn.modules.os.path.join(site, module.__name__)
-    localpath = os.path.dirname(inspect.getsourcefile(module))
+    localpath = os.path.dirname(os.path.abspath(inspect.getsourcefile(module)))
     upload(conn, localpath, remotepath, chunk_size = chunk_size)
 
 upload_module = upload_package
