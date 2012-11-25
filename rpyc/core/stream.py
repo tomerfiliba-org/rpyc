@@ -83,7 +83,7 @@ class SocketStream(Stream):
     MAX_IO_CHUNK = 8000
     def __init__(self, sock):
         self.sock = sock
-    
+        
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM,
             proto = 0, timeout = 3, nodelay = False):
@@ -112,6 +112,19 @@ class SocketStream(Stream):
         if kwargs.pop("ipv6", False):
             kwargs["family"] = socket.AF_INET6
         return cls(cls._connect(host, port, **kwargs))
+
+    @classmethod
+    def unix_connect(cls, path, timeout = 3):
+        """factory method that creates a ``SocketStream `` over a unix domain socket
+        located in *path*
+
+        :param path: the path to the unix domain socket
+        :param timeout: socket timeout
+        """
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(timeout)
+        s.connect(path)
+        return cls(s)
 
     @classmethod
     def ssl_connect(cls, host, port, ssl_kwargs, **kwargs):
