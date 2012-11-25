@@ -26,11 +26,18 @@ setup(name = "rpyc",
         'rpyc.core',
         'rpyc.lib',
         'rpyc.utils',
+        'rpyc.scripts'
     ],
     scripts = [
         os.path.join("rpyc", "scripts", "rpyc_classic.py"),
         os.path.join("rpyc", "scripts", "rpyc_registry.py"),
     ],
+    entry_points = dict(
+        console_scripts = [
+            "rpyc_classic = rpyc.scripts.rpyc_classic:main",
+            "rpyc_registry = rpyc.scretips.rpyc_registry:main",
+        ],
+    ),
     platforms = ["POSIX", "Windows"],
     use_2to3 = False,
     zip_safe = False,
