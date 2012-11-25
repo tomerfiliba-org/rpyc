@@ -67,6 +67,16 @@ def connect(host, port = DEFAULT_SERVER_PORT, ipv6 = False, keepalive = False):
     """
     return factory.connect(host, port, SlaveService, ipv6 = ipv6, keepalive = keepalive)
 
+def unix_connect(path):
+    """
+    Creates a socket connection to the given host and port.
+
+    :param path: the path to the unix domain socket
+
+    :returns: an RPyC connection exposing ``SlaveService``
+    """
+    return factory.unix_connect(path, SlaveService)
+
 def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None,
         certfile = None, ca_certs = None, cert_reqs = None, ssl_version = None,
         ciphers = None, ipv6 = False):
