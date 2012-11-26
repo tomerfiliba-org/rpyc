@@ -5,6 +5,9 @@ from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
 import threading
 import unittest
+from nose import SkipTest
+import socket
+
 
 class BaseServerTest(object):
 
@@ -47,6 +50,9 @@ class Test_ThreadedServerOverUnixSocket(BaseServerTest, unittest.TestCase):
     socket_path = tempfile.mktemp()
     
     def _create_server(self):
+        if not hasattr(socket, "AF_UNIX"):
+            raise SkipTest("no support for AF_UNIX")
+        
         return ThreadedServer(SlaveService, socket_path=self.socket_path, auto_register=False)
 
     def _create_client(self):
