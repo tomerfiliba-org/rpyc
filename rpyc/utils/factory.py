@@ -88,7 +88,20 @@ def connect(host, port, service = VoidService, config = {}, ipv6 = False):
     """
     s = SocketStream.connect(host, port, ipv6 = ipv6)
     return connect_stream(s, service, config)
+    
+def unix_connect(path, service = VoidService, config = {}):
+    """
+    creates a socket-connection to the given host and port
 
+    :param path: the path to the unix domain socket
+    :param service: the local service to expose (defaults to Void)
+    :param config: configuration dict
+
+    :returns: an RPyC connection
+    """
+    s = SocketStream.unix_connect(path)
+    return connect_stream(s, service, config)
+    
 def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
         cert_reqs = None, ssl_version = None, ciphers = None,
         service = VoidService, config = {}, ipv6 = False):
