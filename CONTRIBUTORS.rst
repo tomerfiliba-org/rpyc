@@ -1,3 +1,8 @@
+v3.2.3
+^^^^^^
+* Guy Rozendorn - backported lots of fixes from 3.3 branch
+* Alon Horev - UNIX domain socket patch
+
 v3.2.2
 ^^^^^^
 * Rotem Yaari - Add logging of exceptions to the protocol layer, investigate ``EINTR`` issue

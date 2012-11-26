@@ -30,7 +30,10 @@ class Server(object):
     :param ipv6: whether to create an IPv6 or IPv4 socket. The default is IPv4
     :param port: the TCP port to bind to
     :param backlog: the socket's backlog (passed to ``listen()``)
-    :param reuse_addr: whether or not to create the socket with the ``SO_REUSEADDR`` option set. 
+    :param reuse_addr: whether or not to create the socket with the ``SO_REUSEADDR`` option set.
+    :param socket_path: for Unix domain sockets - specifies the socket's path (filename); 
+                        requires platform support for ``AF_UNIX``. This option is mutually
+                        exclusive with ``hostname``, ``ipv6`` and ``port`` 
     :param authenticator: the :ref:`api-authenticators` to use. If ``None``, no authentication 
                           is performed.
     :param registrar: the :class:`registrar <rpyc.utils.registry.RegistryClient>` to use. 
@@ -60,8 +63,8 @@ class Server(object):
         self.clients = set()
         
         if socket_path is not None:
-            if hostname != "" or port != 0 or ipv6 != False:
-                raise ValueError("socket_path is mutually exclusive with: hostname, port, ipv6")
+            if hostname or port or ipv6:
+                raise ValueError("`socket_path` is mutually exclusive with: hostname, port, ipv6")
             self.listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self.listener.bind(socket_path)
             # set the self.port to the path as it's used for the registry and logging
@@ -266,7 +269,6 @@ class ThreadedServer(Server):
         t = threading.Thread(target = self._authenticate_and_serve_client, args = (sock,))
         t.setDaemon(True)
         t.start()
-
 
 class ThreadPoolServer(Server):
     """This server is threaded like the ThreadedServer but reuses threads so that
