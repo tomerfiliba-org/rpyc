@@ -171,12 +171,14 @@ class UDPRegistryServer(RegistryServer):
     """UDP-based registry server. The server listens to UDP broadcasts and
     answers them. Useful in local networks, were broadcasts are allowed"""
     
+    TIMEOUT = 1.0
+    
     def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT, pruning_timeout = None, logger = None):
         family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, 0, 
             socket.SOCK_DGRAM)[0]
         sock = socket.socket(family, socktype, proto)
         sock.bind(sockaddr)
-        sock.settimeout(0.5)
+        sock.settimeout(self.TIMEOUT)
         RegistryServer.__init__(self, sock, pruning_timeout = pruning_timeout,
             logger = logger)
 
@@ -196,6 +198,8 @@ class TCPRegistryServer(RegistryServer):
     """TCP-based registry server. The server listens to a certain TCP port and
     answers requests. Useful when you need to cross routers in the network, since
     they block UDP broadcasts"""
+
+    TIMEOUT = 3.0
     
     def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT, pruning_timeout = None, 
             logger = None, reuse_addr = True):
@@ -208,7 +212,7 @@ class TCPRegistryServer(RegistryServer):
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         sock.bind(sockaddr)
         sock.listen(10)
-        sock.settimeout(0.5)
+        sock.settimeout(self.TIMEOUT)
         RegistryServer.__init__(self, sock, pruning_timeout = pruning_timeout,
             logger = logger)
         self._connected_sockets = {}

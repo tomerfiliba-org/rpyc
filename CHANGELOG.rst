@@ -21,6 +21,20 @@
   reactor thread" that handles all incoming transport from all connections. This should solve 
   all threading issues once and for all.
 
+3.2.3
+-----
+* Fix (`issue #76 <https://github.com/tomerfiliba/rpyc/issues/76>`_) for real this time
+
+* Fix issue with ``BgServingThread`` (`#89 <https://github.com/tomerfiliba/rpyc/issues/89>`_)
+
+* Fix issue with ``ThreadPoolServer`` (`#91 <https://github.com/tomerfiliba/rpyc/issues/91>`_)
+
+* Remove RPyC's ``excepthook`` in favor of chaining the exception's remote tracebacks in the
+  exception class' ``__str__`` method. This solves numerous issues with logging and debugging.
+
+* Add ``OneShotServer``
+
+* Add `UNIX domain sockets <https://github.com/tomerfiliba/rpyc/pull/100>`_
 
 3.2.2
 -----
