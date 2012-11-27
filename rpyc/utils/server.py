@@ -504,7 +504,8 @@ class ForkingServer(Server):
                 try:
                     self.logger.debug("child process created")
                     signal.signal(signal.SIGCHLD, self._prevhandler)
-                    signal.siginterrupt(signal.SIGCHLD, False) # issue #76
+                    #76: call signal.siginterrupt(False) in forked child
+                    signal.siginterrupt(signal.SIGCHLD, False)
                     self.listener.close()
                     self.clients.clear()
                     self._authenticate_and_serve_client(sock)
