@@ -197,7 +197,7 @@ class DontCare(object):
         pass
 DontCare = DontCare()
 
-class Singlebrain(Splitbrain):
+class Localbrain(Splitbrain):
     def __init__(self):
         Splitbrain.__init__(self, DontCare)
 
@@ -209,7 +209,7 @@ class Singlebrain(Splitbrain):
         del router.modules
         del router.builtins
 
-singlebrain = Singlebrain()
+localbrain = Localbrain()
 
 
 
@@ -262,7 +262,7 @@ singlebrain = Singlebrain()
 #        print win32file.CreateFile
 #    except AttributeError as ex:
 #        print ex  
-    
+
 
 
 
