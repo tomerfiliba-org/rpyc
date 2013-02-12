@@ -7,8 +7,8 @@ try:
 except ImportError:
     from distutils.core import setup
 
-if sys.version_info < (2, 4):
-    sys.exit("requires python 2.4 and up")
+if sys.version_info < (2, 5):
+    sys.exit("requires python 2.5 and up")
 
 here = os.path.dirname(__file__)
 exec(open(os.path.join(here, 'rpyc', 'version.py')).read())
@@ -20,25 +20,24 @@ setup(name = "rpyc",
     author_email = "tomerfiliba@gmail.com",
     license = "MIT",
     url = "http://rpyc.sourceforge.net",
-    download_url = "http://sourceforge.net/projects/rpyc/files/main/%s" % (version_string,), #@UndefinedVariable
+    #download_url = "http://sourceforge.net/projects/rpyc/files/main/%s" % (version_string,), #@UndefinedVariable
     packages = [
         'rpyc',
         'rpyc.core',
         'rpyc.lib',
         'rpyc.utils',
-        'rpyc.scripts'
     ],
     scripts = [
-        os.path.join("scripts", "rpyc_classic.py"),
-        os.path.join("scripts", "rpyc_registry.py"),
+        os.path.join(here, "bin", "rpyc_classic.py"),
+        os.path.join(here, "bin", "rpyc_registry.py"),
     ],
     install_requires = ["six", "plumbum"],
-    entry_points = dict(
-        console_scripts = [
-            "rpyc_classic = rpyc.scripts.rpyc_classic:main",
-            "rpyc_registry = rpyc.scretips.rpyc_registry:main",
-        ],
-    ),
+#    entry_points = dict(
+#        console_scripts = [
+#            "rpyc_classic = rpyc.scripts.rpyc_classic:main",
+#            "rpyc_registry = rpyc.scretips.rpyc_registry:main",
+#        ],
+#    ),
     platforms = ["POSIX", "Windows"],
     use_2to3 = False,
     zip_safe = False,
@@ -50,7 +49,6 @@ setup(name = "rpyc",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.4",
         "Programming Language :: Python :: 2.5",
         "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
@@ -58,6 +56,7 @@ setup(name = "rpyc",
         "Programming Language :: Python :: 3.0",
         "Programming Language :: Python :: 3.1",
         "Programming Language :: Python :: 3.2",
+        "Programming Language :: Python :: 3.3",
         "Topic :: Internet",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Software Development :: Object Brokering",
