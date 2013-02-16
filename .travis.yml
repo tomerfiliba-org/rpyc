@@ -8,7 +8,7 @@ python:
 
 install: 
     - pip install six
-    - pip install plumbum
+    - pip install -e git+git://github.com/tomerfiliba/plumbum.git#egg=plumbum
 
 before_script:
     - "echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config"

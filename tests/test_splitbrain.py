@@ -1,25 +1,23 @@
 from __future__ import with_statement
 import subprocess
 import sys
-import pdb
 import os
 import rpyc
+import six
 import unittest
-from rpyc.utils.splitbrain import splitbrain, localbrain
 import tempfile
 import shutil
-from contextlib import contextmanager
 import traceback
-
+from rpyc.utils.splitbrain import splitbrain, localbrain
 
 
 class SplitbrainTest(unittest.TestCase):
     def setUp(self):
         splitbrain.enable()
-        server_file = os.path.join(os.path.abspath(__file__), "..", "..", "bin", "rpyc_classic.py")
+        server_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bin", "rpyc_classic.py")
         self.proc = subprocess.Popen([sys.executable, server_file, "--mode=oneshot", "--host=localhost", "-p0"], 
             stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        self.assertEqual(self.proc.stdout.readline().strip(), "rpyc-oneshot")
+        self.assertEqual(self.proc.stdout.readline().strip(), six.b("rpyc-oneshot"))
         host, port = self.proc.stdout.readline().strip().split("\t")
         self.conn = rpyc.classic.connect(host, int(port))
     
@@ -38,6 +36,8 @@ class SplitbrainTest(unittest.TestCase):
                 path = tempfile.mkdtemp()
                 
                 import email
+                
+                self.assertNotIn("stale", repr(email))
                 
                 os.chdir(path)
                 hispid = os.getpid()
@@ -62,8 +62,11 @@ class SplitbrainTest(unittest.TestCase):
                         open("crap.txt", "r")
                     f()
                 except IOError:
-                    print "".join(traceback.format_exception(*sys.exc_info()))
+                    tbtext = "".join(traceback.format_exception(*sys.exc_info()))
                     #pdb.post_mortem(sys.exc_info()[2])
+                    self.assertIn("f()", tbtext)
+                    self.assertIn("g()", tbtext)
+                    self.assertIn("h()", tbtext)
                 else:
                     self.fail("This should have raised a IOError")
 
@@ -71,6 +74,8 @@ class SplitbrainTest(unittest.TestCase):
                 # we must move away from the tempdir to delete it (at least on windows)
                 os.chdir("/")
                 shutil.rmtree(path)
+        
+        self.assertIn("stale", repr(email))
         
         self.assertEqual(os.getpid(), mypid)
         self.assertEqual(os.getcwd(), here)
