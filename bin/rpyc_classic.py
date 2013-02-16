@@ -12,7 +12,7 @@ import sys
 import os
 import rpyc
 from plumbum import cli
-from rpyc.utils.server import ThreadedServer, ForkingServer
+from rpyc.utils.server import ThreadedServer, ForkingServer, OneShotServer
 from rpyc.utils.classic import DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT
 from rpyc.utils.registry import REGISTRY_PORT
 from rpyc.utils.registry import UDPRegistryClient, TCPRegistryClient
@@ -22,7 +22,7 @@ from rpyc.core import SlaveService
 
 
 class ClassicServer(cli.Application):
-    mode = cli.SwitchAttr(["-m", "--mode"], cli.Set("threaded", "forking", "stdio"),
+    mode = cli.SwitchAttr(["-m", "--mode"], cli.Set("threaded", "forking", "stdio", "oneshot"),
         default = "threaded", help = "The serving mode (threaded, forking, or 'stdio' for "
         "inetd, etc.)")
     
@@ -82,16 +82,27 @@ class ClassicServer(cli.Application):
         setup_logger(self.quiet, self.logfile)
     
         if self.mode == "threaded":
-            factory = ThreadedServer
+            self._serve_mode(ThreadedServer)
         elif self.mode == "forking":
-            factory = ForkingServer
+            self._serve_mode(ForkingServer)
+        elif self.mode == "oneshot":
+            self._serve_oneshot()
         elif self.mode == "stdio":
             self._serve_stdio()
-            return
-        
+    
+    def _serve_mode(self, factory):
         t = factory(SlaveService, hostname = self.host, port = self.port, 
             reuse_addr = True, ipv6 = self.ipv6, authenticator = self.authenticator, 
             registrar = self.registrar, auto_register = self.auto_register)
+        t.start()
+
+    def _serve_oneshot(self):
+        t = OneShotServer(SlaveService, hostname = self.host, port = self.port, 
+            reuse_addr = True, ipv6 = self.ipv6, authenticator = self.authenticator, 
+            registrar = self.registrar, auto_register = self.auto_register)
+        sys.stdout.write("rpyc-oneshot\n")
+        sys.stdout.write("%s\t%s\n" % (t.host, t.port))
+        sys.stdout.flush()
         t.start()
 
     def _serve_stdio(self):

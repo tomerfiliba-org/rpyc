@@ -1,61 +1,41 @@
 from __future__ import with_statement
+import subprocess
 import sys
 import os
-import signal
 import time
-import subprocess
+import signal
 import rpyc
 import unittest
-from rpyc.utils.splitbrain import splitbrain, enable, disable
+from rpyc.utils.splitbrain import splitbrain, localbrain
 
 
 class SplitbrainTest(unittest.TestCase):
     def setUp(self):
-        enable()
-        #server_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
-        #    "scripts", "rpyc_classic.py")
-        #self.proc = subprocess.Popen([sys.executable, server_file, "-p", "29992"])
-        #time.sleep(1)
-        #self.conn = rpyc.classic.connect("localhost", 29992)
-        self.conn = rpyc.classic.connect("192.168.1.143")
+        splitbrain.enable()
+        server_file = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+            "bin", "rpyc_classic.py")
+        self.proc = subprocess.Popen([sys.executable, server_file, "-m", "oneshot", "--host=localhost", "-p0"], 
+            stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        self.assertEqual(self.proc.stdout.readline().strip(), "rpyc-oneshot")
+        host, port = self.proc.stdout.readline().strip().split("\t")
+        print (host, port)
+        time.sleep(1)
+        self.conn = rpyc.classic.connect(host, int(port))
     
     def tearDown(self):
         self.conn.close()
-        disable()
-        #self.proc.send_signal(signal.SIGINT)
-        #time.sleep(1)
-        #self.proc.terminate()
+        splitbrain.disable()
     
-    def _test_splitbrain(self):
-        sb = Splitbrain(self.conn)
-        here = os.getcwd()
-        self.conn.modules.os.chdir("/")
-        
-        with sb:
-            self.assertEqual(os.getcwd(), "/")
-            os.chdir("/etc")
-        
-        self.assertEqual(os.getcwd(), here)
-
-        with sb:
-            self.assertEqual(os.getcwd(), "/etc")
-
-        self.assertEqual(os.getcwd(), here)
+    def test(self):
+        print os.getcwd()
+        print type(os)
+        with splitbrain(self.conn):
+            os.chdir("/")
+            print os.getcwd()
+        print os.getcwd()
     
-    def test_splitbrain2(self):
-        sb = Splitbrain(self.conn)
-        #import shutil
-        #from os.path import abspath
-        
-        with sb:
-            from os.path import abspath
-            #abspath("")
-            #open("test.txt", "w").close()
-            #print os.path.exists("test.txt")
-            
-        print abspath("test.txt")
-        
-        #print os.path.exists("test.txt")
+    
+    
 
 
 if __name__ == "__main__":
