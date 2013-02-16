@@ -14,7 +14,9 @@ router = threading.local()
 routed_modules = set(["os", "os.path", "platform", "ntpath", "posixpath", "zipimport", "genericpath", 
     "posix", "nt", "signal", "time", "sysconfig", "_locale", "locale", "socket", "_socket", "ssl", "_ssl",
     "struct", "_struct", "_symtable", "errno", "fcntl", "grp", "imp", "pwd", "select", "spwd", 
-    "syslog", "thread", "_io", "io", "subprocess", "_subprocess", "datetime", "mmap", "msvcrt"])
+    "syslog", "thread", "_io", "io", "subprocess", "_subprocess", "datetime", "mmap", "msvcrt", "pdb", "bdb",
+    #"exceptions"
+    ])
 
 class RoutedModule(ModuleType):
     def __init__(self, realmod):
@@ -46,7 +48,10 @@ class RoutedModule(ModuleType):
     def __setattr__(self, name, val):
         return setattr(self.__currmod__, name, val)
 
-routed_sys_attrs = set(["byteorder", "platform", "getfilesystemencoding", "getdefaultencoding"])
+routed_sys_attrs = set(["byteorder", "platform", "getfilesystemencoding", "getdefaultencoding", "settrace",
+    "setprofile", "setrecursionlimit", "getprofile", "getrecursionlimit", "getsizeof", "gettrace", 
+    "exc_clear", "exc_info", "exc_type", "last_type", "last_value", "last_traceback",
+    ])
 
 class RoutedSysModule(ModuleType):
     def __init__(self):
@@ -226,6 +231,7 @@ def localbrain():
         if not router.conn:
             del router.conn
 
+# shortcuts
 splitbrain.enable = enable
 splitbrain.disable = disable
 
