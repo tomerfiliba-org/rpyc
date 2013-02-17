@@ -13,8 +13,9 @@ router = threading.local()
 
 routed_modules = set(["os", "os.path", "platform", "ntpath", "posixpath", "zipimport", "genericpath", 
     "posix", "nt", "signal", "time", "sysconfig", "_locale", "locale", "socket", "_socket", "ssl", "_ssl",
-    "struct", "_struct", "_symtable", "errno", "fcntl", "grp", "imp", "pwd", "select", "spwd", 
-    "syslog", "thread", "_io", "io", "subprocess", "_subprocess", "datetime", "mmap", "msvcrt", "pdb", "bdb",
+    "struct", "_struct", "_symtable", "errno", "fcntl", "grp", "pwd", "select", "spwd", "syslog", "thread", 
+    "_io", "io", "subprocess", "_subprocess", "datetime", "mmap", "msvcrt", "pdb", "bdb", "glob", "fnmatch",
+    #"_frozen_importlib", "imp",
     #"exceptions"
     ])
 
@@ -133,7 +134,7 @@ def enable():
     sys.modules["sys"] = sys2
     for modname in routed_modules:
         try:
-            realmod = __import__(modname, [], [], "*")
+            realmod = _orig_import(modname, [], [], "*")
         except ImportError:
             pass
         else:
@@ -142,10 +143,12 @@ def enable():
             for ref in gc.get_referrers(realmod):
                 if not isinstance(ref, dict) or "__name__" not in ref or ref.get("__file__") is None:
                     continue
-                if ref["__name__"] in routed_modules or ref["__name__"].startswith("rpyc"):
+                n = ref["__name__"]
+                if n in routed_modules or n.startswith("rpyc") or n.startswith("importlib") or n.startswith("imp"):
                     continue
                 for k, v in ref.items():
                     if v is realmod:
+                        #print ("## %s.%s = %s" % (ref["__name__"], ref[k], modname))
                         ref[k] = rmod
 
     builtins.__import__ = _importer
