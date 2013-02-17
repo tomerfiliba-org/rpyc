@@ -11,6 +11,11 @@ import traceback
 from rpyc.utils.splitbrain import splitbrain, localbrain
 
 
+if not hasattr(unittest.TestCase, "assertIn"):
+    unittest.TestCase.assertIn = lambda self, member, container, msg = None: self.assertTrue(member in container, msg)
+if not hasattr(unittest.TestCase, "assertNotIn"):
+    unittest.TestCase.assertNotIn = lambda self, member, container, msg = None: self.assertFalse(member in container, msg)
+
 class SplitbrainTest(unittest.TestCase):
     def setUp(self):
         splitbrain.enable()
@@ -18,7 +23,7 @@ class SplitbrainTest(unittest.TestCase):
         self.proc = subprocess.Popen([sys.executable, server_file, "--mode=oneshot", "--host=localhost", "-p0"], 
             stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         self.assertEqual(self.proc.stdout.readline().strip(), six.b("rpyc-oneshot"))
-        host, port = self.proc.stdout.readline().strip().split("\t")
+        host, port = self.proc.stdout.readline().strip().split(six.b("\t"))
         self.conn = rpyc.classic.connect(host, int(port))
     
     def tearDown(self):
