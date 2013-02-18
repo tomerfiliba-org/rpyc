@@ -45,7 +45,12 @@ with splitbrain(conn):
             with open("split-test.txt", "r") as f:
                 assert f.read() == "foobar"
         
-        open("crap.txt", "r")
+        try:
+            open("crap.txt", "r")
+        except IOError:
+            pass
+        else:
+            assert False, "Expected IOError"
         
 #try:
 #            def f():
