@@ -31,6 +31,8 @@ setup(name = "rpyc",
         os.path.join(here, "bin", "rpyc_classic.py"),
         os.path.join(here, "bin", "rpyc_registry.py"),
     ],
+    tests_require = ['nose'],
+    test_suite = 'nose.collector',
     install_requires = ["six", "plumbum"],
 #    entry_points = dict(
 #        console_scripts = [
