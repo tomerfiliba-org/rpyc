@@ -44,6 +44,8 @@ Reference
    docs/async
    docs/security
    docs/secure-connection
+   docs/zerodeploy
+   docs/splitbrain
 
 
 * :ref:`Servers <servers>` - using the built-in servers and writing custom ones 
@@ -63,12 +65,11 @@ Reference
 * :ref:`Secure Connections <ssl>` - create an encrypted and authenticated 
   connection over SSL or SSH
 
+* :ref:`Zero-Deploy <zerodeploy>` - spawn temporary, short-lived RPyC server on remote
+  machine with nothing more than SSH and a Python interpreter
 
-
-
-
-
-
+* :ref:`Splitbrain Python <splitbrain>` - run code locally, but have all OS-level operations
+  take place on the server machine. A killer feature for debugging and automated testing!
 
 
 

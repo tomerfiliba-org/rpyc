@@ -75,7 +75,6 @@ Client-Side
 
    api/utils_factory
    api/utils_classic
-   api/utils_ssh
 
 * :ref:`api-factory` - general-purpose connection factories (over pipes, sockets, SSL, SSH, 
   TLSlite, etc.)
@@ -85,9 +84,20 @@ Client-Side
 * :ref:`api-helpers` - Various helpers (``timed``, ``async``, ``buffiter``, ``BgServingThread``, 
   etc.)
 
-* :ref:`api-ssh` - Wrappers for SSH, required for establishing RPyC connections over SSH tunnels.
-  In order to establish such a connection, use :func:`rpyc.utils.factory.ssh_connect`.
+Misc
+----
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+   
+   api/utils_splitbrain
+   api/utils_zerodeploy
 
+* :ref:`api-zerodeploy` - Deploy short-living RPyC servers on remote machines with ease - all you'll 
+  need is SSH access and a Python interpreter installed on the host
+
+* :ref:`api-splitbrain` - Run code on the local machine, but have it operating on a remote one! The splitbrain
+  context redirects all OS-level operations to the server, while "pure computation" remains on your local machine
 
 
 

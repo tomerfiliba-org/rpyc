@@ -146,7 +146,8 @@ def _get_free_port():
 def ssh_connect(remote_machine, remote_port, service = VoidService, config = {}):
     """
     Connects to an RPyC server over an SSH tunnel (created by plumbum).
-    See `http://plumbum.readthedocs.org/en/latest/remote.html#tunneling`_ for more details.
+    See `Plumbum tunneling <http://plumbum.readthedocs.org/en/latest/remote.html#tunneling>`_ 
+    for further details.
     
     :param remote_machine: an :class:`plumbum.remote.RemoteMachine` instance
     :param remote_port: the port of the remote server

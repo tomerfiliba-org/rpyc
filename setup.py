@@ -18,6 +18,7 @@ setup(name = "rpyc",
     description = "Remote Python Call (RPyC), a transparent and symmetric RPC library",
     author = "Tomer Filiba",
     author_email = "tomerfiliba@gmail.com",
+    maintainer_email = "rpyc@googlegroups.com",
     license = "MIT",
     url = "http://rpyc.sourceforge.net",
     #download_url = "http://sourceforge.net/projects/rpyc/files/main/%s" % (version_string,), #@UndefinedVariable

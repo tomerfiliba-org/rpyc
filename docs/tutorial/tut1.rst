@@ -21,7 +21,7 @@ as simple as double-clicking it in Explorer:
 
 .. note::
    Prior to version 3.1.0 ``rpyc_classic.py`` was known as ``classic_server.py``.
-   Also, try ``rpyc_classic.py --help`` for more command-line options.
+   Also, try running ``rpyc_classic.py --help`` for more command-line options.
 
 The first (and only) line shows the parameters this server is running with: ``SLAVE`` 
 indicates the ``SlaveService`` (you'll learn more about :ref:`services <services>` later on),
@@ -45,7 +45,7 @@ The ``modules`` Namespace
 -------------------------
 That's about it, you are now connected to the server and ready to control it: say hello 
 to ``modules``! The ``modules`` property of connection objects exposes the server's 
-module-space, i.e., it lets you access remote modules at ease. Here's how::
+module-space, i.e., it lets you access remote modules with ease. Here's how::
 
     # dot notation
     mod1 = conn.modules.sys # access the sys module on the server

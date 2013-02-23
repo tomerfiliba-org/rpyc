@@ -15,8 +15,7 @@ routed_modules = set(["os", "os.path", "platform", "ntpath", "posixpath", "zipim
     "posix", "nt", "signal", "time", "sysconfig", "_locale", "locale", "socket", "_socket", "ssl", "_ssl",
     "struct", "_struct", "_symtable", "errno", "fcntl", "grp", "pwd", "select", "spwd", "syslog", "thread", 
     "_io", "io", "subprocess", "_subprocess", "datetime", "mmap", "msvcrt", "pdb", "bdb", "glob", "fnmatch",
-    #"_frozen_importlib", "imp",
-    #"exceptions"
+    #"_frozen_importlib", "imp", "exceptions"
     ])
 
 class RoutedModule(ModuleType):
@@ -70,7 +69,7 @@ class RoutedSysModule(ModuleType):
         else:
             setattr(sys, name, value)
 
-sys2 = RoutedSysModule()
+rsys = RoutedSysModule()
 
 class RemoteModule(ModuleType):
     def __init__(self, realmod):
@@ -127,11 +126,12 @@ _enabled = False
 _prev_builtins = {}
 
 def enable():
-    """Enables (activates) the Splitbrain machinery"""
+    """Enables (activates) the Splitbrain machinery; must be called before entering 
+    ``splitbrain`` or ``localbrain`` contexts"""
     global _enabled
     if _enabled:
         return
-    sys.modules["sys"] = sys2
+    sys.modules["sys"] = rsys
     for modname in routed_modules:
         try:
             realmod = _orig_import(modname, [], [], "*")
@@ -171,7 +171,7 @@ def enable():
     _enabled = True
 
 def disable():
-    """Disables (restores) the Splitbrain machinery"""
+    """Disables (deactivates) the Splitbrain machinery"""
     global _enabled
     if not _enabled:
         return
@@ -216,6 +216,9 @@ def splitbrain(conn):
         if not router.conn:
             del router.conn
 
+splitbrain.enable = enable
+splitbrain.disable = disable
+
 @contextmanager
 def localbrain():
     """Return to operate on the local machine. You can enter this context only after calling ``enable()``"""
@@ -234,9 +237,6 @@ def localbrain():
         if not router.conn:
             del router.conn
 
-# shortcuts
-splitbrain.enable = enable
-splitbrain.disable = disable
 
 
 

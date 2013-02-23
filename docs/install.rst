@@ -3,11 +3,6 @@
 Download and Install
 ====================
 
-.. toctree::
-   :hidden:
-
-   changelog
-
 You can always download the latest releases of RPyC from the project's 
 `sourceforge page <http://sourceforge.net/projects/rpyc/files/main>`_ or 
 its `PyPI page <http://pypi.python.org/pypi/rpyc>`_. RPyC is distributed as a 
@@ -119,14 +114,5 @@ them:
 
   * `zlib for IronPython <https://bitbucket.org/jdhardy/ironpythonzlib>`_ - Required
     for IronPython prior to v2.7
-
-.. _license:
-
-License
-=======
-RPyC is released under the *MIT license*:
-
-  .. literalinclude:: ../LICENSE
-
 
 

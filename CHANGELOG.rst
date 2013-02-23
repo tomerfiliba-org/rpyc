@@ -9,7 +9,7 @@
   instead of ``SshContext``.
 
 * Zero deploy: deploy RPyC to a remote machine over an SSH connection and form an SSH tunnel 
-  connected to it, in just one line of code. All you need is SSH access and a python interpreter
+  connected to it, in just one line of code. All you need is SSH access and a Python interpreter
   installed on the remote machine.
 
 * Dropping python 2.4 support. RPyC now requires python 2.5 - 3.3.
@@ -17,9 +17,16 @@
 * rpycd - a well-behaved daemon for ``rpyc_classic.py``, based on 
   `python-daemon <http://pypi.python.org/pypi/python-daemon/>`_
 
+* The ``OneShotServer`` is now exposed by ``rpyc_classic -m oneshot``
+
+* ``scripts`` directory renamed ``bin``
+
+* Introducing ``Splitbrain Python`` - running code on remote machines transparently
+
 * Removing the ``BgServerThread`` and all polling/timeout hacks in favor of a "global background 
   reactor thread" that handles all incoming transport from all connections. This should solve 
   all threading issues once and for all.
+
 
 3.2.3
 -----

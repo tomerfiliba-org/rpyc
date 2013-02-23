@@ -1,32 +1,49 @@
-.. toctree::
-   :hidden:
-
-   install
-   tutorial
-   screencasts
-
-   docs
-   api
-
 .. raw:: html
 
-   <div style="margin-left: auto; margin-right: auto; margin-bottom:1em; margin-top: 1em;
-               display: block; padding: 1em; border: 1px solid #DDD; background-color: #EEEECC;">
-   <p><strong>Sticky</strong></p> 
-   
-   <p><a class="reference external" href="http://tomerfiliba.com/blog/RPyC-3.2.2">Version 3.2.2</a> 
-   was released on June 1st</p>
-   
-   <p>Please use the 
-   <a class="reference external" href="https://groups.google.com/forum/?fromgroups#!forum/rpyc">mailing list</a> 
-   to ask questions, and use 
-   <a class="reference external" href="https://github.com/tomerfiliba/rpyc/issues">issues</a> 
-   to report problems</p>
-   
-   </div>
+    <div style="float:right; margin:1em; padding: 1em 2em 1em 2em; background-color: #efefef;
+        border-radius: 5px; border-width: thin; border-style: dotted; border-color: #0C3762;">
+    <strong>Quick Links</strong><br/>
+    <ul>
+    <li><a href="#getting-started" title="Jump to download">Download</a></li>
+    <li><a href="tutorial.html" title="Tutorial">Tutorial</a></li>
+    <li><a href="docs.html" title="User guide">User Guide</a></li>
+    <li><a href="api.html" title="API reference">API Reference</a></li>
+    <li><a href="#contents" title="Jump to Table of Contents">ToC</a></li>
+    </ul>
+    <hr/>
+    <a href="http://tomerfiliba.com" target="_blank">
+    <img style="display: block; margin-left: auto; margin-right: auto" 
+    src="_static/fish-text-black.png" title="Tomer's Blog"/></a>
+    <br/>
+    <a href="http://github.com/tomerfiliba/rpyc" target="_blank">
+    <img style="display: block; margin-left: auto; margin-right: auto; opacity: 0.7; width: 70px;" 
+    src="_static/github-logo.png" title="Github Repo"/></a>
+    <br/>
+    <a href="http://travis-ci.org/tomerfiliba/plumbum" target="_blank">
+    <img src="https://secure.travis-ci.org/tomerfiliba/rpyc.png" 
+    style="display: block; margin-left: auto; margin-right: auto;" title="Travis CI status"></a>
+    </div>
 
 Welcome
 =======
+.. raw:: html
+
+   <div style="width:795px; margin: 1em 0 2em 0; display: block; padding: 1em; border: 1px dotted #DDD; 
+    background-color: rgba(255, 255, 202, 0.69); border-radius: 5px;">
+   
+   <strong>Sticky</strong><br/>
+   
+   <a class="reference external" href="https://pypi.python.org/pypi/rpyc">Version 3.2.3</a> 
+   was released on December 2nd <br/>
+   
+   Please use the 
+   <a class="reference external" href="https://groups.google.com/forum/?fromgroups#!forum/rpyc">mailing list</a> 
+   to ask questions and use 
+   <a class="reference external" href="https://github.com/tomerfiliba/rpyc/issues">github issues</a> 
+   to report problems. <strong>Please do not email me directly</strong>.
+   
+   </div>
+
 **RPyC** (`IPA: <http://en.wikipedia.org/wiki/IPA_for_English>`_ /ɑɹ paɪ siː/,
 pronounced like *are-pie-see*), or *Remote Python Call*, is a **transparent**
 `python <http://www.python.org>`_ library for **symmetrical**
@@ -39,16 +56,14 @@ between processes and computers, so that remote objects can be manipulated as if
 they were local.
 
 .. figure:: _static/screenshot.png
-   :align: center
    
-   A screenshot of a Windows client connecting to a Linux server.
-   
-   Note that text written to the server's ``stdout`` is actually printed on 
-   the server's console.
+   A screenshot of a Windows client connecting to a Linux server. Note that text written 
+   to the server's ``stdout`` is actually printed on the server's console.
+
 
 Getting Started
 ---------------
-:ref:`Installing <install>` RPyC is as easy as ``easy_install rpyc``.
+:ref:`Installing <install>` RPyC is as easy as ``pip install rpyc``.
 
 If you're new to RPyC, be sure to check out the :ref:`tutorial` and
 :ref:`screencasts`. Next, refer to the :ref:`documentation` and :ref:`api-ref`,
@@ -111,5 +126,21 @@ Use Cases
   or `RMI <http://en.wikipedia.org/wiki/Java_remote_method_invocation>`_)
   quickly and concisely (without the overhead and limitations of these technologies)
 
+
+Contents
+--------
+.. toctree::
+   :maxdepth: 1
+
+   install
+   license
+   changelog
+
+.. toctree::
+
+   tutorial
+   screencasts
+   docs
+   api
 
 

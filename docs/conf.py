@@ -12,6 +12,7 @@
 # serve to show the default.
 
 import sys, os, time
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -25,8 +26,7 @@ import sys, os, time
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.todo',
-    'sphinx.ext.coverage', 'sphinx.ext.pngmath', 'sphinx.ext.viewcode']
+extensions = ['sphinx.ext.autodoc', 'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -42,7 +42,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'RPyC'
-copyright = u'%d, Tomer Filiba' % (time.gmtime().tm_year,)
+copyright = u'%d, Tomer Filiba, licensed under Attribution-ShareAlike 3.0' % (time.gmtime().tm_year,)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -96,14 +96,14 @@ autodoc_member_order = "bysource"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #html_theme = 'agogo'
-html_theme = 'agogo2'
-html_theme_path = ["_themes"]
+html_theme = 'haiku'
+#html_theme_path = ["_themes"]
 
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {"full_logo" : True}
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -119,7 +119,7 @@ html_title = ""
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "_static/rpyc3-logo-medium.png"
+html_logo = "_static/banner.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
