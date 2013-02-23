@@ -24,8 +24,8 @@
     style="display: block; margin-left: auto; margin-right: auto;" title="Travis CI status"></a>
     </div>
 
-Welcome
-=======
+RPyC - Transparent, Symmetric Distributed Computing
+====================================================
 .. raw:: html
 
    <div style="width:795px; margin: 1em 0 2em 0; display: block; padding: 1em; border: 1px dotted #DDD; 

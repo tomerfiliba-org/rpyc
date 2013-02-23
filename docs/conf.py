@@ -112,7 +112,7 @@ html_theme_options = {"full_logo" : True}
 # "<project> v<release> documentation".
 #html_title = "%s v%s Docs" % (project, version)
 #html_title = project
-html_title = ""
+html_title = "RPyC"
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None

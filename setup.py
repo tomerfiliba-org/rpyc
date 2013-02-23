@@ -20,7 +20,7 @@ setup(name = "rpyc",
     author_email = "tomerfiliba@gmail.com",
     maintainer_email = "rpyc@googlegroups.com",
     license = "MIT",
-    url = "http://rpyc.sourceforge.net",
+    url = "http://rpyc.readthedocs.org",
     #download_url = "http://sourceforge.net/projects/rpyc/files/main/%s" % (version_string,), #@UndefinedVariable
     packages = [
         'rpyc',
