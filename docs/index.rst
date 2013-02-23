@@ -19,7 +19,7 @@
     <img style="display: block; margin-left: auto; margin-right: auto; opacity: 0.7; width: 70px;" 
     src="_static/github-logo.png" title="Github Repo"/></a>
     <br/>
-    <a href="http://travis-ci.org/tomerfiliba/plumbum" target="_blank">
+    <a href="http://travis-ci.org/tomerfiliba/rpyc" target="_blank">
     <img src="https://secure.travis-ci.org/tomerfiliba/rpyc.png" 
     style="display: block; margin-left: auto; margin-right: auto;" title="Travis CI status"></a>
     </div>
