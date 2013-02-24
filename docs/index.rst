@@ -20,7 +20,7 @@
     src="_static/github-logo.png" title="Github Repo"/></a>
     <br/>
     <a href="http://travis-ci.org/tomerfiliba/rpyc" target="_blank">
-    <img src="https://secure.travis-ci.org/tomerfiliba/rpyc.png" 
+    <img src="https://travis-ci.org/tomerfiliba/rpyc.png?branch=master" 
     style="display: block; margin-left: auto; margin-right: auto;" title="Travis CI status"></a>
     </div>
 
