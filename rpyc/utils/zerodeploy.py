@@ -1,3 +1,6 @@
+"""
+.. versionadded:: 3.3
+"""
 from __future__ import with_statement
 import rpyc
 import socket
