@@ -1,3 +1,6 @@
+"""
+.. versionadded:: 3.3
+"""
 import sys
 import threading
 from contextlib import contextmanager
