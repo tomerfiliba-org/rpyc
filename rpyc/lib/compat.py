@@ -94,9 +94,16 @@ if hasattr(select_module, "poll"):
         def register(self, fd, mode):
             flags = 0
             if "r" in mode:
-                flags |= select_module.POLLIN
+                flags |= select_module.POLLIN | select_module.POLLPRI
             if "w" in mode:
                 flags |= select_module.POLLOUT
+            if "e" in mode:
+                flags |= select_module.POLLERR
+            if "h" in mode:
+                # POLLRDHUP is a linux only extension, not know to python, but nevertheless
+                # used and thus needed in the flags
+                POLLRDHUP = 0x2000
+                flags |= select_module.POLLHUP | select_module.POLLNVAL | POLLRDHUP
             self._poll.register(fd, flags)
         modify = register
         def unregister(self, fd):
