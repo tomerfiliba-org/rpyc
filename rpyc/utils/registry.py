@@ -57,7 +57,7 @@ class RegistryServer(object):
         """updates the service's keep-alive time stamp"""
         if name not in self.services:
             self.services[name] = {}
-        is_new = addrinfo not in self.services
+        is_new = addrinfo not in self.services[name]
         self.services[name][addrinfo] = time.time()
         if is_new:
             try:
