@@ -27,7 +27,8 @@ class TestAsync(unittest.TestCase):
         self.assertRaises(rpyc.AsyncResultTimeout, res.wait)
         dt = time.time() - t0
         #print( "timed out after %s" % (dt,) )
-        self.assertTrue(3.9 <= dt <= 4.1)
+        self.assertGreaterEqual(dt, 3.5)
+        self.assertLessEqual(dt, 4.5)
 
     def test_asyncresult_callbacks(self):
         res = self.a_sleep(2)
