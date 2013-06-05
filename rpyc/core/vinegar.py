@@ -68,7 +68,7 @@ def dump(typ, val, tb, include_local_traceback):
         elif name.startswith("_") or name in ignored_attrs:
             continue
         else:
-            attrval = getattr(val, name)
+            attrval = getattr(val, name, None)
             if not brine.dumpable(attrval):
                 attrval = repr(attrval)
             attrs.append((name, attrval))
