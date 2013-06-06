@@ -8,7 +8,7 @@ import unittest
 import tempfile
 import shutil
 import traceback
-from rpyc.utils.splitbrain import splitbrain, localbrain
+from rpyc.utils.splitbrain import splitbrain, localbrain, enable_splitbrain, disable_splitbrain
 
 
 if not hasattr(unittest.TestCase, "assertIn"):
@@ -16,39 +16,37 @@ if not hasattr(unittest.TestCase, "assertIn"):
 if not hasattr(unittest.TestCase, "assertNotIn"):
     unittest.TestCase.assertNotIn = lambda self, member, container, msg = None: self.assertFalse(member in container, msg)
 
-from nose import SkipTest
-if sys.version_info >= (3, 3):
-    raise SkipTest("Python 3.3 doesn't work right now")
-
-
 class SplitbrainTest(unittest.TestCase):
     def setUp(self):
-        splitbrain.enable()
+        enable_splitbrain()
         server_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bin", "rpyc_classic.py")
-        self.proc = subprocess.Popen([sys.executable, server_file, "--mode=oneshot", "--host=localhost", "-p0"], 
+        self.proc = subprocess.Popen([sys.executable, server_file, "--mode=oneshot", "--host=localhost", "-p0"],
             stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        self.assertEqual(self.proc.stdout.readline().strip(), six.b("rpyc-oneshot"))
+        line = self.proc.stdout.readline().strip()
+        if not line:
+            print (self.proc.stderr.read())
+            self.fail("server failed to start")
+        self.assertEqual(line, six.b("rpyc-oneshot"), "server failed to start")
         host, port = self.proc.stdout.readline().strip().split(six.b("\t"))
         self.conn = rpyc.classic.connect(host, int(port))
-    
+
     def tearDown(self):
         self.conn.close()
-        splitbrain.disable()
-    
+        disable_splitbrain()
+
     def test(self):
         here = os.getcwd()
         mypid = os.getpid()
         with open("split-test.txt", "w") as f:
             f.write("foobar")
-        
         with splitbrain(self.conn):
             try:
                 path = tempfile.mkdtemp()
-                
+
                 import email
-                
+
                 self.assertNotIn("stale", repr(email))
-                
+
                 os.chdir(path)
                 hispid = os.getpid()
                 self.assertNotEqual(mypid, hispid)
@@ -57,12 +55,12 @@ class SplitbrainTest(unittest.TestCase):
                 self.assertFalse(os.path.exists("split-test.txt"))
                 with open("split-test.txt", "w") as f:
                     f.write("spam")
-                
+
                 with localbrain():
                     self.assertEqual(os.getpid(), mypid)
                     with open("split-test.txt", "r") as f:
                         self.assertEqual(f.read(), "foobar")
-                
+
                 try:
                     def f():
                         g()
@@ -72,8 +70,9 @@ class SplitbrainTest(unittest.TestCase):
                         open("crap.txt", "r")
                     f()
                 except IOError:
-                    tbtext = "".join(traceback.format_exception(*sys.exc_info()))
-                    #pdb.post_mortem(sys.exc_info()[2])
+                    with localbrain():
+                        tbtext = "".join(traceback.format_exception(*sys.exc_info()))
+                    # pdb.post_mortem(sys.exc_info()[2])
                     self.assertIn("f()", tbtext)
                     self.assertIn("g()", tbtext)
                     self.assertIn("h()", tbtext)
@@ -84,15 +83,14 @@ class SplitbrainTest(unittest.TestCase):
                 # we must move away from the tempdir to delete it (at least on windows)
                 os.chdir("/")
                 shutil.rmtree(path)
-        
+
         self.assertIn("stale", repr(email))
-        
+
         self.assertEqual(os.getpid(), mypid)
         self.assertEqual(os.getcwd(), here)
-        
+
         os.remove("split-test.txt")
-    
-    
+
 
 
 if __name__ == "__main__":

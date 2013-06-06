@@ -1,7 +1,10 @@
 """
+The Magnificent Splitbrain
 .. versionadded:: 3.3
+
 """
 import sys
+import atexit
 import threading
 from contextlib import contextmanager
 import functools
@@ -128,7 +131,7 @@ def _importer(modname, *args, **kwargs):
 _enabled = False
 _prev_builtins = {}
 
-def enable():
+def enable_splitbrain():
     """Enables (activates) the Splitbrain machinery; must be called before entering 
     ``splitbrain`` or ``localbrain`` contexts"""
     global _enabled
@@ -173,7 +176,7 @@ def enable():
     
     _enabled = True
 
-def disable():
+def disable_splitbrain():
     """Disables (deactivates) the Splitbrain machinery"""
     global _enabled
     if not _enabled:
@@ -192,12 +195,15 @@ def disable():
     sys.modules["sys"] = sys
     builtins.__import__ = _orig_import
 
+atexit.register(disable_splitbrain)
+
 @contextmanager
 def splitbrain(conn):
     """Enter a splitbrain context in which imports take place over the given RPyC connection (expected to 
     be a SlaveService). You can enter this context only after calling ``enable()``"""
     if not _enabled:
-        raise ValueError("Splitbrain not enabled")
+        enable_splitbrain()
+        #raise ValueError("Splitbrain not enabled")
     prev_conn = getattr(router, "conn", None)
     prev_modules = sys.modules.copy()
     router.conn = conn
@@ -218,9 +224,6 @@ def splitbrain(conn):
         router.conn = prev_conn
         if not router.conn:
             del router.conn
-
-splitbrain.enable = enable
-splitbrain.disable = disable
 
 @contextmanager
 def localbrain():
