@@ -7,7 +7,7 @@ RPyC makes use of `object-proxying <http://en.wikipedia.org/wiki/Proxy_pattern>`
 a technique that employs python's dynamic nature, to overcome the physical boundaries
 between processes and computers, so that remote objects can be manipulated as if they were local.
 
-.. figure:: http://rpyc.sourceforge.net/_static/screenshot.png
+.. figure:: http://rpyc.readthedocs.org/en/latest/_images/screenshot.png
    :align: center
    
    A screenshot of a Windows client connecting to a Linux server.

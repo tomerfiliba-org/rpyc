@@ -21,7 +21,6 @@ setup(name = "rpyc",
     maintainer_email = "rpyc@googlegroups.com",
     license = "MIT",
     url = "http://rpyc.readthedocs.org",
-    #download_url = "http://sourceforge.net/projects/rpyc/files/main/%s" % (version_string,), #@UndefinedVariable
     packages = [
         'rpyc',
         'rpyc.core',

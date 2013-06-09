@@ -1,1 +1,1 @@
-plumbum>=0.9
+plumbum>=1.2
