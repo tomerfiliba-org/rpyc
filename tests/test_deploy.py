@@ -2,13 +2,13 @@ from __future__ import with_statement
 import sys
 import unittest
 from plumbum import SshMachine
-from rpyc.utils.zerodeploy import deployment
+from rpyc.utils.zerodeploy import DeployedServer
 
 class TestDeploy(unittest.TestCase):
     def test_deploy(self):
         rem = SshMachine("localhost")
         SshMachine.python = rem[sys.executable]  # major hack
-        with deployment(rem) as dep:
+        with DeployedServer(rem) as dep:
             conn = dep.classic_connect()
             print (conn.modules.sys)
             func = conn.modules.os.getcwd
