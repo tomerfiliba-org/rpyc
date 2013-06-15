@@ -1,5 +1,7 @@
 """
 .. versionadded:: 3.3
+
+Requires [plumbum](http://plumbum.readthedocs.org/)
 """
 from __future__ import with_statement
 import rpyc
@@ -66,7 +68,7 @@ class DeployedServer(object):
     
     :param remote_machine: a ``plumbum.SshMachine`` instance, representing an SSH 
                            connection to the desired remote machine
-    :param server_class: the server to create (e.g., ``ThreadedServer``, ``ForkingServer``)
+    :param server_class: the server to create (e.g., ``"ThreadedServer"``, ``"ForkingServer"``)
     """
     
     def __init__(self, remote_machine, server_class = "ThreadedServer"):
@@ -140,9 +142,7 @@ class MultiServerDeployment(object):
     def __init__(self, remote_machines, server_class = "ThreadedServer"):
         self.remote_machines = remote_machines
         # build the list incrementally, so we can clean it up if we have an exception
-        self.servers = []
-        for mach in remote_machines:
-            self.servers.append(DeployedServer(mach, server_class))
+        self.servers = [DeployedServer(mach, server_class) for mach in remote_machines]
     
     def __del__(self):
         self.close()
@@ -163,8 +163,10 @@ class MultiServerDeployment(object):
             s.close()
     
     def connect_all(self, service = VoidService, config = {}):
+        """connects to all deployed servers; returns a list of connections (order guaranteed)"""
         return [s.connect(service, config) for s in self.servers]
     def classic_connect_all(self):
+        """connects to all deployed servers using classic_connect; returns a list of connections (order guaranteed)"""
         return [s.classic_connect() for s in self.servers]
 
 

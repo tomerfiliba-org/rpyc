@@ -42,6 +42,9 @@ RPyC - Transparent, Symmetric Distributed Computing
    <a class="reference external" href="https://github.com/tomerfiliba/rpyc/issues">github issues</a> 
    to report problems. <strong>Please do not email me directly</strong>.
    
+   <br/>
+   Learn about the new :ref:`Zero-Deploy <zerodeploy>` feature in the up-coming 3.3 release
+   
    </div>
 
 **RPyC** (pronounced as *are-pie-see*), or *Remote Python Call*, is a **transparent**
@@ -94,7 +97,9 @@ Features
   protocol, and requiring no complex setup (name servers, HTTP, URL-mapping, etc.)
 
 * **Secure** - employs a `Capability based <http://en.wikipedia.org/wiki/Capability-based_security>`_
-  security model
+  security model; intergrates easily with SSH
+
+* **Zero-Deploy Enabled** -- Read more about :ref:`Zero-Deploy RPyC <zerodeploy>`
 
 * **Integrates** with `TLS/SSL <http://en.wikipedia.org/wiki/Transport_Layer_Security>`_,
   `SSH <http://en.wikipedia.org/wiki/Secure_Shell>`_ and `inetd <http://en.wikipedia.org/wiki/inetd>`_.
