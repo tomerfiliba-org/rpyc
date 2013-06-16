@@ -15,7 +15,7 @@ the preferred way to deploy RPyC.
 How It Works
 ------------
 
-Zero-deploy only requires that you have [Plumbum](http://plumbum.readthedocs.org/) (1.2 and later) installed on
+Zero-deploy only requires that you have `Plumbum <http://plumbum.readthedocs.org>`_ (1.2 and later) installed on
 your client machine and that you can connect to the remote machine over SSH. It takes care of the rest:
 
 1. Create a temporary directory on the remote machine 
@@ -49,7 +49,7 @@ it requires only two lines of code::
 
     # you're not limited to a single connection, of course
     conn2 = server.classic_connect()
-    print conn1.modules.os.getpid()
+    print conn2.modules.os.getpid()
 
     # when you're done - close the server and everything will disappear
     server.close()
@@ -100,8 +100,8 @@ If you need to deploy on a group of machines a cluster of machines, you can also
     
     dep.close()
 
-Short-lived Servers
--------------------
+On-Demand Servers
+-----------------
 Zero-deploy is ideal for use-once, on-demand servers. For instance, suppose you need to connect to one of your
 machines periodically or only when a certain event takes place. Keeping an RPyC server up and running at all times
 is a waste of memory and a potential security hole. Using zero-deploy on demand is the best approach for 
