@@ -350,7 +350,7 @@ class UDPRegistryClient(RegistryClient):
                     rip, rport = address[:2]
                 except socket.timeout:
                     self.logger.warn("no registry acknowledged")
-                    break
+                    return False
                 if rport != self.port:
                     continue
                 try:
@@ -359,9 +359,10 @@ class UDPRegistryClient(RegistryClient):
                     continue
                 if reply == "OK":
                     self.logger.info("registry %s:%s acknowledged", rip, rport)
-                    break
+                    return True
             else:
                 self.logger.warn("no registry acknowledged")
+                return False
         finally:
             sock.close()
 
@@ -427,19 +428,21 @@ class TCPRegistryClient(RegistryClient):
                 sock.send(data)
             except (socket.error, socket.timeout):
                 self.logger.warn("could not connect to registry")
-                return
+                return False
             try:
                 data = sock.recv(MAX_DGRAM_SIZE)
             except socket.timeout:
                 self.logger.warn("registry did not acknowledge")
-                return
+                return False
             try:
                 reply = brine.load(data)
             except Exception:
                 self.logger.warn("received corrupted data from registry")
-                return
+                return False
             if reply == "OK":
                 self.logger.info("registry %s:%s acknowledged", self.ip, self.port)
+
+            return True
         finally:
             sock.close()
 
