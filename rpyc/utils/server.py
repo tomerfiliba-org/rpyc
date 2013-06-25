@@ -74,9 +74,8 @@ class Server(object):
             self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         self.listener.bind((hostname, port))
-        if sys.platform == "win32":
-            # hack so we can receive Ctrl+C on windows
-            self.listener.settimeout(0.5)
+        self.listener.settimeout(0.5)
+
         # hack for IPv6 (the tuple can be longer than 2)
         sockname = self.listener.getsockname()
         self.host, self.port = sockname[0], sockname[1]
@@ -122,7 +121,7 @@ class Server(object):
 
     def accept(self):
         """accepts an incoming socket connection (blocking)"""
-        while True:
+        while self.active:
             try:
                 sock, addrinfo = self.listener.accept()
             except socket.timeout:
@@ -135,6 +134,9 @@ class Server(object):
                     raise EOFError()
             else:
                 break
+
+        if not self.active:
+            return
 
         sock.setblocking(True)
         self.logger.info("accepted %s:%s", addrinfo[0], addrinfo[1])
@@ -226,7 +228,7 @@ class Server(object):
             t.start()
         try:
             try:
-                while True:
+                while self.active:
                     self.accept()
             except EOFError:
                 pass # server closed by another thread
