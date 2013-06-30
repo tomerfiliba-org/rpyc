@@ -204,12 +204,20 @@ class Server(object):
             while self.active:
                 t = time.time()
                 if t >= tnext:
-                    tnext = t + interval
+                    did_register = False
+                    aliases = self.service.get_service_aliases()
                     try:
-                        self.registrar.register(self.service.get_service_aliases(),
-                            self.port)
+                        did_register = self.registrar.register(aliases, self.port)
                     except Exception:
                         self.logger.exception("error registering services")
+
+                    # If registration worked out, retry to register again after
+                    # interval time. Otherwise, try to register soon again.
+                    if did_register:
+                        tnext = t + interval
+                    else:
+                        self.logger.info("registering services did not work - retry")
+
                 time.sleep(1)
         finally:
             if not self._closed:
