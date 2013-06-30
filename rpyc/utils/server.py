@@ -42,11 +42,13 @@ class Server(object):
                             that is passed to the RPyC connection
     :param logger: the ``logger`` to use (of the built-in ``logging`` module). If ``None``, a 
                    default logger will be created.
+    :param listener_timeout: the timeout of the listener socket; set to ``None`` to disable (e.g.
+                             on embedded platforms with limited battery)
     """
     
     def __init__(self, service, hostname = "", ipv6 = False, port = 0, 
             backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
-            auto_register = None, protocol_config = {}, logger = None):
+            auto_register = None, protocol_config = {}, logger = None, listener_timeout = 0.5):
         self.active = False
         self._closed = False
         self.service = service
@@ -74,7 +76,7 @@ class Server(object):
             self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         self.listener.bind((hostname, port))
-        self.listener.settimeout(0.5)
+        self.listener.settimeout(listener_timeout)
 
         # hack for IPv6 (the tuple can be longer than 2)
         sockname = self.listener.getsockname()
