@@ -10,11 +10,13 @@ if is_py3k:
     exec("execute = exec")
     def BYTES_LITERAL(text):
         return bytes(text, "utf8")
+    maxint = sys.maxsize
 else:
     exec("""def execute(code, globals = None, locals = None):
                 exec code in globals, locals""")
     def BYTES_LITERAL(text):
         return text
+    maxint = sys.maxint
 
 try:
     from struct import Struct #@UnusedImport
@@ -80,6 +82,11 @@ def get_exc_errno(exc):
     else:
         return exc[0]
 
+if select_module:
+    select_error = select_module.error
+else:
+    select_error = IOError
+
 if hasattr(select_module, "poll"):
     class PollingPoll(object):
         def __init__(self):
@@ -87,9 +94,16 @@ if hasattr(select_module, "poll"):
         def register(self, fd, mode):
             flags = 0
             if "r" in mode:
-                flags |= select_module.POLLIN
+                flags |= select_module.POLLIN | select_module.POLLPRI
             if "w" in mode:
                 flags |= select_module.POLLOUT
+            if "e" in mode:
+                flags |= select_module.POLLERR
+            if "h" in mode:
+                # POLLRDHUP is a linux only extension, not know to python, but nevertheless
+                # used and thus needed in the flags
+                POLLRDHUP = 0x2000
+                flags |= select_module.POLLHUP | select_module.POLLNVAL | POLLRDHUP
             self._poll.register(fd, flags)
         modify = register
         def unregister(self, fd):
@@ -109,7 +123,7 @@ if hasattr(select_module, "poll"):
                     mask += "h"
                 if evt & select_module.POLLNVAL:
                     mask += "n"
-                processed.append(fd)
+                processed.append((fd, mask))
             return processed
     
     poll = PollingPoll

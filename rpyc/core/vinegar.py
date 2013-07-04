@@ -30,13 +30,6 @@ except NameError:
     # python 2.4 compatible
     BaseException = Exception
 
-class GenericException(Exception):
-    """A 'generic exception' that is raised when the exception the gotten from
-    the other party cannot be instantiated locally"""
-    pass
-
-_generic_exceptions_cache = {}
-
 def dump(typ, val, tb, include_local_traceback):
     """Dumps the given exceptions info, as returned by ``sys.exc_info()``
     
@@ -75,7 +68,11 @@ def dump(typ, val, tb, include_local_traceback):
         elif name.startswith("_") or name in ignored_attrs:
             continue
         else:
-            attrval = getattr(val, name)
+            try:
+                attrval = getattr(val, name)
+            except AttributeError:
+                # skip this attr. see issue #108
+                continue
             if not brine.dumpable(attrval):
                 attrval = repr(attrval)
             attrs.append((name, attrval))
@@ -91,21 +88,18 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     details.
     
     :param val: the dumped exception
-    :param import_custom_exceptions: whether to allow this function to import
-                                     custom modules (imposes a security risk)
-    :param instantiate_custom_exceptions: whether to allow this function to 
-                                          instantiate "custom exceptions" (i.e.,
-                                          not one of the built-in exceptions,
+    :param import_custom_exceptions: whether to allow this function to import custom modules 
+                                     (imposes a security risk)
+    :param instantiate_custom_exceptions: whether to allow this function to instantiate "custom 
+                                          exceptions" (i.e., not one of the built-in exceptions,
                                           such as ``ValueError``, ``OSError``, etc.)
-    :param instantiate_oldstyle_exceptions: whether to allow this function to 
-                                            instantiate exception classes that 
-                                            do not derive from ``BaseException``.
-                                            This is required to support old-style
-                                            exceptions.
+    :param instantiate_oldstyle_exceptions: whether to allow this function to instantiate exception 
+                                            classes that do not derive from ``BaseException``.
+                                            This is required to support old-style exceptions. 
+                                            Not applicable for Python 3 and above.
     
     :returns: A throwable exception object
     """
-    
     if val == consts.EXC_STOP_ITERATION:
         return StopIteration # optimization
     if type(val) is str:
@@ -121,8 +115,6 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     if instantiate_custom_exceptions:
         if modname in sys.modules:
             cls = getattr(sys.modules[modname], clsname, None)
-        elif not is_py3k and modname == "builtins":
-            cls = getattr(exceptions_module, clsname, None)
         else:
             cls = None
     elif modname == exceptions_module.__name__:
@@ -130,23 +122,29 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     else:
         cls = None
 
-    if not isinstance(cls, (type, ClassType)):
-        cls = None
-    elif issubclass(cls, ClassType) and not instantiate_oldstyle_exceptions:
-        cls = None
-    elif not issubclass(cls, BaseException):
-        cls = None
+    if is_py3k:
+        if not isinstance(cls, type) or not issubclass(cls, BaseException):
+            cls = None
+    else:
+        if not isinstance(cls, (type, ClassType)):
+            cls = None
+        elif issubclass(cls, ClassType) and not instantiate_oldstyle_exceptions:
+            cls = None
+        elif not issubclass(cls, BaseException):
+            cls = None
 
     if cls is None:
         fullname = "%s.%s" % (modname, clsname)
         if fullname not in _generic_exceptions_cache:
-            fakemodule = {"__module__" : "%s.%s" % (__name__, modname)}
+            fakemodule = {"__module__" : "%s/%s" % (__name__, modname)}
             if isinstance(GenericException, ClassType):
                 _generic_exceptions_cache[fullname] = ClassType(fullname, (GenericException,), fakemodule)
             else:
                 _generic_exceptions_cache[fullname] = type(fullname, (GenericException,), fakemodule)
         cls = _generic_exceptions_cache[fullname]
 
+    cls = _get_exception_class(cls)
+    
     # support old-style exception classes
     if ClassType is not type and isinstance(cls, ClassType):
         exc = InstanceType(cls)
@@ -156,42 +154,38 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     exc.args = args
     for name, attrval in attrs:
         setattr(exc, name, attrval)
-    if hasattr(exc, "_remote_tb"):
-        exc._remote_tb += (tbtext,)
-    else:
-        exc._remote_tb = (tbtext,)
+    exc._remote_tb = tbtext
     return exc
 
 
-#===============================================================================
-# customized except hook
-#===============================================================================
-if hasattr(sys, "excepthook"):
-    _orig_excepthook = sys.excepthook
-else:
-    # ironpython forgot to implement excepthook, scheisse
-    _orig_excepthook = None
+class GenericException(Exception):
+    """A 'generic exception' that is raised when the exception the gotten from
+    the other party cannot be instantiated locally"""
+    pass
 
-def rpyc_excepthook(typ, val, tb):
-    """RPyC-enabled ``excepthook`` (installed to ``sys.excepthook``) upon import.
-    This function is called when an exception reaches the "top level" handler,
-    and will display the remote traceback (if contained within the exception)
-    as well. Not intended to be invoked directly"""
-    if hasattr(val, "_remote_tb"):
-        sys.stderr.write("======= Remote traceback =======\n")
-        tbtext = "\n--------------------------------\n\n".join(val._remote_tb)
-        sys.stderr.write(tbtext)
-        sys.stderr.write("\n======= Local exception ========\n")
-    _orig_excepthook(typ, val, tb)
+_generic_exceptions_cache = {}
+_exception_classes_cache = {}
 
-def install_rpyc_excepthook():
-    """Installs the :func:`rpyc_excepthook` from ``sys.excepthook``; this function
-    is called automatically upon import"""
-    if _orig_excepthook is not None:
-        sys.excepthook = rpyc_excepthook
+def _get_exception_class(cls):
+    if cls in _exception_classes_cache:
+        return _exception_classes_cache[cls]
 
-def uninstall_rpyc_excepthook():
-    """Uninstalls the :func:`rpyc_excepthook` from ``sys.excepthook``"""
-    if _orig_excepthook is not None:
-        sys.excepthook = _orig_excepthook
+    # subclass the exception class' to provide a version of __str__ that supports _remote_tb
+    class Derived(cls):
+        def __str__(self):
+            try:
+                text = cls.__str__(self)
+            except Exception:
+                text = "<Unprintable exception>"
+            if hasattr(self, "_remote_tb"):
+                text += "\n\n========= Remote Traceback (%d) =========\n%s" % (
+                    self._remote_tb.count("\n\n========= Remote Traceback") + 1, self._remote_tb)
+            return text
+        def __repr__(self):
+            return str(self)
+    
+    Derived.__name__ = cls.__name__
+    Derived.__module__ = cls.__module__
+    _exception_classes_cache[cls] = Derived
+    return Derived
 

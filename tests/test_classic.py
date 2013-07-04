@@ -1,3 +1,4 @@
+import os
 import rpyc
 import unittest
 
@@ -24,7 +25,8 @@ class ClassicMode(unittest.TestCase):
         # are gc'ed, they cry that their fd is already closed. this is all
         # considered harmless, but there's no way to disable that message
         # to stderr
-        conn = rpyc.classic.connect_subproc()
+        server_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bin", "rpyc_classic.py")
+        conn = rpyc.classic.connect_subproc(server_file)
         conn.modules.sys.path.append("xxx")
         self.assertEqual(conn.modules.sys.path.pop(-1), "xxx")
         conn.close()

@@ -5,7 +5,7 @@ of *magic*, so beware.
 import sys
 import inspect
 import types
-from rpyc.lib.compat import pickle, is_py3k
+from rpyc.lib.compat import pickle, is_py3k, maxint
 from rpyc.core import consts
 
 
@@ -64,9 +64,11 @@ def syncreq(proxy, handler, *args):
     :raises: any exception raised by the operation will be raised
     :returns: the result of the operation
     """
-    conn = object.__getattribute__(proxy, "____conn__")
+    conn = object.__getattribute__(proxy, "____conn__")()
+    if not conn:
+        raise ReferenceError('weakly-referenced object no longer exists')
     oid = object.__getattribute__(proxy, "____oid__")
-    return conn().sync_request(handler, oid, *args)
+    return conn.sync_request(handler, oid, *args)
 
 def asyncreq(proxy, handler, *args):
     """Performs an asynchronous request on the given proxy object.
@@ -80,12 +82,11 @@ def asyncreq(proxy, handler, *args):
     :returns: an :class:`AsyncResult <rpyc.core.async.AsyncResult>` representing
               the operation
     """
-    conn = object.__getattribute__(proxy, "____conn__")
-    connection = conn()
-    if not connection:
+    conn = object.__getattribute__(proxy, "____conn__")()
+    if not conn:
         raise ReferenceError('weakly-referenced object no longer exists')
     oid = object.__getattribute__(proxy, "____oid__")
-    return connection.async_request(handler, oid, *args)
+    return conn.async_request(handler, oid, *args)
 
 class NetrefMetaclass(type):
     """A *metaclass* used to customize the ``__repr__`` of ``netref`` classes.
@@ -113,6 +114,7 @@ class BaseNetref(object):
     :param conn: the :class:`rpyc.core.protocol.Connection` instance
     :param oid: the unique object ID of the remote object
     """
+    # this is okay with py3k -- see below
     __metaclass__ = NetrefMetaclass
     __slots__ = ["____conn__", "____oid__", "__weakref__"]
     def __init__(self, conn, oid):
@@ -177,7 +179,7 @@ if not isinstance(BaseNetref, NetrefMetaclass):
     # python 2 and 3 compatible metaclass...
     ns = dict(BaseNetref.__dict__)
     for slot in BaseNetref.__slots__:
-        ns.pop(slot) 
+        ns.pop(slot)
     BaseNetref = NetrefMetaclass(BaseNetref.__name__, BaseNetref.__bases__, ns) 
 
 
@@ -196,7 +198,7 @@ def _make_method(name, doc):
         return __call__
     elif name in slicers:                                 # 32/64 bit issue #41
         def method(self, start, stop, *args):
-            if stop == sys.maxint:
+            if stop == maxint:
                 stop = None
             return syncreq(self, consts.HANDLE_OLDSLICING, slicers[name], name, start, stop, args)
         method.__name__ = name

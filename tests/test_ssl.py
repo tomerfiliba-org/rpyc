@@ -1,11 +1,11 @@
 import rpyc
 import os
+import threading
+import unittest
+import time
 from rpyc.utils.authenticators import SSLAuthenticator
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
-import threading
-import unittest
-
 from nose import SkipTest
 
 try:
@@ -33,6 +33,7 @@ class Test_SSL(unittest.TestCase):
         self.server.logger.quiet = False
         t = threading.Thread(target=self.server.start)
         t.start()
+        time.sleep(1)
 
     def tearDown(self):
         self.server.close()

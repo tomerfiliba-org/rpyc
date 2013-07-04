@@ -1,6 +1,19 @@
+v3.2.3
+^^^^^^
+* Guy Rozendorn - backported lots of fixes from 3.3 branch
+* Alon Horev - UNIX domain socket patch
+
+v3.2.2
+^^^^^^
+* Rotem Yaari - Add logging of exceptions to the protocol layer, investigate ``EINTR`` issue
+* Anselm Kruis - Make RPyC more introspection-friendly
+* Rüdiger Kessel - SSH on windows patch
+
 v3.2.1
 ^^^^^^
 * Robert Hayward - adding missing import
+* `pyscripter <https://github.com/pyscripter>`_ - investigating python 3 incompatibilities
+* `xanep <https://github.com/xanep>`_ - handling ``__cmp__`` correctly
 
 v3.2.0
 ^^^^^^

@@ -4,6 +4,6 @@
 .settings
 dist
 MANIFEST
-
-
-/MANIFEST
+__pycache__
+rpyc.egg-info
+*.egg

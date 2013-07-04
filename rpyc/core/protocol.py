@@ -2,18 +2,16 @@
 The RPyC protocol
 """
 import sys
-import select
 import weakref
 import itertools
 import socket
 import time
 
 from threading import Lock
-from rpyc.lib.compat import pickle, next, is_py3k
+from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
-
 
 class PingError(Exception):
     """The exception raised should :func:`Connection.ping` fail"""
@@ -25,7 +23,7 @@ DEFAULT_CONFIG = dict(
     allow_exposed_attrs = True,
     allow_public_attrs = False,
     allow_all_attrs = False,
-    safe_attrs = set(['__abs__', '__add__', '__and__', '__cmp__', '__contains__',
+    safe_attrs = set(['__abs__', '__add__', '__and__', '__bool__', '__cmp__', '__contains__',
         '__delitem__', '__delslice__', '__div__', '__divmod__', '__doc__',
         '__eq__', '__float__', '__floordiv__', '__ge__', '__getitem__',
         '__getslice__', '__gt__', '__hash__', '__hex__', '__iadd__', '__iand__',
@@ -50,10 +48,13 @@ DEFAULT_CONFIG = dict(
     import_custom_exceptions = False,
     instantiate_oldstyle_exceptions = False, # which don't derive from Exception
     propagate_SystemExit_locally = False, # whether to propagate SystemExit locally or to the other party
+    log_exceptions = True,
     # MISC
     allow_pickle = False,
     connid = None,
     credentials = None,
+    endpoints = None,
+    logger = None,
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
@@ -64,7 +65,7 @@ by passing a different configuration dict to the :class:`Connection` class.
    to repeat parameters whose values remain unchanged.
 
 =====================================  ================  =====================================================
-Parameter                               Default value     Description
+Parameter                              Default value     Description
 =====================================  ================  =====================================================
 ``allow_safe_attrs``                   ``True``          Whether to allow the use of *safe* attributes
                                                          (only those listed as ``safe_attrs``)
@@ -87,15 +88,25 @@ Parameter                               Default value     Description
 ``import_custom_exceptions``           ``False``         Whether to allow importing of 
                                                          exceptions from not-yet-imported modules
 ``instantiate_oldstyle_exceptions``    ``False``         Whether to allow instantiation of exceptions
-                                                         which don't derive from ``Exception``
+                                                         which don't derive from ``Exception``. This
+                                                         is not applicable for Python 3 and later.
 ``propagate_SystemExit_locally``       ``False``         Whether to propagate ``SystemExit``
-                                                         locally or to the other party
+                                                         locally (kill the server) or to the other 
+                                                         party (kill the client)
+``logger``                             ``None``          The logger instance to use to log exceptions
+                                                         (before they are sent to the other party)
+                                                         and other events. If ``None``, no logging takes place.
 
 ``connid``                             ``None``          **Runtime**: the RPyC connection ID (used
                                                          mainly for debugging purposes) 
 ``credentials``                        ``None``          **Runtime**: the credentails object that was returned
                                                          by the server's :ref:`authenticator <api-authenticators>`
                                                          or ``None``
+``endpoints``                          ``None``          **Runtime**: The connection's endpoints. This is a tuple 
+                                                         made of the local socket endpoint (``getsockname``) and the 
+                                                         remote one (``getpeername``). This is set by the server
+                                                         upon accepting a connection; client side connections
+                                                         do no have this configuration option set.
 =====================================  ================  =====================================================
 """
 
@@ -162,7 +173,6 @@ class Connection(object):
         self._local_objects.clear()
         self._proxy_cache.clear()
         self._netref_classes_cache.clear()
-        self._last_traceback = None
         self._last_traceback = None
         self._remote_root = None
         self._local_root = None
@@ -294,6 +304,8 @@ class Connection(object):
             # need to catch old style exceptions too
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
+            if self._config["logger"]:
+                self._config["logger"].debug("Exception caught", exc_info=True)
             if t is SystemExit and self._config["propagate_SystemExit_locally"]:
                 raise
             self._send_exception(seq, t, v, tb)
@@ -381,7 +393,7 @@ class Connection(object):
             try:
                 while True:
                     self.serve(0.1)
-            except (socket.error, select.error):
+            except (socket.error, select_error, IOError):
                 if not self.closed:
                     raise
             except EOFError:
@@ -392,7 +404,7 @@ class Connection(object):
     def poll_all(self, timeout = 0):
         """Serves all requests and replies that arrive within the given interval.
         
-        :returns: ``True`` if at least transaction was served, ``False`` otherwise
+        :returns: ``True`` if at least a single transaction was served, ``False`` otherwise
         """
         at_least_once = False
         t0 = time.time()
@@ -438,7 +450,7 @@ class Connection(object):
         """
         timeout = kwargs.pop("timeout", None)
         if kwargs:
-            raise TypeError("got unexpected keyword argument %r" % (kwargs.keys()[0],))
+            raise TypeError("got unexpected keyword argument(s) %s" % (list(kwargs.keys()),))
         res = AsyncResult(weakref.proxy(self))
         self._async_request(handler, args, res)
         if timeout is not None:
@@ -512,7 +524,7 @@ class Connection(object):
         obj = self._local_objects[oid]
         try:
             return type(obj).__cmp__(obj, other)
-        except TypeError:
+        except (AttributeError, TypeError):
             return NotImplemented
     def _handle_hash(self, oid):
         return hash(self._local_objects[oid])
@@ -553,7 +565,7 @@ class Connection(object):
         except Exception:
             # fallback to __xxxslice__. see issue #41
             if stop is None:
-                stop = sys.maxint
+                stop = maxint
             getslice = self._handle_getattr(oid, fallback)
             return getslice(start, stop, *args)
 

@@ -7,8 +7,8 @@ try:
 except ImportError:
     from distutils.core import setup
 
-if sys.version_info < (2, 4):
-    sys.exit("requires python 2.4 and up")
+if sys.version_info < (2, 5):
+    sys.exit("requires python 2.5 and up")
 
 here = os.path.dirname(__file__)
 exec(open(os.path.join(here, 'rpyc', 'version.py')).read())
@@ -18,9 +18,9 @@ setup(name = "rpyc",
     description = "Remote Python Call (RPyC), a transparent and symmetric RPC library",
     author = "Tomer Filiba",
     author_email = "tomerfiliba@gmail.com",
+    maintainer_email = "rpyc@googlegroups.com",
     license = "MIT",
-    url = "http://rpyc.sourceforge.net",
-    download_url = "http://sourceforge.net/projects/rpyc/files/main/%s" % (version_string,), #@UndefinedVariable
+    url = "http://rpyc.readthedocs.org",
     packages = [
         'rpyc',
         'rpyc.core',
@@ -28,23 +28,28 @@ setup(name = "rpyc",
         'rpyc.utils',
     ],
     scripts = [
-        os.path.join("rpyc", "scripts", "rpyc_classic.py"),
-        os.path.join("rpyc", "scripts", "rpyc_registry.py"),
+        os.path.join(here, "bin", "rpyc_classic.py"),
+        os.path.join(here, "bin", "rpyc_registry.py"),
     ],
+    tests_require = ['nose'],
+    test_suite = 'nose.collector',
+    install_requires = ["six", "plumbum"],
+#    entry_points = dict(
+#        console_scripts = [
+#            "rpyc_classic = rpyc.scripts.rpyc_classic:main",
+#            "rpyc_registry = rpyc.scretips.rpyc_registry:main",
+#        ],
+#    ),
     platforms = ["POSIX", "Windows"],
     use_2to3 = False,
-    zip_ok = False,
-    long_description = ("A symmetric library for transparent RPC, clustering and "
-        "distributed computing for python, built around the concept of remote "
-        "services and object proxying"),
+    zip_safe = False,
+    long_description = open(os.path.join(here, "README.rst"), "r").read(),
     classifiers = [
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
         "Intended Audience :: System Administrators",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.4",
         "Programming Language :: Python :: 2.5",
         "Programming Language :: Python :: 2.6",
         "Programming Language :: Python :: 2.7",
@@ -52,6 +57,7 @@ setup(name = "rpyc",
         "Programming Language :: Python :: 3.0",
         "Programming Language :: Python :: 3.1",
         "Programming Language :: Python :: 3.2",
+        "Programming Language :: Python :: 3.3",
         "Topic :: Internet",
         "Topic :: Software Development :: Libraries :: Python Modules",
         "Topic :: Software Development :: Object Brokering",

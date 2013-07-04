@@ -1,8 +1,82 @@
+3.3.0
+-----
+* RPyC integrates with `plumbum <http://pypi.python.org/pypi/plumbum>`_; plumbum is required
+  for some features, like ``rpyc_classic.py`` and *zero deploy*, but the core of the library
+  doesn't require it. It is, of course, advised to have it installed.
+
+* ``SshContext``, ``SshTunnel`` classes killed in favor of plumbum's SSH tunneling. The interface
+  doesn't change much, except that ``ssh_connect`` now accept a ``plumbum.SshMachine`` instance
+  instead of ``SshContext``.
+
+* Zero deploy: deploy RPyC to a remote machine over an SSH connection and form an SSH tunnel 
+  connected to it, in just one line of code. All you need is SSH access and a Python interpreter
+  installed on the remote machine.
+
+* Dropping python 2.4 support. RPyC now requires python 2.5 - 3.3.
+
+* rpycd - a well-behaved daemon for ``rpyc_classic.py``, based on 
+  `python-daemon <http://pypi.python.org/pypi/python-daemon/>`_
+
+* The ``OneShotServer`` is now exposed by ``rpyc_classic -m oneshot``
+
+* ``scripts`` directory renamed ``bin``
+
+* Introducing ``Splitbrain Python`` - running code on remote machines transparently
+
+* Removing the ``BgServerThread`` and all polling/timeout hacks in favor of a "global background 
+  reactor thread" that handles all incoming transport from all connections. This should solve 
+  all threading issues once and for all.
+
+
+3.2.3
+-----
+* Fix (`issue #76 <https://github.com/tomerfiliba/rpyc/issues/76>`_) for real this time
+
+* Fix issue with ``BgServingThread`` (`#89 <https://github.com/tomerfiliba/rpyc/issues/89>`_)
+
+* Fix issue with ``ThreadPoolServer`` (`#91 <https://github.com/tomerfiliba/rpyc/issues/91>`_)
+
+* Remove RPyC's ``excepthook`` in favor of chaining the exception's remote tracebacks in the
+  exception class' ``__str__`` method. This solves numerous issues with logging and debugging.
+
+* Add ``OneShotServer``
+
+* Add `UNIX domain sockets <https://github.com/tomerfiliba/rpyc/pull/100>`_
+
+3.2.2
+-----
+* Windows: make SSH tunnels windowless (`#68 <https://github.com/tomerfiliba/rpyc/issues/68>`_)
+
+* Fixes a compatibility issue with IronPython on Mono
+  (`#72 <https://github.com/tomerfiliba/rpyc/issues/72>`_)
+
+* Fixes an issue with introspection when an ``AttributeError`` is expected
+  (`#71 <https://github.com/tomerfiliba/rpyc/issues/71>`_)
+
+* The server now logs all exceptions (`#73 <https://github.com/tomerfiliba/rpyc/issues/73>`_)
+
+* Forking server: call ``siginterrupt(False)`` in forked child 
+  (`#76 <https://github.com/tomerfiliba/rpyc/issues/76>`_)
+
+* Shutting down the old wikidot site 
+
+* Adding `Travis CI <http://travis-ci.org/#!/tomerfiliba/rpyc>`_ integration
+
 3.2.1
 -----
 * Adding missing import (`#52 <https://github.com/tomerfiliba/rpyc/issues/52>`_)
 
 * Fixing site documentation issue (`#54 <https://github.com/tomerfiliba/rpyc/issues/54>`_)
+
+* Fixing Python 3 incompatibilities (`#58 <https://github.com/tomerfiliba/rpyc/issues/58>`_, 
+  `#59 <https://github.com/tomerfiliba/rpyc/issues/59>`_, 
+  `#60 <https://github.com/tomerfiliba/rpyc/issues/60>`_,
+  `#61 <https://github.com/tomerfiliba/rpyc/issues/61>`_,
+  `#66 <https://github.com/tomerfiliba/rpyc/issues/66>`_)
+
+* Fixing ``slice`` issue (`#62 <https://github.com/tomerfiliba/rpyc/issues/62>`_)
+
+* Added the ``endpoints`` parameter to the config dict of connection (only on the server side)
 
 3.2.0
 -----
@@ -45,8 +119,8 @@
 3.1.0
 ------
 
-What's New:
-^^^^^^^^^^^
+What's New
+^^^^^^^^^^
 * Supports CPython 2.4-2.7, IronPython, and Jython
 
 * `tlslite <http://sourceforge.net/projects/rpyc/files/tlslite>`_ has been ported to
@@ -75,8 +149,8 @@ What's New:
 
 * Fixes typos, running pylint, etc.
 
-Breakage from 3.0.7:
-^^^^^^^^^^^^^^^^^^^^
+Breakage from 3.0.7
+^^^^^^^^^^^^^^^^^^^
 * Removing egg builds (we're pure python, and eggs just messed up the build)
 
 * Package layout changed drastically, and some files were renamed

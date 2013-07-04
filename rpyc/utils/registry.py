@@ -57,7 +57,7 @@ class RegistryServer(object):
         """updates the service's keep-alive time stamp"""
         if name not in self.services:
             self.services[name] = {}
-        is_new = addrinfo not in self.services
+        is_new = addrinfo not in self.services[name]
         self.services[name][addrinfo] = time.time()
         if is_new:
             try:
@@ -147,7 +147,7 @@ class RegistryServer(object):
             raise ValueError("server is already running")
         if self.sock is None:
             raise ValueError("object disposed")
-        self.logger.debug("server started on %s:%s", *self.sock.getsockname())
+        self.logger.debug("server started on %s:%s", *self.sock.getsockname()[:2])
         try:
             try:
                 self.active = True
@@ -171,12 +171,14 @@ class UDPRegistryServer(RegistryServer):
     """UDP-based registry server. The server listens to UDP broadcasts and
     answers them. Useful in local networks, were broadcasts are allowed"""
     
-    def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT,
-            pruning_timeout = None, logger = None):
-
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        sock.bind((host, port))
-        sock.settimeout(0.5)
+    TIMEOUT = 1.0
+    
+    def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT, pruning_timeout = None, logger = None):
+        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, 0, 
+            socket.SOCK_DGRAM)[0]
+        sock = socket.socket(family, socktype, proto)
+        sock.bind(sockaddr)
+        sock.settimeout(self.TIMEOUT)
         RegistryServer.__init__(self, sock, pruning_timeout = pruning_timeout,
             logger = logger)
 
@@ -196,17 +198,21 @@ class TCPRegistryServer(RegistryServer):
     """TCP-based registry server. The server listens to a certain TCP port and
     answers requests. Useful when you need to cross routers in the network, since
     they block UDP broadcasts"""
-    
-    def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT,
-            pruning_timeout = None, logger = None, reuse_addr = True):
 
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    TIMEOUT = 3.0
+    
+    def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT, pruning_timeout = None, 
+            logger = None, reuse_addr = True):
+
+        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, 0, 
+            socket.SOCK_STREAM)[0]
+        sock = socket.socket(family, socktype, proto)
         if reuse_addr and sys.platform != "win32":
             # warning: reuseaddr is not what you expect on windows!
             sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind((host, port))
+        sock.bind(sockaddr)
         sock.listen(10)
-        sock.settimeout(0.5)
+        sock.settimeout(self.TIMEOUT)
         RegistryServer.__init__(self, sock, pruning_timeout = pruning_timeout,
             logger = logger)
         self._connected_sockets = {}
@@ -291,18 +297,24 @@ class UDPRegistryClient(RegistryClient):
     """
     
     def __init__(self, ip = "255.255.255.255", port = REGISTRY_PORT, timeout = 2,
-    bcast = None, logger = None):
+            bcast = None, logger = None, ipv6 = False):
         RegistryClient.__init__(self, ip = ip, port = port, timeout = timeout,
             logger = logger)
-        if bcast is None:
-            bcast = "255" in ip.split(".")
-        self.bcast = bcast
+        
+        if ipv6:
+            self.sock_family = socket.AF_INET6
+            self.bcast = False
+        else:
+            self.sock_family = socket.AF_INET
+            if bcast is None:
+                bcast = "255" in ip.split(".")
+            self.bcast = bcast
 
     def _get_logger(self):
         return logging.getLogger('REGCLNT/UDP')
 
     def discover(self, name):
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock = socket.socket(self.sock_family, socket.SOCK_DGRAM)
 
         try:
             if self.bcast:
@@ -323,7 +335,7 @@ class UDPRegistryClient(RegistryClient):
 
     def register(self, aliases, port):
         self.logger.info("registering on %s:%s", self.ip, self.port)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock = socket.socket(self.sock_family, socket.SOCK_DGRAM)
         try:
             if self.bcast:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
@@ -334,10 +346,11 @@ class UDPRegistryClient(RegistryClient):
             while time.time() < tmax:
                 sock.settimeout(tmax - time.time())
                 try:
-                    data, (rip, rport) = sock.recvfrom(MAX_DGRAM_SIZE)
+                    data, address = sock.recvfrom(MAX_DGRAM_SIZE)
+                    rip, rport = address[:2]
                 except socket.timeout:
                     self.logger.warn("no registry acknowledged")
-                    break
+                    return False
                 if rport != self.port:
                     continue
                 try:
@@ -346,15 +359,16 @@ class UDPRegistryClient(RegistryClient):
                     continue
                 if reply == "OK":
                     self.logger.info("registry %s:%s acknowledged", rip, rport)
-                    break
+                    return True
             else:
                 self.logger.warn("no registry acknowledged")
+                return False
         finally:
             sock.close()
 
     def unregister(self, port):
         self.logger.info("unregistering from %s:%s", self.ip, self.port)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock = socket.socket(self.sock_family, socket.SOCK_DGRAM)
         try:
             if self.bcast:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
@@ -414,19 +428,21 @@ class TCPRegistryClient(RegistryClient):
                 sock.send(data)
             except (socket.error, socket.timeout):
                 self.logger.warn("could not connect to registry")
-                return
+                return False
             try:
                 data = sock.recv(MAX_DGRAM_SIZE)
             except socket.timeout:
                 self.logger.warn("registry did not acknowledge")
-                return
+                return False
             try:
                 reply = brine.load(data)
             except Exception:
                 self.logger.warn("received corrupted data from registry")
-                return
+                return False
             if reply == "OK":
                 self.logger.info("registry %s:%s acknowledged", self.ip, self.port)
+
+            return True
         finally:
             sock.close()
 

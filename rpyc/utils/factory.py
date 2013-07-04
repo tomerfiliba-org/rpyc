@@ -3,12 +3,17 @@ RPyC connection factories: ease the creation of a connection for the common
 cases)
 """
 import socket
+
 import threading
-from multiprocessing import Process
 try:
     from thread import interrupt_main
 except ImportError:
-    from _thread import interrupt_main
+    try:
+        from _thread import interrupt_main
+    except ImportError:
+        # assume jython (#83)
+        from java.lang import System
+        interrupt_main = System.exit
 
 from rpyc import Connection, Channel, SocketStream, TunneledSocketStream, PipeStream, VoidService
 from rpyc.utils.registry import UDPRegistryClient
@@ -138,11 +143,13 @@ def _get_free_port():
     s.close()
     return port
 
-def ssh_connect(sshctx, remote_port, service = VoidService, config = {}):
+def ssh_connect(remote_machine, remote_port, service = VoidService, config = {}):
     """
-    Connects to an RPyC server over an SSH tunnel
+    Connects to an RPyC server over an SSH tunnel (created by plumbum).
+    See `Plumbum tunneling <http://plumbum.readthedocs.org/en/latest/remote.html#tunneling>`_ 
+    for further details.
     
-    :param sshctx: an :class:`rpyc.utils.ssh.SshContext` instance
+    :param remote_machine: an :class:`plumbum.remote.RemoteMachine` instance
     :param remote_port: the port of the remote server
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict
@@ -150,7 +157,7 @@ def ssh_connect(sshctx, remote_port, service = VoidService, config = {}):
     :returns: an RPyC connection
     """
     loc_port = _get_free_port()
-    tun = sshctx.tunnel(loc_port, remote_port)
+    tun = remote_machine.tunnel(loc_port, remote_port)
     stream = TunneledSocketStream.connect("localhost", loc_port)
     stream.tun = tun
     return Connection(service, Channel(stream), config = config)
@@ -252,6 +259,8 @@ def connect_multiprocess(service = VoidService, config = {}, remote_service = Vo
     
     Contributed by *@tvanzyl*
     """
+    from multiprocessing import Process
+    
     listener = socket.socket()
     listener.bind(("localhost", 0))
     listener.listen(1)
@@ -265,10 +274,8 @@ def connect_multiprocess(service = VoidService, config = {}, remote_service = Vo
                 conn._local_root.exposed_namespace[k] = args[k]
             conn.serve_all()
         except KeyboardInterrupt:
-            interrupt_main()            
-    proc = Process(target = server)
-    proc.start()
-    host, port = listener.getsockname()
-    conn = connect(host, port, service = service, config = config)
-    conn.proc = proc
-    return 
+            interrupt_main()
+    	t = Process(target = server)
+    	t.start()
+    	host, port = listener.getsockname()
+    	return connect(host, port, service = service, config = config)

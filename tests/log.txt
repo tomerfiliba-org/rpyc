@@ -1,0 +1,142 @@
+filibt@ISENFILIBTL1C /c/Users/filibt/workspace/rpyc (master)
+$ /c/Python32/python tests/test_splitbrain.py
+E
+======================================================================
+ERROR: test (__main__.SplitbrainTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "tests/test_splitbrain.py", line 68, in test
+    f()
+  File "tests/test_splitbrain.py", line 63, in f
+    g()
+  File "tests/test_splitbrain.py", line 65, in g
+    h()
+  File "tests/test_splitbrain.py", line 67, in h
+    open("crap.txt", "r")
+  File "c:\users\filibt\workspace\rpyc\rpyc\utils\splitbrain.py", line 165, in tlbuiltin
+    return func(*args, **kwargs)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\netref.py", line 196, in __call__
+    return syncreq(_self, consts.HANDLE_CALL, args, kwargs)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\netref.py", line 71, in syncreq
+    return conn.sync_request(handler, oid, *args)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 438, in sync_request
+    raise obj
+IOError: [Errno 2] No such file or directory: 'crap.txt'
+
+========= Remote Traceback (1) =========
+Traceback (most recent call last):
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 300, in _dispatch_request
+    res = self._HANDLERS[handler](self, *args)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 532, in _handle_call
+    return self._local_objects[oid](*args, **dict(kwargs))
+IOError: [Errno 2] No such file or directory: 'crap.txt'
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Python32\lib\linecache.py", line 81, in updatecache
+    stat = os.stat(fullname)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\netref.py", line 196, in __call__
+    return syncreq(_self, consts.HANDLE_CALL, args, kwargs)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\netref.py", line 71, in syncreq
+    return conn.sync_request(handler, oid, *args)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 438, in sync_request
+    raise obj
+WindowsError: [Error 3] The system cannot find the path specified: 'tests/test_splitbrain.py'
+
+========= Remote Traceback (1) =========
+Traceback (most recent call last):
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 300, in _dispatch_request
+    res = self._HANDLERS[handler](self, *args)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 532, in _handle_call
+    return self._local_objects[oid](*args, **dict(kwargs))
+WindowsError: [Error 3] The system cannot find the path specified: 'tests/test_splitbrain.py'
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "c:\Python32\lib\linecache.py", line 119, in updatecache
+    stat = os.stat(fullname)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\netref.py", line 196, in __call__
+    return syncreq(_self, consts.HANDLE_CALL, args, kwargs)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\netref.py", line 71, in syncreq
+    return conn.sync_request(handler, oid, *args)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 438, in sync_request
+    raise obj
+WindowsError: [Error 3] The system cannot find the path specified: 'c:\\Users\\filibt\\workspace\\rpyc\\tests\\tests/test_splitbrain.py'
+
+========= Remote Traceback (1) =========
+Traceback (most recent call last):
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 300, in _dispatch_request
+    res = self._HANDLERS[handler](self, *args)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 532, in _handle_call
+    return self._local_objects[oid](*args, **dict(kwargs))
+WindowsError: [Error 3] The system cannot find the path specified: 'c:\\Users\\filibt\\workspace\\rpyc\\tests\\tests/test_splitbrain.py'
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "tests/test_splitbrain.py", line 70, in test
+    tbtext = "".join(traceback.format_exception(*sys.exc_info()))
+  File "c:\Python32\lib\traceback.py", line 186, in format_exception
+    list.extend(format_tb(tb, limit))
+  File "c:\Python32\lib\traceback.py", line 75, in format_tb
+    return format_list(extract_tb(tb, limit))
+  File "c:\Python32\lib\traceback.py", line 100, in extract_tb
+    line = linecache.getline(filename, lineno, f.f_globals)
+  File "c:\Python32\lib\linecache.py", line 15, in getline
+    lines = getlines(filename, module_globals)
+  File "c:\Python32\lib\linecache.py", line 41, in getlines
+    return updatecache(filename, module_globals)
+  File "c:\Python32\lib\linecache.py", line 121, in updatecache
+    except os.error:
+TypeError: catching classes that do not inherit from BaseException is not allowed
+
+----------------------------------------------------------------------
+Ran 1 test in 1.019s
+
+FAILED (errors=1)
+
+filibt@ISENFILIBTL1C /c/Users/filibt/workspace/rpyc (master)
+$ /c/Python27/python tests/test_splitbrain.py
+E
+======================================================================
+ERROR: test (__main__.SplitbrainTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "tests/test_splitbrain.py", line 70, in test
+    tbtext = "".join(traceback.format_exception(*sys.exc_info()))
+  File "c:\Python27\lib\traceback.py", line 141, in format_exception
+    list = list + format_tb(tb, limit)
+  File "c:\Python27\lib\traceback.py", line 76, in format_tb
+    return format_list(extract_tb(tb, limit))
+  File "c:\Python27\lib\traceback.py", line 101, in extract_tb
+    line = linecache.getline(filename, lineno, f.f_globals)
+  File "c:\Python27\lib\linecache.py", line 14, in getline
+    lines = getlines(filename, module_globals)
+  File "c:\Python27\lib\linecache.py", line 40, in getlines
+    return updatecache(filename, module_globals)
+  File "c:\Python27\lib\linecache.py", line 120, in updatecache
+    stat = os.stat(fullname)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\netref.py", line 196, in __call__
+    return syncreq(_self, consts.HANDLE_CALL, args, kwargs)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\netref.py", line 71, in syncreq
+    return conn.sync_request(handler, oid, *args)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 438, in sync_request
+    raise obj
+WindowsError: [Error 3] The system cannot find the path specified: 'c:\\Users\\filibt\\workspace\\rpyc\\tests\\tests/test_splitbrain.py'
+
+========= Remote Traceback (1) =========
+Traceback (most recent call last):
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 300, in _dispatch_request
+    res = self._HANDLERS[handler](self, *args)
+  File "c:\users\filibt\workspace\rpyc\rpyc\core\protocol.py", line 532, in _handle_call
+    return self._local_objects[oid](*args, **dict(kwargs))
+WindowsError: [Error 3] The system cannot find the path specified: 'c:\\Users\\filibt\\workspace\\rpyc\\tests\\tests/test_splitbrain.py'
+
+
+----------------------------------------------------------------------
+Ran 1 test in 0.568s

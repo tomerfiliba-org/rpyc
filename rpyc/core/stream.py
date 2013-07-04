@@ -8,7 +8,7 @@ import socket
 import time
 import errno
 from rpyc.lib import safe_import
-from rpyc.lib.compat import select, BYTES_LITERAL, get_exc_errno
+from rpyc.lib.compat import select, select_error, BYTES_LITERAL, get_exc_errno, maxint
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 msvcrt = safe_import("msvcrt")
@@ -35,7 +35,13 @@ class Stream(object):
     def poll(self, timeout):
         """indicates whether the stream has data to read (within *timeout* 
         seconds)"""
-        rl, _, _ = select([self], [], [], timeout)
+        try:
+            rl, _, _ = select([self], [], [], timeout)
+        except ValueError:
+            # i get this some times: "ValueError: file descriptor cannot be a negative integer (-1)"
+            # let's translate it to select.error
+            ex = sys.exc_info()[1]
+            raise select_error(str(ex))
         return bool(rl)
     def read(self, count):
         """reads **exactly** *count* bytes, or raise EOFError
@@ -57,6 +63,8 @@ class ClosedFile(object):
     """Represents a closed file object (singleton)"""
     __slots__ = ()
     def __getattr__(self, name):
+        if name.startswith("__"): # issue 71
+            raise AttributeError("stream has been closed")
         raise EOFError("stream has been closed")
     def close(self):
         pass
@@ -79,9 +87,11 @@ class SocketStream(Stream):
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM,
             proto = 0, timeout = 3, nodelay = False):
+        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, family, 
+            socktype, proto)[0]
         s = socket.socket(family, socktype, proto)
         s.settimeout(timeout)
-        s.connect((host, port))
+        s.connect(sockaddr)
         if nodelay:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         return s
@@ -181,7 +191,7 @@ class SocketStream(Stream):
             raise EOFError(ex)
 
 class TunneledSocketStream(SocketStream):
-    """A socket stream over an :class:`rpyc.utils.ssh.SshTunnel`"""
+    """A socket stream over an SSH tunnel (terminates the tunnel when the connection closes)"""
     
     __slots__ = ("tun",)
     def __init__(self, sock):
@@ -339,7 +349,7 @@ class Win32PipeStream(Stream):
     def poll(self, timeout, interval = 0.1):
         """a poor man's version of select()"""
         if timeout is None:
-            timeout = sys.maxint
+            timeout = maxint
         length = 0
         tmax = time.time() + timeout
         try:

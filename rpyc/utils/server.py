@@ -42,11 +42,13 @@ class Server(object):
                             that is passed to the RPyC connection
     :param logger: the ``logger`` to use (of the built-in ``logging`` module). If ``None``, a 
                    default logger will be created.
+    :param listener_timeout: the timeout of the listener socket; set to ``None`` to disable (e.g.
+                             on embedded platforms with limited battery)
     """
     
     def __init__(self, service, hostname = "", ipv6 = False, port = 0, 
             backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
-            auto_register = None, protocol_config = {}, logger = None):
+            auto_register = None, protocol_config = {}, logger = None, listener_timeout = 0.5):
         self.active = False
         self._closed = False
         self.service = service
@@ -69,19 +71,22 @@ class Server(object):
         
         if reuse_addr and sys.platform != "win32":
             # warning: reuseaddr is not what you'd expect on windows!
-            # it allows you to bind an already bound port, results in 
-            # "unexpected behavior"
+            # it allows you to bind an already bound port, resulting in "unexpected behavior"
+            # (quoting MSDN)
             self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         self.listener.bind((hostname, port))
-        # hack so we can receive Ctrl+C on windows
-        self.listener.settimeout(0.5)
+        self.listener.settimeout(listener_timeout)
+
+        # hack for IPv6 (the tuple can be longer than 2)
         sockname = self.listener.getsockname()
         self.host, self.port = sockname[0], sockname[1]
 
         if logger is None:
             logger = logging.getLogger("%s/%d" % (self.service.get_service_name(), self.port))
         self.logger = logger
+        if "logger" not in self.protocol_config:
+            self.protocol_config["logger"] = self.logger
         if registrar is None:
             registrar = UDPRegistryClient(logger = self.logger)
         self.registrar = registrar
@@ -98,6 +103,10 @@ class Server(object):
                 self.registrar.unregister(self.port)
             except Exception:
                 self.logger.exception("error unregistering services")
+        try:
+            self.listener.shutdown(socket.SHUT_RDWR)
+        except (EnvironmentError, socket.error):
+            pass
         self.listener.close()
         self.logger.info("listener closed")
         for c in set(self.clients):
@@ -114,24 +123,22 @@ class Server(object):
 
     def accept(self):
         """accepts an incoming socket connection (blocking)"""
-        while True:
+        while self.active:
             try:
                 sock, addrinfo = self.listener.accept()
             except socket.timeout:
                 pass
             except socket.error:
                 ex = sys.exc_info()[1]
-                if hasattr(ex, "errno"):
-                    if get_exc_errno(ex) == errno.EINTR:
-                        pass
-                    else:
-                        raise EOFError()
-                elif ex[0] == errno.EINTR:
+                if get_exc_errno(ex) == errno.EINTR:
                     pass
                 else:
                     raise EOFError()
             else:
                 break
+
+        if not self.active:
+            return
 
         sock.setblocking(True)
         self.logger.info("accepted %s:%s", addrinfo[0], addrinfo[1])
@@ -183,7 +190,8 @@ class Server(object):
         else:
             self.logger.info("welcome [%s]:%s", h, p)
         try:
-            config = dict(self.protocol_config, credentials = credentials)
+            config = dict(self.protocol_config, credentials = credentials, 
+                endpoints = (sock.getsockname(), addrinfo))
             conn = Connection(self.service, Channel(SocketStream(sock)),
                 config = config, _lazy = True)
             conn._init_service()
@@ -200,12 +208,20 @@ class Server(object):
             while self.active:
                 t = time.time()
                 if t >= tnext:
-                    tnext = t + interval
+                    did_register = False
+                    aliases = self.service.get_service_aliases()
                     try:
-                        self.registrar.register(self.service.get_service_aliases(),
-                            self.port)
+                        did_register = self.registrar.register(aliases, self.port)
                     except Exception:
                         self.logger.exception("error registering services")
+
+                    # If registration worked out, retry to register again after
+                    # interval time. Otherwise, try to register soon again.
+                    if did_register:
+                        tnext = t + interval
+                    else:
+                        self.logger.info("registering services did not work - retry")
+
                 time.sleep(1)
         finally:
             if not self._closed:
@@ -222,7 +238,7 @@ class Server(object):
             t.start()
         try:
             try:
-                while True:
+                while self.active:
                     self.accept()
             except EOFError:
                 pass # server closed by another thread
@@ -233,6 +249,18 @@ class Server(object):
             self.logger.info("server has terminated")
             self.close()
 
+
+class OneShotServer(Server):
+    """
+    A server that handles a single connection (blockingly), and terminates after that
+    
+    Parameters: see :class:`Server`
+    """
+    def _accept_method(self, sock):
+        try:
+            self._authenticate_and_serve_client(sock)
+        finally:
+            self.close()
 
 class ThreadedServer(Server):
     """
@@ -333,7 +361,7 @@ class ThreadPoolServer(Server):
 
     def _add_inactive_connection(self, fd):
         '''adds a connection to the set of inactive ones'''
-        self.poll_object.register(fd, "rw")
+        self.poll_object.register(fd, "reh")
 
     def _handle_poll_result(self, connlist):
         '''adds a connection to the set of inactive ones'''
@@ -488,6 +516,8 @@ class ForkingServer(Server):
                 try:
                     self.logger.debug("child process created")
                     signal.signal(signal.SIGCHLD, self._prevhandler)
+                    #76: call signal.siginterrupt(False) in forked child
+                    signal.siginterrupt(signal.SIGCHLD, False)
                     self.listener.close()
                     self.clients.clear()
                     self._authenticate_and_serve_client(sock)
