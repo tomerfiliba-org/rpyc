@@ -83,10 +83,10 @@ class SocketStream(Stream):
     MAX_IO_CHUNK = 8000
     def __init__(self, sock):
         self.sock = sock
-    
+
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM,
-            proto = 0, timeout = 3, nodelay = False):
+            proto = 0, timeout = 3, nodelay = False, keepalive = False):
         family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, family, 
             socktype, proto)[0]
         s = socket.socket(family, socktype, proto)
@@ -94,6 +94,14 @@ class SocketStream(Stream):
         s.connect(sockaddr)
         if nodelay:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        if keepalive:
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+            # Linux specific: after 10 idle minutes, start sending keepalives every 5 minutes. 
+            # Drop connection after 10 fails keepalives
+            if hasattr(socket, "TCP_KEEPIDLE") and hasattr(socket, "TCP_KEEPINTVL") and hasattr(socket, "TCP_KEEPCNT"):
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 10 * 60)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 5 * 60)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)    
         return s
     
     @classmethod
