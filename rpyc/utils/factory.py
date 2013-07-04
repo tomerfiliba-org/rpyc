@@ -266,7 +266,9 @@ def connect_multiprocess(service = VoidService, config = {}, remote_service = Vo
             conn.serve_all()
         except KeyboardInterrupt:
             interrupt_main()            
-    t = Process(target = server)
-    t.start()
+    proc = Process(target = server)
+    proc.start()
     host, port = listener.getsockname()
-    return connect(host, port, service = service, config = config)
+    conn = connect(host, port, service = service, config = config)
+    conn.proc = proc
+    return 
