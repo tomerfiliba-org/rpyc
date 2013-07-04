@@ -97,7 +97,7 @@ class SocketStream(Stream):
         if keepalive:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
             # Linux specific: after 10 idle minutes, start sending keepalives every 5 minutes. 
-            # Drop connection after 10 fails keepalives
+            # Drop connection after 10 failed keepalives
             if hasattr(socket, "TCP_KEEPIDLE") and hasattr(socket, "TCP_KEEPINTVL") and hasattr(socket, "TCP_KEEPCNT"):
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 10 * 60)
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 5 * 60)
