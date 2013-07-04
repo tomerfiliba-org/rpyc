@@ -83,10 +83,22 @@ class SocketStream(Stream):
     MAX_IO_CHUNK = 8000
     def __init__(self, sock):
         self.sock = sock
+
+    @classmethod
+    def _set_keepalive(cls, s, after_idle_sec=1, interval_sec=3, max_fails=5):
+        """Set TCP keepalive on an open socket.
+        It activates after 1 second (after_idle_sec) of idleness,
+        then sends a keepalive ping once every 3 seconds (interval_sec),
+        and closes the connection after 5 failed ping (max_fails), or 15 seconds
+        """
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, after_idle_sec)
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, interval_sec)
+        s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, max_fails)
     
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM,
-            proto = 0, timeout = 3, nodelay = False):
+            proto = 0, timeout = 3, nodelay = False, keepalive=False):
         family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, family, 
             socktype, proto)[0]
         s = socket.socket(family, socktype, proto)
@@ -94,6 +106,8 @@ class SocketStream(Stream):
         s.connect(sockaddr)
         if nodelay:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        if keepalive:
+            cls._set_keepalive(s)
         return s
     
     @classmethod
