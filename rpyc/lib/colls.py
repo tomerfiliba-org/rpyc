@@ -1,3 +1,4 @@
+from __future__ import with_statement
 import weakref
 from threading import Lock
 
@@ -61,8 +62,7 @@ class RefCountingColl(object):
     def __repr__(self):
         return repr(self._dict)
     def add(self, obj):
-        self._lock.acquire()
-        try:
+        with self._lock:
             key = id(obj)
             slot = self._dict.get(key, None)
             if slot is None:
@@ -70,29 +70,18 @@ class RefCountingColl(object):
             else:
                 slot[1] += 1
             self._dict[key] = slot
-        finally:
-            self._lock.release()
     def clear(self):
-        self._lock.acquire()
-        try:
+        with self._lock:
             self._dict.clear()
-        finally:
-            self._lock.release()
     def decref(self, key):
-        self._lock.acquire()
-        try:
+        with self._lock:
             slot = self._dict[key]
             if slot[1] < 1:
                 del self._dict[key]
             else:
                 slot[1] -= 1
                 self._dict[key] = slot
-        finally:
-            self._lock.release()
     def __getitem__(self, key):
-        self._lock.acquire()
-        try:
+        with self._lock:
             return self._dict[key][0]
-        finally:
-            self._lock.release()
 

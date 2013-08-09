@@ -149,11 +149,10 @@ class RegistryServer(object):
             raise ValueError("object disposed")
         self.logger.debug("server started on %s:%s", *self.sock.getsockname()[:2])
         try:
-            try:
-                self.active = True
-                self._work()
-            except KeyboardInterrupt:
-                self.logger.warn("User interrupt!")
+            self.active = True
+            self._work()
+        except KeyboardInterrupt:
+            self.logger.warn("User interrupt!")
         finally:
             self.active = False
             self.logger.debug("server closed")
@@ -230,10 +229,9 @@ class TCPRegistryServer(RegistryServer):
     def _send(self, data, addrinfo):
         sock2 = self._connected_sockets.pop(addrinfo)
         try:
-            try:
-                sock2.send(data)
-            except (socket.error, socket.timeout):
-                pass
+            sock2.send(data)
+        except (socket.error, socket.timeout):
+            pass
         finally:
             sock2.close()
 

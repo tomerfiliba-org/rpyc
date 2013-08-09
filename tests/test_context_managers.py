@@ -2,11 +2,6 @@ from __future__ import with_statement
 import rpyc
 import unittest
 
-#import sys
-#from nose import SkipTest
-#if sys.version < (2, 5):
-#    raise SkipTest("requires python 2.5 and above")
-
 from contextlib import contextmanager
 
 on_context_enter = False

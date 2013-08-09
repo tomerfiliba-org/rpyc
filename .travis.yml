@@ -6,7 +6,7 @@ python:
     - "3.2"
     - "3.3"
 
-install: 
+install:
     - pip install six
     - pip install -e git+git://github.com/tomerfiliba/plumbum.git#egg=plumbum
 

@@ -237,14 +237,13 @@ class Server(object):
             t.setDaemon(True)
             t.start()
         try:
-            try:
-                while self.active:
-                    self.accept()
-            except EOFError:
-                pass # server closed by another thread
-            except KeyboardInterrupt:
-                print("")
-                self.logger.warn("keyboard interrupt!")
+            while self.active:
+                self.accept()
+        except EOFError:
+            pass # server closed by another thread
+        except KeyboardInterrupt:
+            print("")
+            self.logger.warn("keyboard interrupt!")
         finally:
             self.logger.info("server has terminated")
             self.close()
@@ -513,18 +512,17 @@ class ForkingServer(Server):
         if pid == 0:
             # child
             try:
-                try:
-                    self.logger.debug("child process created")
-                    signal.signal(signal.SIGCHLD, self._prevhandler)
-                    #76: call signal.siginterrupt(False) in forked child
-                    signal.siginterrupt(signal.SIGCHLD, False)
-                    self.listener.close()
-                    self.clients.clear()
-                    self._authenticate_and_serve_client(sock)
-                except:
-                    self.logger.exception("child process terminated abnormally")
-                else:
-                    self.logger.debug("child process terminated")
+                self.logger.debug("child process created")
+                signal.signal(signal.SIGCHLD, self._prevhandler)
+                #76: call signal.siginterrupt(False) in forked child
+                signal.siginterrupt(signal.SIGCHLD, False)
+                self.listener.close()
+                self.clients.clear()
+                self._authenticate_and_serve_client(sock)
+            except:
+                self.logger.exception("child process terminated abnormally")
+            else:
+                self.logger.debug("child process terminated")
             finally:
                 self.logger.debug("child terminated")
                 os._exit(0)

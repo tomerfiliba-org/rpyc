@@ -9,7 +9,7 @@ import socket
 from rpyc.core.service import VoidService
 try:
     from plumbum import local, ProcessExecutionError
-    from plumbum.utils import copy
+    from plumbum.path.utils import copy
 except ImportError:
     import inspect
     if any("sphinx" in line[1] or "docutils" in line[1] or "autodoc" in line[1] for line in inspect.stack()):

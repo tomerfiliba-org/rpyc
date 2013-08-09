@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 from __future__ import with_statement
-from rpyc.utils.server import ThreadedServer, ForkingServer
-from rpyc.core.service import SlaveService
-from rpyc.lib import setup_logger
-from six.moves import configparser
 import daemon
 import lockfile
 import sys
 import signal
+from rpyc.utils.server import ThreadedServer, ForkingServer
+from rpyc.core.service import SlaveService
+from rpyc.lib import setup_logger
+from six.moves import configparser
 
 
 server = None

@@ -18,7 +18,7 @@ Example::
     >>> x == z
     True
 """
-from rpyc.lib.compat import Struct, BytesIO, all, is_py3k, BYTES_LITERAL
+from rpyc.lib.compat import Struct, BytesIO, is_py3k, BYTES_LITERAL
 
 
 # singletons

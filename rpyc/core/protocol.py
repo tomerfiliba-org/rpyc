@@ -185,13 +185,12 @@ class Connection(object):
             return
         self._closed = True
         try:
-            try:
-                self._async_request(consts.HANDLE_CLOSE)
-            except EOFError:
-                pass
-            except Exception:
-                if not _catchall:
-                    raise
+            self._async_request(consts.HANDLE_CLOSE)
+        except EOFError:
+            pass
+        except Exception:
+            if not _catchall:
+                raise
         finally:
             self._cleanup(_anyway = True)
 
@@ -336,14 +335,13 @@ class Connection(object):
         if not self._recvlock.acquire(wait_for_lock):
             return None
         try:
-            try:
-                if self._channel.poll(timeout):
-                    data = self._channel.recv()
-                else:
-                    data = None
-            except EOFError:
-                self.close()
-                raise
+            if self._channel.poll(timeout):
+                data = self._channel.recv()
+            else:
+                data = None
+        except EOFError:
+            self.close()
+            raise
         finally:
             self._recvlock.release()
         return data
@@ -390,14 +388,13 @@ class Connection(object):
         """Serves all requests and replies for as long as the connection is 
         alive."""
         try:
-            try:
-                while True:
-                    self.serve(0.1)
-            except (socket.error, select_error, IOError):
-                if not self.closed:
-                    raise
-            except EOFError:
-                pass
+            while True:
+                self.serve(0.1)
+        except (socket.error, select_error, IOError):
+            if not self.closed:
+                raise
+        except EOFError:
+            pass
         finally:
             self.close()
 

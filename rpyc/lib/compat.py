@@ -44,15 +44,6 @@ except NameError:
         return iterator.next()
 
 try:
-    all = all
-except NameError:
-    def all(seq):
-        for elem in seq:
-            if not elem:
-                return False
-        return True
-
-try:
     import cPickle as pickle
 except ImportError:
     import pickle #@UnusedImport

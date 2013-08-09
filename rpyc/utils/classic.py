@@ -1,9 +1,12 @@
+from __future__ import with_statement
 import sys
 import os
 import inspect
-from rpyc.lib.compat import pickle
+from rpyc.lib.compat import pickle, execute, is_py3k
 from rpyc import SlaveService
 from rpyc.utils import factory
+from rpyc.core.service import ModuleNamespace
+from contextlib import contextmanager
 
 
 DEFAULT_SERVER_PORT = 18812
@@ -275,71 +278,30 @@ def deliver(conn, localobj):
     """
     return conn.modules["rpyc.lib.compat"].pickle.loads(pickle.dumps(localobj))
 
-class redirected_stdio(object):
-    """
+@contextmanager
+def redirected_stdio(conn):
+    r"""
     Redirects the other party's ``stdin``, ``stdout`` and ``stderr`` to 
-    those of the local party, so remote IO will occur locally. It was 
-    originally written as a ``contextmanager``, but was turned into a class
-    for compatibility with python 2.4
-    
-    Here's the context-manager::
-    
-        @contextmanager
-        def redirected_stdio(conn):
-            orig_stdin = conn.modules.sys.stdin
-            orig_stdout = conn.modules.sys.stdout
-            orig_stderr = conn.modules.sys.stderr
-            try:
-                conn.modules.sys.stdin = sys.stdin
-                conn.modules.sys.stdout = sys.stdout
-                conn.modules.sys.stderr = sys.stderr
-                yield
-            finally:
-                conn.modules.sys.stdin = orig_stdin
-                conn.modules.sys.stdout = orig_stdout
-                conn.modules.sys.stderr = orig_stderr
-    
+    those of the local party, so remote IO will occur locally.
+
     Example usage::
     
         with redirected_stdio(conn):
-            # remote IO will occur locally
-        
-    or ::
-        
-        redir = redirected_stdio(conn)
-        try:
-            # remote IO will occur locally
-        finally:
-            redir.restore()
+            conn.modules.sys.stdout.write("hello\n")   # will be printed locally
+    
     """
-    def __init__(self, conn):
-        """
-        :param conn: the RPyC connection whose stdio will be redirected
-        """
-        self._restored = True
-        self.conn = conn
-        self.orig_stdin = self.conn.modules.sys.stdin
-        self.orig_stdout = self.conn.modules.sys.stdout
-        self.orig_stderr = self.conn.modules.sys.stderr
-        self.conn.modules.sys.stdin = sys.stdin
-        self.conn.modules.sys.stdout = sys.stdout
-        self.conn.modules.sys.stderr = sys.stderr
-        self._restored = False
-    def __del__(self):
-        self.restore()
-    def restore(self):
-        """Restores the redirection"""
-        if self._restored:
-            return
-        self._restored = True
-        self.conn.modules.sys.stdin = self.orig_stdin
-        self.conn.modules.sys.stdout = self.orig_stdout
-        self.conn.modules.sys.stderr = self.orig_stderr
-    def __enter__(self):
-        return self
-    def __exit__(self, t, v, tb):
-        self.restore()
-
+    orig_stdin = conn.modules.sys.stdin
+    orig_stdout = conn.modules.sys.stdout
+    orig_stderr = conn.modules.sys.stderr
+    try:
+        conn.modules.sys.stdin = sys.stdin
+        conn.modules.sys.stdout = sys.stdout
+        conn.modules.sys.stderr = sys.stderr
+        yield
+    finally:
+        conn.modules.sys.stdin = orig_stdin
+        conn.modules.sys.stdout = orig_stdout
+        conn.modules.sys.stderr = orig_stderr
 
 def pm(conn):
     """same as ``pdb.pm()`` but on a remote exception
@@ -347,11 +309,8 @@ def pm(conn):
     :param conn: the RPyC connection
     """
     #pdb.post_mortem(conn.root.getconn()._last_traceback)
-    redir = redirected_stdio(conn)
-    try:
+    with redirected_stdio(conn):
         conn.modules.pdb.post_mortem(conn.root.getconn()._last_traceback)
-    finally:
-        redir.restore()
 
 def interact(conn, namespace = None):
     """remote interactive interpreter
@@ -362,12 +321,34 @@ def interact(conn, namespace = None):
     if namespace is None:
         namespace = {}
     namespace["conn"] = conn
-    redir = redirected_stdio(conn)
-    try:
+    with redirected_stdio(conn):
         conn.execute("""def _rinteract(ns):
             import code
             code.interact(local = dict(ns))""")
         conn.namespace["_rinteract"](namespace)
-    finally:
-        redir.restore()
+
+class MockClassicConnection(object):
+    """Mock classic RPyC connection object. Useful when you want the same code to run remotely or locally.
+    
+    """
+    def __init__(self):
+        self._conn = None
+        self.namespace = {}
+        self.modules = ModuleNamespace(self.getmodule)
+        if is_py3k:
+            self.builtin = self.modules.builtins
+        else:
+            self.builtin = self.modules.__builtin__
+        self.builtins = self.builtin
+
+    def execute(self, text):
+        execute(text, self.namespace)
+    def eval(self, text):
+        return eval(text, self.namespace)
+    def getmodule(self, name):
+        return __import__(name, None, None, "*")
+    def getconn(self):
+        return None
+
+
 

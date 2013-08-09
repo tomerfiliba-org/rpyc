@@ -50,6 +50,16 @@ class ClassicMode(unittest.TestCase):
         print( x.__class__ )
         self.assertTrue(isinstance(x, list))
         self.assertTrue(isinstance(x, rpyc.BaseNetref))
+    
+    def test_mock_connection(self):
+        from rpyc.utils.classic import MockClassicConnection
+        import sys
+        import xml.dom.minidom
+        conn = MockClassicConnection()
+        self.assertTrue(conn.modules.sys is sys)
+        self.assertTrue(conn.modules["xml.dom.minidom"].Element is xml.dom.minidom.Element)
+        self.assertTrue(conn.builtin.open is open)
+        self.assertEqual(conn.eval("2+3"), 5)
 
 
 if __name__ == "__main__":

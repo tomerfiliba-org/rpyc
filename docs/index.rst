@@ -147,5 +147,6 @@ Contents
    screencasts
    docs
    api
+   whatsnew33
 
 
