@@ -125,9 +125,9 @@ else:
             self.wlist = set()
         def register(self, fd, mode):
             if "r" in mode:
-                self.rlist.append(fd)
+                self.rlist.add(fd)
             if "w" in mode:
-                self.wlist.append(fd)
+                self.wlist.add(fd)
         modify = register
         def unregister(self, fd):
             self.rlist.discard(fd)
