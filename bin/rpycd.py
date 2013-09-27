@@ -7,15 +7,17 @@ import signal
 from rpyc.utils.server import ThreadedServer, ForkingServer
 from rpyc.core.service import SlaveService
 from rpyc.lib import setup_logger
-from six.moves import configparser
-
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import ConfigParser
 
 server = None
 
 def start():
     global server
     
-    conf = configparser.ConfigParser()
+    conf = ConfigParser()
     conf.read('rpycd.conf')
     
     mode = conf.get("rpycd", "mode").lower()
@@ -40,8 +42,10 @@ def stop(*args):
     server.close()
     sys.exit()
 
-with daemon.DaemonContext(
-        pidfile = lockfile.FileLock('/var/run/rpydc.pid'),
-        signal_map = {signal.SIGTERM: stop, signal.SIGHUP: reload}):
-    start()
+
+if __name__ == "__main__":
+    with daemon.DaemonContext(
+            pidfile = lockfile.FileLock('/var/run/rpydc.pid'),
+            signal_map = {signal.SIGTERM: stop, signal.SIGHUP: reload}):
+        start()
 

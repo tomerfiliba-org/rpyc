@@ -7,6 +7,7 @@ from __future__ import with_statement
 import rpyc
 import socket
 from rpyc.core.service import VoidService
+from rpyc.core.stream import SocketStream
 try:
     from plumbum import local, ProcessExecutionError
     from plumbum.path.utils import copy
@@ -66,14 +67,15 @@ class DeployedServer(object):
     5. When the deployment is closed, the SSH tunnel is torn down, the remote server terminates 
        and the temporary directory is deleted.
     
-    :param remote_machine: a ``plumbum.SshMachine`` instance, representing an SSH 
-                           connection to the desired remote machine
+    :param remote_machine: a plumbum ``SshMachine`` or ``ParamikoMachine`` instance, representing 
+                           an SSH connection to the desired remote machine
     :param server_class: the server to create (e.g., ``"ThreadedServer"``, ``"ForkingServer"``)
     """
     
     def __init__(self, remote_machine, server_class = "ThreadedServer"):
         self.proc = None
         self.tun = None
+        self.remote_machine = remote_machine
         self._tmpdir_ctx = None
         
         rpyc_root = local.path(rpyc.__file__).dirname
@@ -88,7 +90,7 @@ class DeployedServer(object):
         line = ""
         try:
             line = self.proc.stdout.readline()
-            remote_port = int(line.strip())
+            self.remote_port = int(line.strip())
         except Exception:
             try:
                 self.proc.terminate()
@@ -97,11 +99,15 @@ class DeployedServer(object):
             stdout, stderr = self.proc.communicate()
             raise ProcessExecutionError(self.proc.argv, self.proc.returncode, line + stdout, stderr)
         
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind(("localhost", 0))
-        self.local_port = s.getsockname()[1]
-        s.close()
-        self.tun = remote_machine.tunnel(self.local_port, remote_port)
+        if hasattr(remote_machine, "connect_sock"):
+            # Paramiko: use connect_sock() instead of tunnels
+            self.local_port = None
+        else:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.bind(("localhost", 0))
+            self.local_port = s.getsockname()[1]
+            s.close()
+            self.tun = remote_machine.tunnel(self.local_port, self.remote_port)
 
     def __del__(self):
         self.close()
@@ -127,11 +133,22 @@ class DeployedServer(object):
     def connect(self, service = VoidService, config = {}):
         """Same as :func:`connect <rpyc.utils.factory.connect>`, but with the ``host`` and ``port`` 
         parameters fixed"""
-        return rpyc.connect("localhost", self.local_port, service = service, config = config)
+        if self.local_port is None:
+            # ParamikoMachine
+            stream = SocketStream(self.remote_machine.connect_sock(self.remote_port))
+            return rpyc.connect_stream(stream, service = service, config = config)
+        else:
+            return rpyc.connect("localhost", self.local_port, service = service, config = config)
+    
     def classic_connect(self):
         """Same as :func:`classic.connect <rpyc.utils.classic.connect>`, but with the ``host`` and 
         ``port`` parameters fixed"""
-        return rpyc.classic.connect("localhost", self.local_port)
+        if self.local_port is None:
+            # ParamikoMachine
+            stream = SocketStream(self.remote_machine.connect_sock(self.remote_port))
+            return rpyc.classic.connect_stream(stream)
+        else:
+            return rpyc.classic.connect("localhost", self.local_port)
 
 
 class MultiServerDeployment(object):

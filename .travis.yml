@@ -7,7 +7,7 @@ python:
     - "3.3"
 
 install:
-    - pip install six
+    - pip install paramiko
     - pip install -e git+git://github.com/tomerfiliba/plumbum.git#egg=plumbum
 
 before_script:
@@ -15,9 +15,9 @@ before_script:
     - "echo StrictHostKeyChecking no >> ~/.ssh/config"
     - "ssh-keygen -q -f ~/.ssh/id_rsa -N ''"
     - "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys"
-    - "export PYTHONPATH=$PYTHONPATH:`pwd`"
     - "uname -a"
     - "hostname"
+    - "python setup.py install"
     - "cd tests"
 
 script: nosetests -vv
