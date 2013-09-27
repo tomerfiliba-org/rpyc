@@ -35,7 +35,7 @@ def rmdir():
 atexit.register(rmdir)
 
 sys.path.insert(0, here)
-import $SERVER$ as ServerCls
+from $MODULE$ import $SERVER$ as ServerCls
 from rpyc import SlaveService
 
 t = ServerCls(SlaveService, hostname = "localhost", port = 0, reuse_addr = True)
@@ -84,7 +84,8 @@ class DeployedServer(object):
         copy(rpyc_root, tmp)
         
         script = (tmp / "deployed-rpyc.py")
-        script.write(SERVER_SCRIPT.replace("$SERVER$", server_class))
+        modname, clsname = server_class.rsplit(".", 1)
+        script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname))
         self.proc = remote_machine.python.popen(script, new_session = True)
         
         line = ""
