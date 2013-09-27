@@ -34,8 +34,8 @@ def rmdir():
     shutil.rmtree(here, ignore_errors = True)
 atexit.register(rmdir)
 
-sys.path.insert(0, os.getcwd())
-from rpyc.utils.server import $SERVER$ as ServerCls
+sys.path.insert(0, here)
+import $SERVER$ as ServerCls
 from rpyc import SlaveService
 
 t = ServerCls(SlaveService, hostname = "localhost", port = 0, reuse_addr = True)
@@ -72,7 +72,7 @@ class DeployedServer(object):
     :param server_class: the server to create (e.g., ``"ThreadedServer"``, ``"ForkingServer"``)
     """
     
-    def __init__(self, remote_machine, server_class = "ThreadedServer"):
+    def __init__(self, remote_machine, server_class = "rpyc.utils.server.ThreadedServer"):
         self.proc = None
         self.tun = None
         self.remote_machine = remote_machine

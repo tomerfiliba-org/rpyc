@@ -1,11 +1,14 @@
 from __future__ import with_statement 
 import unittest
+import sys
 from plumbum import SshMachine
 from rpyc.utils.zerodeploy import DeployedServer
+
 
 class TestDeploy(unittest.TestCase):
     def test_deploy(self):
         rem = SshMachine("localhost")
+        SshMachine.python = rem[sys.executable]
         with DeployedServer(rem) as dep:
             conn = dep.classic_connect()
             print (conn.modules.sys)
