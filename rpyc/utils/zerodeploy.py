@@ -10,7 +10,7 @@ from rpyc.core.service import VoidService
 from rpyc.core.stream import SocketStream
 try:
     from plumbum import local, ProcessExecutionError
-    from plumbum.path.utils import copy
+    from plumbum.path import copy
 except ImportError:
     import inspect
     if any("sphinx" in line[1] or "docutils" in line[1] or "autodoc" in line[1] for line in inspect.stack()):
@@ -33,6 +33,14 @@ os.chdir(here)
 def rmdir():
     shutil.rmtree(here, ignore_errors = True)
 atexit.register(rmdir)
+
+try:
+    for dirpath, _, filenames in os.walk(here):
+        for fn in filenames:
+            if fn == "__pycache__" or (fn.endswith(".pyc") or os.path.exists(fn[:-1])):
+                os.remove(os.path.join(dirpath, fn))
+except Exception:
+    pass
 
 sys.path.insert(0, here)
 from $MODULE$ import $SERVER$ as ServerCls
@@ -78,7 +86,7 @@ class DeployedServer(object):
         self.remote_machine = remote_machine
         self._tmpdir_ctx = None
         
-        rpyc_root = local.path(rpyc.__file__).dirname
+        rpyc_root = local.path(rpyc.__file__).up(2)
         self._tmpdir_ctx = remote_machine.tempdir()
         tmp = self._tmpdir_ctx.__enter__()
         copy(rpyc_root, tmp)
