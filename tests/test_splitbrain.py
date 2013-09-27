@@ -3,7 +3,6 @@ import subprocess
 import sys
 import os
 import rpyc
-import six
 import unittest
 import tempfile
 import shutil
@@ -16,6 +15,12 @@ if not hasattr(unittest.TestCase, "assertIn"):
 if not hasattr(unittest.TestCase, "assertNotIn"):
     unittest.TestCase.assertNotIn = lambda self, member, container, msg = None: self.assertFalse(member in container, msg)
 
+def b(st):
+    if sys.version_info[0] >= 3:
+        return bytes(st, "latin-1")
+    else:
+        return st
+
 class SplitbrainTest(unittest.TestCase):
     def setUp(self):
         enable_splitbrain()
@@ -26,8 +31,8 @@ class SplitbrainTest(unittest.TestCase):
         if not line:
             print (self.proc.stderr.read())
             self.fail("server failed to start")
-        self.assertEqual(line, six.b("rpyc-oneshot"), "server failed to start")
-        host, port = self.proc.stdout.readline().strip().split(six.b("\t"))
+        self.assertEqual(line, b("rpyc-oneshot"), "server failed to start")
+        host, port = self.proc.stdout.readline().strip().split(b("\t"))
         self.conn = rpyc.classic.connect(host, int(port))
 
     def tearDown(self):
