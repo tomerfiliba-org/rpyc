@@ -133,10 +133,16 @@ class DeployedServer(object):
                 pass
             self.proc = None
         if self.tun is not None:
-            self.tun.close()
+            try:
+                self.tun.close()
+            except Exception:
+                pass
             self.tun = None
         if self._tmpdir_ctx is not None:
-            self._tmpdir_ctx.__exit__(None, None, None)
+            try:
+                self._tmpdir_ctx.__exit__(None, None, None)
+            except Exception:
+                pass
             self._tmpdir_ctx = None
     
     def connect(self, service = VoidService, config = {}):
