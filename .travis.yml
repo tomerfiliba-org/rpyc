@@ -7,10 +7,10 @@ python:
     - "3.3"
 
 install:
-    - pip install paramiko
     - pip install -e git+git://github.com/tomerfiliba/plumbum.git#egg=plumbum
 
 before_script:
+    - "pip install paramiko || true"
     - "echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config"
     - "echo StrictHostKeyChecking no >> ~/.ssh/config"
     - "ssh-keygen -q -f ~/.ssh/id_rsa -N ''"
