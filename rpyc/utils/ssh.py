@@ -49,8 +49,6 @@ class SshTunnel(object):
        Do not instantiate this class yourself -- use the :func:`SshContext.tunnel`
        function for that.
     """
-    
-    PROGRAM = r"""import sys;sys.stdout.write("ready\n\n\n");sys.stdout.flush();sys.stdin.readline()"""
 
     def __init__(self, sshctx, loc_host, loc_port, rem_host, rem_port):
         self.loc_host = loc_host
@@ -58,10 +56,10 @@ class SshTunnel(object):
         self.rem_host = rem_host
         self.rem_port = rem_port
         self.sshctx = sshctx
-        self.proc = sshctx.popen("python", "-u", "-c", self.PROGRAM,
+        self.proc = sshctx.popen("python", "-u", "-V",
             L = "[%s]:%s:[%s]:%s" % (loc_host, loc_port, rem_host, rem_port))
         banner = self.proc.stdout.readline().strip()
-        if banner != BYTES_LITERAL("ready"):
+        if BYTES_LITERAL("Python") not in banner:
             raise ValueError("tunnel failed", banner)
     def __del__(self):
         try:
