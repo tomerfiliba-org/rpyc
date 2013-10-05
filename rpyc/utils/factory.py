@@ -74,7 +74,7 @@ def connect_stdpipes(service = VoidService, config = {}):
     """
     return connect_stream(PipeStream.from_std(), service = service, config = config)
 
-def connect(host, port, service = VoidService, config = {}, ipv6 = False):
+def connect(host, port, service = VoidService, config = {}, ipv6 = False, keepalive = False):
     """
     creates a socket-connection to the given host and port
     
@@ -86,12 +86,12 @@ def connect(host, port, service = VoidService, config = {}, ipv6 = False):
 
     :returns: an RPyC connection
     """
-    s = SocketStream.connect(host, port, ipv6 = ipv6)
+    s = SocketStream.connect(host, port, ipv6 = ipv6, keepalive = keepalive)
     return connect_stream(s, service, config)
 
 def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
         cert_reqs = None, ssl_version = None, ciphers = None,
-        service = VoidService, config = {}, ipv6 = False):
+        service = VoidService, config = {}, ipv6 = False, keepalive = False):
     """
     creates an SSL-wrapped connection to the given host (encrypted and
     authenticated).
@@ -132,7 +132,7 @@ def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
         ssl_kwargs["ssl_version"] = ssl_version
     if ciphers is not None:
         ssl_kwargs["ciphers"] = ciphers
-    s = SocketStream.ssl_connect(host, port, ssl_kwargs, ipv6 = ipv6)
+    s = SocketStream.ssl_connect(host, port, ssl_kwargs, ipv6 = ipv6, keepalive = keepalive)
     return connect_stream(s, service, config)
 
 def _get_free_port():
