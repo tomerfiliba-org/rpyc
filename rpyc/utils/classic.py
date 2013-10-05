@@ -55,7 +55,7 @@ def connect_pipes(input, output):
     """
     return factory.connect_pipes(input, output, SlaveService)
 
-def connect(host, port = DEFAULT_SERVER_PORT, ipv6 = False):
+def connect(host, port = DEFAULT_SERVER_PORT, ipv6 = False, keepalive = False):
     """
     Creates a socket connection to the given host and port.
     
@@ -65,7 +65,7 @@ def connect(host, port = DEFAULT_SERVER_PORT, ipv6 = False):
     
     :returns: an RPyC connection exposing ``SlaveService``
     """
-    return factory.connect(host, port, SlaveService, ipv6 = ipv6)
+    return factory.connect(host, port, SlaveService, ipv6 = ipv6, keepalive = keepalive)
 
 def ssl_connect(host, port = DEFAULT_SERVER_SSL_PORT, keyfile = None,
         certfile = None, ca_certs = None, cert_reqs = None, ssl_version = None, 
