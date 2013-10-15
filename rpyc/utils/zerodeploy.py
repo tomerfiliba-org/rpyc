@@ -6,7 +6,6 @@ Requires [plumbum](http://plumbum.readthedocs.org/)
 from __future__ import with_statement
 import rpyc
 import socket
-import pdb
 from rpyc.core.service import VoidService
 from rpyc.core.stream import SocketStream
 from inspect import getsource
