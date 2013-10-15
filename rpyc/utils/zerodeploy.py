@@ -6,8 +6,10 @@ Requires [plumbum](http://plumbum.readthedocs.org/)
 from __future__ import with_statement
 import rpyc
 import socket
+import pdb
 from rpyc.core.service import VoidService
 from rpyc.core.stream import SocketStream
+from inspect import getsource
 try:
     from plumbum import local, ProcessExecutionError
     from plumbum.path import copy
@@ -44,9 +46,9 @@ except Exception:
 
 sys.path.insert(0, here)
 from $MODULE$ import $SERVER$ as ServerCls
-from rpyc import SlaveService
+from rpyc import $SERVICE_CLS$
 
-t = ServerCls(SlaveService, hostname = "localhost", port = 0, reuse_addr = True)
+t = ServerCls($SERVICE_CLS_NAME$, hostname = "localhost", port = 0, reuse_addr = True)
 sys.stdout.write("%s\n" % (t.port,))
 sys.stdout.flush()
 
@@ -80,22 +82,25 @@ class DeployedServer(object):
     :param server_class: the server to create (e.g., ``"ThreadedServer"``, ``"ForkingServer"``)
     """
     
-    def __init__(self, remote_machine, server_class = "rpyc.utils.server.ThreadedServer"):
+    def __init__(self, remote_machine, service_class = "SlaveService", server_class = "rpyc.utils.server.ThreadedServer"):
         self.proc = None
         self.tun = None
         self.remote_machine = remote_machine
         self._tmpdir_ctx = None
-        
-        rpyc_root = local.path(rpyc.__file__).up(2)
+        rpyc_root = local.path(rpyc.__file__).dirname
         self._tmpdir_ctx = remote_machine.tempdir()
         tmp = self._tmpdir_ctx.__enter__()
         copy(rpyc_root, tmp)
-        
         script = (tmp / "deployed-rpyc.py")
         modname, clsname = server_class.rsplit(".", 1)
-        script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname))
-        self.proc = remote_machine.python.popen(script, new_session = True)
-        
+        if service_class == "SlaveService":
+            scriptServiceCls = service_class
+            scriptServiceClsName = service_class
+        else:
+            scriptServiceCls = "Service\n"+getsource(service_class)
+            scriptServiceClsName = service_class.__name__
+        script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname).replace("$SERVICE_CLS$", scriptServiceCls).replace("$SERVICE_CLS_NAME$", scriptServiceClsName))
+        self.proc = remote_machine.python.popen(script, new_session = True)        
         line = ""
         try:
             line = self.proc.stdout.readline()
@@ -171,10 +176,10 @@ class MultiServerDeployment(object):
     An 'aggregate' server deployment to multiple SSH machine. It deploys RPyC to each machine
     separately, but lets you manage them as a single deployment.
     """
-    def __init__(self, remote_machines, server_class = "ThreadedServer"):
+    def __init__(self, remote_machines,  service_class = "SlaveService", server_class = "rpyc.utils.server.ThreadedServer"):
         self.remote_machines = remote_machines
         # build the list incrementally, so we can clean it up if we have an exception
-        self.servers = [DeployedServer(mach, server_class) for mach in remote_machines]
+        self.servers = [DeployedServer(mach, service_class, server_class) for mach in remote_machines]
     
     def __del__(self):
         self.close()
