@@ -255,6 +255,8 @@ class Connection(object):
             except Exception:
                 # see issue #16
                 cls = type(obj)
+            if not isinstance(cls, type):
+                cls = type(obj)
             return consts.LABEL_REMOTE_REF, (id(obj), cls.__name__, cls.__module__)
 
     def _unbox(self, package):

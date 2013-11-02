@@ -109,7 +109,7 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     if import_custom_exceptions and modname not in sys.modules:
         try:
             __import__(modname, None, None, "*")
-        except ImportError:
+        except Exception:
             pass
     
     if instantiate_custom_exceptions:
