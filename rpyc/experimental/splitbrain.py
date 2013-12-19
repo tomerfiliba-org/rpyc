@@ -142,20 +142,19 @@ def enable_splitbrain():
         try:
             realmod = _orig_import(modname, [], [], "*")
         except ImportError:
-            pass
-        else:
-            rmod = RoutedModule(realmod)
-            sys.modules[modname] = rmod
-            for ref in gc.get_referrers(realmod):
-                if not isinstance(ref, dict) or "__name__" not in ref or ref.get("__file__") is None:
-                    continue
-                n = ref["__name__"]
-                if n in routed_modules or n.startswith("rpyc") or n.startswith("importlib") or n.startswith("imp"):
-                    continue
-                for k, v in ref.items():
-                    if v is realmod:
-                        #print ("## %s.%s = %s" % (ref["__name__"], ref[k], modname))
-                        ref[k] = rmod
+            continue
+        rmod = RoutedModule(realmod)
+        sys.modules[modname] = rmod
+        for ref in gc.get_referrers(realmod):
+            if not isinstance(ref, dict) or "__name__" not in ref or ref.get("__file__") is None:
+                continue
+            n = ref["__name__"]
+            if n in routed_modules or n.startswith("rpyc") or n.startswith("importlib") or n.startswith("imp"):
+                continue
+            for k, v in ref.items():
+                if v is realmod:
+                    #print ("## %s.%s = %s" % (ref["__name__"], ref[k], modname))
+                    ref[k] = rmod
 
     builtins.__import__ = _importer
     for funcname in ["open", "execfile", "file"]:

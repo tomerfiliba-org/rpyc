@@ -25,6 +25,7 @@ setup(name = "rpyc",
         'rpyc',
         'rpyc.core',
         'rpyc.lib',
+        'rpyc.experimental',
         'rpyc.utils',
     ],
     scripts = [

@@ -45,6 +45,11 @@ class TeleportationTest(unittest.TestCase):
         f2 = import_function(exp)
         self.assertEqual(f(6)(7), f2(6)(7))
 
+        # HACK: needed so the other side could import us (for globals)
+        mod = self.conn.modules.types.ModuleType(__name__)
+        self.conn.modules.sys.modules[__name__] = mod
+        mod.__builtins__ = self.conn.builtins
+
         h2 = teleport_function(self.conn, h)
         self.assertNotEqual(h(7), h2(7))
 
