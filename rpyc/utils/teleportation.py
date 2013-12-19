@@ -1,9 +1,9 @@
-import six
 import opcode
 try:
     import __builtin__
 except ImportError:
     import builtins as __builtin__
+from rpyc.lib.compat import is_py3k
 from types import CodeType, FunctionType
 from rpyc.core import brine
 
@@ -13,7 +13,7 @@ CODEOBJ_MAGIC = "MAg1c J0hNNzo0hn ZqhuBP17LQk8"
 def decode_codeobj(codeobj):
     # adapted from dis.dis
     extended_arg = 0
-    if six.PY3:
+    if is_py3k:
         codestr = codeobj.co_code
     else:
         codestr = [ord(ch) for ch in codeobj.co_code]
@@ -64,7 +64,7 @@ def _export_codeobj(cobj):
             if arg not in __builtin__.__dict__:
                 raise TypeError("Cannot export a function with non-builtin globals: %r" % (arg,))
 
-    if six.PY3:
+    if is_py3k:
         exported = (cobj.co_argcount, cobj.co_kwonlyargcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
             cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
             cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
@@ -77,7 +77,7 @@ def _export_codeobj(cobj):
     return (CODEOBJ_MAGIC, exported)
 
 def export_function(func):
-    if six.PY3:
+    if is_py3k:
         func_closure = func.__closure__
         func_code = func.__code__
         func_defaults = func.__defaults__
@@ -94,7 +94,7 @@ def export_function(func):
     return func.__name__, func.__module__, func_defaults, _export_codeobj(func_code)[1]
 
 def _import_codetup(codetup):
-    if six.PY3:
+    if is_py3k:
         (argcnt, kwargcnt, nloc, stk, flg, codestr, consts, names, varnames, filename, name,
             firstlineno, lnotab, freevars, cellvars) = codetup
     else:
@@ -108,7 +108,7 @@ def _import_codetup(codetup):
         else:
             consts2.append(const)
     
-    if six.PY3:
+    if is_py3k:
         return CodeType(argcnt, kwargcnt, nloc, stk, flg, codestr, tuple(consts2), names, varnames, filename, name,
             firstlineno, lnotab, freevars, cellvars)
     else:
