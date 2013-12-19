@@ -36,7 +36,16 @@ class Stream(object):
         """indicates whether the stream has data to read (within *timeout* 
         seconds)"""
         try:
-            rl, _, _ = select([self], [], [], timeout)
+            while True:
+                try:
+                    rl, _, _ = select([self], [], [], timeout)
+                except select_error as ex:
+                    if ex[0] == errno.EINTR:
+                        continue
+                    else:
+                        raise
+                else:
+                    break
         except ValueError:
             # i get this some times: "ValueError: file descriptor cannot be a negative integer (-1)"
             # let's translate it to select.error

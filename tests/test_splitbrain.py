@@ -7,7 +7,7 @@ import unittest
 import tempfile
 import shutil
 import traceback
-from rpyc.utils.splitbrain import splitbrain, localbrain, enable_splitbrain, disable_splitbrain
+from rpyc.experimental.splitbrain import splitbrain, localbrain, enable_splitbrain, disable_splitbrain
 
 
 if not hasattr(unittest.TestCase, "assertIn"):

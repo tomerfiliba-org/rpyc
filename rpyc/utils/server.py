@@ -191,7 +191,7 @@ class Server(object):
             self.logger.info("welcome [%s]:%s", h, p)
         try:
             config = dict(self.protocol_config, credentials = credentials, 
-                endpoints = (sock.getsockname(), addrinfo))
+                endpoints = (sock.getsockname(), addrinfo), logger = self.logger)
             conn = Connection(self.service, Channel(SocketStream(sock)),
                 config = config, _lazy = True)
             conn._init_service()

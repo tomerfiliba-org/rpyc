@@ -48,6 +48,7 @@ DEFAULT_CONFIG = dict(
     import_custom_exceptions = False,
     instantiate_oldstyle_exceptions = False, # which don't derive from Exception
     propagate_SystemExit_locally = False, # whether to propagate SystemExit locally or to the other party
+    propagate_KeyboardInterrupt_locally = True,  # whether to propagate KeyboardInterrupt locally or to the other party
     log_exceptions = True,
     # MISC
     allow_pickle = False,
@@ -64,50 +65,53 @@ by passing a different configuration dict to the :class:`Connection` class.
    You only need to override the parameters you want to change. There's no need
    to repeat parameters whose values remain unchanged.
 
-=====================================  ================  =====================================================
-Parameter                              Default value     Description
-=====================================  ================  =====================================================
-``allow_safe_attrs``                   ``True``          Whether to allow the use of *safe* attributes
-                                                         (only those listed as ``safe_attrs``)
-``allow_exposed_attrs``                ``True``          Whether to allow exposed attributes 
-                                                         (attributes that start with the ``exposed_prefix``)
-``allow_public_attrs``                 ``False``         Whether to allow public attributes
-                                                         (attributes that don't start with ``_``)
-``allow_all_attrs``                    ``False``         Whether to allow all attributes (including private)
-``safe_attrs``                         ``set([...])``    The set of attributes considered safe
-``exposed_prefix``                     ``"exposed_"``    The prefix of exposed attributes
-``allow_getattr``                      ``True``          Whether to allow getting of attributes (``getattr``)
-``allow_setattr``                      ``False``         Whether to allow setting of attributes (``setattr``)
-``allow_delattr``                      ``False``         Whether to allow deletion of attributes (``delattr``)
-``allow_pickle``                       ``False``         Whether to allow the use of ``pickle``
+=======================================  ================  =====================================================
+Parameter                                Default value     Description
+=======================================  ================  =====================================================
+``allow_safe_attrs``                     ``True``          Whether to allow the use of *safe* attributes
+                                                           (only those listed as ``safe_attrs``)
+``allow_exposed_attrs``                  ``True``          Whether to allow exposed attributes
+                                                           (attributes that start with the ``exposed_prefix``)
+``allow_public_attrs``                   ``False``         Whether to allow public attributes
+                                                           (attributes that don't start with ``_``)
+``allow_all_attrs``                      ``False``         Whether to allow all attributes (including private)
+``safe_attrs``                           ``set([...])``    The set of attributes considered safe
+``exposed_prefix``                       ``"exposed_"``    The prefix of exposed attributes
+``allow_getattr``                        ``True``          Whether to allow getting of attributes (``getattr``)
+``allow_setattr``                        ``False``         Whether to allow setting of attributes (``setattr``)
+``allow_delattr``                        ``False``         Whether to allow deletion of attributes (``delattr``)
+``allow_pickle``                         ``False``         Whether to allow the use of ``pickle``
 
-``include_local_traceback``            ``True``          Whether to include the local traceback
-                                                         in the remote exception
-``instantiate_custom_exceptions``      ``False``         Whether to allow instantiation of
-                                                         custom exceptions (not the built in ones)
-``import_custom_exceptions``           ``False``         Whether to allow importing of 
-                                                         exceptions from not-yet-imported modules
-``instantiate_oldstyle_exceptions``    ``False``         Whether to allow instantiation of exceptions
-                                                         which don't derive from ``Exception``. This
-                                                         is not applicable for Python 3 and later.
-``propagate_SystemExit_locally``       ``False``         Whether to propagate ``SystemExit``
-                                                         locally (kill the server) or to the other 
-                                                         party (kill the client)
-``logger``                             ``None``          The logger instance to use to log exceptions
-                                                         (before they are sent to the other party)
-                                                         and other events. If ``None``, no logging takes place.
+``include_local_traceback``              ``True``          Whether to include the local traceback
+                                                           in the remote exception
+``instantiate_custom_exceptions``        ``False``         Whether to allow instantiation of
+                                                           custom exceptions (not the built in ones)
+``import_custom_exceptions``             ``False``         Whether to allow importing of
+                                                           exceptions from not-yet-imported modules
+``instantiate_oldstyle_exceptions``      ``False``         Whether to allow instantiation of exceptions
+                                                           which don't derive from ``Exception``. This
+                                                           is not applicable for Python 3 and later.
+``propagate_SystemExit_locally``         ``False``         Whether to propagate ``SystemExit``
+                                                           locally (kill the server) or to the other
+                                                           party (kill the client)
+``propagate_KeyboardInterrupt_locally``  ``False``         Whether to propagate ``KeyboardInterrupt``
+                                                           locally (kill the server) or to the other
+                                                           party (kill the client)
+``logger``                               ``None``          The logger instance to use to log exceptions
+                                                           (before they are sent to the other party)
+                                                           and other events. If ``None``, no logging takes place.
 
-``connid``                             ``None``          **Runtime**: the RPyC connection ID (used
-                                                         mainly for debugging purposes) 
-``credentials``                        ``None``          **Runtime**: the credentails object that was returned
-                                                         by the server's :ref:`authenticator <api-authenticators>`
-                                                         or ``None``
-``endpoints``                          ``None``          **Runtime**: The connection's endpoints. This is a tuple 
-                                                         made of the local socket endpoint (``getsockname``) and the 
-                                                         remote one (``getpeername``). This is set by the server
-                                                         upon accepting a connection; client side connections
-                                                         do no have this configuration option set.
-=====================================  ================  =====================================================
+``connid``                               ``None``          **Runtime**: the RPyC connection ID (used
+                                                           mainly for debugging purposes)
+``credentials``                          ``None``          **Runtime**: the credentails object that was returned
+                                                           by the server's :ref:`authenticator <api-authenticators>`
+                                                           or ``None``
+``endpoints``                            ``None``          **Runtime**: The connection's endpoints. This is a tuple
+                                                           made of the local socket endpoint (``getsockname``) and the
+                                                           remote one (``getpeername``). This is set by the server
+                                                           upon accepting a connection; client side connections
+                                                           do no have this configuration option set.
+=======================================  ================  =====================================================
 """
 
 
@@ -299,8 +303,6 @@ class Connection(object):
             handler, args = raw_args
             args = self._unbox(args)
             res = self._HANDLERS[handler](self, *args)
-        except KeyboardInterrupt:
-            raise
         except:
             # need to catch old style exceptions too
             t, v, tb = sys.exc_info()
@@ -308,6 +310,8 @@ class Connection(object):
             if self._config["logger"] and t is not StopIteration:
                 self._config["logger"].debug("Exception caught", exc_info=True)
             if t is SystemExit and self._config["propagate_SystemExit_locally"]:
+                raise
+            if t is KeyboardInterrupt and self._config["propagate_KeyboardInterrupt_locally"]:
                 raise
             self._send_exception(seq, t, v, tb)
         else:

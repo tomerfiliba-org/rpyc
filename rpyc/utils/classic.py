@@ -350,5 +350,27 @@ class MockClassicConnection(object):
     def getconn(self):
         return None
 
+def teleport_function(conn, func):
+    """
+    "Teleports" a function (including nested functions/closures) over the RPyC connection.
+    The function is passed in bytecode form and reconstructed on the other side.
+
+    The function cannot have non-brinable defaults (e.g., ``def f(x, y=[8]):``,
+    since a ``list`` isn't brinable), or make use of non-builtin globals (like modules).
+    You can overcome the second restriction by moving the necessary imports into the
+    function body, e.g. ::
+
+        def f(x, y):
+            import os
+            return (os.getpid() + y) * x
+
+    :param conn: the RPyC connection
+    :param func: the function object to be delivered to the other party
+    """
+    from rpyc.utils.teleportation import export_function
+    exported = export_function(func)
+    return conn.modules["rpyc.utils.teleportation"].import_function(exported)
+
+
 
 

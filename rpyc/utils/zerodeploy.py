@@ -37,7 +37,7 @@ atexit.register(rmdir)
 try:
     for dirpath, _, filenames in os.walk(here):
         for fn in filenames:
-            if fn == "__pycache__" or (fn.endswith(".pyc") or os.path.exists(fn[:-1])):
+            if fn == "__pycache__" or (fn.endswith(".pyc") and os.path.exists(fn[:-1])):
                 os.remove(os.path.join(dirpath, fn))
 except Exception:
     pass
@@ -46,7 +46,10 @@ sys.path.insert(0, here)
 from $MODULE$ import $SERVER$ as ServerCls
 from rpyc import SlaveService
 
-t = ServerCls(SlaveService, hostname = "localhost", port = 0, reuse_addr = True)
+logger = None
+$EXTRA_SETUP$
+
+t = ServerCls(SlaveService, hostname = "localhost", port = 0, reuse_addr = True, logger = logger)
 sys.stdout.write("%s\n" % (t.port,))
 sys.stdout.flush()
 
@@ -78,9 +81,10 @@ class DeployedServer(object):
     :param remote_machine: a plumbum ``SshMachine`` or ``ParamikoMachine`` instance, representing 
                            an SSH connection to the desired remote machine
     :param server_class: the server to create (e.g., ``"ThreadedServer"``, ``"ForkingServer"``)
+    :param extra_setup: any extra code to add to the script
     """
     
-    def __init__(self, remote_machine, server_class = "rpyc.utils.server.ThreadedServer"):
+    def __init__(self, remote_machine, server_class = "rpyc.utils.server.ThreadedServer", extra_setup = ""):
         self.proc = None
         self.tun = None
         self.remote_machine = remote_machine
@@ -93,7 +97,7 @@ class DeployedServer(object):
         
         script = (tmp / "deployed-rpyc.py")
         modname, clsname = server_class.rsplit(".", 1)
-        script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname))
+        script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname)).replace("$EXTRA_SETUP$", extra_setup)
         self.proc = remote_machine.python.popen(script, new_session = True)
         
         line = ""
