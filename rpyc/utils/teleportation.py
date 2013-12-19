@@ -1,8 +1,9 @@
+import six
+import opcode
 try:
     import __builtin__
 except ImportError:
     import builtins as __builtin__
-import opcode
 from types import CodeType, FunctionType
 from rpyc.core import brine
 
@@ -10,19 +11,21 @@ CODEOBJ_MAGIC = "MAg1c J0hNNzo0hn ZqhuBP17LQk8"
 
 
 def decode_codeobj(codeobj):
-    if hasattr(codeobj, "func_code"):
-        codeobj = codeobj.func_code
+    # adapted from dis.dis
     extended_arg = 0
-    codestr = codeobj.co_code
+    if six.PY3:
+        codestr = codeobj.co_code
+    else:
+        codestr = [ord(ch) for ch in codeobj.co_code]
     free = None
     i = 0
     while i < len(codestr):
-        op = ord(codestr[i])
+        op = codestr[i]
         opname = opcode.opname[op]
         i += 1
         argval = None
         if op >= opcode.HAVE_ARGUMENT:
-            oparg = ord(codestr[i]) + ord(codestr[i + 1]) * 256 + extended_arg
+            oparg = codestr[i] + codestr[i + 1] * 256 + extended_arg
             i += 2
             extended_arg = 0
             if op == opcode.EXTENDED_ARG:
@@ -61,23 +64,42 @@ def _export_codeobj(cobj):
             if arg not in __builtin__.__dict__:
                 raise TypeError("Cannot export a function with non-builtin globals: %r" % (arg,))
 
-    exported = (cobj.co_argcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
-        cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
-        cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
+    if six.PY3:
+        exported = (cobj.co_argcount, cobj.co_kwonlyargcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
+            cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
+            cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
+    else:
+        exported = (cobj.co_argcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
+            cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
+            cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
+
     assert brine.dumpable(exported)
     return (CODEOBJ_MAGIC, exported)
 
 def export_function(func):
-    if func.func_closure:
+    if six.PY3:
+        func_closure = func.__closure__
+        func_code = func.__code__
+        func_defaults = func.__defaults__
+    else:
+        func_closure = func.func_closure
+        func_code = func.func_code
+        func_defaults = func.func_defaults
+    
+    if func_closure:
         raise TypeError("Cannot export a function closure")
-    if not brine.dumpable(func.func_defaults):
+    if not brine.dumpable(func_defaults):
         raise TypeError("Cannot export a function with non-brinable defaults (func_defaults)")
     
-    return func.__name__, func.__module__, func.func_defaults, _export_codeobj(func.func_code)[1]
+    return func.__name__, func.__module__, func_defaults, _export_codeobj(func_code)[1]
 
 def _import_codetup(codetup):
-    (argcnt, nloc, stk, flg, codestr, consts, names, varnames, filename, name,
-        firstlineno, lnotab, freevars, cellvars) = codetup
+    if six.PY3:
+        (argcnt, kwargcnt, nloc, stk, flg, codestr, consts, names, varnames, filename, name,
+            firstlineno, lnotab, freevars, cellvars) = codetup
+    else:
+        (argcnt, nloc, stk, flg, codestr, consts, names, varnames, filename, name,
+            firstlineno, lnotab, freevars, cellvars) = codetup
 
     consts2 = []
     for const in consts:
@@ -85,9 +107,13 @@ def _import_codetup(codetup):
             consts2.append(_import_codetup(const[1]))
         else:
             consts2.append(const)
-
-    return CodeType(argcnt, nloc, stk, flg, codestr, tuple(consts2), names, varnames, filename, name,
-        firstlineno, lnotab, freevars, cellvars)
+    
+    if six.PY3:
+        return CodeType(argcnt, kwargcnt, nloc, stk, flg, codestr, tuple(consts2), names, varnames, filename, name,
+            firstlineno, lnotab, freevars, cellvars)
+    else:
+        return CodeType(argcnt, nloc, stk, flg, codestr, tuple(consts2), names, varnames, filename, name,
+            firstlineno, lnotab, freevars, cellvars)
 
 def import_function(functup):
     name, modname, defaults, codetup = functup
