@@ -31,6 +31,8 @@
 * Added ``MockClassicConnection`` - a mock RPyC "connection" that allows you to write code that runs
   either locally or remotely without modification 
 
+* Added ``teleport_function``
+
 
 3.2.3
 -----

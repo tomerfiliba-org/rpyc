@@ -1,4 +1,7 @@
-import __builtin__
+try:
+    import __builtin__
+except ImportError:
+    import builtins as __builtin__
 import opcode
 from types import CodeType, FunctionType
 from rpyc.core import brine

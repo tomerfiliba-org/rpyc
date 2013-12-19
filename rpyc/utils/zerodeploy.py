@@ -97,7 +97,7 @@ class DeployedServer(object):
         
         script = (tmp / "deployed-rpyc.py")
         modname, clsname = server_class.rsplit(".", 1)
-        script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname)).replace("$EXTRA_SETUP$", extra_setup)
+        script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname).replace("$EXTRA_SETUP$", extra_setup))
         self.proc = remote_machine.python.popen(script, new_session = True)
         
         line = ""

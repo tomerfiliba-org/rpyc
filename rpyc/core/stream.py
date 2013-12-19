@@ -46,10 +46,9 @@ class Stream(object):
                         raise
                 else:
                     break
-        except ValueError:
+        except ValueError as ex:
             # i get this some times: "ValueError: file descriptor cannot be a negative integer (-1)"
             # let's translate it to select.error
-            ex = sys.exc_info()[1]
             raise select_error(str(ex))
         return bool(rl)
     def read(self, count):
