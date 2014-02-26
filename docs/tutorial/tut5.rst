@@ -119,7 +119,7 @@ consider the following ``FileMonitor`` example -- it monitors monitors a file
     import time
     from threading import Thread
     
-    class FileMonitorService(rpyc.Service):
+    class FileMonitorService(rpyc.SlaveService):
         class exposed_FileMonitor(object):   # exposing names is not limited to methods :)
             def __init__(self, filename, callback, interval = 1):
                 self.filename = filename
