@@ -14,3 +14,9 @@ between processes and computers, so that remote objects can be manipulated as if
    
    Note that text written to the server's ``stdout`` is actually printed on 
    the server's console.
+
+
+.. image:: https://d2weczhvl823v0.cloudfront.net/tomerfiliba/rpyc/trend.png
+   :alt: Bitdeli badge
+   :target: https://bitdeli.com/free
+
