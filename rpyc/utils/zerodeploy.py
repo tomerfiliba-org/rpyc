@@ -100,18 +100,20 @@ class DeployedServer(object):
         modname, clsname = server_class.rsplit(".", 1)
         script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname).replace("$EXTRA_SETUP$", extra_setup))
         if not python_executable:
+            cmd = remote_machine[python_executable]
+        else:
             major = sys.version_info[0]
             minor = sys.version_info[1]
             cmd = None
             for opt in ["python%s.%s" % (major, minor), "python%s" % (major,)]:
                 try:
-                    cmd = remote_machine.which(opt)
+                    cmd = remote_machine[opt]
                 except CommandNotFound:
-                    continue
-            if not cmd:
-                cmd = remote_machine.python
-        else:
-            cmd = remote_machine.which(python_executable)
+                    pass
+                else:
+                    break
+        if not cmd:
+            cmd = remote_machine.python
         
         self.proc = cmd.popen(script, new_session = True)
         
