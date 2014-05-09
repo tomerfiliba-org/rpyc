@@ -99,7 +99,7 @@ class DeployedServer(object):
         script = (tmp / "deployed-rpyc.py")
         modname, clsname = server_class.rsplit(".", 1)
         script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname).replace("$EXTRA_SETUP$", extra_setup))
-        if not python_executable:
+        if python_executable:
             cmd = remote_machine[python_executable]
         else:
             major = sys.version_info[0]
