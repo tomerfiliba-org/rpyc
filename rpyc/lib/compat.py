@@ -3,6 +3,7 @@ compatibility module for various versions of python (2.4/3+/jython)
 and various platforms (posix/windows)
 """
 import sys
+import time
 
 is_py3k = (sys.version_info[0] >= 3)
 
@@ -133,7 +134,10 @@ else:
             self.rlist.discard(fd)
             self.wlist.discard(fd)
         def poll(self, timeout = None):
-            rl, wl, _ = select(self.rlist, self.wlist, (), timeout)
+            if not self.rlist and not self.wlist:
+                time.sleep(timeout)
+            else:
+                rl, wl, _ = select(self.rlist, self.wlist, (), timeout)
             return [(fd, "r") for fd in rl] + [(fd, "w") for fd in wl]
     
     poll = SelectingPoll
