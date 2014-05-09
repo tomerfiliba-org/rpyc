@@ -23,10 +23,6 @@ class TestDeploy(unittest.TestCase):
             self.fail("expected an EOFError")
     
     def test_deploy_paramiko(self):
-        # paramiko 1.14 finally supports python 3, which now breaks this test probably due to plumbum
-        if sys.version_info[0] >= 3:
-            self.skipTest("Paramiko is not available")
-
         try:
             import paramiko     # @UnusedImport
         except Exception:

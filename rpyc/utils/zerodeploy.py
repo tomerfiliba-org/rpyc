@@ -4,12 +4,13 @@
 Requires [plumbum](http://plumbum.readthedocs.org/)
 """
 from __future__ import with_statement
+import sys
 import rpyc
 import socket
 from rpyc.core.service import VoidService
 from rpyc.core.stream import SocketStream
 try:
-    from plumbum import local, ProcessExecutionError
+    from plumbum import local, ProcessExecutionError, CommandNotFound
     from plumbum.path import copy
 except ImportError:
     import inspect
@@ -84,7 +85,7 @@ class DeployedServer(object):
     :param extra_setup: any extra code to add to the script
     """
     
-    def __init__(self, remote_machine, server_class = "rpyc.utils.server.ThreadedServer", extra_setup = ""):
+    def __init__(self, remote_machine, server_class = "rpyc.utils.server.ThreadedServer", extra_setup = "", python_executable=None):
         self.proc = None
         self.tun = None
         self.remote_machine = remote_machine
@@ -98,7 +99,21 @@ class DeployedServer(object):
         script = (tmp / "deployed-rpyc.py")
         modname, clsname = server_class.rsplit(".", 1)
         script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname).replace("$EXTRA_SETUP$", extra_setup))
-        self.proc = remote_machine.python.popen(script, new_session = True)
+        if not python_executable:
+            major = sys.version_info[0]
+            minor = sys.version_info[1]
+            cmd = None
+            for opt in ["python%s.%s" % (major, minor), "python%s" % (major,)]:
+                try:
+                    cmd = remote_machine.which(opt)
+                except CommandNotFound:
+                    continue
+            if not cmd:
+                cmd = remote_machine.python
+        else:
+            cmd = remote_machine.which(python_executable)
+        
+        self.proc = cmd.popen(script, new_session = True)
         
         line = ""
         try:
