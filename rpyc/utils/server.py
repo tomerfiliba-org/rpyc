@@ -211,7 +211,7 @@ class Server(object):
                     did_register = False
                     aliases = self.service.get_service_aliases()
                     try:
-                        did_register = self.registrar.register(aliases, self.port)
+                        did_register = self.registrar.register(aliases, self.port, interface = self.host)
                     except Exception:
                         self.logger.exception("error registering services")
 

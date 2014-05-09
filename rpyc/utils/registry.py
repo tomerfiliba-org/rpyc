@@ -331,9 +331,10 @@ class UDPRegistryClient(RegistryClient):
             sock.close()
         return servers
 
-    def register(self, aliases, port):
+    def register(self, aliases, port, interface = ""):
         self.logger.info("registering on %s:%s", self.ip, self.port)
         sock = socket.socket(self.sock_family, socket.SOCK_DGRAM)
+        sock.bind((interface, 0))
         try:
             if self.bcast:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
@@ -414,9 +415,10 @@ class TCPRegistryClient(RegistryClient):
             sock.close()
         return servers
 
-    def register(self, aliases, port):
+    def register(self, aliases, port, interface = ""):
         self.logger.info("registering on %s:%s", self.ip, self.port)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind((interface, 0))
         sock.settimeout(self.timeout)
         data = brine.dump(("RPYC", "REGISTER", (aliases, port)))
 
