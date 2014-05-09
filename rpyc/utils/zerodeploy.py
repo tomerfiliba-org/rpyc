@@ -7,6 +7,7 @@ from __future__ import with_statement
 import sys
 import rpyc
 import socket
+import six
 from rpyc.core.service import VoidService
 from rpyc.core.stream import SocketStream
 try:
@@ -51,13 +52,14 @@ logger = None
 $EXTRA_SETUP$
 
 t = ServerCls(SlaveService, hostname = "localhost", port = 0, reuse_addr = True, logger = logger)
+thd = Thread(target = t.start)
+thd.setDaemon(True)
+thd.start()
+
 sys.stdout.write("%s\n" % (t.port,))
 sys.stdout.flush()
 
 try:
-    thd = Thread(target = t.start)
-    thd.setDaemon(True)
-    thd.start()
     sys.stdin.read()
 finally:
     t.close()
@@ -91,10 +93,10 @@ class DeployedServer(object):
         self.remote_machine = remote_machine
         self._tmpdir_ctx = None
         
-        rpyc_root = local.path(rpyc.__file__).up(2)
+        rpyc_root = local.path(rpyc.__file__).up()
         self._tmpdir_ctx = remote_machine.tempdir()
         tmp = self._tmpdir_ctx.__enter__()
-        copy(rpyc_root, tmp)
+        copy(rpyc_root, tmp / "rpyc")
         
         script = (tmp / "deployed-rpyc.py")
         modname, clsname = server_class.rsplit(".", 1)
@@ -112,8 +114,8 @@ class DeployedServer(object):
                     pass
                 else:
                     break
-        if not cmd:
-            cmd = remote_machine.python
+            if not cmd:
+                cmd = remote_machine.python
         
         self.proc = cmd.popen(script, new_session = True)
         
@@ -127,7 +129,7 @@ class DeployedServer(object):
             except Exception:
                 pass
             stdout, stderr = self.proc.communicate()
-            raise ProcessExecutionError(self.proc.argv, self.proc.returncode, line + stdout, stderr)
+            raise ProcessExecutionError(self.proc.argv, self.proc.returncode, six.b(line) + stdout, stderr)
         
         if hasattr(remote_machine, "connect_sock"):
             # Paramiko: use connect_sock() instead of tunnels
