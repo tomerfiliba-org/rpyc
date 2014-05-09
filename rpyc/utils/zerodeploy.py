@@ -7,7 +7,7 @@ from __future__ import with_statement
 import sys
 import rpyc
 import socket
-import six
+from rpyc.lib.compat import BYTES_LITERAL
 from rpyc.core.service import VoidService
 from rpyc.core.stream import SocketStream
 try:
@@ -129,7 +129,7 @@ class DeployedServer(object):
             except Exception:
                 pass
             stdout, stderr = self.proc.communicate()
-            raise ProcessExecutionError(self.proc.argv, self.proc.returncode, six.b(line) + stdout, stderr)
+            raise ProcessExecutionError(self.proc.argv, self.proc.returncode, BYTES_LITERAL(line) + stdout, stderr)
         
         if hasattr(remote_machine, "connect_sock"):
             # Paramiko: use connect_sock() instead of tunnels
