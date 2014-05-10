@@ -34,18 +34,15 @@ RPyC - Transparent, Symmetric Distributed Computing
    
    <strong>Sticky</strong><br/>
    
-   <a class="reference external" href="https://pypi.python.org/pypi/rpyc">Version 3.2.3</a> 
-   was released on December 2nd <br/>
+   <p>Preparing for 
+   <a class="reference external" href="https://groups.google.com/forum/#!topic/rpyc/RwwDW-Fsc8w">version 3.3</a> --
+   your input is much appreciated!</p>
    
-   Please use the 
+   <p>Please use the 
    <a class="reference external" href="https://groups.google.com/forum/?fromgroups#!forum/rpyc">mailing list</a> 
    to ask questions and use 
    <a class="reference external" href="https://github.com/tomerfiliba/rpyc/issues">github issues</a> 
-   to report problems. <strong>Please do not email me directly</strong>.
-   
-   <p>Learn about the new <a href="https://rpyc.readthedocs.org/en/latest/docs/zerodeploy.html">Zero-Deploy</a> 
-   feature in the up-coming 3.3 release</p>
-   
+   to report problems. <strong>Please do not email me directly</strong>.</p>
    </div>
 
 **RPyC** (pronounced as *are-pie-see*), or *Remote Python Call*, is a **transparent**
