@@ -445,7 +445,7 @@ class Connection(object):
         start_time = time.time()
         while seq not in self._sync_replies:
             remaining_time = self.SYNC_REQUEST_TIMEOUT - (time.time() - start_time)
-            if remaining_time > self.SYNC_REQUEST_TIMEOUT:
+            if remaining_time < 0:
                 raise socket.timeout
 
             # lock or wait for signal
