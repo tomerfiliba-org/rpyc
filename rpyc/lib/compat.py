@@ -136,9 +136,10 @@ else:
         def poll(self, timeout = None):
             if not self.rlist and not self.wlist:
                 time.sleep(timeout)
+                return []  # need to return an empty array in this case
             else:
                 rl, wl, _ = select(self.rlist, self.wlist, (), timeout)
-            return [(fd, "r") for fd in rl] + [(fd, "w") for fd in wl]
+                return [(fd, "r") for fd in rl] + [(fd, "w") for fd in wl]
     
     poll = SelectingPoll
 
