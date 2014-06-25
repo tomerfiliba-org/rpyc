@@ -143,6 +143,8 @@ def _get_free_port():
     s.close()
     return port
 
+_ssh_connect_lock = threading.Lock()
+
 def ssh_connect(remote_machine, remote_port, service = VoidService, config = {}):
     """
     Connects to an RPyC server over an SSH tunnel (created by plumbum).
@@ -156,10 +158,11 @@ def ssh_connect(remote_machine, remote_port, service = VoidService, config = {})
 
     :returns: an RPyC connection
     """
-    loc_port = _get_free_port()
-    tun = remote_machine.tunnel(loc_port, remote_port)
-    stream = TunneledSocketStream.connect("localhost", loc_port)
-    stream.tun = tun
+    with _ssh_connect_lock:
+        loc_port = _get_free_port()
+        tun = remote_machine.tunnel(loc_port, remote_port)
+        stream = TunneledSocketStream.connect("localhost", loc_port)
+        stream.tun = tun
     return Connection(service, Channel(stream), config = config)
 
 def discover(service_name, host = None, registrar = None, timeout = 2):
