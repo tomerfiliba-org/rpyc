@@ -153,8 +153,8 @@ def ssh_connect(remote_machine, remote_port, service = VoidService, config = {})
     
     .. note::
        This function attempts to allocate a free TCP port for the underlying tunnel, but doing
-       so is inherently prone to a race condition with other processes who might claim the 
-       same port for sshd actually binds it. Albeit unlikely, there is no sure way around it.
+       so is inherently prone to a race condition with other processes who might bind the 
+       same port before sshd does. Albeit unlikely, there is no sure way around it.
 
     :param remote_machine: an :class:`plumbum.remote.RemoteMachine` instance
     :param remote_port: the port of the remote server
