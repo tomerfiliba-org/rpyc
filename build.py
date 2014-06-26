@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 from plumbum import local, cli
-from plumbum.utils import delete
+from plumbum.path.utils import delete
 from rpyc.version import version_string
 
 class Build(cli.Application):
