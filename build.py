@@ -18,11 +18,6 @@ class Build(cli.Application):
             local.python("setup.py", "sdist", "--formats=zip,gztar", "upload")
             print("uploading win installer")
             local.python("setup.py", "bdist_wininst", "--plat-name=win32", "upload")
-    
-            # upload to sourceforge
-            print("uploading to sourceforge")
-            dst = "gangesmaster,rpyc@frs.sourceforge.net:/home/frs/project/r/rp/rpyc/main/%s/" % (version_string,)
-            local["rsync"]("-rv", "dist/", dst)
         else:
             local.python("setup.py", "sdist", "--formats=zip,gztar")
             local.python("setup.py", "bdist_wininst", "--plat-name=win32")

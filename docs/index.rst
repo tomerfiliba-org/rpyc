@@ -34,9 +34,10 @@ RPyC - Transparent, Symmetric Distributed Computing
    
    <strong>Sticky</strong><br/>
    
-   <p>Preparing for 
-   <a class="reference external" href="https://groups.google.com/forum/#!topic/rpyc/RwwDW-Fsc8w">version 3.3</a> --
-   your input is much appreciated!</p>
+   <p> 2014.06.26:
+   <a class="reference external" href="https://pypi.python.org/pypi/rpyc/3.3.0">Version 3.3</a> has been released!.
+   More info on the <a href="http://rpyc.readthedocs.org/en/latest/changelog.html">changelog</a>
+   </p>
    
    <p>Please use the 
    <a class="reference external" href="https://groups.google.com/forum/?fromgroups#!forum/rpyc">mailing list</a> 
