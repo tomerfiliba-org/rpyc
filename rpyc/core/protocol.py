@@ -182,7 +182,7 @@ class Connection(object):
         self._local_root = None
         #self._seqcounter = None
         #self._config.clear()
-    
+
     def close(self, _catchall = True):
         """closes the connection, releasing all held resources"""
         if self._closed:
@@ -202,6 +202,7 @@ class Connection(object):
     def closed(self):
         """Indicates whether the connection has been closed or not"""
         return self._closed
+
     def fileno(self):
         """Returns the connectin's underlying file descriptor"""
         return self._channel.fileno()
@@ -222,6 +223,10 @@ class Connection(object):
         if res.value != data:
             raise PingError("echo mismatches sent data")
 
+    def _get_seq_id(self):
+        seq = next(self._seqcounter)
+        return seq
+
     def _send(self, msg, seq, args):
         data = brine.dump((msg, seq, args))
         self._sendlock.acquire()
@@ -229,12 +234,14 @@ class Connection(object):
             self._channel.send(data)
         finally:
             self._sendlock.release()
-    def _send_request(self, handler, args):
-        seq = next(self._seqcounter)
+
+    def _send_request(self, seq, handler, args):
         self._send(consts.MSG_REQUEST, seq, (handler, self._box(args)))
         return seq
+
     def _send_reply(self, seq, obj):
         self._send(consts.MSG_REPLY, seq, self._box(obj))
+
     def _send_exception(self, seq, exctype, excval, exctb):
         exc = vinegar.dump(exctype, excval, exctb,
             include_local_traceback = self._config["include_local_traceback"])
@@ -429,11 +436,12 @@ class Connection(object):
     #
     def sync_request(self, handler, *args):
         """Sends a synchronous request (waits for the reply to arrive)
-        
+
         :raises: any exception that the requets may be generated
         :returns: the result of the request
         """
-        seq = self._send_request(handler, args)
+        seq = self._get_seq_id()
+        self._send_request(seq, handler, args)
         while seq not in self._sync_replies:
             self.serve(0.1)
         isexc, obj = self._sync_replies.pop(seq)
@@ -443,11 +451,18 @@ class Connection(object):
             return obj
 
     def _async_request(self, handler, args = (), callback = (lambda a, b: None)):
-        seq = self._send_request(handler, args)
+        seq = self._get_seq_id()
         self._async_callbacks[seq] = callback
+        try:
+            self._send_request(seq, handler, args)
+        except:
+            if seq in self._async_callbacks:
+                del self._async_callbacks[seq]
+            raise
+
     def async_request(self, handler, *args, **kwargs):
         """Send an asynchronous request (does not wait for it to finish)
-        
+
         :returns: an :class:`rpyc.core.async.AsyncResult` object, which will
                   eventually hold the result (or exception)
         """
