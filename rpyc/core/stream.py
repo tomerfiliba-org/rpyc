@@ -39,16 +39,18 @@ class Stream(object):
             while True:
                 try:
                     rl, _, _ = select([self], [], [], timeout)
-                except select_error as ex:
-                    if ex[0] == errno.EINTR:
+                except select_error:
+                    ex = sys.exc_info()[1]
+                    if ex.args[0] == errno.EINTR:
                         continue
                     else:
                         raise
                 else:
                     break
-        except ValueError as ex:
+        except ValueError:
             # i get this some times: "ValueError: file descriptor cannot be a negative integer (-1)"
             # let's translate it to select.error
+            ex = sys.exc_info()[1]
             raise select_error(str(ex))
         return bool(rl)
     def read(self, count):
