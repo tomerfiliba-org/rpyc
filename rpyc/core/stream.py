@@ -1,5 +1,5 @@
 """
-An abstraction layer over OS-dependent file-like objects, that provides a 
+An abstraction layer over OS-dependent file-like objects, that provides a
 consistent view of a *duplex byte stream*.
 """
 import sys
@@ -20,7 +20,7 @@ retry_errnos = (errno.EAGAIN, errno.EWOULDBLOCK)
 
 class Stream(object):
     """Base Stream"""
-    
+
     __slots__ = ()
     def close(self):
         """closes the stream, releasing any system resources associated with it"""
@@ -33,7 +33,7 @@ class Stream(object):
         """returns the stream's file descriptor"""
         raise NotImplementedError()
     def poll(self, timeout):
-        """indicates whether the stream has data to read (within *timeout* 
+        """indicates whether the stream has data to read (within *timeout*
         seconds)"""
         try:
             while True:
@@ -53,15 +53,15 @@ class Stream(object):
         return bool(rl)
     def read(self, count):
         """reads **exactly** *count* bytes, or raise EOFError
-        
+
         :param count: the number of bytes to read
-        
+
         :returns: read data
         """
         raise NotImplementedError()
     def write(self, data):
         """writes the entire *data*, or raise EOFError
-        
+
         :param data: a string of binary data
         """
         raise NotImplementedError()
@@ -86,7 +86,7 @@ ClosedFile = ClosedFile()
 
 class SocketStream(Stream):
     """A stream over a socket"""
-    
+
     __slots__ = ("sock",)
     MAX_IO_CHUNK = 8000
     def __init__(self, sock):
@@ -95,7 +95,7 @@ class SocketStream(Stream):
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM,
             proto = 0, timeout = 3, nodelay = False, keepalive = False):
-        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, family, 
+        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, family,
             socktype, proto)[0]
         s = socket.socket(family, socktype, proto)
         s.settimeout(timeout)
@@ -104,27 +104,27 @@ class SocketStream(Stream):
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         if keepalive:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            # Linux specific: after 10 idle minutes, start sending keepalives every 5 minutes. 
+            # Linux specific: after 10 idle minutes, start sending keepalives every 5 minutes.
             # Drop connection after 10 failed keepalives
             if hasattr(socket, "TCP_KEEPIDLE") and hasattr(socket, "TCP_KEEPINTVL") and hasattr(socket, "TCP_KEEPCNT"):
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 10 * 60)
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 5 * 60)
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)    
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
         return s
-    
+
     @classmethod
     def connect(cls, host, port, **kwargs):
         """factory method that creates a ``SocketStream`` over a socket connected
         to *host* and *port*
-        
+
         :param host: the host name
         :param port: the TCP port
         :param kwargs: additional keyword arguments: ``family``, ``socktype``,
-                       ``proto``, ``timeout``, ``nodelay``, passed directly to 
+                       ``proto``, ``timeout``, ``nodelay``, passed directly to
                        the ``socket`` constructor, or ``ipv6``.
         :param ipv6: if True, creates an IPv6 socket (``AF_INET6``); otherwise
                      an IPv4 (``AF_INET``) socket is created
-        
+
         :returns: a :class:`SocketStream`
         """
         if kwargs.pop("ipv6", False):
@@ -133,19 +133,19 @@ class SocketStream(Stream):
 
     @classmethod
     def ssl_connect(cls, host, port, ssl_kwargs, **kwargs):
-        """factory method that creates a ``SocketStream`` over an SSL-wrapped 
+        """factory method that creates a ``SocketStream`` over an SSL-wrapped
         socket, connected to *host* and *port* with the given credentials.
-        
+
         :param host: the host name
         :param port: the TCP port
-        :param ssl_kwargs: a dictionary of keyword arguments to be passed 
+        :param ssl_kwargs: a dictionary of keyword arguments to be passed
                            directly to ``ssl.wrap_socket``
         :param kwargs: additional keyword arguments: ``family``, ``socktype``,
-                       ``proto``, ``timeout``, ``nodelay``, passed directly to 
+                       ``proto``, ``timeout``, ``nodelay``, passed directly to
                        the ``socket`` constructor, or ``ipv6``.
         :param ipv6: if True, creates an IPv6 socket (``AF_INET6``); otherwise
                      an IPv4 (``AF_INET``) socket is created
-        
+
         :returns: a :class:`SocketStream`
         """
         if kwargs.pop("ipv6", False):
@@ -153,7 +153,7 @@ class SocketStream(Stream):
         s = cls._connect(host, port, **kwargs)
         s2 = ssl.wrap_socket(s, **ssl_kwargs)
         return cls(s2)
-    
+
     @property
     def closed(self):
         return self.sock is ClosedFile
@@ -175,7 +175,7 @@ class SocketStream(Stream):
                 raise EOFError()
             else:
                 raise
-    
+
     def read(self, count):
         data = []
         while count > 0:
@@ -208,7 +208,7 @@ class SocketStream(Stream):
 
 class TunneledSocketStream(SocketStream):
     """A socket stream over an SSH tunnel (terminates the tunnel when the connection closes)"""
-    
+
     __slots__ = ("tun",)
     def __init__(self, sock):
         self.sock = sock
@@ -220,7 +220,7 @@ class TunneledSocketStream(SocketStream):
 
 class PipeStream(Stream):
     """A stream over two simplex pipes (one used to input, another for output)"""
-    
+
     __slots__ = ("incoming", "outgoing")
     MAX_IO_CHUNK = 32000
     def __init__(self, incoming, outgoing):
@@ -229,17 +229,17 @@ class PipeStream(Stream):
         self.outgoing = outgoing
     @classmethod
     def from_std(cls):
-        """factory method that creates a PipeStream over the standard pipes 
+        """factory method that creates a PipeStream over the standard pipes
         (``stdin`` and ``stdout``)
-        
+
         :returns: a :class:`PipeStream` instance
         """
         return cls(sys.stdin, sys.stdout)
     @classmethod
     def create_pair(cls):
-        """factory method that creates two pairs of anonymous pipes, and 
+        """factory method that creates two pairs of anonymous pipes, and
         creates two PipeStreams over them. Useful for ``fork()``.
-        
+
         :returns: a tuple of two :class:`PipeStream` instances
         """
         r1, w1 = os.pipe()
@@ -289,7 +289,7 @@ class PipeStream(Stream):
 class Win32PipeStream(Stream):
     """A stream over two simplex pipes (one used to input, another for output).
     This is an implementation for Windows pipes (which suck)"""
-    
+
     __slots__ = ("incoming", "outgoing", "_fileno", "_keepalive")
     PIPE_BUFFER_SIZE = 130000
     MAX_IO_CHUNK = 32000
@@ -385,7 +385,7 @@ class Win32PipeStream(Stream):
 class NamedPipeStream(Win32PipeStream):
     """A stream over two named pipes (one used to input, another for output).
     Windows implementation."""
-    
+
     NAMED_PIPE_PREFIX = r'\\.\pipe\rpyc_'
     PIPE_IO_TIMEOUT = 3
     CONNECT_TIMEOUT = 3
@@ -403,14 +403,14 @@ class NamedPipeStream(Win32PipeStream):
 
     @classmethod
     def create_server(cls, pipename, connect = True):
-        """factory method that creates a server-side ``NamedPipeStream``, over 
+        """factory method that creates a server-side ``NamedPipeStream``, over
         a newly-created *named pipe* of the given name.
-        
+
         :param pipename: the name of the pipe. It will be considered absolute if
                          it starts with ``\\\\.``; otherwise ``\\\\.\\pipe\\rpyc``
                          will be prepended.
         :param connect: whether to connect on creation or not
-        
+
         :returns: a :class:`NamedPipeStream` instance
         """
         if not pipename.startswith("\\\\."):
@@ -431,7 +431,7 @@ class NamedPipeStream(Win32PipeStream):
         return inst
 
     def connect_server(self):
-        """connects the server side of an unconnected named pipe (blocks 
+        """connects the server side of an unconnected named pipe (blocks
         until a connection arrives)"""
         if not self.is_server_side:
             raise ValueError("this must be the server side")
@@ -439,13 +439,13 @@ class NamedPipeStream(Win32PipeStream):
 
     @classmethod
     def create_client(cls, pipename):
-        """factory method that creates a client-side ``NamedPipeStream``, over 
+        """factory method that creates a client-side ``NamedPipeStream``, over
         a newly-created *named pipe* of the given name.
-        
+
         :param pipename: the name of the pipe. It will be considered absolute if
                          it starts with ``\\\\.``; otherwise ``\\\\.\\pipe\\rpyc``
                          will be prepended.
-        
+
         :returns: a :class:`NamedPipeStream` instance
         """
         if not pipename.startswith("\\\\."):
