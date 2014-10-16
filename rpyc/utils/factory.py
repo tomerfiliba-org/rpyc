@@ -2,6 +2,7 @@
 RPyC connection factories: ease the creation of a connection for the common
 cases)
 """
+from __future__ import with_statement
 import socket
 
 import threading
