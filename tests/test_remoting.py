@@ -25,7 +25,7 @@ class Test_Remoting(unittest.TestCase):
         os.mkdir(os.path.join(base1, "somedir1"))
 
         rpyc.classic.upload(self.conn, base1, base2)
-        self.assertEqual(os.listdir(base1), os.listdir(base2))
+        self.assertEqual(sorted(os.listdir(base1)), sorted(os.listdir(base2)))
 
         rpyc.classic.download(self.conn, base2, base3)
         self.assertEqual(os.listdir(base2), os.listdir(base3))
