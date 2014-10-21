@@ -72,11 +72,13 @@ Example
     # allow this function to take up to 6 seconds
     timed_sleep = rpyc.timed(conn.modules.time.sleep, 6)
     
-    # wait for 3 seconds -- works fine
-    timed_sleep(3)  
+    # wait for 3 seconds -- works
+    async_res = timed_sleep(3)  # returns immediately
+    async_res.value             # returns after 3 seconds
     
-    # wait for 10 seconds -- after 6 seconds, an AsyncResultTimeout will be raised
-    timed_sleep(10)
+    # wait for 10 seconds -- fails
+    async_res = timed_sleep(10) # returns immediately
+    async_res.value             # raises AsyncResultTimeout
 
 
 Background Serving Thread
