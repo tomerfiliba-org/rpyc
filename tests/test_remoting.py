@@ -28,7 +28,7 @@ class Test_Remoting(unittest.TestCase):
         self.assertEqual(sorted(os.listdir(base1)), sorted(os.listdir(base2)))
 
         rpyc.classic.download(self.conn, base2, base3)
-        self.assertEqual(os.listdir(base2), os.listdir(base3))
+        self.assertEqual(sorted(os.listdir(base2)), sorted(os.listdir(base3)))
 
         shutil.rmtree(base)
 
