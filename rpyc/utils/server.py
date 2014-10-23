@@ -130,7 +130,7 @@ class Server(object):
                 pass
             except socket.error:
                 ex = sys.exc_info()[1]
-                if get_exc_errno(ex) == errno.EINTR:
+                if get_exc_errno(ex) in (errno.EINTR, errno.EAGAIN):
                     pass
                 else:
                     raise EOFError()
