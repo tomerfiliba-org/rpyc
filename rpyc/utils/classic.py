@@ -55,7 +55,7 @@ def connect_pipes(input, output):
     """
     return factory.connect_pipes(input, output, SlaveService)
 
-def connect(host, port = DEFAULT_SERVER_PORT, ipv6 = False, keepalive = False):
+def connect(host, port = DEFAULT_SERVER_PORT, ipv6 = False, keepalive=None):
     """
     Creates a socket connection to the given host and port.
     

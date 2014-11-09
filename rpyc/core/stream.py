@@ -96,7 +96,7 @@ class SocketStream(Stream):
 
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM,
-            proto = 0, timeout = 3, nodelay = False, keepalive = False):
+            proto = 0, timeout = 3, nodelay = False, keepalive = None):
         family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, family,
             socktype, proto)[0]
         s = socket.socket(family, socktype, proto)
@@ -105,13 +105,18 @@ class SocketStream(Stream):
         if nodelay:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         if keepalive:
+            if keepalive < 1:
+                raise ValueError("Keepalive minimal value is 1 minute")
             s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            # Linux specific: after 10 idle minutes, start sending keepalives every 5 minutes.
-            # Drop connection after 10 failed keepalives
+            num_of_keepalives = 5
+            # Linux specific: after <keepalive_internal> seconds, start sending keepalives every <keepalive_internal> seconds.
+            # Drop connection after 5 failed keepalives
             if hasattr(socket, "TCP_KEEPIDLE") and hasattr(socket, "TCP_KEEPINTVL") and hasattr(socket, "TCP_KEEPCNT"):
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, 10 * 60)
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, 5 * 60)
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 10)
+                # based on the provided keepalive value (in minutes), keepalive_internal is defined
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, num_of_keepalives)
+                keepalive_internal = keepalive * 60 * 60 / num_of_keepalives * 60 + 60
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, keepalive_internal)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepalive_internal)
         return s
 
     @classmethod
