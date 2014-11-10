@@ -104,19 +104,20 @@ class SocketStream(Stream):
         s.connect(sockaddr)
         if nodelay:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        if keepalive:
+        if keepalive > 0:
+            # `keepalive` may be a bool or an integer
+            if keepalive is True:
+                keepalive = 60
             if keepalive < 1:
-                raise ValueError("Keepalive minimal value is 1 minute")
+                raise ValueError("Keepalive minimal value is 1 second")
             s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-            num_of_keepalives = 5
-            # Linux specific: after <keepalive_internal> seconds, start sending keepalives every <keepalive_internal> seconds.
-            # Drop connection after 5 failed keepalives
+
             if hasattr(socket, "TCP_KEEPIDLE") and hasattr(socket, "TCP_KEEPINTVL") and hasattr(socket, "TCP_KEEPCNT"):
-                # based on the provided keepalive value (in minutes), keepalive_internal is defined
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, num_of_keepalives)
-                keepalive_internal = keepalive * 60 * 60 / num_of_keepalives * 60 + 60
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, keepalive_internal)
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepalive_internal)
+                # Linux specific: after <keepalive> idle seconds, start sending keepalives every <keepalive> seconds.
+                # Drop connection after 5 failed keepalives
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 5)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, keepalive)
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepalive)
         return s
 
     @classmethod
@@ -126,9 +127,14 @@ class SocketStream(Stream):
 
         :param host: the host name
         :param port: the TCP port
-        :param kwargs: additional keyword arguments: ``family``, ``socktype``,
-                       ``proto``, ``timeout``, ``nodelay``, passed directly to
-                       the ``socket`` constructor, or ``ipv6``.
+        :param family: specify a custom socket family
+        :param socktype: specify a custom socket type
+        :param proto: specify a custom socket protocol
+        :param timeout: connection timeout (default is 3 seconds)
+        :param nodelay: set the TCP_NODELAY socket option
+        :param keepalive: enable TCP keepalives. The value can be either
+                          ``True/False``. On Linux, it can also be an integer
+                          specifying the keepalive interval (in seconds)
         :param ipv6: if True, creates an IPv6 socket (``AF_INET6``); otherwise
                      an IPv4 (``AF_INET``) socket is created
 
