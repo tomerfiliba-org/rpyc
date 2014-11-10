@@ -96,7 +96,7 @@ class SocketStream(Stream):
 
     @classmethod
     def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM,
-            proto = 0, timeout = 3, nodelay = False, keepalive = None):
+            proto = 0, timeout = 3, nodelay = False, keepalive = False):
         family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, family,
             socktype, proto)[0]
         s = socket.socket(family, socktype, proto)
@@ -104,17 +104,18 @@ class SocketStream(Stream):
         s.connect(sockaddr)
         if nodelay:
             s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        if keepalive > 0:
-            # `keepalive` may be a bool or an integer
-            if keepalive is True:
-                keepalive = 60
-            if keepalive < 1:
-                raise ValueError("Keepalive minimal value is 1 second")
+        if keepalive:
             s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
             if hasattr(socket, "TCP_KEEPIDLE") and hasattr(socket, "TCP_KEEPINTVL") and hasattr(socket, "TCP_KEEPCNT"):
                 # Linux specific: after <keepalive> idle seconds, start sending keepalives every <keepalive> seconds.
                 # Drop connection after 5 failed keepalives
+                # `keepalive` may be a bool or an integer
+                if keepalive is True:
+                    keepalive = 60
+                if keepalive < 1:
+                    raise ValueError("Keepalive minimal value is 1 second")
+
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 5)
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, keepalive)
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepalive)
@@ -132,9 +133,9 @@ class SocketStream(Stream):
         :param proto: specify a custom socket protocol
         :param timeout: connection timeout (default is 3 seconds)
         :param nodelay: set the TCP_NODELAY socket option
-        :param keepalive: enable TCP keepalives. The value can be either
-                          ``True/False``. On Linux, it can also be an integer
-                          specifying the keepalive interval (in seconds)
+        :param keepalive: enable TCP keepalives. The value should be a boolean,
+                          but on Linux, it can also be an integer specifying the
+                          keepalive interval (in seconds)
         :param ipv6: if True, creates an IPv6 socket (``AF_INET6``); otherwise
                      an IPv4 (``AF_INET``) socket is created
 
