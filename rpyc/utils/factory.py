@@ -75,7 +75,7 @@ def connect_stdpipes(service = VoidService, config = {}):
     """
     return connect_stream(PipeStream.from_std(), service = service, config = config)
 
-def connect(host, port, service = VoidService, config = {}, ipv6 = False, keepalive = False):
+def connect(host, port, service = VoidService, config = {}, ipv6 = False, keepalive = None):
     """
     creates a socket-connection to the given host and port
 
