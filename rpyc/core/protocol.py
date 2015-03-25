@@ -7,7 +7,7 @@ import itertools
 import socket
 import time
 
-from threading import Lock
+from threading import Lock, RLock, Event
 from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
@@ -128,6 +128,9 @@ class Connection(object):
                   the connection. Default is True. If set to False, you will 
                   need to call :func:`_init_service` manually later
     """
+
+    SYNC_REQUEST_TIMEOUT = 30
+
     def __init__(self, service, channel, config = {}, _lazy = False):
         self._closed = True
         self._config = DEFAULT_CONFIG.copy()
@@ -140,6 +143,8 @@ class Connection(object):
         self._recvlock = Lock()
         self._sendlock = Lock()
         self._sync_replies = {}
+        self._sync_lock = RLock()
+        self._sync_event = Event()
         self._async_callbacks = {}
         self._local_objects = RefCountingColl()
         self._last_traceback = None
@@ -150,6 +155,8 @@ class Connection(object):
         if not _lazy:
             self._init_service()
         self._closed = False
+
+
     def _init_service(self):
         self._local_root.on_connect()
 
@@ -224,8 +231,7 @@ class Connection(object):
             raise PingError("echo mismatches sent data")
 
     def _get_seq_id(self):
-        seq = next(self._seqcounter)
-        return seq
+        return next(self._seqcounter)
 
     def _send(self, msg, seq, args):
         data = brine.dump((msg, seq, args))
@@ -237,7 +243,6 @@ class Connection(object):
 
     def _send_request(self, seq, handler, args):
         self._send(consts.MSG_REQUEST, seq, (handler, self._box(args)))
-        return seq
 
     def _send_reply(self, seq, obj):
         self._send(consts.MSG_REPLY, seq, self._box(obj))
@@ -442,8 +447,24 @@ class Connection(object):
         """
         seq = self._get_seq_id()
         self._send_request(seq, handler, args)
+        start_time = time.time()
+
         while seq not in self._sync_replies:
-            self.serve(0.1)
+            remaining_time = self.SYNC_REQUEST_TIMEOUT - (time.time() - start_time)
+            if remaining_time < 0:
+                raise socket.timeout
+
+            # lock or wait for signal
+            if self._sync_lock.acquire(False):
+                self._sync_event.clear()
+                try:
+                    self.serve(remaining_time)
+                finally:
+                    self._sync_lock.release()
+                    self._sync_event.set()
+            else:
+                self._sync_event.wait(remaining_time)
+
         isexc, obj = self._sync_replies.pop(seq)
         if isexc:
             raise obj
