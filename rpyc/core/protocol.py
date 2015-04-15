@@ -6,6 +6,7 @@ import weakref
 import itertools
 import socket
 import time
+import gc
 
 from threading import Lock, RLock, Event
 from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
@@ -235,11 +236,19 @@ class Connection(object):
 
     def _send(self, msg, seq, args):
         data = brine.dump((msg, seq, args))
+        # GC might run while sending data
+        # if so, a BaseNetref.__del__ might be called
+        # BaseNetref.__del__ must call asyncreq,
+        # which will cause a deadlock
+        is_gc_enabled = gc.isenabled()
+        gc.disable()
         self._sendlock.acquire()
         try:
             self._channel.send(data)
         finally:
             self._sendlock.release()
+            if is_gc_enabled:
+                gc.enable()
 
     def _send_request(self, seq, handler, args):
         self._send(consts.MSG_REQUEST, seq, (handler, self._box(args)))
