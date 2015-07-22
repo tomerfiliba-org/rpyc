@@ -189,11 +189,12 @@ class BgServingThread(object):
     SERVE_INTERVAL = 0.0
     SLEEP_INTERVAL = 0.1
 
-    def __init__(self, conn):
+    def __init__(self, conn, callback=None):
         self._conn = conn
         self._thread = threading.Thread(target = self._bg_server)
         self._thread.setDaemon(True)
         self._active = True
+        self._callback = callback
         self._thread.start()
     def __del__(self):
         if self._active:
@@ -205,7 +206,10 @@ class BgServingThread(object):
                 time.sleep(self.SLEEP_INTERVAL) # to reduce contention
         except Exception:
             if self._active:
-                raise
+                self._active = False
+                if self._callback is None:
+                    raise
+                self._callback()
     def stop(self):
         """stop the server thread. once stopped, it cannot be resumed. you will
         have to create a new BgServingThread object later."""
