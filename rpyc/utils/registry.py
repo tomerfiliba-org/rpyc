@@ -1,13 +1,13 @@
 """
-RPyC **registry server** implementation. The registry is much like 
-`Avahi <http://en.wikipedia.org/wiki/Avahi_(software)>`_ or 
+RPyC **registry server** implementation. The registry is much like
+`Avahi <http://en.wikipedia.org/wiki/Avahi_(software)>`_ or
 `Bonjour <http://en.wikipedia.org/wiki/Bonjour_(software)>`_, but tailored to
 the needs of RPyC. Also, neither of them supports (or supported) Windows,
-and Bonjour has a restrictive license. Moreover, they are too "powerful" for 
+and Bonjour has a restrictive license. Moreover, they are too "powerful" for
 what RPyC needed and required too complex a setup.
 
-If anyone wants to implement the RPyC registry using Avahi, Bonjour, or any 
-other zeroconf implementation -- I'll be happy to include them. 
+If anyone wants to implement the RPyC registry using Avahi, Bonjour, or any
+other zeroconf implementation -- I'll be happy to include them.
 
 Refer to :file:`rpyc/scripts/rpyc_registry.py` for more info.
 """
@@ -19,18 +19,18 @@ from rpyc.core import brine
 
 
 DEFAULT_PRUNING_TIMEOUT = 4 * 60
-MAX_DGRAM_SIZE          = 1500
-REGISTRY_PORT           = 18811
+MAX_DGRAM_SIZE = 1500
+REGISTRY_PORT = 18811
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # servers
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 class RegistryServer(object):
     """Base registry server"""
-    
-    def __init__(self, listenersock, pruning_timeout = None, logger = None):
+
+    def __init__(self, listenersock, pruning_timeout=None, logger=None):
         self.sock = listenersock
         self.port = self.sock.getsockname()[1]
         self.active = False
@@ -84,7 +84,8 @@ class RegistryServer(object):
             return ()
 
         oldest = time.time() - self.pruning_timeout
-        all_servers = sorted(self.services[name].items(), key = lambda x: x[1])
+        all_servers = sorted(self.services[name].items(), key=lambda x: x[1][1])
+        self.logger.debug("All sorted servers: %r", all_servers)
         servers = []
         for addrinfo, tt in all_servers:
             regtime, tasks = tt
@@ -167,20 +168,20 @@ class RegistryServer(object):
         self.logger.debug("stopping server...")
         self.active = False
 
+
 class UDPRegistryServer(RegistryServer):
     """UDP-based registry server. The server listens to UDP broadcasts and
     answers them. Useful in local networks, were broadcasts are allowed"""
-    
+
     TIMEOUT = 1.0
-    
-    def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT, pruning_timeout = None, logger = None):
-        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, 0, 
-            socket.SOCK_DGRAM)[0]
+
+    def __init__(self, host="0.0.0.0", port=REGISTRY_PORT, pruning_timeout=None, logger=None):
+        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, 0, socket.SOCK_DGRAM)[0]
         sock = socket.socket(family, socktype, proto)
         sock.bind(sockaddr)
         sock.settimeout(self.TIMEOUT)
-        RegistryServer.__init__(self, sock, pruning_timeout = pruning_timeout,
-            logger = logger)
+        RegistryServer.__init__(self, sock, pruning_timeout=pruning_timeout,
+                                logger=logger)
 
     def _get_logger(self):
         return logging.getLogger("REGSRV/UDP/%d" % (self.port,))
@@ -194,18 +195,18 @@ class UDPRegistryServer(RegistryServer):
         except (socket.error, socket.timeout):
             pass
 
+
 class TCPRegistryServer(RegistryServer):
     """TCP-based registry server. The server listens to a certain TCP port and
     answers requests. Useful when you need to cross routers in the network, since
     they block UDP broadcasts"""
 
     TIMEOUT = 3.0
-    
-    def __init__(self, host = "0.0.0.0", port = REGISTRY_PORT, pruning_timeout = None, 
-            logger = None, reuse_addr = True):
 
-        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, 0, 
-            socket.SOCK_STREAM)[0]
+    def __init__(self, host="0.0.0.0", port=REGISTRY_PORT, pruning_timeout=None,
+                 logger=None, reuse_addr=True):
+
+        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM)[0]
         sock = socket.socket(family, socktype, proto)
         if reuse_addr and sys.platform != "win32":
             # warning: reuseaddr is not what you expect on windows!
@@ -213,8 +214,8 @@ class TCPRegistryServer(RegistryServer):
         sock.bind(sockaddr)
         sock.listen(10)
         sock.settimeout(self.TIMEOUT)
-        RegistryServer.__init__(self, sock, pruning_timeout = pruning_timeout,
-            logger = logger)
+        RegistryServer.__init__(self, sock, pruning_timeout=pruning_timeout,
+                                logger=logger)
         self._connected_sockets = {}
 
     def _get_logger(self):
@@ -236,15 +237,16 @@ class TCPRegistryServer(RegistryServer):
         finally:
             sock2.close()
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 # clients (registrars)
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 class RegistryClient(object):
     """Base registry client. Also known as **registrar**"""
-    
+
     REREGISTER_INTERVAL = 60
 
-    def __init__(self, ip, port, timeout, logger = None):
+    def __init__(self, ip, port, timeout, logger=None):
         self.ip = ip
         self.port = port
         self.timeout = timeout
@@ -257,17 +259,18 @@ class RegistryClient(object):
 
     def discover(self, name):
         """Sends a query for the specified service name.
-        
+
         :param name: the service name (or one of its aliases)
-        
+
         :returns: a list of ``(host, port)`` tuples
         """
         raise NotImplementedError()
 
     def register(self, aliases, port, tasks=0):
-        """Registers the given service aliases with the given TCP port. This 
+
+        """Registers the given service aliases with the given TCP port. This
         API is intended to be called only by an RPyC server.
-        
+
         :param aliases: the :class:`service's <rpyc.core.service.Service>` aliases
         :param port: the listening TCP port of the server
         """
@@ -276,30 +279,31 @@ class RegistryClient(object):
     def unregister(self, port):
         """Unregisters the given RPyC server. This API is intended to be called
         only by an RPyC server.
-        
+
         :param port: the listening TCP port of the RPyC server to unregister
         """
         raise NotImplementedError()
 
+
 class UDPRegistryClient(RegistryClient):
-    """UDP-based registry clients. By default, it sends UDP broadcasts (requires 
-    special user privileges on certain OS's) and collects the replies. You can 
+    """UDP-based registry clients. By default, it sends UDP broadcasts (requires
+    special user privileges on certain OS's) and collects the replies. You can
     also specify the IP address to send to.
-    
+
     Example::
-    
+
         registrar = UDPRegistryClient()
         list_of_servers = registrar.discover("foo")
 
     .. note::
        Consider using :func:`rpyc.utils.factory.discover` instead
     """
-    
-    def __init__(self, ip = "255.255.255.255", port = REGISTRY_PORT, timeout = 2,
-            bcast = None, logger = None, ipv6 = False):
-        RegistryClient.__init__(self, ip = ip, port = port, timeout = timeout,
-            logger = logger)
-        
+
+    def __init__(self, ip="255.255.255.255", port=REGISTRY_PORT, timeout=2,
+                 bcast=None, logger=None, ipv6=False):
+        RegistryClient.__init__(self, ip=ip, port=port, timeout=timeout,
+                                logger=logger)
+
         if ipv6:
             self.sock_family = socket.AF_INET6
             self.bcast = False
@@ -332,16 +336,16 @@ class UDPRegistryClient(RegistryClient):
             sock.close()
         return servers
 
-    def register(self, aliases, port, tasks=0, interface = ""):
-        self.logger.info("registering on %s:%s", self.ip, self.port)
+    def register(self, aliases, port, tasks=0, interface=""):
+        self.logger.info("registering on %s:%s with %i clients connected", self.ip, self.port, tasks)
         sock = socket.socket(self.sock_family, socket.SOCK_DGRAM)
         sock.bind((interface, 0))
         try:
             if self.bcast:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-            data = brine.dump(("RPYC", "REGISTER", (aliases, port)))
+            data = brine.dump(("RPYC", "REGISTER", (aliases, port, tasks)))
             sock.sendto(data, (self.ip, self.port))
-    
+
             tmax = time.time() + self.timeout
             while time.time() < tmax:
                 sock.settimeout(tmax - time.time())
@@ -380,20 +384,20 @@ class UDPRegistryClient(RegistryClient):
 
 class TCPRegistryClient(RegistryClient):
     """TCP-based registry client. You must specify the host (registry server)
-    to connect to.  
-    
+    to connect to.
+
     Example::
-    
+
         registrar = TCPRegistryClient("localhost")
         list_of_servers = registrar.discover("foo")
-    
+
     .. note::
        Consider using :func:`rpyc.utils.factory.discover` instead
     """
-    
-    def __init__(self, ip, port = REGISTRY_PORT, timeout = 2, logger = None):
-        RegistryClient.__init__(self, ip = ip, port = port, timeout = timeout,
-            logger = logger)
+
+    def __init__(self, ip, port=REGISTRY_PORT, timeout=2, logger=None):
+        RegistryClient.__init__(self, ip=ip, port=port, timeout=timeout,
+                                logger=logger)
 
     def _get_logger(self):
         return logging.getLogger('REGCLNT/TCP')
@@ -405,7 +409,7 @@ class TCPRegistryClient(RegistryClient):
             data = brine.dump(("RPYC", "QUERY", (name,)))
             sock.connect((self.ip, self.port))
             sock.send(data)
-            
+
             try:
                 data = sock.recv(MAX_DGRAM_SIZE)
             except (socket.error, socket.timeout):
@@ -416,8 +420,8 @@ class TCPRegistryClient(RegistryClient):
             sock.close()
         return servers
 
-    def register(self, aliases, port, tasks=0, interface = ""):
-        self.logger.info("registering on %s:%s", self.ip, self.port)
+    def register(self, aliases, port, tasks=0, interface=""):
+        self.logger.info("registering on %s:%s with %i clients connected", self.ip, self.port, tasks)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((interface, 0))
         sock.settimeout(self.timeout)
@@ -460,4 +464,3 @@ class TCPRegistryClient(RegistryClient):
                 self.logger.warn("could not connect to registry")
         finally:
             sock.close()
-

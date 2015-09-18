@@ -12,30 +12,35 @@ import gc
 try:
     import __builtin__ as builtins
 except ImportError:
-    import builtins # python 3+
+    import builtins  # python 3+
 from types import ModuleType
 
 router = threading.local()
 
-routed_modules = set(["os", "os.path", "platform", "ntpath", "posixpath", "zipimport", "genericpath", 
-    "posix", "nt", "signal", "time", "sysconfig", "_locale", "locale", "socket", "_socket", "ssl", "_ssl",
-    "struct", "_struct", "_symtable", "errno", "fcntl", "grp", "pwd", "select", "spwd", "syslog", "thread", 
-    "_io", "io", "subprocess", "_subprocess", "datetime", "mmap", "msvcrt", "pdb", "bdb", "glob", "fnmatch",
-    #"_frozen_importlib", "imp", "exceptions"
-    ])
+routed_modules = set(["os", "os.path", "platform", "ntpath", "posixpath", "zipimport", "genericpath",
+                      "posix", "nt", "signal", "time", "sysconfig", "_locale", "locale", "socket", "_socket", "ssl", "_ssl",
+                      "struct", "_struct", "_symtable", "errno", "fcntl", "grp", "pwd", "select", "spwd", "syslog", "thread",
+                      "_io", "io", "subprocess", "_subprocess", "datetime", "mmap", "msvcrt", "pdb", "bdb", "glob", "fnmatch",
+                      # "_frozen_importlib", "imp", "exceptions"
+                      ])
+
 
 class RoutedModule(ModuleType):
+
     def __init__(self, realmod):
         ModuleType.__init__(self, realmod.__name__, getattr(realmod, "__doc__", None))
         object.__setattr__(self, "__realmod__", realmod)
         object.__setattr__(self, "__file__", getattr(realmod, "__file__", None))
+
     def __repr__(self):
         if self.__file__:
             return "<module %r from %r>" % (self.__name__, self.__file__)
         else:
             return "<module %r (built-in)>" % (self.__name__,)
+
     def __dir__(self):
         return dir(self.__currmod__)
+
     def __getattribute__(self, name):
         if name == "__realmod__":
             return object.__getattribute__(self, "__realmod__")
@@ -49,26 +54,33 @@ class RoutedModule(ModuleType):
                 return object.__getattribute__(self, "__realmod__")
         else:
             return getattr(self.__currmod__, name)
+
     def __delattr__(self, name, val):
         return setattr(self.__currmod__, name, val)
+
     def __setattr__(self, name, val):
         return setattr(self.__currmod__, name, val)
 
 routed_sys_attrs = set(["byteorder", "platform", "getfilesystemencoding", "getdefaultencoding", "settrace",
-    "setprofile", "setrecursionlimit", "getprofile", "getrecursionlimit", "getsizeof", "gettrace", 
-    "exc_clear", "exc_info", "exc_type", "last_type", "last_value", "last_traceback",
-    ])
+                        "setprofile", "setrecursionlimit", "getprofile", "getrecursionlimit", "getsizeof", "gettrace",
+                        "exc_clear", "exc_info", "exc_type", "last_type", "last_value", "last_traceback",
+                        ])
+
 
 class RoutedSysModule(ModuleType):
+
     def __init__(self):
         ModuleType.__init__(self, "sys", sys.__doc__)
+
     def __dir__(self):
         return dir(sys)
+
     def __getattribute__(self, name):
         if name in routed_sys_attrs and hasattr(router, "conn"):
             return getattr(router.conn.modules["sys"], name)
         else:
             return getattr(sys, name)
+
     def __setattr__(self, name, value):
         if name in routed_sys_attrs and hasattr(router, "conn"):
             setattr(router.conn.modules["sys"], name, value)
@@ -77,10 +89,13 @@ class RoutedSysModule(ModuleType):
 
 rsys = RoutedSysModule()
 
+
 class RemoteModule(ModuleType):
+
     def __init__(self, realmod):
         ModuleType.__init__(self, realmod.__name__, getattr(realmod, "__doc__", None))
         object.__setattr__(self, "__file__", getattr(realmod, "__file__", None))
+
     def __repr__(self):
         try:
             self.__currmod__
@@ -90,6 +105,7 @@ class RemoteModule(ModuleType):
             return "<module %r from %r>" % (self.__name__, self.__file__)
         else:
             return "<module %r (built-in)>" % (self.__name__,)
+
     def __dir__(self):
         return dir(self.__currmod__)
 
@@ -106,13 +122,16 @@ class RemoteModule(ModuleType):
             return mod
         else:
             return getattr(self.__currmod__, name)
+
     def __delattr__(self, name, val):
         return setattr(self.__currmod__, name, val)
+
     def __setattr__(self, name, val):
         return setattr(self.__currmod__, name, val)
 
 
 _orig_import = builtins.__import__
+
 
 def _importer(modname, *args, **kwargs):
     if not hasattr(router, "conn"):
@@ -120,7 +139,7 @@ def _importer(modname, *args, **kwargs):
     existing = sys.modules.get(modname, None)
     if type(existing) is RoutedModule:
         return existing
-    
+
     mod = router.conn.modules[modname]
     if existing and type(existing) is RemoteModule:
         return existing
@@ -131,8 +150,9 @@ def _importer(modname, *args, **kwargs):
 _enabled = False
 _prev_builtins = {}
 
+
 def enable_splitbrain():
-    """Enables (activates) the Splitbrain machinery; must be called before entering 
+    """Enables (activates) the Splitbrain machinery; must be called before entering
     ``splitbrain`` or ``localbrain`` contexts"""
     global _enabled
     if _enabled:
@@ -153,13 +173,14 @@ def enable_splitbrain():
                 continue
             for k, v in ref.items():
                 if v is realmod:
-                    #print ("## %s.%s = %s" % (ref["__name__"], ref[k], modname))
+                    # print ("## %s.%s = %s" % (ref["__name__"], ref[k], modname))
                     ref[k] = rmod
 
     builtins.__import__ = _importer
     for funcname in ["open", "execfile", "file"]:
         if not hasattr(builtins, funcname):
             continue
+
         def mkfunc(funcname, origfunc):
             @functools.wraps(getattr(builtins, funcname))
             def tlbuiltin(*args, **kwargs):
@@ -172,8 +193,9 @@ def enable_splitbrain():
         origfunc = getattr(builtins, funcname)
         _prev_builtins[funcname] = origfunc
         setattr(builtins, funcname, mkfunc(funcname, origfunc))
-    
+
     _enabled = True
+
 
 def disable_splitbrain():
     """Disables (deactivates) the Splitbrain machinery"""
@@ -196,13 +218,14 @@ def disable_splitbrain():
 
 atexit.register(disable_splitbrain)
 
+
 @contextmanager
 def splitbrain(conn):
-    """Enter a splitbrain context in which imports take place over the given RPyC connection (expected to 
+    """Enter a splitbrain context in which imports take place over the given RPyC connection (expected to
     be a SlaveService). You can enter this context only after calling ``enable()``"""
     if not _enabled:
         enable_splitbrain()
-        #raise ValueError("Splitbrain not enabled")
+        # raise ValueError("Splitbrain not enabled")
     prev_conn = getattr(router, "conn", None)
     prev_modules = sys.modules.copy()
     router.conn = conn
@@ -224,6 +247,7 @@ def splitbrain(conn):
         if not router.conn:
             del router.conn
 
+
 @contextmanager
 def localbrain():
     """Return to operate on the local machine. You can enter this context only after calling ``enable()``"""
@@ -241,7 +265,3 @@ def localbrain():
         router.conn = prev_conn
         if not router.conn:
             del router.conn
-
-
-
-

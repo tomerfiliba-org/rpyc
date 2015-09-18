@@ -7,10 +7,11 @@ from rpyc.core.stream import Stream, TunneledSocketStream, ClosedFile
 
 COOKIE_LENGTH = 8
 
+
 class ReconnectingTunnelStream(Stream):
     RETRIES = 5
 
-    def __init__(self, remote_machine, destination_port, retries = RETRIES):
+    def __init__(self, remote_machine, destination_port, retries=RETRIES):
         self.remote_machine = remote_machine
         self.destination_port = destination_port
         self.retries = retries
@@ -73,7 +74,7 @@ class MultiplexingListener(object):
     REACCEPT_TIMEOUT = 10
     RETRIES = 5
 
-    def __init__(self, reaccept_timeout = REACCEPT_TIMEOUT, retries = RETRIES):
+    def __init__(self, reaccept_timeout=REACCEPT_TIMEOUT, retries=RETRIES):
         self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.reaccept_timeout = reaccept_timeout
         self.retries = retries
@@ -82,18 +83,25 @@ class MultiplexingListener(object):
     def close(self):
         self.listener.close()
         self.listener = ClosedFile
+
     def fileno(self):
         return self.listener.getfileno()
+
     def getsockname(self):
         return self.listener.getsockname()
+
     def listen(self, backlog):
         self.listener.listen(backlog)
+
     def bind(self, addrinfo):
         self.listener.bind(addrinfo)
+
     def settimeout(self, timeout):
         self.listener.settimeout(timeout)
+
     def setsockopt(self, level, option, value):
         return self.listener.setsockopt(level, option, value)
+
     def shutdown(self, mode):
         self.listener.shutdown(mode)
 
@@ -124,13 +132,14 @@ class MultiplexingListener(object):
 
 
 class ReconnectingSocket(object):
+
     def __init__(self, listener, cookie, retries):
         self.listener = listener
         self.cookie = cookie
         self.sock = None
         self.retries = retries
         self.blocking_mode = None
-    
+
     def close(self):
         if self.sock:
             self.sock.close()
@@ -138,10 +147,13 @@ class ReconnectingSocket(object):
 
     def fileno(self):
         return self._safeio(lambda sock: sock.fileno())
+
     def getsockname(self):
         return self._safeio(lambda sock: sock.getsockname())
+
     def getpeername(self):
         return self._safeio(lambda sock: sock.getpeername())
+
     def shutdown(self, mode):
         if self.sock:
             self.sock.shutdown(mode)
@@ -174,12 +186,3 @@ class ReconnectingSocket(object):
     def send(self, data):
         # print "ReconnectingSocket.send(%r)" % (len(data),)
         return self._safeio(lambda sock: sock.send(data))
-
-
-
-
-
-
-
-
-

@@ -4,6 +4,7 @@ import unittest
 
 
 class BrineTest(unittest.TestCase):
+
     def test_brine_2(self):
         if is_py3k:
             exec('''x = (b"he", 7, "llo", 8, (), 900, None, True, Ellipsis, 18.2, 18.2j + 13,
@@ -19,4 +20,3 @@ class BrineTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

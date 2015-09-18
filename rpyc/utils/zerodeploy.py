@@ -28,7 +28,6 @@ import os
 import atexit
 import shutil
 from threading import Thread
-
 here = os.path.dirname(__file__)
 os.chdir(here)
 
@@ -66,38 +65,40 @@ finally:
     thd.join(2)
 """
 
+
 class DeployedServer(object):
+
     """
-    Sets up a temporary, short-lived RPyC deployment on the given remote machine. It will: 
-    
-    1. Create a temporary directory on the remote machine and copy RPyC's code 
+    Sets up a temporary, short-lived RPyC deployment on the given remote machine. It will:
+
+    1. Create a temporary directory on the remote machine and copy RPyC's code
        from the local machine to the remote temporary directory.
     2. Start an RPyC server on the remote machine, binding to an arbitrary TCP port,
-       allowing only in-bound connections (``localhost`` connections). The server reports the 
+       allowing only in-bound connections (``localhost`` connections). The server reports the
        chosen port over ``stdout``.
-    3. An SSH tunnel is created from an arbitrary local port (on the local host), to the remote 
+    3. An SSH tunnel is created from an arbitrary local port (on the local host), to the remote
        machine's chosen port. This tunnel is authenticated and encrypted.
     4. You get a ``DeployedServer`` object that can be used to connect to the newly-spawned server.
-    5. When the deployment is closed, the SSH tunnel is torn down, the remote server terminates 
+    5. When the deployment is closed, the SSH tunnel is torn down, the remote server terminates
        and the temporary directory is deleted.
-    
-    :param remote_machine: a plumbum ``SshMachine`` or ``ParamikoMachine`` instance, representing 
+
+    :param remote_machine: a plumbum ``SshMachine`` or ``ParamikoMachine`` instance, representing
                            an SSH connection to the desired remote machine
     :param server_class: the server to create (e.g., ``"ThreadedServer"``, ``"ForkingServer"``)
     :param extra_setup: any extra code to add to the script
     """
-    
-    def __init__(self, remote_machine, server_class = "rpyc.utils.server.ThreadedServer", extra_setup = "", python_executable=None):
+
+    def __init__(self, remote_machine, server_class="rpyc.utils.server.ThreadedServer", extra_setup="", python_executable=None):
         self.proc = None
         self.tun = None
         self.remote_machine = remote_machine
         self._tmpdir_ctx = None
-        
+
         rpyc_root = local.path(rpyc.__file__).up()
         self._tmpdir_ctx = remote_machine.tempdir()
         tmp = self._tmpdir_ctx.__enter__()
         copy(rpyc_root, tmp / "rpyc")
-        
+
         script = (tmp / "deployed-rpyc.py")
         modname, clsname = server_class.rsplit(".", 1)
         script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname).replace("$EXTRA_SETUP$", extra_setup))
@@ -116,9 +117,9 @@ class DeployedServer(object):
                     break
             if not cmd:
                 cmd = remote_machine.python
-        
-        self.proc = cmd.popen(script, new_session = True)
-        
+
+        self.proc = cmd.popen(script, new_session=True)
+
         line = ""
         try:
             line = self.proc.stdout.readline()
@@ -130,7 +131,7 @@ class DeployedServer(object):
                 pass
             stdout, stderr = self.proc.communicate()
             raise ProcessExecutionError(self.proc.argv, self.proc.returncode, BYTES_LITERAL(line) + stdout, stderr)
-        
+
         if hasattr(remote_machine, "connect_sock"):
             # Paramiko: use connect_sock() instead of tunnels
             self.local_port = None
@@ -143,8 +144,10 @@ class DeployedServer(object):
 
     def __del__(self):
         self.close()
+
     def __enter__(self):
         return self
+
     def __exit__(self, t, v, tb):
         self.close()
 
@@ -167,19 +170,19 @@ class DeployedServer(object):
             except Exception:
                 pass
             self._tmpdir_ctx = None
-    
-    def connect(self, service = VoidService, config = {}):
-        """Same as :func:`connect <rpyc.utils.factory.connect>`, but with the ``host`` and ``port`` 
+
+    def connect(self, service=VoidService, config={}):
+        """Same as :func:`connect <rpyc.utils.factory.connect>`, but with the ``host`` and ``port``
         parameters fixed"""
         if self.local_port is None:
             # ParamikoMachine
             stream = SocketStream(self.remote_machine.connect_sock(self.remote_port))
-            return rpyc.connect_stream(stream, service = service, config = config)
+            return rpyc.connect_stream(stream, service=service, config=config)
         else:
-            return rpyc.connect("localhost", self.local_port, service = service, config = config)
-    
+            return rpyc.connect("localhost", self.local_port, service=service, config=config)
+
     def classic_connect(self):
-        """Same as :func:`classic.connect <rpyc.utils.classic.connect>`, but with the ``host`` and 
+        """Same as :func:`classic.connect <rpyc.utils.classic.connect>`, but with the ``host`` and
         ``port`` parameters fixed"""
         if self.local_port is None:
             # ParamikoMachine
@@ -190,39 +193,44 @@ class DeployedServer(object):
 
 
 class MultiServerDeployment(object):
+
     """
     An 'aggregate' server deployment to multiple SSH machine. It deploys RPyC to each machine
     separately, but lets you manage them as a single deployment.
     """
-    def __init__(self, remote_machines, server_class = "ThreadedServer"):
+
+    def __init__(self, remote_machines, server_class="ThreadedServer"):
         self.remote_machines = remote_machines
         # build the list incrementally, so we can clean it up if we have an exception
         self.servers = [DeployedServer(mach, server_class) for mach in remote_machines]
-    
+
     def __del__(self):
         self.close()
+
     def __enter__(self):
         return self
+
     def __exit__(self, t, v, tb):
         self.close()
+
     def __iter__(self):
         return iter(self.servers)
+
     def __len__(self):
         return len(self.servers)
+
     def __getitem__(self, index):
         return self.servers[index]
-    
+
     def close(self):
         while self.servers:
             s = self.servers.pop(0)
             s.close()
-    
-    def connect_all(self, service = VoidService, config = {}):
+
+    def connect_all(self, service=VoidService, config={}):
         """connects to all deployed servers; returns a list of connections (order guaranteed)"""
         return [s.connect(service, config) for s in self.servers]
+
     def classic_connect_all(self):
         """connects to all deployed servers using classic_connect; returns a list of connections (order guaranteed)"""
         return [s.classic_connect() for s in self.servers]
-
-
-

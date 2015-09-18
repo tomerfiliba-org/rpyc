@@ -10,6 +10,7 @@ PRUNING_TIMEOUT = 5
 
 
 class BaseRegistryTest(object):
+
     def _get_server(self):
         raise NotImplementedError
 
@@ -45,7 +46,7 @@ class BaseRegistryTest(object):
         c = self._get_client()
         c.logger.quiet = True
         c.register(("BAR",), 17171)
-        
+
         time.sleep(1)
         res = c.discover("BAR")
         self.assertEqual(set(p for _, p in res), set((17171,)))
@@ -56,13 +57,16 @@ class BaseRegistryTest(object):
 
 
 class TestTcpRegistry(BaseRegistryTest, unittest.TestCase):
+
     def _get_server(self):
         return TCPRegistryServer(pruning_timeout=PRUNING_TIMEOUT)
 
     def _get_client(self):
         return TCPRegistryClient("localhost")
 
+
 class TestUdpRegistry(BaseRegistryTest, unittest.TestCase):
+
     def _get_server(self):
         return UDPRegistryServer(pruning_timeout=PRUNING_TIMEOUT)
 
@@ -72,5 +76,3 @@ class TestUdpRegistry(BaseRegistryTest, unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-

@@ -14,10 +14,12 @@ def b(st):
     else:
         return st
 
+
 def f(a):
     def g(b):
         return a + int(b)
     return g
+
 
 def h(a):
     import os
@@ -25,10 +27,11 @@ def h(a):
 
 
 class TeleportationTest(unittest.TestCase):
+
     def setUp(self):
         server_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bin", "rpyc_classic.py")
         self.proc = subprocess.Popen([sys.executable, server_file, "--mode=oneshot", "--host=localhost", "-p0"],
-            stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         line = self.proc.stdout.readline().strip()
         if not line:
             print (self.proc.stderr.read())
@@ -54,9 +57,5 @@ class TeleportationTest(unittest.TestCase):
         self.assertNotEqual(h(7), h2(7))
 
 
-
 if __name__ == "__main__":
     unittest.main()
-
-
-

@@ -7,15 +7,19 @@ import logging
 
 class MissingModule(object):
     __slots__ = ["__name"]
+
     def __init__(self, name):
         self.__name = name
+
     def __getattr__(self, name):
-        if name.startswith("__"): # issue 71
+        if name.startswith("__"):  # issue 71
             raise AttributeError("module %r not found" % (self.__name,))
         raise ImportError("module %r not found" % (self.__name,))
+
     def __bool__(self):
         return False
     __nonzero__ = __bool__
+
 
 def safe_import(name):
     try:
@@ -24,13 +28,14 @@ def safe_import(name):
         mod = MissingModule(name)
     except Exception:
         # issue 72: IronPython on Mono
-        if sys.platform == "cli" and name == "signal": #os.name == "posix":
+        if sys.platform == "cli" and name == "signal":  # os.name == "posix":
             mod = MissingModule(name)
         else:
             raise
     return mod
 
-def setup_logger(quiet = False, logfile = None):
+
+def setup_logger(quiet=False, logfile=None):
     opts = {}
     if quiet:
         opts['level'] = logging.ERROR
@@ -39,4 +44,3 @@ def setup_logger(quiet = False, logfile = None):
     if logfile:
         opts['file'] = logfile
     logging.basicConfig(**opts)
-

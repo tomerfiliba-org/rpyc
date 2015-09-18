@@ -20,35 +20,34 @@ from rpyc.lib.compat import poll, get_exc_errno
 signal = safe_import("signal")
 
 
-
 class Server(object):
     """Base server implementation
-    
+
     :param service: the :class:`service <service.Service>` to expose
-    :param hostname: the host to bind to. Default is IPADDR_ANY, but you may 
+    :param hostname: the host to bind to. Default is IPADDR_ANY, but you may
                      want to restrict it only to ``localhost`` in some setups
     :param ipv6: whether to create an IPv6 or IPv4 socket. The default is IPv4
     :param port: the TCP port to bind to
     :param backlog: the socket's backlog (passed to ``listen()``)
-    :param reuse_addr: whether or not to create the socket with the ``SO_REUSEADDR`` option set. 
-    :param authenticator: the :ref:`api-authenticators` to use. If ``None``, no authentication 
+    :param reuse_addr: whether or not to create the socket with the ``SO_REUSEADDR`` option set.
+    :param authenticator: the :ref:`api-authenticators` to use. If ``None``, no authentication
                           is performed.
-    :param registrar: the :class:`registrar <rpyc.utils.registry.RegistryClient>` to use. 
+    :param registrar: the object of :class:`registrar <rpyc.utils.registry.RegistryClient>` to use.
                           If ``None``, a default :class:`rpyc.utils.registry.UDPRegistryClient`
                           will be used
-    :param auto_register: whether or not to register using the *registrar*. By default, the 
-                          server will attempt to register only if a registrar was explicitly given. 
-    :param protocol_config: the :data:`configuration dictionary <rpyc.core.protocol.DEFAULT_CONFIG>` 
+    :param auto_register: whether or not to register using the *registrar*. By default, the
+                          server will attempt to register only if a registrar was explicitly given.
+    :param protocol_config: the :data:`configuration dictionary <rpyc.core.protocol.DEFAULT_CONFIG>`
                             that is passed to the RPyC connection
-    :param logger: the ``logger`` to use (of the built-in ``logging`` module). If ``None``, a 
+    :param logger: the ``logger`` to use (of the built-in ``logging`` module). If ``None``, a
                    default logger will be created.
     :param listener_timeout: the timeout of the listener socket; set to ``None`` to disable (e.g.
                              on embedded platforms with limited battery)
     """
-    
-    def __init__(self, service, hostname = "", ipv6 = False, port = 0, 
-            backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
-            auto_register = None, protocol_config = {}, logger = None, listener_timeout = 0.5):
+
+    def __init__(self, service, hostname="", ipv6=False, port=0,
+                 backlog=10, reuse_addr=True, authenticator=None, registrar=None,
+                 auto_register=None, protocol_config={}, logger=None, listener_timeout=0.5):
         self.active = False
         self._closed = False
         self.service = service
@@ -68,7 +67,7 @@ class Server(object):
             self.listener = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         else:
             self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        
+
         if reuse_addr and sys.platform != "win32":
             # warning: reuseaddr is not what you'd expect on windows!
             # it allows you to bind an already bound port, resulting in "unexpected behavior"
@@ -88,11 +87,11 @@ class Server(object):
         if "logger" not in self.protocol_config:
             self.protocol_config["logger"] = self.logger
         if registrar is None:
-            registrar = UDPRegistryClient(logger = self.logger)
+            registrar = UDPRegistryClient(logger=self.logger)
         self.registrar = registrar
 
     def close(self):
-        """Closes (terminates) the server and all of its clients. If applicable, 
+        """Closes (terminates) the server and all of its clients. If applicable,
         also unregisters from the registry server"""
         if self._closed:
             return
@@ -196,10 +195,10 @@ class Server(object):
         else:
             self.logger.info("welcome [%s]:%s", h, p)
         try:
-            config = dict(self.protocol_config, credentials = credentials, 
-                endpoints = (sock.getsockname(), addrinfo), logger = self.logger)
+            config = dict(self.protocol_config, credentials=credentials,
+                          endpoints=(sock.getsockname(), addrinfo), logger=self.logger)
             conn = Connection(self.service, Channel(SocketStream(sock)),
-                config = config, _lazy = True)
+                              config=config, _lazy=True)
             conn._init_service()
             conn.serve_all()
         finally:
@@ -208,7 +207,7 @@ class Server(object):
     def _bg_register(self):
         interval = self.registrar.REREGISTER_INTERVAL
         self.logger.info("started background auto-register thread "
-            "(interval = %s)", interval)
+                         "(interval = %s)", interval)
         tnext = 0
         try:
             while self.active:
@@ -217,7 +216,7 @@ class Server(object):
                     did_register = False
                     aliases = self.service.get_service_aliases()
                     try:
-                        did_register = self.registrar.register(aliases, self.port, tasks=self.tasks, interface = self.host)
+                        did_register = self.registrar.register(aliases, self.port, tasks=self.tasks, interface=self.host)
                     except Exception:
                         self.logger.exception("error registering services")
 
@@ -239,14 +238,14 @@ class Server(object):
         self.logger.info("server started on [%s]:%s", self.host, self.port)
         self.active = True
         if self.auto_register:
-            t = threading.Thread(target = self._bg_register)
+            t = threading.Thread(target=self._bg_register)
             t.setDaemon(True)
             t.start()
         try:
             while self.active:
                 self.accept()
         except EOFError:
-            pass # server closed by another thread
+            pass  # server closed by another thread
         except KeyboardInterrupt:
             print("")
             self.logger.warn("keyboard interrupt!")
@@ -258,7 +257,7 @@ class Server(object):
 class OneShotServer(Server):
     """
     A server that handles a single connection (blockingly), and terminates after that
-    
+
     Parameters: see :class:`Server`
     """
     def _accept_method(self, sock):
@@ -267,15 +266,16 @@ class OneShotServer(Server):
         finally:
             self.close()
 
+
 class ThreadedServer(Server):
     """
     A server that spawns a thread for each connection. Works on any platform
     that supports threads.
-    
+
     Parameters: see :class:`Server`
     """
     def _accept_method(self, sock):
-        t = threading.Thread(target = self._authenticate_and_serve_client, args = (sock,))
+        t = threading.Thread(target=self._authenticate_and_serve_client, args=(sock,))
         t.setDaemon(True)
         t.start()
 
@@ -288,7 +288,7 @@ class ThreadPoolServer(Server):
     up to request_batch_size requests from the same connection in one go, before it goes to
     the next connection with pending requests. By default, self.request_batch_size
     is set to 10 and it can be overwritten in the constructor arguments.
-    
+
     Contributed by *@sponce*
 
     Parameters: see :class:`Server`
@@ -315,7 +315,7 @@ class ThreadPoolServer(Server):
         # setup the thread pool for handling requests
         self.workers = []
         for _ in range(nbthreads):
-            t = threading.Thread(target = self._serve_clients)
+            t = threading.Thread(target=self._serve_clients)
             t.setName('ThreadPoolWorker')
             t.daemon = True
             t.start()
@@ -325,7 +325,7 @@ class ThreadPoolServer(Server):
         # a dictionary fd -> connection
         self.fd_to_conn = {}
         # setup a thread for polling inactive connections
-        self.polling_thread = threading.Thread(target = self._poll_inactive_clients)
+        self.polling_thread = threading.Thread(target=self._poll_inactive_clients)
         self.polling_thread.setName('PollingThread')
         self.polling_thread.setDaemon(True)
         self.polling_thread.start()
@@ -407,7 +407,7 @@ class ThreadPoolServer(Server):
         # serve a maximum of RequestBatchSize requests for this connection
         for _ in range(self.request_batch_size):
             try:
-                if not self.fd_to_conn[fd].poll(): # note that poll serves the request
+                if not self.fd_to_conn[fd].poll():  # note that poll serves the request
                     # we could not find a request, so we put this connection back to the inactive set
                     self._add_inactive_connection(fd)
                     return
@@ -462,7 +462,7 @@ class ThreadPoolServer(Server):
             credentials = None
         # build a connection
         h, p = sock.getpeername()
-        config = dict(self.protocol_config, credentials=credentials, connid="%s:%d"%(h, p))
+        config = dict(self.protocol_config, credentials=credentials, connid="%s:%d" % (h, p))
         return Connection(self.service, Channel(SocketStream(sock)), config=config)
 
     def _accept_method(self, sock):
@@ -484,12 +484,12 @@ class ThreadPoolServer(Server):
 
 class ForkingServer(Server):
     """
-    A server that forks a child process for each connection. Available on 
+    A server that forks a child process for each connection. Available on
     POSIX compatible systems only.
-    
+
     Parameters: see :class:`Server`
     """
-    
+
     def __init__(self, *args, **kwargs):
         if not signal:
             raise OSError("ForkingServer not supported on this platform")
@@ -520,7 +520,7 @@ class ForkingServer(Server):
             try:
                 self.logger.debug("child process created")
                 signal.signal(signal.SIGCHLD, self._prevhandler)
-                #76: call signal.siginterrupt(False) in forked child
+                # 76: call signal.siginterrupt(False) in forked child
                 signal.siginterrupt(signal.SIGCHLD, False)
                 self.listener.close()
                 self.clients.clear()
@@ -535,4 +535,3 @@ class ForkingServer(Server):
         else:
             # parent
             sock.close()
-
