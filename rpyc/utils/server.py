@@ -145,6 +145,12 @@ class Server(object):
         self.clients.add(sock)
         self._accept_method(sock)
 
+    @property
+    def tasks(self):
+        """returns number of connected clients
+        """
+        return len(self.clients)
+
     def _accept_method(self, sock):
         """this method should start a thread, fork a child process, or
         anything else in order to serve the client. once the mechanism has
@@ -211,7 +217,7 @@ class Server(object):
                     did_register = False
                     aliases = self.service.get_service_aliases()
                     try:
-                        did_register = self.registrar.register(aliases, self.port, interface = self.host)
+                        did_register = self.registrar.register(aliases, self.port, tasks=self.tasks, interface = self.host)
                     except Exception:
                         self.logger.exception("error registering services")
 

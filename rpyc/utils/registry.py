@@ -53,12 +53,12 @@ class RegistryServer(object):
         """called when a service unregisters or is pruned.
         override this to add custom logic"""
 
-    def _add_service(self, name, addrinfo):
+    def _add_service(self, name, addrinfo, tasks):
         """updates the service's keep-alive time stamp"""
         if name not in self.services:
             self.services[name] = {}
         is_new = addrinfo not in self.services[name]
-        self.services[name][addrinfo] = time.time()
+        self.services[name][addrinfo] = (time.time(), tasks)
         if is_new:
             try:
                 self.on_service_added(name, addrinfo)
@@ -86,8 +86,9 @@ class RegistryServer(object):
         oldest = time.time() - self.pruning_timeout
         all_servers = sorted(self.services[name].items(), key = lambda x: x[1])
         servers = []
-        for addrinfo, t in all_servers:
-            if t < oldest:
+        for addrinfo, tt in all_servers:
+            regtime, tasks = tt
+            if regtime < oldest:
                 self.logger.debug("discarding stale %s:%s", *addrinfo)
                 self._remove_service(name, addrinfo)
             else:
@@ -96,11 +97,11 @@ class RegistryServer(object):
         self.logger.debug("replying with %r", servers)
         return tuple(servers)
 
-    def cmd_register(self, host, names, port):
+    def cmd_register(self, host, names, port, tasks=0):
         """implementation of the ``register`` command"""
-        self.logger.debug("registering %s:%s as %s", host, port, ", ".join(names))
+        self.logger.debug("registering %s:%s as %s with %i clients connected", host, port, ", ".join(names), tasks)
         for name in names:
-            self._add_service(name.upper(), (host, port))
+            self._add_service(name.upper(), (host, port), tasks)
         return "OK"
 
     def cmd_unregister(self, host, port):
@@ -263,7 +264,7 @@ class RegistryClient(object):
         """
         raise NotImplementedError()
 
-    def register(self, aliases, port):
+    def register(self, aliases, port, tasks=0):
         """Registers the given service aliases with the given TCP port. This 
         API is intended to be called only by an RPyC server.
         
@@ -331,7 +332,7 @@ class UDPRegistryClient(RegistryClient):
             sock.close()
         return servers
 
-    def register(self, aliases, port, interface = ""):
+    def register(self, aliases, port, tasks=0, interface = ""):
         self.logger.info("registering on %s:%s", self.ip, self.port)
         sock = socket.socket(self.sock_family, socket.SOCK_DGRAM)
         sock.bind((interface, 0))
@@ -415,7 +416,7 @@ class TCPRegistryClient(RegistryClient):
             sock.close()
         return servers
 
-    def register(self, aliases, port, interface = ""):
+    def register(self, aliases, port, tasks=0, interface = ""):
         self.logger.info("registering on %s:%s", self.ip, self.port)
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((interface, 0))
