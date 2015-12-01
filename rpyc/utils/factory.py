@@ -206,18 +206,22 @@ def discover(service_name, host=None, registrar=None, timeout=2):
     return addrs
 
 
-def connect_by_service(service_name, host=None, service=VoidService, config={}):
+def connect_by_service(service_name, host=None, service=VoidService, config={}, registrar=None, timeout=2):
     """create a connection to an arbitrary server that exposes the requested service
 
     :param service_name: the service to discover
     :param host: limit discovery to the given host only (None means any host)
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict
+    :param registrar: use this registry client to discover services. if None,
+                      use the default UDPRegistryClient with the default settings.
+    :param timeout: the number of seconds to wait for a reply from the registry
+                    if no hosts are found, raises DiscoveryError
 
     :raises: ``DiscoveryError`` if no server is found
     :returns: an RPyC connection
     """
-    host, port = discover(service_name, host=host)[0]
+    host, port = discover(service_name, host=host, registrar=registrar, timeout=timeout)[0]
     return connect(host, port, service, config=config)
 
 
