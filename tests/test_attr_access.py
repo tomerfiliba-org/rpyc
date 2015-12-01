@@ -6,18 +6,25 @@ from threading import Thread
 
 
 class MyClass(object):
+
     def foo(self):
         return "foo"
+
     def bar(self):
         return "bar"
+
     def spam(self):
         return "spam"
 
+
 class YourClass(object):
+
     def lala(self):
         return MyClass()
+
     def baba(self):
         return "baba"
+
     def gaga(self):
         return "gaga"
 
@@ -32,16 +39,22 @@ try:
 except NameError:
     bytes = str
 
+
 class Protector(object):
-    def __init__(self, safetypes = (int, list, bool, tuple, str, float, long, unicode, bytes)):
+
+    def __init__(self, safetypes=(int, list, bool, tuple, str, float, long, unicode, bytes)):
         self._safetypes = set(safetypes)
         self._typereg = {}
+
     def register(self, typ, attrs):
         self._typereg[typ] = frozenset(attrs)
+
     def wrap(self, obj):
         class Restrictor(object):
+
             def __call__(_, *args, **kwargs):
                 return self.wrap(obj(*args, **kwargs))
+
             def _rpyc_getattr(_, name):
                 if type(obj) not in self._safetypes:
                     attrs = self._typereg.get(type(obj), ())
@@ -52,20 +65,24 @@ class Protector(object):
             __getattr__ = _rpyc_getattr
         return Restrictor()
 
+
 class MyService(rpyc.Service):
+
     def exposed_get_one(self):
         return rpyc.restricted(MyClass(), ["foo", "bar"])
-    
+
     def exposed_get_two(self):
         protector = Protector()
         protector.register(MyClass, ["foo", "spam"])
         protector.register(YourClass, ["lala", "baba"])
         return protector.wrap(YourClass())
 
+
 class TestRestricted(unittest.TestCase):
+
     def setUp(self):
-        self.server = ThreadedServer(MyService, port = 0)
-        self.thd = Thread(target = self.server.start)
+        self.server = ThreadedServer(MyService, port=0)
+        self.thd = Thread(target=self.server.start)
         self.thd.start()
         time.sleep(1)
         self.conn = rpyc.connect("localhost", self.server.port)
@@ -99,12 +116,8 @@ class TestRestricted(unittest.TestCase):
 #            pass
 #        else:
 #            assert False, "expected an attribute error!"
-#        
+#
 
 
 if __name__ == "__main__":
     unittest.main()
-
-
-
-

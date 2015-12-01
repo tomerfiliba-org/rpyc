@@ -2,15 +2,19 @@ import time
 
 
 class AsyncResultTimeout(Exception):
+
     """an exception that represents an :class:`AsyncResult` that has timed out"""
     pass
 
+
 class AsyncResult(object):
+
     """*AsyncResult* represents a computation that occurs in the background and
-    will eventually have a result. Use the :attr:`value` property to access the 
+    will eventually have a result. Use the :attr:`value` property to access the
     result (which will block if the result has not yet arrived).
     """
     __slots__ = ["_conn", "_is_ready", "_is_exc", "_callbacks", "_obj", "_ttl"]
+
     def __init__(self, conn):
         self._conn = conn
         self._is_ready = False
@@ -18,6 +22,7 @@ class AsyncResult(object):
         self._obj = None
         self._callbacks = []
         self._ttl = None
+
     def __repr__(self):
         if self._is_ready:
             state = "ready"
@@ -28,7 +33,7 @@ class AsyncResult(object):
         else:
             state = "pending"
         return "<AsyncResult object (%s) at 0x%08x>" % (state, id(self))
-    
+
     def __call__(self, is_exc, obj):
         if self.expired:
             return
@@ -51,28 +56,29 @@ class AsyncResult(object):
         else:
             while True:
                 timeout = self._ttl - time.time()
-                self._conn.poll(timeout = max(timeout, 0))
+                self._conn.poll(timeout=max(timeout, 0))
                 if self._is_ready:
                     break
                 if timeout <= 0:
                     raise AsyncResultTimeout("result expired")
-    
+
     def add_callback(self, func):
         """Adds a callback to be invoked when the result arrives. The callback 
         function takes a single argument, which is the current AsyncResult
         (``self``). If the result has already arrived, the function is invoked
         immediately.
-        
+
         :param func: the callback function to add
         """
         if self._is_ready:
             func(self)
         else:
             self._callbacks.append(func)
+
     def set_expiry(self, timeout):
         """Sets the expiry time (in seconds, relative to now) or ``None`` for
         unlimited time
-        
+
         :param timeout: the expiry time in seconds or ``None``
         """
         if timeout is None:
@@ -88,12 +94,14 @@ class AsyncResult(object):
         if not self._is_ready:
             self._conn.poll_all()
         return self._is_ready
+
     @property
     def error(self):
         """Indicates whether the returned result is an exception"""
         if self.ready:
             return self._is_exc
         return False
+
     @property
     def expired(self):
         """Indicates whether the AsyncResult has expired"""
@@ -115,4 +123,3 @@ class AsyncResult(object):
             raise self._obj
         else:
             return self._obj
-

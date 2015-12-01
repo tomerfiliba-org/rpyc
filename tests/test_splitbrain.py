@@ -15,18 +15,21 @@ if not hasattr(unittest.TestCase, "assertIn"):
 if not hasattr(unittest.TestCase, "assertNotIn"):
     unittest.TestCase.assertNotIn = lambda self, member, container, msg = None: self.assertFalse(member in container, msg)
 
+
 def b(st):
     if sys.version_info[0] >= 3:
         return bytes(st, "latin-1")
     else:
         return st
 
+
 class SplitbrainTest(unittest.TestCase):
+
     def setUp(self):
         enable_splitbrain()
         server_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bin", "rpyc_classic.py")
         self.proc = subprocess.Popen([sys.executable, server_file, "--mode=oneshot", "--host=localhost", "-p0"],
-            stdin = subprocess.PIPE, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         line = self.proc.stdout.readline().strip()
         if not line:
             print (self.proc.stderr.read())
@@ -69,8 +72,10 @@ class SplitbrainTest(unittest.TestCase):
                 try:
                     def f():
                         g()
+
                     def g():
                         h()
+
                     def h():
                         open("crap.txt", "r")
                     f()
@@ -97,7 +102,5 @@ class SplitbrainTest(unittest.TestCase):
         os.remove("split-test.txt")
 
 
-
 if __name__ == "__main__":
     unittest.main()
-

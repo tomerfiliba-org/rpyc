@@ -31,7 +31,7 @@ def decode_codeobj(codeobj):
             if op == opcode.EXTENDED_ARG:
                 extended_arg = oparg * 65536
                 continue
-            
+
             if op in opcode.hasconst:
                 argval = codeobj.co_consts[oparg]
             elif op in opcode.hasname:
@@ -48,6 +48,7 @@ def decode_codeobj(codeobj):
                 argval = free[oparg]
 
         yield (opname, argval)
+
 
 def _export_codeobj(cobj):
     consts2 = []
@@ -66,15 +67,16 @@ def _export_codeobj(cobj):
 
     if is_py3k:
         exported = (cobj.co_argcount, cobj.co_kwonlyargcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
-            cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
-            cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
+                    cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
+                    cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
     else:
         exported = (cobj.co_argcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
-            cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
-            cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
+                    cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
+                    cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
 
     assert brine.dumpable(exported)
     return (CODEOBJ_MAGIC, exported)
+
 
 def export_function(func):
     if is_py3k:
@@ -85,13 +87,14 @@ def export_function(func):
         func_closure = func.func_closure
         func_code = func.func_code
         func_defaults = func.func_defaults
-    
+
     if func_closure:
         raise TypeError("Cannot export a function closure")
     if not brine.dumpable(func_defaults):
         raise TypeError("Cannot export a function with non-brinable defaults (func_defaults)")
-    
+
     return func.__name__, func.__module__, func_defaults, _export_codeobj(func_code)[1]
+
 
 def _import_codetup(codetup):
     if is_py3k:
@@ -107,13 +110,14 @@ def _import_codetup(codetup):
             consts2.append(_import_codetup(const[1]))
         else:
             consts2.append(const)
-    
+
     if is_py3k:
         return CodeType(argcnt, kwargcnt, nloc, stk, flg, codestr, tuple(consts2), names, varnames, filename, name,
-            firstlineno, lnotab, freevars, cellvars)
+                        firstlineno, lnotab, freevars, cellvars)
     else:
         return CodeType(argcnt, nloc, stk, flg, codestr, tuple(consts2), names, varnames, filename, name,
-            firstlineno, lnotab, freevars, cellvars)
+                        firstlineno, lnotab, freevars, cellvars)
+
 
 def import_function(functup):
     name, modname, defaults, codetup = functup
@@ -123,5 +127,3 @@ def import_function(functup):
         mod = __import__("__main__", None, None, "*")
     codeobj = _import_codetup(codetup)
     return FunctionType(codeobj, mod.__dict__, name, defaults)
-
-

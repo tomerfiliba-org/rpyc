@@ -12,10 +12,11 @@ if not getattr(socket, "has_ipv6", False):
 
 
 class Test_IPv6(unittest.TestCase):
+
     def setUp(self):
-        self.server = ThreadedServer(SlaveService, port = 0, ipv6 = True)
+        self.server = ThreadedServer(SlaveService, port=0, ipv6=True)
         self.server.logger.quiet = True
-        self.thd = threading.Thread(target = self.server.start)
+        self.thd = threading.Thread(target=self.server.start)
         self.thd.start()
         time.sleep(1)
 
@@ -24,10 +25,10 @@ class Test_IPv6(unittest.TestCase):
         self.thd.join()
 
     def test_ipv6_conenction(self):
-        c = rpyc.classic.connect("::1", port = self.server.port, ipv6 = True)
-        print( repr(c) )
-        print( c.modules.sys )
-        print( c.modules["xml.dom.minidom"].parseString("<a/>") )
+        c = rpyc.classic.connect("::1", port=self.server.port, ipv6=True)
+        print(repr(c))
+        print(c.modules.sys)
+        print(c.modules["xml.dom.minidom"].parseString("<a/>"))
         c.execute("x = 5")
         self.assertEqual(c.namespace["x"], 5)
         self.assertEqual(c.eval("1+x"), 6)
@@ -36,6 +37,3 @@ class Test_IPv6(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-

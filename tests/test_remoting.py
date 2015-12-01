@@ -7,6 +7,7 @@ import rpyc
 
 
 class Test_Remoting(unittest.TestCase):
+
     def setUp(self):
         self.conn = rpyc.classic.connect_thread()
 
@@ -37,7 +38,7 @@ class Test_Remoting(unittest.TestCase):
 
     def test_interactive(self):
         raise SkipTest("Need to be manually")
-        print( "type Ctrl+D to exit (Ctrl+Z on Windows)" )
+        print("type Ctrl+D to exit (Ctrl+Z on Windows)")
         rpyc.classic.interact(self.conn)
 
     def test_post_mortem(self):
@@ -45,7 +46,7 @@ class Test_Remoting(unittest.TestCase):
         try:
             self.conn.modules.sys.path[100000]
         except IndexError:
-            print( "type 'q' to exit" )
+            print("type 'q' to exit")
             rpyc.classic.pm(self.conn)
             raise
         else:
@@ -60,6 +61,3 @@ class Test_Remoting(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-

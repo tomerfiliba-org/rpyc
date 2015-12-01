@@ -22,16 +22,20 @@ class Stream(object):
     """Base Stream"""
 
     __slots__ = ()
+
     def close(self):
         """closes the stream, releasing any system resources associated with it"""
         raise NotImplementedError()
+
     @property
     def closed(self):
         """tests whether the stream is closed or not"""
         raise NotImplementedError()
+
     def fileno(self):
         """returns the stream's file descriptor"""
         raise NotImplementedError()
+
     def poll(self, timeout):
         """indicates whether the stream has data to read (within *timeout*
         seconds)"""
@@ -53,6 +57,7 @@ class Stream(object):
             ex = sys.exc_info()[1]
             raise select_error(str(ex))
         return bool(rl)
+
     def read(self, count):
         """reads **exactly** *count* bytes, or raise EOFError
 
@@ -61,6 +66,7 @@ class Stream(object):
         :returns: read data
         """
         raise NotImplementedError()
+
     def write(self, data):
         """writes the entire *data*, or raise EOFError
 
@@ -72,17 +78,23 @@ class Stream(object):
 class ClosedFile(object):
     """Represents a closed file object (singleton)"""
     __slots__ = ()
+
     def __getattr__(self, name):
-        if name.startswith("__"): # issue 71
+        if name.startswith("__"):  # issue 71
             raise AttributeError("stream has been closed")
         raise EOFError("stream has been closed")
+
     def close(self):
         pass
+
     @property
     def closed(self):
         return True
+
     def fileno(self):
         raise EOFError("stream has been closed")
+
+
 ClosedFile = ClosedFile()
 
 
@@ -91,14 +103,15 @@ class SocketStream(Stream):
 
     __slots__ = ("sock",)
     MAX_IO_CHUNK = 8000
+
     def __init__(self, sock):
         self.sock = sock
 
     @classmethod
-    def _connect(cls, host, port, family = socket.AF_INET, socktype = socket.SOCK_STREAM,
-            proto = 0, timeout = 3, nodelay = False, keepalive = False):
+    def _connect(cls, host, port, family=socket.AF_INET, socktype=socket.SOCK_STREAM,
+                 proto=0, timeout=3, nodelay=False, keepalive=False):
         family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, family,
-            socktype, proto)[0]
+                                                                  socktype, proto)[0]
         s = socket.socket(family, socktype, proto)
         s.settimeout(timeout)
         s.connect(sockaddr)
@@ -171,6 +184,7 @@ class SocketStream(Stream):
     @property
     def closed(self):
         return self.sock is ClosedFile
+
     def close(self):
         if not self.closed:
             try:
@@ -179,6 +193,7 @@ class SocketStream(Stream):
                 pass
         self.sock.close()
         self.sock = ClosedFile
+
     def fileno(self):
         try:
             return self.sock.fileno()
@@ -210,6 +225,7 @@ class SocketStream(Stream):
             data.append(buf)
             count -= len(buf)
         return BYTES_LITERAL("").join(data)
+
     def write(self, data):
         try:
             while data:
@@ -220,27 +236,33 @@ class SocketStream(Stream):
             self.close()
             raise EOFError(ex)
 
+
 class TunneledSocketStream(SocketStream):
     """A socket stream over an SSH tunnel (terminates the tunnel when the connection closes)"""
 
     __slots__ = ("tun",)
+
     def __init__(self, sock):
         self.sock = sock
         self.tun = None
+
     def close(self):
         SocketStream.close(self)
         if self.tun:
             self.tun.close()
+
 
 class PipeStream(Stream):
     """A stream over two simplex pipes (one used to input, another for output)"""
 
     __slots__ = ("incoming", "outgoing")
     MAX_IO_CHUNK = 32000
+
     def __init__(self, incoming, outgoing):
         outgoing.flush()
         self.incoming = incoming
         self.outgoing = outgoing
+
     @classmethod
     def from_std(cls):
         """factory method that creates a PipeStream over the standard pipes
@@ -249,6 +271,7 @@ class PipeStream(Stream):
         :returns: a :class:`PipeStream` instance
         """
         return cls(sys.stdin, sys.stdout)
+
     @classmethod
     def create_pair(cls):
         """factory method that creates two pairs of anonymous pipes, and
@@ -261,16 +284,20 @@ class PipeStream(Stream):
         side1 = cls(os.fdopen(r1, "rb"), os.fdopen(w2, "wb"))
         side2 = cls(os.fdopen(r2, "rb"), os.fdopen(w1, "wb"))
         return side1, side2
+
     @property
     def closed(self):
         return self.incoming is ClosedFile
+
     def close(self):
         self.incoming.close()
         self.outgoing.close()
         self.incoming = ClosedFile
         self.outgoing = ClosedFile
+
     def fileno(self):
         return self.incoming.fileno()
+
     def read(self, count):
         data = []
         try:
@@ -288,6 +315,7 @@ class PipeStream(Stream):
             self.close()
             raise EOFError(ex)
         return BYTES_LITERAL("").join(data)
+
     def write(self, data):
         try:
             while data:
@@ -317,9 +345,11 @@ class Win32PipeStream(Stream):
             outgoing = msvcrt.get_osfhandle(outgoing.fileno())
         self.incoming = incoming
         self.outgoing = outgoing
+
     @classmethod
     def from_std(cls):
         return cls(sys.stdin, sys.stdout)
+
     @classmethod
     def create_pair(cls):
         r1, w1 = win32pipe.CreatePipe(None, cls.PIPE_BUFFER_SIZE)
@@ -328,9 +358,11 @@ class Win32PipeStream(Stream):
 
     def fileno(self):
         return self._fileno
+
     @property
     def closed(self):
         return self.incoming is ClosedFile
+
     def close(self):
         if self.closed:
             return
@@ -344,6 +376,7 @@ class Win32PipeStream(Stream):
         except Exception:
             pass
         self.outgoing = ClosedFile
+
     def read(self, count):
         try:
             data = []
@@ -361,6 +394,7 @@ class Win32PipeStream(Stream):
             self.close()
             raise EOFError(ex)
         return BYTES_LITERAL("").join(data)
+
     def write(self, data):
         try:
             while data:
@@ -408,15 +442,17 @@ class NamedPipeStream(Win32PipeStream):
     def __init__(self, handle, is_server_side):
         Win32PipeStream.__init__(self, handle, handle)
         self.is_server_side = is_server_side
+
     @classmethod
     def from_std(cls):
         raise NotImplementedError()
+
     @classmethod
     def create_pair(cls):
         raise NotImplementedError()
 
     @classmethod
-    def create_server(cls, pipename, connect = True):
+    def create_server(cls, pipename, connect=True):
         """factory method that creates a server-side ``NamedPipeStream``, over
         a newly-created *named pipe* of the given name.
 
@@ -486,4 +522,3 @@ class NamedPipeStream(Win32PipeStream):
 
 if sys.platform == "win32":
     PipeStream = Win32PipeStream
-

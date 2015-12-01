@@ -13,6 +13,7 @@ from rpyc.lib.compat import BYTES_LITERAL
 
 
 class Test_Pipes(unittest.TestCase):
+
     def test_basic_io(self):
         p1, p2 = PipeStream.create_pair()
         p1.write(BYTES_LITERAL("hello"))
@@ -42,10 +43,11 @@ class Test_Pipes(unittest.TestCase):
 
 
 class Test_NamedPipe(object):
+
     def setUp(self):
         self.pipe_server_thread = Thread(target=self.pipe_server)
         self.pipe_server_thread.start()
-        time.sleep(1) # make sure server is accepting already
+        time.sleep(1)  # make sure server is accepting already
         self.np_client = NamedPipeStream.create_client("floop")
         self.client = rpyc.connect_stream(self.np_client)
 

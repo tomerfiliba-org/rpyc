@@ -4,6 +4,7 @@ import unittest
 
 
 class TestRefcount(unittest.TestCase):
+
     def setUp(self):
         self.conn = rpyc.classic.connect_thread()
 
@@ -23,7 +24,7 @@ class DummyObject(object):
         d1 = rDummyObject("d1")
         d2 = rDummyObject("d2")
         d3 = rDummyObject("d3")
-        d4 = rDummyObject("d4") #@UnusedVariable
+        d4 = rDummyObject("d4")  # @UnusedVariable
         d2_copy = d2
         del d1
         del d3
@@ -39,6 +40,3 @@ class DummyObject(object):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-

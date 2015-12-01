@@ -9,12 +9,13 @@ from rpyc import SlaveService
 from nose import SkipTest
 
 try:
-    import ssl #@UnusedImport
+    import ssl  # @UnusedImport
 except ImportError:
     raise SkipTest("requires ssl")
 
 
 class Test_SSL(unittest.TestCase):
+
     '''
     created key like that
     http://www.akadia.com/services/ssh_test_certificate.html
@@ -23,13 +24,13 @@ class Test_SSL(unittest.TestCase):
     '''
 
     def setUp(self):
-        self.key = os.path.join( os.path.dirname(__file__) , "server.key")
-        self.cert =  os.path.join( os.path.dirname(__file__) , "server.crt")
-        print( self.cert, self.key )
+        self.key = os.path.join(os.path.dirname(__file__), "server.key")
+        self.cert = os.path.join(os.path.dirname(__file__), "server.crt")
+        print(self.cert, self.key)
 
         authenticator = SSLAuthenticator(self.key, self.cert)
-        self.server = ThreadedServer(SlaveService, port = 18812,
-            auto_register=False, authenticator = authenticator)
+        self.server = ThreadedServer(SlaveService, port=18812,
+                                     auto_register=False, authenticator=authenticator)
         self.server.logger.quiet = False
         t = threading.Thread(target=self.server.start)
         t.start()
@@ -39,11 +40,11 @@ class Test_SSL(unittest.TestCase):
         self.server.close()
 
     def test_ssl_conenction(self):
-        c = rpyc.classic.ssl_connect("localhost", port = 18812,
-            keyfile=self.key, certfile=self.cert)
-        print( repr(c) )
-        print( c.modules.sys )
-        print( c.modules["xml.dom.minidom"].parseString("<a/>") )
+        c = rpyc.classic.ssl_connect("localhost", port=18812,
+                                     keyfile=self.key, certfile=self.cert)
+        print(repr(c))
+        print(c.modules.sys)
+        print(c.modules["xml.dom.minidom"].parseString("<a/>"))
         c.execute("x = 5")
         self.assertEqual(c.namespace["x"], 5)
         self.assertEqual(c.eval("1+x"), 6)
@@ -51,4 +52,3 @@ class Test_SSL(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
