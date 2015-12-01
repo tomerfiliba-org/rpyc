@@ -425,7 +425,7 @@ class TCPRegistryClient(RegistryClient):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind((interface, 0))
         sock.settimeout(self.timeout)
-        data = brine.dump(("RPYC", "REGISTER", (aliases, port)))
+        data = brine.dump(("RPYC", "REGISTER", (aliases, port, tasks)))
 
         try:
             try:
