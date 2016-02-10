@@ -53,9 +53,9 @@ class SSLAuthenticator(object):
     
     def __init__(self, keyfile, certfile, ca_certs = None, cert_reqs = None, 
             ssl_version = None, ciphers = None):
-        self.keyfile = keyfile
-        self.certfile = certfile
-        self.ca_certs = ca_certs
+        self.keyfile = str(keyfile)
+        self.certfile = str(certfile)
+        self.ca_certs = str(ca_certs) if ca_certs else None
         self.ciphers = ciphers
         if cert_reqs is None:
             if ca_certs:
