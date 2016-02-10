@@ -70,8 +70,8 @@ class ClassicServer(cli.Application):
             self.registrar = TCPRegistryClient(ip = self.registry_host, port = self.registry_port)
 
         if self.ssl_keyfile:
-            self.authenticator = SSLAuthenticator(str(self.ssl_keyfile), str(self.ssl_certfile), 
-                str(self.ssl_cafile))
+            self.authenticator = SSLAuthenticator(self.ssl_keyfile, self.ssl_certfile, 
+                self.ssl_cafile)
             default_port = DEFAULT_SERVER_SSL_PORT
         else:
             self.authenticator = None

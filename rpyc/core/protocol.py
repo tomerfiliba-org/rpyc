@@ -320,16 +320,19 @@ class Connection(object):
     # dispatching
     #
     def _dispatch_request(self, seq, raw_args):
+        logger = self._config["logger"]
         try:
             handler, args = raw_args
+            if logger:
+                logger.debug("dispatching: %r (%r)", handler, seq)
             args = self._unbox(args)
             res = self._HANDLERS[handler](self, *args)
         except:
             # need to catch old style exceptions too
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
-            if self._config["logger"] and t is not StopIteration:
-                self._config["logger"].debug("Exception caught", exc_info=True)
+            if logger and t is not StopIteration:
+                logger.debug("Exception caught", exc_info=True)
             if t is SystemExit and self._config["propagate_SystemExit_locally"]:
                 raise
             if t is KeyboardInterrupt and self._config["propagate_KeyboardInterrupt_locally"]:
