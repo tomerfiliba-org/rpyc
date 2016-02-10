@@ -117,7 +117,10 @@ def _import_codetup(codetup):
 
 def import_function(functup):
     name, modname, defaults, codetup = functup
-    mod = __import__(modname, None, None, "*")
+    try:
+        mod = __import__(modname, None, None, "*")
+    except ImportError:
+        mod = __import__("__main__", None, None, "*")
     codeobj = _import_codetup(codetup)
     return FunctionType(codeobj, mod.__dict__, name, defaults)
 

@@ -8,7 +8,7 @@ import socket
 import time
 import errno
 from rpyc.lib import safe_import
-from rpyc.lib.compat import select, select_error, BYTES_LITERAL, get_exc_errno, maxint
+from rpyc.lib.compat import poll, select_error, BYTES_LITERAL, get_exc_errno, maxint
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 msvcrt = safe_import("msvcrt")
@@ -36,9 +36,11 @@ class Stream(object):
         """indicates whether the stream has data to read (within *timeout*
         seconds)"""
         try:
+            p = poll()   # from lib.compat, it may be a select object on non-Unix platforms
+            p.register(self.fileno(), "r")
             while True:
                 try:
-                    rl, _, _ = select([self], [], [], timeout)
+                    rl = p.poll(timeout)
                 except select_error:
                     ex = sys.exc_info()[1]
                     if ex.args[0] == errno.EINTR:
@@ -48,8 +50,10 @@ class Stream(object):
                 else:
                     break
         except ValueError:
-            # i get this some times: "ValueError: file descriptor cannot be a negative integer (-1)"
-            # let's translate it to select.error
+            # if the underlying call is a select(), then the following errors may happen:
+            # - "ValueError: filedescriptor cannot be a negative integer (-1)"
+            # - "ValueError: filedescriptor out of range in select()"
+            # let's translate them to select.error
             ex = sys.exc_info()[1]
             raise select_error(str(ex))
         return bool(rl)

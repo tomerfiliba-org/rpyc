@@ -2,7 +2,7 @@
 **Brine** is a simple, fast and secure object serializer for **immutable** objects.
 The following types are supported: ``int``, ``long``, ``bool``, ``str``, ``float``,
 ``unicode``, ``bytes``, ``slice``, ``complex``, ``tuple`` (of simple types), 
-``forzenset`` (of simple types) as well as the following singletons: ``None``, 
+``frozenset`` (of simple types) as well as the following singletons: ``None``, 
 ``NotImplemented``, and ``Ellipsis``.
 
 Example::
