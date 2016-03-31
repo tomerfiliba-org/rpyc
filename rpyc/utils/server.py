@@ -385,9 +385,9 @@ class ThreadPoolServer(Server):
         Check whether inactive clients have become active'''
         while self.active:
             try:
-                # the actual poll, with a timeout of 1s so that we can exit in case
+                # the actual poll, with a timeout of 0.1s so that we can exit in case
                 # we re not active anymore
-                active_clients = self.poll_object.poll(1)
+                active_clients = self.poll_object.poll(0.1)
                 # for each client that became active, put them in the active queue
                 self._handle_poll_result(active_clients)
             except Exception:
