@@ -1,5 +1,5 @@
 import unittest
-from rpyc.utils.multiprocessing import count
+from rpyc.utils.mp import count
 from multiprocessing import Process
 
 class TestMpCount(unittest.TestCase):

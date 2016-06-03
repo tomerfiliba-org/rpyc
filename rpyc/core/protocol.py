@@ -12,7 +12,7 @@ from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
-import rpyc.utils.multiprocessing
+import rpyc.utils.mp
 
 class PingError(Exception):
     """The exception raised should :func:`Connection.ping` fail"""
@@ -116,7 +116,7 @@ Parameter                                Default value     Description
 """
 
 
-_connection_id_generator = rpyc.utils.multiprocessing.count(1)
+_connection_id_generator = rpyc.utils.mp.count(1)
 
 class Connection(object):
     """The RPyC *connection* (AKA *protocol*).
@@ -140,7 +140,7 @@ class Connection(object):
             self._config["connid"] = "conn%d" % (next(_connection_id_generator),)
 
         self._channel = channel
-        self._seqcounter = rpyc.utils.multiprocessing.count()
+        self._seqcounter = rpyc.utils.mp.count()
         self._recvlock = Lock()
         self._sendlock = Lock()
         self._sync_replies = {}
