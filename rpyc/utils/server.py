@@ -194,7 +194,6 @@ class Server(object):
                 endpoints = (sock.getsockname(), addrinfo), logger = self.logger)
             conn = Connection(self.service, Channel(SocketStream(sock)),
                 config = config, _lazy = True)
-            conn._init_service()
             conn.serve_all()
         finally:
             self.logger.info("goodbye [%s]:%s", h, p)
