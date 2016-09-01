@@ -10,7 +10,7 @@ from rpyc.core import consts
 
 
 _local_netref_attrs = frozenset([
-    '____conn__', '____oid__', '__class__', '__cmp__', '__del__', '__delattr__',
+    '____conn__', '____oid__', '____refcount__', '__class__', '__cmp__', '__del__', '__delattr__',
     '__dir__', '__doc__', '__getattr__', '__getattribute__', '__hash__',
     '__init__', '__metaclass__', '__module__', '__new__', '__reduce__',
     '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__',
@@ -43,6 +43,7 @@ if is_py3k:
     _builtin_types.extend([
         bytes, bytearray, type(iter(range(10))), memoryview,
     ])
+    xrange = range
 else:
     _builtin_types.extend([
         basestring, unicode, long, xrange, type(iter(xrange(10))), file,
@@ -116,18 +117,21 @@ class BaseNetref(object):
     """
     # this is okay with py3k -- see below
     __metaclass__ = NetrefMetaclass
-    __slots__ = ["____conn__", "____oid__", "__weakref__"]
+    __slots__ = ["____conn__", "____oid__", "__weakref__", "____refcount__"]
     def __init__(self, conn, oid):
         self.____conn__ = conn
         self.____oid__ = oid
+        self.____refcount__ = 1
+
     def __del__(self):
-        try:
-            asyncreq(self, consts.HANDLE_DEL)
-        except Exception:
-            # raised in a destructor, most likely on program termination,
-            # when the connection might have already been closed.
-            # it's safe to ignore all exceptions here
-            pass
+        for _ in xrange(self.____refcount__):
+            try:
+                asyncreq(self, consts.HANDLE_DEL)
+            except Exception:
+                # raised in a destructor, most likely on program termination,
+                # when the connection might have already been closed.
+                # it's safe to ignore all exceptions here
+                pass
 
     def __getattribute__(self, name):
         if name in _local_netref_attrs:

@@ -298,7 +298,11 @@ class Connection(object):
         if label == consts.LABEL_REMOTE_REF:
             oid, clsname, modname = value
             if oid in self._proxy_cache:
-                return self._proxy_cache[oid]
+                proxy = self._proxy_cache[oid]
+                proxy.____refcount__ += 1  # other side increased refcount on boxing,
+                                           # if I'm returning from cache instead of new object,
+                                           # must increase refcount to match
+                return proxy
             proxy = self._netref_factory(oid, clsname, modname)
             self._proxy_cache[oid] = proxy
             return proxy
