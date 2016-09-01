@@ -37,6 +37,6 @@ def setup_logger(quiet = False, logfile = None):
     else:
         opts['level'] = logging.DEBUG
     if logfile:
-        opts['file'] = logfile
+        opts['filename'] = logfile
     logging.basicConfig(**opts)
 
