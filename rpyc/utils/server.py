@@ -302,7 +302,7 @@ class ThreadPoolServer(Server):
             del kwargs['requestBatchSize']
         # init the parent
         Server.__init__(self, *args, **kwargs)
-        # a queue of connections having somethign to process
+        # a queue of connections having something to process
         self._active_connection_queue = Queue.Queue()
         # declare the pool as already active
         self.active = True
