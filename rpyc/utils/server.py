@@ -308,9 +308,9 @@ class ThreadPoolServer(Server):
         self.active = True
         # setup the thread pool for handling requests
         self.workers = []
-        for _ in range(nbthreads):
+        for i in range(nbthreads):
             t = threading.Thread(target = self._serve_clients)
-            t.setName('ThreadPoolWorker')
+            t.setName('Worker%i' % i)
             t.daemon = True
             t.start()
             self.workers.append(t)
@@ -348,6 +348,8 @@ class ThreadPoolServer(Server):
 
     def _drop_connection(self, fd):
         '''removes a connection by closing it and removing it from internal structs'''
+        conn = None
+
         # cleanup fd_to_conn dictionnary
         try:
             conn = self.fd_to_conn[fd]
@@ -355,8 +357,10 @@ class ThreadPoolServer(Server):
         except KeyError:
             # the active connection has already been removed
             pass
+
         # close connection
-        conn.close()
+        if conn:
+            conn.close()
 
     def _add_inactive_connection(self, fd):
         '''adds a connection to the set of inactive ones'''
@@ -434,9 +438,8 @@ class ThreadPoolServer(Server):
                 # thread can stop even if there is nothing in the queue
                 pass
             except Exception:
-                ex = sys.exc_info()[1]
                 # "Caught exception in Worker thread" message
-                self.logger.warning("failed to serve client, caught exception : %s", str(ex))
+                self.logger.exception("failed to serve client, caught exception")
                 # wait a bit so that we do not loop too fast in case of error
                 time.sleep(0.2)
 
@@ -472,8 +475,7 @@ class ThreadPoolServer(Server):
                 self._add_inactive_connection(fd)
                 self.clients.clear()
         except Exception:
-            ex = sys.exc_info()[1]
-            self.logger.warning("failed to serve client, caught exception : %s", str(ex))
+            self.logger.exception("failed to serve client, caught exception")
 
 
 class ForkingServer(Server):
