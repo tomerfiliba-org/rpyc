@@ -57,6 +57,7 @@ DEFAULT_CONFIG = dict(
     credentials = None,
     endpoints = None,
     logger = None,
+    sync_request_timeout = 30,
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
@@ -112,6 +113,8 @@ Parameter                                Default value     Description
                                                            remote one (``getpeername``). This is set by the server
                                                            upon accepting a connection; client side connections
                                                            do no have this configuration option set.
+
+``sync_request_timeout``                 ``30``            Default timeout for waiting results
 =======================================  ================  =====================================================
 """
 
@@ -129,8 +132,6 @@ class Connection(object):
                   the connection. Default is True. If set to False, you will 
                   need to call :func:`_init_service` manually later
     """
-
-    SYNC_REQUEST_TIMEOUT = 30
 
     def __init__(self, service, channel, config = {}, _lazy = False):
         self._closed = True
@@ -460,9 +461,10 @@ class Connection(object):
         seq = self._get_seq_id()
         self._send_request(seq, handler, args)
         start_time = time.time()
+        timeout = self._config["sync_request_timeout"]
 
         while seq not in self._sync_replies:
-            remaining_time = self.SYNC_REQUEST_TIMEOUT - (time.time() - start_time)
+            remaining_time = timeout - (time.time() - start_time)
             if remaining_time < 0:
                 raise socket.timeout
 
