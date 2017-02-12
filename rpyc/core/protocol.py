@@ -8,7 +8,7 @@ import socket
 import time
 import gc
 
-from threading import Lock, RLock, Event
+from threading import Lock, RLock, Event, Thread
 from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
@@ -449,7 +449,7 @@ class Connection(object):
         alive."""
         try:
             for _ in range(thread_count):
-                thread = Thread(self, target=_thread_target)
+                thread = Thread(target=_thread_target)
                 thread.daemon = True
                 thread.start()
                 threads.append(thread)
