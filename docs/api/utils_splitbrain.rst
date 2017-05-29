@@ -3,5 +3,5 @@
 Splitbrain Python
 =================
 
-.. automodule:: rpyc.utils.splitbrain
+.. automodule:: rpyc.experimental.splitbrain
    :members:

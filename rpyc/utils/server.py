@@ -141,7 +141,7 @@ class Server(object):
             return
 
         sock.setblocking(True)
-        self.logger.info("accepted %s:%s", addrinfo[0], addrinfo[1])
+        self.logger.info("accepted %s:%s with fd %d", addrinfo[0], addrinfo[1], sock.fileno())
         self.clients.add(sock)
         self._accept_method(sock)
 
@@ -195,10 +195,14 @@ class Server(object):
             conn = Connection(self.service, Channel(SocketStream(sock)),
                 config = config, _lazy = True)
             conn._init_service()
-            conn.serve_all()
+            self._handle_connection(conn)
         finally:
             self.logger.info("goodbye [%s]:%s", h, p)
 
+    def _handle_connection(self, conn):
+        """This methoed should implement the server's logic."""
+        conn.serve_all()
+        
     def _bg_register(self):
         interval = self.registrar.REREGISTER_INTERVAL
         self.logger.info("started background auto-register thread "
@@ -302,7 +306,7 @@ class ThreadPoolServer(Server):
             del kwargs['requestBatchSize']
         # init the parent
         Server.__init__(self, *args, **kwargs)
-        # a queue of connections having somethign to process
+        # a queue of connections having something to process
         self._active_connection_queue = Queue.Queue()
         # declare the pool as already active
         self.active = True
@@ -359,6 +363,7 @@ class ThreadPoolServer(Server):
             pass
 
         # close connection
+        self.logger.info("Closing connection for fd %d", fd)
         if conn:
             conn.close()
 
@@ -388,15 +393,15 @@ class ThreadPoolServer(Server):
         Check whether inactive clients have become active'''
         while self.active:
             try:
-                # the actual poll, with a timeout of 1s so that we can exit in case
+                # the actual poll, with a timeout of 0.1s so that we can exit in case
                 # we re not active anymore
-                active_clients = self.poll_object.poll(1)
+                active_clients = self.poll_object.poll(0.1)
                 # for each client that became active, put them in the active queue
                 self._handle_poll_result(active_clients)
             except Exception:
                 ex = sys.exc_info()[1]
                 # "Caught exception in Worker thread" message
-                self.logger.warning("failed to poll clients, caught exception : %s", str(ex))
+                self.logger.warning("Failed to poll clients, caught exception : %s", str(ex))
                 # wait a bit so that we do not loop too fast in case of error
                 time.sleep(0.2)
 
@@ -453,7 +458,7 @@ class ThreadPoolServer(Server):
             try:
                 sock, credentials = self.authenticator(sock)
             except AuthenticationError:
-                self.logger.info("%s:%s failed to authenticate, rejecting connection", h, p)
+                self.logger.warning("%s:%s failed to authenticate, rejecting connection", h, p)
                 return None
         else:
             credentials = None
@@ -470,12 +475,19 @@ class ThreadPoolServer(Server):
             conn = self._authenticate_and_build_connection(sock)
             # put the connection in the active queue
             if conn:
+                h, p = sock.getpeername()
                 fd = conn.fileno()
+                self.logger.debug("Created connection to %s:%d with fd %d", h, p, fd)
                 self.fd_to_conn[fd] = conn
                 self._add_inactive_connection(fd)
                 self.clients.clear()
+            else:
+                self.logger.warning("Failed to authenticate and build connection, closing %s:%d", h, p)
+                sock.close()
         except Exception:
-            self.logger.exception("failed to serve client, caught exception")
+            h, p = sock.getpeername()
+            self.logger.exception("Failed to serve client for %s:%d, caught exception", h, p)
+            sock.close()
 
 
 class ForkingServer(Server):
