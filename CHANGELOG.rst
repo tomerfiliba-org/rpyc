@@ -1,3 +1,13 @@
+3.4.0
+-----
+Date: 29.05.2017
+
+Please excuse the briefity for this versions changelist.
+
+* Add keepalive interface [#151]
+
+* Various fixes: #136, #140, #143, #147, #149, #151, #159, #160, #166, #173, #176, #179, #174, #182, #183 and others.
+
 3.3.0
 -----
 * RPyC integrates with `plumbum <http://pypi.python.org/pypi/plumbum>`_; plumbum is required
