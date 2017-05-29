@@ -92,7 +92,7 @@ if hasattr(select_module, "poll"):
             if "e" in mode:
                 flags |= select_module.POLLERR
             if "h" in mode:
-                # POLLRDHUP is a linux only extension, not know to python, but nevertheless
+                # POLLRDHUP is a linux only extension, not known to python, but nevertheless
                 # used and thus needed in the flags
                 POLLRDHUP = 0x2000
                 flags |= select_module.POLLHUP | select_module.POLLNVAL | POLLRDHUP
@@ -101,6 +101,9 @@ if hasattr(select_module, "poll"):
         def unregister(self, fd):
             self._poll.unregister(fd)
         def poll(self, timeout = None):
+            if timeout:
+                # the real poll takes milliseconds while we have seconds here
+                timeout = 1000*timeout
             events = self._poll.poll(timeout)
             processed = []
             for fd, evt in events:
