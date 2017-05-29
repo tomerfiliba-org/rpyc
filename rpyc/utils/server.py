@@ -195,10 +195,14 @@ class Server(object):
             conn = Connection(self.service, Channel(SocketStream(sock)),
                 config = config, _lazy = True)
             conn._init_service()
-            conn.serve_all()
+            self._handle_connection(conn)
         finally:
             self.logger.info("goodbye [%s]:%s", h, p)
 
+    def _handle_connection(self, conn):
+        """This methoed should implement the server's logic."""
+        conn.serve_all()
+        
     def _bg_register(self):
         interval = self.registrar.REREGISTER_INTERVAL
         self.logger.info("started background auto-register thread "
