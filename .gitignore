@@ -8,3 +8,4 @@ __pycache__
 rpyc.egg-info
 *.egg
 *.class
+build/
