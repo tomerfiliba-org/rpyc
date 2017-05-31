@@ -177,12 +177,13 @@ def _get_exception_class(cls):
                 text = cls.__str__(self)
             except Exception:
                 text = "<Unprintable exception>"
+            return text
+        def __repr__(self):
+            text = str(self)
             if hasattr(self, "_remote_tb"):
                 text += "\n\n========= Remote Traceback (%d) =========\n%s" % (
                     self._remote_tb.count("\n\n========= Remote Traceback") + 1, self._remote_tb)
             return text
-        def __repr__(self):
-            return str(self)
     
     Derived.__name__ = cls.__name__
     Derived.__module__ = cls.__module__
