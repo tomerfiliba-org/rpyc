@@ -75,7 +75,7 @@ def connect_stdpipes(service = VoidService, config = {}):
     """
     return connect_stream(PipeStream.from_std(), service = service, config = config)
 
-def connect(host, port, service = VoidService, config = {}, ipv6 = False, keepalive = False):
+def connect(host, port, service = VoidService, config = {}, ipv6 = False, keepalive = False, timeout=3):
     """
     creates a socket-connection to the given host and port
 
@@ -87,7 +87,7 @@ def connect(host, port, service = VoidService, config = {}, ipv6 = False, keepal
 
     :returns: an RPyC connection
     """
-    s = SocketStream.connect(host, port, ipv6 = ipv6, keepalive = keepalive)
+    s = SocketStream.connect(host, port, ipv6 = ipv6, keepalive = keepalive, timeout = timeout)
     return connect_stream(s, service, config)
 
 def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
