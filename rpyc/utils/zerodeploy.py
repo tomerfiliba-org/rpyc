@@ -96,7 +96,7 @@ class DeployedServer(object):
         rpyc_root = local.path(rpyc.__file__).up()
         self._tmpdir_ctx = remote_machine.tempdir()
         tmp = self._tmpdir_ctx.__enter__()
-        copy(rpyc_root, tmp / "rpyc")
+        copy(rpyc_root, tmp)
         
         script = (tmp / "deployed-rpyc.py")
         modname, clsname = server_class.rsplit(".", 1)
