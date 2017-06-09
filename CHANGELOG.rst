@@ -1,3 +1,12 @@
+3.4.1
+-----
+Date: 09.06.2017
+
+* Fix issue high-cpu polling (#191,#218)
+* Fix filename argument in logging (#197)
+* Improved log messages (#191,#204)
+* Drop support for python 3.2 and py 2.5
+
 3.4.0
 -----
 Date: 29.05.2017
