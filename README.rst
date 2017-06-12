@@ -1,3 +1,13 @@
+.. image:: https://img.shields.io/pypi/v/rpyc.svg?style=flat-square
+    :target: https://pypi.python.org/pypi/rpyc
+    :alt: Version
+.. image:: https://img.shields.io/pypi/pyversions/rpyc.svg?style=flat-square
+    :target: https://pypi.python.org/pypi/rpyc
+    :alt: Python Versions
+.. image:: https://img.shields.io/travis/tomerfiliba/rpyc/master.svg?style=flat-square
+    :target: https://travis-ci.org/amoffat/sh
+    :alt: Build Status
+
 `RPyC <http://rpyc.sourceforge.net>`_ (pronounced like *are-pie-see*), or *Remote Python Call*, 
 is a **transparent** library for **symmetrical** `remote procedure calls 
 <http://en.wikipedia.org/wiki/Remote_procedure_calls>`_, 
@@ -14,14 +24,3 @@ between processes and computers, so that remote objects can be manipulated as if
    
    Note that text written to the server's ``stdout`` is actually printed on 
    the server's console.
-
-
-.. image:: https://img.shields.io/pypi/v/rpyc.svg?style=flat-square
-    :target: https://pypi.python.org/pypi/rpyc
-    :alt: Version
-.. image:: https://img.shields.io/pypi/pyversions/rpyc.svg?style=flat-square
-    :target: https://pypi.python.org/pypi/rpyc
-    :alt: Python Versions
-.. image:: https://img.shields.io/travis/tomerfiliba/rpyc/master.svg?style=flat-square
-    :target: https://travis-ci.org/amoffat/sh
-    :alt: Build Status
