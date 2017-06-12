@@ -5,7 +5,7 @@
     :target: https://pypi.python.org/pypi/rpyc
     :alt: Python Versions
 .. image:: https://img.shields.io/travis/tomerfiliba/rpyc/master.svg?style=flat-square
-    :target: https://travis-ci.org/amoffat/sh
+    :target: https://travis-ci.org/tomerfiliba/rpyc
     :alt: Build Status
 
 `RPyC <http://rpyc.sourceforge.net>`_ (pronounced like *are-pie-see*), or *Remote Python Call*, 
