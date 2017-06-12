@@ -16,7 +16,12 @@ between processes and computers, so that remote objects can be manipulated as if
    the server's console.
 
 
-.. image:: https://d2weczhvl823v0.cloudfront.net/tomerfiliba/rpyc/trend.png
-   :alt: Bitdeli badge
-   :target: https://bitdeli.com/free
-
+.. image:: https://img.shields.io/pypi/v/rpyc.svg?style=flat-square
+    :target: https://pypi.python.org/pypi/rpyc
+    :alt: Version
+.. image:: https://img.shields.io/pypi/pyversions/rpyc.svg?style=flat-square
+    :target: https://pypi.python.org/pypi/rpyc
+    :alt: Python Versions
+.. image:: https://img.shields.io/travis/tomerfiliba/rpyc/master.svg?style=flat-square
+    :target: https://travis-ci.org/amoffat/sh
+    :alt: Build Status
