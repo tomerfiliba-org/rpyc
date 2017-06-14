@@ -1,3 +1,9 @@
+3.4.2
+-----
+Date: 14.06.2017
+
+* Fix ``export_function`` on python 3.6
+
 3.4.1
 -----
 Date: 09.06.2017
