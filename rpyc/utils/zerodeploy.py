@@ -194,7 +194,7 @@ class MultiServerDeployment(object):
     An 'aggregate' server deployment to multiple SSH machine. It deploys RPyC to each machine
     separately, but lets you manage them as a single deployment.
     """
-    def __init__(self, remote_machines, server_class = "ThreadedServer"):
+    def __init__(self, remote_machines, server_class = "rpyc.utils.server.ThreadedServer"):
         self.remote_machines = remote_machines
         # build the list incrementally, so we can clean it up if we have an exception
         self.servers = [DeployedServer(mach, server_class) for mach in remote_machines]
