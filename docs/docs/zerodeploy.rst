@@ -87,7 +87,7 @@ MultiServerDeployment
 ---------------------
 If you need to deploy on a group of machines a cluster of machines, you can also use ``MultiServerDeployment``::
 
-    from plumbum.utils.zerodeploy import MultiServerDeployment
+    from rpyc.utils.zerodeploy import MultiServerDeployment
     
     m1 = SshMachine("host1")
     m2 = SshMachine("host2")
