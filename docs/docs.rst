@@ -9,7 +9,7 @@ Introduction
 .. toctree::
    :maxdepth: 1
    :hidden:
-   
+
    docs/about
    docs/theory
    docs/howto
@@ -18,13 +18,13 @@ Introduction
    docs/capabilities
 
 
-* :ref:`A little about RPyC <about>` - related projects, contributors, and 
+* :ref:`A little about RPyC <about>` - related projects, contributors, and
   logo issues
 
-* :ref:`Theory of Operation <theory>` - background on the inner workings of 
-  RPyC and the terminology 
+* :ref:`Theory of Operation <theory>` - background on the inner workings of
+  RPyC and the terminology
 
-* :ref:`Use cases <use-cases>` - some common use-cases, demonstrating the power 
+* :ref:`Use cases <use-cases>` - some common use-cases, demonstrating the power
   and ease of RPyC
 
 * :ref:`How to's <howto>` - solutions to specific problems
@@ -48,9 +48,9 @@ Reference
    docs/splitbrain
 
 
-* :ref:`Servers <servers>` - using the built-in servers and writing custom ones 
+* :ref:`Servers <servers>` - using the built-in servers and writing custom ones
 
-* :ref:`Classic RPyC <classic>` - using RPyC in *slave mode* (AKA *classic 
+* :ref:`Classic RPyC <classic>` - using RPyC in *slave mode* (AKA *classic
   mode*), where the client has unrestricted control over the server.
 
 * :ref:`RPyC Services <services>` - writing well-defined services which restrict
@@ -62,7 +62,7 @@ Reference
 * :ref:`Security Concerns <security>` - keeping security in mind when using
   RPyC
 
-* :ref:`Secure Connections <ssl>` - create an encrypted and authenticated 
+* :ref:`Secure Connections <ssl>` - create an encrypted and authenticated
   connection over SSL or SSH
 
 * :ref:`Zero-Deploy <zerodeploy>` - spawn temporary, short-lived RPyC server on remote

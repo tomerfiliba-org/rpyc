@@ -45,7 +45,7 @@ class BaseRegistryTest(object):
         c = self._get_client()
         c.logger.quiet = True
         c.register(("BAR",), 17171)
-        
+
         time.sleep(1)
         res = c.discover("BAR")
         self.assertEqual(set(p for _, p in res), set((17171,)))

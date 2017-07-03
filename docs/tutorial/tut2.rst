@@ -15,7 +15,7 @@ Creating a connection and accessing modules ::
     <rpyc.core.protocol.Protocol object at 0x00B9F830>
     >>> conn.modules
     <rpyc.services.slave.ModuleNamespace object at 0x00B77DA0>
-    
+
     >>> conn.modules.sys
     <module 'sys' (built-in)>
     >>> conn.modules.os
@@ -34,16 +34,16 @@ Working with remote objects ::
     >>> conn.modules.sys.path.append("regina victoria")
     >>> conn.modules.sys.path
     ['D:\\projects\\rpyc\\servers', 'd:\\projects', ....., 'regina victoria']
-    
+
     >>> conn.modules.sys.stdout
     <open file '<stdout>', mode 'w' at 0x0098F068>
     >>> conn.modules.sys.stdout.write("hello world\n")
     # 'hello world' is printed on the server
-    
+
     >>> conn.modules.os.path.abspath("lalala")
     'D:\\eclipse\\lalala'
     [[/code]]
-    
+
     Experimenting with remote objects:
     [[code type="python"]]
     >>> conn.modules.sys.path[0]
@@ -72,7 +72,7 @@ Working with remote objects ::
 
 Introspection
 -------------
-So far everything seemed normal. Now it's time to get our hands dirty and figure out what 
+So far everything seemed normal. Now it's time to get our hands dirty and figure out what
 exactly are these magical objects... ::
 
     >>> type(conn.modules.sys.path)
@@ -84,10 +84,10 @@ exactly are these magical objects... ::
     >>> type(conn.modules.os.path.abspath)
     <netref class '__builtin__.function'>
 
-Voila, **netrefs** (*network references*, also known as *transparent object proxies*) are 
+Voila, **netrefs** (*network references*, also known as *transparent object proxies*) are
 special objects that delegate everything done on them locally to the corresponding remote
 objects. Netrefs may not be real lists of functions or modules, but they "do their best"
-to look and feel like the objects they point to... in fact, they even fool python's 
+to look and feel like the objects they point to... in fact, they even fool python's
 introspection mechanisms! ::
 
     >>> isinstance(conn.modules.sys.path, list)
@@ -103,17 +103,17 @@ introspection mechanisms! ::
     True
     >>> dir(conn.modules.sys.path)
     ['____conn__', '____oid__', '__add__', '__class__', '__contains__', '__delattr__',
-    '__delitem__', '__delslice__', '__doc__', '__eq__', '__ge__', '__getattribute__', 
-    '__getitem__', '__getslice__', '__gt__', '__hash__', '__iadd__', '__imul__', 
-    '__init__', '__iter__', '__le__', '__len__', '__lt__', '__mul__', '__ne__', '__new__', 
-    '__reduce__', '__reduce_ex__', '__repr__', '__reversed__', '__rmul__', '__setattr__', 
-    '__setitem__', '__setslice__', '__str__', 'append', 'count', 'extend', 'index', 'insert', 
+    '__delitem__', '__delslice__', '__doc__', '__eq__', '__ge__', '__getattribute__',
+    '__getitem__', '__getslice__', '__gt__', '__hash__', '__iadd__', '__imul__',
+    '__init__', '__iter__', '__le__', '__len__', '__lt__', '__mul__', '__ne__', '__new__',
+    '__reduce__', '__reduce_ex__', '__repr__', '__reversed__', '__rmul__', '__setattr__',
+    '__setitem__', '__setslice__', '__str__', 'append', 'count', 'extend', 'index', 'insert',
     'pop', 'remove', 'reverse', 'sort']
 
 Exceptions
 ----------
 But things are not always bright, and exceptions must be dealt with. When a client makes a
-request that fails (an exception is raised on the server side), the exception propagates 
+request that fails (an exception is raised on the server side), the exception propagates
 transparently to the client. Have a look at this snippet::
 
     >>> conn.modules.sys.path[300]         # there are only 12 elements in the list...
@@ -124,7 +124,7 @@ transparently to the client. Have a look at this snippet::
       File "D:\projects\rpyc\core\protocol.py", line 321, in _handle_callattr
         return attr(*args, **dict(kwargs))
     IndexError: list index out of range
-    
+
     ======= Local exception ========
     Traceback (most recent call last):
       File "<stdin>", line 1, in <module>
@@ -143,12 +143,12 @@ transparently to the client. Have a look at this snippet::
     IndexError: list index out of range
     >>>
 
-As you can see, we get two tracebacks: the remote one, showing what went wrong on the server, 
+As you can see, we get two tracebacks: the remote one, showing what went wrong on the server,
 and a local one, showing what we did to cause it.
 
 Misc
 ----
-Aside from the very useful ``.modules`` attribute of ``conn``, classic RPyC provides 
+Aside from the very useful ``.modules`` attribute of ``conn``, classic RPyC provides
 some more useful entry points:
 
 * ``builtins`` - the ``__builtin__`` module (short for ``conn.modules.__builin__``)
@@ -158,7 +158,7 @@ some more useful entry points:
   (by the ``execute`` and ``eval`` methods)
 
 Here are some examples ::
-  
+
     >>> remlist = conn.builtin.range(50)
     >>> conn.execute("print 'world'")      # 'world' is printed on the server
     >>> conn.execute("x = 7")              # a variable named 'x' is defined on the server

@@ -1,6 +1,6 @@
 .. _api-protocol:
 
-Protocol 
+Protocol
 ========
 
 .. automodule:: rpyc.core.protocol

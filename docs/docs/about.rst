@@ -2,10 +2,10 @@
 
 About RPyC
 ==========
-RPyC was inspired by the work of **Eyal Lotem** on 
-`pyinvoke <http://pybuild.sourceforge.net/pyinvoke.html>`_, which pioneered in 
-the field of "dynamic RPC" (where there's no predefined contract between the 
-two sides). The two projects, however, are completely unrelated in any other 
+RPyC was inspired by the work of **Eyal Lotem** on
+`pyinvoke <http://pybuild.sourceforge.net/pyinvoke.html>`_, which pioneered in
+the field of "dynamic RPC" (where there's no predefined contract between the
+two sides). The two projects, however, are completely unrelated in any other
 way. RPyC is developed and maintained by `Tomer Filiba <http://tomerfiliba.com>`_
 (tomerfiliba@gmail.com).
 

@@ -7,7 +7,7 @@ Part 1: Introduction to RPyC and the Classic Mode
 -------------------------------------------------
 
 .. raw:: html
-   
+
    <object width="425" height="344" id="_741" data="http://showmedo.com/static/flowplayer/flowplayer-3.1.5.swf" type="application/x-shockwave-flash"><param name="movie" value="http://showmedo.com/static/flowplayer/flowplayer-3.1.5.swf" />
    <param name="allowfullscreen" value="true" />
    <param name="allowscriptaccess" value="always" />
