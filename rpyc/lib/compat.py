@@ -120,7 +120,7 @@ if hasattr(select_module, "poll"):
                     mask += "n"
                 processed.append((fd, mask))
             return processed
-    
+
     poll = PollingPoll
 else:
     class SelectingPoll(object):
@@ -143,7 +143,7 @@ else:
             else:
                 rl, wl, _ = select(self.rlist, self.wlist, (), timeout)
                 return [(fd, "r") for fd in rl] + [(fd, "w") for fd in wl]
-    
+
     poll = SelectingPoll
 
 

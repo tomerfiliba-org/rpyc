@@ -17,9 +17,9 @@ from types import ModuleType
 
 router = threading.local()
 
-routed_modules = set(["os", "os.path", "platform", "ntpath", "posixpath", "zipimport", "genericpath", 
+routed_modules = set(["os", "os.path", "platform", "ntpath", "posixpath", "zipimport", "genericpath",
     "posix", "nt", "signal", "time", "sysconfig", "_locale", "locale", "socket", "_socket", "ssl", "_ssl",
-    "struct", "_struct", "_symtable", "errno", "fcntl", "grp", "pwd", "select", "spwd", "syslog", "thread", 
+    "struct", "_struct", "_symtable", "errno", "fcntl", "grp", "pwd", "select", "spwd", "syslog", "thread",
     "_io", "io", "subprocess", "_subprocess", "datetime", "mmap", "msvcrt", "pdb", "bdb", "glob", "fnmatch",
     #"_frozen_importlib", "imp", "exceptions"
     ])
@@ -55,7 +55,7 @@ class RoutedModule(ModuleType):
         return setattr(self.__currmod__, name, val)
 
 routed_sys_attrs = set(["byteorder", "platform", "getfilesystemencoding", "getdefaultencoding", "settrace",
-    "setprofile", "setrecursionlimit", "getprofile", "getrecursionlimit", "getsizeof", "gettrace", 
+    "setprofile", "setrecursionlimit", "getprofile", "getrecursionlimit", "getsizeof", "gettrace",
     "exc_clear", "exc_info", "exc_type", "last_type", "last_value", "last_traceback",
     ])
 
@@ -120,7 +120,7 @@ def _importer(modname, *args, **kwargs):
     existing = sys.modules.get(modname, None)
     if type(existing) is RoutedModule:
         return existing
-    
+
     mod = router.conn.modules[modname]
     if existing and type(existing) is RemoteModule:
         return existing
@@ -132,7 +132,7 @@ _enabled = False
 _prev_builtins = {}
 
 def enable_splitbrain():
-    """Enables (activates) the Splitbrain machinery; must be called before entering 
+    """Enables (activates) the Splitbrain machinery; must be called before entering
     ``splitbrain`` or ``localbrain`` contexts"""
     global _enabled
     if _enabled:
@@ -172,7 +172,7 @@ def enable_splitbrain():
         origfunc = getattr(builtins, funcname)
         _prev_builtins[funcname] = origfunc
         setattr(builtins, funcname, mkfunc(funcname, origfunc))
-    
+
     _enabled = True
 
 def disable_splitbrain():
@@ -198,7 +198,7 @@ atexit.register(disable_splitbrain)
 
 @contextmanager
 def splitbrain(conn):
-    """Enter a splitbrain context in which imports take place over the given RPyC connection (expected to 
+    """Enter a splitbrain context in which imports take place over the given RPyC connection (expected to
     be a SlaveService). You can enter this context only after calling ``enable()``"""
     if not _enabled:
         enable_splitbrain()

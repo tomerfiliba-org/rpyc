@@ -1,8 +1,8 @@
 """
 **Brine** is a simple, fast and secure object serializer for **immutable** objects.
 The following types are supported: ``int``, ``long``, ``bool``, ``str``, ``float``,
-``unicode``, ``bytes``, ``slice``, ``complex``, ``tuple`` (of simple types), 
-``frozenset`` (of simple types) as well as the following singletons: ``None``, 
+``unicode``, ``bytes``, ``slice``, ``complex``, ``tuple`` (of simple types),
+``frozenset`` (of simple types) as well as the following singletons: ``None``,
 ``NotImplemented``, and ``Ellipsis``.
 
 Example::
@@ -333,9 +333,9 @@ def _load(stream):
 #===============================================================================
 def dump(obj):
     """Converts (dumps) the given object to a byte-string representation
-    
+
     :param obj: any :func:`dumpable` object
-    
+
     :returns: a byte-string representation of the object
     """
     stream = []
@@ -344,24 +344,24 @@ def dump(obj):
 
 def load(data):
     """Recreates (loads) an object from its byte-string representation
-    
+
     :param data: the byte-string representation of an object
-    
+
     :returns: the dumped object
     """
     stream = BytesIO(data)
     return _load(stream)
 
 if is_py3k:
-    simple_types = frozenset([type(None), int, bool, float, bytes, str, complex, 
+    simple_types = frozenset([type(None), int, bool, float, bytes, str, complex,
         type(NotImplemented), type(Ellipsis)])
 else:
-    simple_types = frozenset([type(None), int, long, bool, float, str, unicode, complex, 
+    simple_types = frozenset([type(None), int, long, bool, float, str, unicode, complex,
         type(NotImplemented), type(Ellipsis)])
 
 def dumpable(obj):
     """Indicates whether the given object is *dumpable* by brine
-    
+
     :returns: ``True`` if the object is dumpable (e.g., :func:`dump` would succeed),
               ``False`` otherwise
     """

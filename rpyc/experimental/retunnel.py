@@ -130,7 +130,7 @@ class ReconnectingSocket(object):
         self.sock = None
         self.retries = retries
         self.blocking_mode = None
-    
+
     def close(self):
         if self.sock:
             self.sock.close()

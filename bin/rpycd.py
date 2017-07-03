@@ -16,10 +16,10 @@ server = None
 
 def start():
     global server
-    
+
     conf = ConfigParser()
     conf.read('rpycd.conf')
-    
+
     mode = conf.get("rpycd", "mode").lower()
     if mode == "threaded":
         factory = ThreadedServer
@@ -27,10 +27,10 @@ def start():
         factory = ForkingServer
     else:
         raise ValueError("Invalid mode %r" % (mode,))
-    
+
     setup_logger(conf.getboolean("rpycd", "quiet"), conf.get("rpycd", "logfile"))
-    
-    server = factory(SlaveService, hostname = conf.get("rpycd", "host"), 
+
+    server = factory(SlaveService, hostname = conf.get("rpycd", "host"),
         port = conf.getint("rpycd", "port"), reuse_addr = True)
     server.start()
 

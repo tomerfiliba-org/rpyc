@@ -123,13 +123,13 @@ _connection_id_generator = itertools.count(1)
 
 class Connection(object):
     """The RPyC *connection* (AKA *protocol*).
-    
+
     :param service: the :class:`Service <rpyc.core.service.Service>` to expose
     :param channel: the :class:`Channel <rpyc.core.channel.Channel>` over which messages are passed
-    :param config: the connection's configuration dict (overriding parameters 
+    :param config: the connection's configuration dict (overriding parameters
                    from the :data:`default configuration <DEFAULT_CONFIG>`)
     :param _lazy: whether or not to initialize the service with the creation of
-                  the connection. Default is True. If set to False, you will 
+                  the connection. Default is True. If set to False, you will
                   need to call :func:`_init_service` manually later
     """
 
@@ -217,13 +217,13 @@ class Connection(object):
         return self._channel.fileno()
 
     def ping(self, data = None, timeout = 3):
-        """       
+        """
         Asserts that the other party is functioning properly, by making sure
         the *data* is echoed back before the *timeout* expires
-        
+
         :param data: the data to send (leave ``None`` for the default buffer)
         :param timeout: the maximal time to wait for echo
-        
+
         :raises: :class:`PingError` if the echoed data does not match
         """
         if data is None:
@@ -404,8 +404,8 @@ class Connection(object):
         """Serves a single request or reply that arrives within the given
         time frame (default is 1 sec). Note that the dispatching of a request
         might trigger multiple (nested) requests, thus this function may be
-        reentrant. 
-        
+        reentrant.
+
         :returns: ``True`` if a request or reply were received, ``False``
                   otherwise.
         """
@@ -416,7 +416,7 @@ class Connection(object):
         return True
 
     def serve_all(self):
-        """Serves all requests and replies for as long as the connection is 
+        """Serves all requests and replies for as long as the connection is
         alive."""
         try:
             while True:
@@ -431,7 +431,7 @@ class Connection(object):
 
     def poll_all(self, timeout = 0):
         """Serves all requests and replies that arrive within the given interval.
-        
+
         :returns: ``True`` if at least a single transaction was served, ``False`` otherwise
         """
         at_least_once = False

@@ -1,11 +1,11 @@
 """
 **Vinegar** ("when things go sour") is a safe serializer for exceptions.
 The :data`configuration parameters <rpyc.core.protocol.DEFAULT_CONFIG>` control
-its mode of operation, for instance, whether to allow *old-style* exceptions 
+its mode of operation, for instance, whether to allow *old-style* exceptions
 (that do not derive from ``Exception``), whether to allow the :func:`load` to
-import custom modules (imposes a security risk), etc. 
+import custom modules (imposes a security risk), etc.
 
-Note that by changing the configuration parameters, this module can be made 
+Note that by changing the configuration parameters, this module can be made
 non-secure. Keep this in mind.
 """
 import sys
@@ -32,18 +32,18 @@ except NameError:
 
 def dump(typ, val, tb, include_local_traceback):
     """Dumps the given exceptions info, as returned by ``sys.exc_info()``
-    
+
     :param typ: the exception's type (class)
     :param val: the exceptions' value (instance)
     :param tb: the exception's traceback (a ``traceback`` object)
     :param include_local_traceback: whether or not to include the local traceback
                                     in the dumped info. This may expose the other
-                                    side to implementation details (code) and 
+                                    side to implementation details (code) and
                                     package structure, and may theoretically impose
                                     a security risk.
-    
-    :returns: A tuple of ``((module name, exception name), arguments, attributes, 
-              traceback text)``. This tuple can be safely passed to 
+
+    :returns: A tuple of ``((module name, exception name), arguments, attributes,
+              traceback text)``. This tuple can be safely passed to
               :func:`brine.dump <rpyc.core.brine.dump>`
     """
     if typ is StopIteration:
@@ -80,24 +80,24 @@ def dump(typ, val, tb, include_local_traceback):
 
 def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantiate_oldstyle_exceptions):
     """
-    Loads a dumped exception (the tuple returned by :func:`dump`) info a 
+    Loads a dumped exception (the tuple returned by :func:`dump`) info a
     throwable exception object. If the exception cannot be instantiated for any
-    reason (i.e., the security parameters do not allow it, or the exception 
+    reason (i.e., the security parameters do not allow it, or the exception
     class simply doesn't exist on the local machine), a :class:`GenericException`
     instance will be returned instead, containing all of the original exception's
     details.
-    
+
     :param val: the dumped exception
-    :param import_custom_exceptions: whether to allow this function to import custom modules 
+    :param import_custom_exceptions: whether to allow this function to import custom modules
                                      (imposes a security risk)
-    :param instantiate_custom_exceptions: whether to allow this function to instantiate "custom 
+    :param instantiate_custom_exceptions: whether to allow this function to instantiate "custom
                                           exceptions" (i.e., not one of the built-in exceptions,
                                           such as ``ValueError``, ``OSError``, etc.)
-    :param instantiate_oldstyle_exceptions: whether to allow this function to instantiate exception 
+    :param instantiate_oldstyle_exceptions: whether to allow this function to instantiate exception
                                             classes that do not derive from ``BaseException``.
-                                            This is required to support old-style exceptions. 
+                                            This is required to support old-style exceptions.
                                             Not applicable for Python 3 and above.
-    
+
     :returns: A throwable exception object
     """
     if val == consts.EXC_STOP_ITERATION:
@@ -111,7 +111,7 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
             __import__(modname, None, None, "*")
         except Exception:
             pass
-    
+
     if instantiate_custom_exceptions:
         if modname in sys.modules:
             cls = getattr(sys.modules[modname], clsname, None)
@@ -144,7 +144,7 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
         cls = _generic_exceptions_cache[fullname]
 
     cls = _get_exception_class(cls)
-    
+
     # support old-style exception classes
     if ClassType is not type and isinstance(cls, ClassType):
         exc = InstanceType(cls)
@@ -183,7 +183,7 @@ def _get_exception_class(cls):
             return text
         def __repr__(self):
             return str(self)
-    
+
     Derived.__name__ = cls.__name__
     Derived.__module__ = cls.__module__
     _exception_classes_cache[cls] = Derived

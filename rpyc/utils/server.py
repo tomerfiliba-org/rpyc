@@ -23,30 +23,30 @@ signal = safe_import("signal")
 
 class Server(object):
     """Base server implementation
-    
+
     :param service: the :class:`service <service.Service>` to expose
-    :param hostname: the host to bind to. Default is IPADDR_ANY, but you may 
+    :param hostname: the host to bind to. Default is IPADDR_ANY, but you may
                      want to restrict it only to ``localhost`` in some setups
     :param ipv6: whether to create an IPv6 or IPv4 socket. The default is IPv4
     :param port: the TCP port to bind to
     :param backlog: the socket's backlog (passed to ``listen()``)
-    :param reuse_addr: whether or not to create the socket with the ``SO_REUSEADDR`` option set. 
-    :param authenticator: the :ref:`api-authenticators` to use. If ``None``, no authentication 
+    :param reuse_addr: whether or not to create the socket with the ``SO_REUSEADDR`` option set.
+    :param authenticator: the :ref:`api-authenticators` to use. If ``None``, no authentication
                           is performed.
-    :param registrar: the :class:`registrar <rpyc.utils.registry.RegistryClient>` to use. 
+    :param registrar: the :class:`registrar <rpyc.utils.registry.RegistryClient>` to use.
                           If ``None``, a default :class:`rpyc.utils.registry.UDPRegistryClient`
                           will be used
-    :param auto_register: whether or not to register using the *registrar*. By default, the 
-                          server will attempt to register only if a registrar was explicitly given. 
-    :param protocol_config: the :data:`configuration dictionary <rpyc.core.protocol.DEFAULT_CONFIG>` 
+    :param auto_register: whether or not to register using the *registrar*. By default, the
+                          server will attempt to register only if a registrar was explicitly given.
+    :param protocol_config: the :data:`configuration dictionary <rpyc.core.protocol.DEFAULT_CONFIG>`
                             that is passed to the RPyC connection
-    :param logger: the ``logger`` to use (of the built-in ``logging`` module). If ``None``, a 
+    :param logger: the ``logger`` to use (of the built-in ``logging`` module). If ``None``, a
                    default logger will be created.
     :param listener_timeout: the timeout of the listener socket; set to ``None`` to disable (e.g.
                              on embedded platforms with limited battery)
     """
-    
-    def __init__(self, service, hostname = "", ipv6 = False, port = 0, 
+
+    def __init__(self, service, hostname = "", ipv6 = False, port = 0,
             backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
             auto_register = None, protocol_config = {}, logger = None, listener_timeout = 0.5):
         self.active = False
@@ -68,7 +68,7 @@ class Server(object):
             self.listener = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
         else:
             self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        
+
         if reuse_addr and sys.platform != "win32":
             # warning: reuseaddr is not what you'd expect on windows!
             # it allows you to bind an already bound port, resulting in "unexpected behavior"
@@ -92,7 +92,7 @@ class Server(object):
         self.registrar = registrar
 
     def close(self):
-        """Closes (terminates) the server and all of its clients. If applicable, 
+        """Closes (terminates) the server and all of its clients. If applicable,
         also unregisters from the registry server"""
         if self._closed:
             return
@@ -190,7 +190,7 @@ class Server(object):
         else:
             self.logger.info("welcome [%s]:%s", h, p)
         try:
-            config = dict(self.protocol_config, credentials = credentials, 
+            config = dict(self.protocol_config, credentials = credentials,
                 endpoints = (sock.getsockname(), addrinfo), logger = self.logger)
             conn = Connection(self.service, Channel(SocketStream(sock)),
                 config = config, _lazy = True)
@@ -202,7 +202,7 @@ class Server(object):
     def _handle_connection(self, conn):
         """This methoed should implement the server's logic."""
         conn.serve_all()
-        
+
     def _bg_register(self):
         interval = self.registrar.REREGISTER_INTERVAL
         self.logger.info("started background auto-register thread "
@@ -259,7 +259,7 @@ class Server(object):
 class OneShotServer(Server):
     """
     A server that handles a single connection (blockingly), and terminates after that
-    
+
     Parameters: see :class:`Server`
     """
     def _accept_method(self, sock):
@@ -272,7 +272,7 @@ class ThreadedServer(Server):
     """
     A server that spawns a thread for each connection. Works on any platform
     that supports threads.
-    
+
     Parameters: see :class:`Server`
     """
     def _accept_method(self, sock):
@@ -289,7 +289,7 @@ class ThreadPoolServer(Server):
     up to request_batch_size requests from the same connection in one go, before it goes to
     the next connection with pending requests. By default, self.request_batch_size
     is set to 10 and it can be overwritten in the constructor arguments.
-    
+
     Contributed by *@sponce*
 
     Parameters: see :class:`Server`
@@ -496,12 +496,12 @@ class ThreadPoolServer(Server):
 
 class ForkingServer(Server):
     """
-    A server that forks a child process for each connection. Available on 
+    A server that forks a child process for each connection. Available on
     POSIX compatible systems only.
-    
+
     Parameters: see :class:`Server`
     """
-    
+
     def __init__(self, *args, **kwargs):
         if not signal:
             raise OSError("ForkingServer not supported on this platform")

@@ -1,5 +1,5 @@
 import os
-import select    
+import select
 import threading
 
 

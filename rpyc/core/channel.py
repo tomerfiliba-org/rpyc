@@ -12,11 +12,11 @@ zlib = safe_import("zlib")
 
 class Channel(object):
     """Channel implementation.
-    
-    Note: In order to avoid problems with all sorts of line-buffered transports, 
+
+    Note: In order to avoid problems with all sorts of line-buffered transports,
     we deliberately add ``\\n`` at the end of each frame.
     """
-    
+
     COMPRESSION_THRESHOLD = 3000
     COMPRESSION_LEVEL = 1
     FRAME_HEADER = Struct("!LB")
@@ -44,7 +44,7 @@ class Channel(object):
     def recv(self):
         """Receives the next packet (or *frame*) from the underlying stream.
         This method will block until the packet has been read completely
-        
+
         :returns: string of data
         """
         header = self.stream.read(self.FRAME_HEADER.size)
@@ -54,9 +54,9 @@ class Channel(object):
             data = zlib.decompress(data)
         return data
     def send(self, data):
-        """Sends the given string of data as a packet over the underlying 
+        """Sends the given string of data as a packet over the underlying
         stream. Blocks until the packet has been sent.
-        
+
         :param data: the byte string to send as a packet
         """
         if self.compress and len(data) > self.COMPRESSION_THRESHOLD:

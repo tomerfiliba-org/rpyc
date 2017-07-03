@@ -7,7 +7,7 @@ class AsyncResultTimeout(Exception):
 
 class AsyncResult(object):
     """*AsyncResult* represents a computation that occurs in the background and
-    will eventually have a result. Use the :attr:`value` property to access the 
+    will eventually have a result. Use the :attr:`value` property to access the
     result (which will block if the result has not yet arrived).
     """
     __slots__ = ["_conn", "_is_ready", "_is_exc", "_callbacks", "_obj", "_ttl"]
@@ -28,7 +28,7 @@ class AsyncResult(object):
         else:
             state = "pending"
         return "<AsyncResult object (%s) at 0x%08x>" % (state, id(self))
-    
+
     def __call__(self, is_exc, obj):
         if self.expired:
             return
@@ -56,13 +56,13 @@ class AsyncResult(object):
                     break
                 if timeout <= 0:
                     raise AsyncResultTimeout("result expired")
-    
+
     def add_callback(self, func):
-        """Adds a callback to be invoked when the result arrives. The callback 
+        """Adds a callback to be invoked when the result arrives. The callback
         function takes a single argument, which is the current AsyncResult
         (``self``). If the result has already arrived, the function is invoked
         immediately.
-        
+
         :param func: the callback function to add
         """
         if self._is_ready:
@@ -72,7 +72,7 @@ class AsyncResult(object):
     def set_expiry(self, timeout):
         """Sets the expiry time (in seconds, relative to now) or ``None`` for
         unlimited time
-        
+
         :param timeout: the expiry time in seconds or ``None``
         """
         if timeout is None:
@@ -106,8 +106,8 @@ class AsyncResult(object):
     def value(self):
         """Returns the result of the operation. If the result has not yet
         arrived, accessing this property will wait for it. If the result does
-        not arrive before the expiry time elapses, :class:`AsyncResultTimeout` 
-        is raised. If the returned result is an exception, it will be raised 
+        not arrive before the expiry time elapses, :class:`AsyncResultTimeout`
+        is raised. If the returned result is an exception, it will be raised
         here. Otherwise, the result is returned directly.
         """
         self.wait()

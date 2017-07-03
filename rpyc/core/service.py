@@ -1,8 +1,8 @@
 """
 Services are the heart of RPyC: each side of the connection exposes a *service*,
-which define the capabilities available to the other side. 
+which define the capabilities available to the other side.
 
-Note that the services by both parties need not be symmetric, e.g., one side may 
+Note that the services by both parties need not be symmetric, e.g., one side may
 exposed *service A*, while the other may expose *service B*. As long as the two
 can interoperate, you're good to go.
 """
@@ -12,38 +12,38 @@ from rpyc.lib.compat import execute, is_py3k
 class Service(object):
     """The service base-class. Derive from this class to implement custom RPyC
     services:
-    
+
     * The name of the class implementing the ``Foo`` service should match the
       pattern ``FooService`` (suffixed by the word 'Service') ::
-      
+
           class FooService(Service):
               pass
-          
+
           FooService.get_service_name() # 'FOO'
           FooService.get_service_aliases() # ['FOO']
-    
+
     * To supply a different name or aliases, use the ``ALIASES`` class attribute ::
-    
+
           class Foobar(Service):
               ALIASES = ["foo", "bar", "lalaland"]
-          
+
           Foobar.get_service_name() # 'FOO'
           Foobar.get_service_aliases() # ['FOO', 'BAR', 'LALALAND']
-    
+
     * Override :func:`on_connect` to perform custom initialization
-    
+
     * Override :func:`on_disconnect` to perform custom finalization
-    
+
     * To add exposed methods or attributes, simply define them normally,
       but prefix their name by ``exposed_``, e.g. ::
-    
+
           class FooService(Service):
               def exposed_add(self, x, y):
                   return x + y
-    
+
     * All other names (not prefixed by ``exposed_``) are local (not accessible
       to the other party)
-    
+
     .. note::
        You can override ``_rpyc_getattr``, ``_rpyc_setattr`` and ``_rpyc_delattr``
        to change attribute lookup -- but beware of possible **security implications!**
@@ -83,7 +83,7 @@ class Service(object):
         return (name,)
     @classmethod
     def get_service_name(cls):
-        """returns the canonical name of the service (which is its first 
+        """returns the canonical name of the service (which is its first
         alias)"""
         return cls.get_service_aliases()[0]
 
@@ -97,9 +97,9 @@ class VoidService(Service):
 
 
 class ModuleNamespace(object):
-    """used by the :class:`SlaveService` to implement the magical 
+    """used by the :class:`SlaveService` to implement the magical
     'module namespace'"""
-    
+
     __slots__ = ["__getmodule", "__cache", "__weakref__"]
     def __init__(self, getmodule):
         self.__getmodule = getmodule
@@ -122,9 +122,9 @@ class ModuleNamespace(object):
 
 class SlaveService(Service):
     """The SlaveService allows the other side to perform arbitrary imports and
-    execution arbitrary code on the server. This is provided for compatibility 
+    execution arbitrary code on the server. This is provided for compatibility
     with the classic RPyC (2.6) modus operandi.
-    
+
     This service is very useful in local, secure networks, but it exposes
     a **major security risk** otherwise."""
     __slots__ = ["exposed_namespace"]
