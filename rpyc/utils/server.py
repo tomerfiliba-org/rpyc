@@ -234,6 +234,9 @@ class Server(object):
     def start(self):
         """Starts the server (blocking). Use :meth:`close` to stop"""
         self.listener.listen(self.backlog)
+        # On Jython, if binding to port 0, we can get the correct port only
+        # once `listen()` was called, see #156:
+        self.port = self.listener.getsockname()[1]
         self.logger.info("server started on [%s]:%s", self.host, self.port)
         self.active = True
         if self.auto_register:
