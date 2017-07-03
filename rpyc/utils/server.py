@@ -464,7 +464,8 @@ class ThreadPoolServer(Server):
             credentials = None
         # build a connection
         h, p = sock.getpeername()
-        config = dict(self.protocol_config, credentials=credentials, connid="%s:%d"%(h, p))
+        config = dict(self.protocol_config, credentials=credentials, connid="%s:%d"%(h, p),
+                      endpoints=(sock.getsockname(), (h, p)))
         return Connection(self.service, Channel(SocketStream(sock)), config=config)
 
     def _accept_method(self, sock):
