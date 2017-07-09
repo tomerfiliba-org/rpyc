@@ -49,6 +49,9 @@ class SSLAuthenticator(object):
 
     Refer to `ssl.wrap_socket <http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket>`_
     for more info.
+
+    Clients can connect to this authenticator via
+    :func:`rpyc.utils.classic.ssl_connect`.
     """
 
     def __init__(self, keyfile, certfile, ca_certs = None, cert_reqs = None,
