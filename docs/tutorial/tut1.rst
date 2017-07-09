@@ -14,20 +14,10 @@ Let's start with the basics: running a server. In this tutorial we'll run both t
 the client on the same machine (the ``localhost``). The classic server can be
 started using::
 
-    python bin/rpyc_classic.py
+    $ python bin/rpyc_classic.py
+    INFO:SLAVE/18812:server started on [0.0.0.0]:18812
 
-On my Windows box, running the server is as simple as double-clicking it in
-Explorer:
-
-.. figure:: _static/running-classic-server.png
-   :align: center
-
-   Starting an RPyC server on WinXP
-
-.. note::
-   The location of the script has moved since that screenshot was taken. The
-   new location is ``bin/rpyc_classic.py``.
-   Also, try running ``bin/rpyc_classic.py --help`` for more command-line options.
+On windows, the server can be started by double-clicking the script file.
 
 The first (and only) line shows the parameters this server is running with: ``SLAVE``
 indicates the ``SlaveService`` (you'll learn more about :ref:`services <services>` later on),
