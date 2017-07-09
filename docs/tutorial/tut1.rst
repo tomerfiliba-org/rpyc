@@ -11,8 +11,13 @@ if you were not -- we'll make sure you feel at home in a moment ;)
 Running a Server
 ----------------
 Let's start with the basics: running a server. In this tutorial we'll run both the server and
-the client on the same machine (the ``localhost``). On my Windows box, running the server is
-as simple as double-clicking it in Explorer:
+the client on the same machine (the ``localhost``). The classic server can be
+started using::
+
+    python bin/rpyc_classic.py
+
+On my Windows box, running the server is as simple as double-clicking it in
+Explorer:
 
 .. figure:: _static/running-classic-server.png
    :align: center
@@ -20,8 +25,9 @@ as simple as double-clicking it in Explorer:
    Starting an RPyC server on WinXP
 
 .. note::
-   Prior to version 3.1.0 ``rpyc_classic.py`` was known as ``classic_server.py``.
-   Also, try running ``rpyc_classic.py --help`` for more command-line options.
+   The location of the script has moved since that screenshot was taken. The
+   new location is ``bin/rpyc_classic.py``.
+   Also, try running ``bin/rpyc_classic.py --help`` for more command-line options.
 
 The first (and only) line shows the parameters this server is running with: ``SLAVE``
 indicates the ``SlaveService`` (you'll learn more about :ref:`services <services>` later on),
