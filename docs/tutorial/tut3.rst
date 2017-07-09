@@ -41,6 +41,12 @@ with ``exposed_``, the attribute will be remotely accessible, otherwise it is on
 locally accessible. In this example, clients will be able to call ``get_answer``,
 but not ``get_question``, as we'll see in a moment.
 
+.. note::
+    The server creates a ``Service`` object for every instance. This means
+    that instance variables are not shared between different clients. If you
+    do need shared state, you have to use globals or subclass the ``Server``
+    class to pass additional variables to new ``Service`` objects.
+
 To expose your service to the world, however, you will need to start a server. There are many
 ways to do that, but the simplest is ::
 
@@ -139,10 +145,3 @@ between the parties, both services must be "compatible".
 
 
 Continue to :ref:`part 4 <tut4>`...
-
-
-
-
-
-
-
