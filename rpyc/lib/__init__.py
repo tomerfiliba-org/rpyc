@@ -48,8 +48,8 @@ def setup_logger(quiet=False, logfile=None):
     else:
         opts['level'] = logging.DEBUG
     if logfile:
-        opts['filename'] = logfile
-    logging.basicConfig(**opts)
+        opts['file'] = logfile
+    logging.basicConfig(format="%(asctime)s|%(threadName)-25s|%(name)-30s|%(levelname)-5s|%(funcName)-30s |%(message)s", **opts)
 
 
 class hybridmethod(object):
