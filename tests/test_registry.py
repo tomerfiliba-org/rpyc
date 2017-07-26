@@ -63,11 +63,14 @@ class TestTcpRegistry(BaseRegistryTest, unittest.TestCase):
         return TCPRegistryClient("localhost")
 
 class TestUdpRegistry(BaseRegistryTest, unittest.TestCase):
+    ip = '0.0.0.0'
+    
     def _get_server(self):
-        return UDPRegistryServer(pruning_timeout=PRUNING_TIMEOUT)
+        return UDPRegistryServer(pruning_timeout=PRUNING_TIMEOUT,
+                                host=self.__class__.ip)
 
     def _get_client(self):
-        return UDPRegistryClient()
+        return UDPRegistryClient(ip=self.__class__.ip)
 
 
 if __name__ == "__main__":
