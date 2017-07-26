@@ -32,9 +32,8 @@ return an ``AsyncResult`` ::
     res = async_sleep(5)
 
 Which means your client can continue working normally, while the server
-performs the request. Do note, however, that the server is "busy" sleeping,
-and will not respond to new requests until the operation completes (unless you
-started your request on a separate thread)
+performs the request. There are several pitfalls using :func:`async
+<pyc.utils.helpers.async>`, be sure to read the Notes_ section!
 
 You can test for completion using ``res.ready``, wait for completion using ``res.wait()``,
 and get the result using ``res.value``. You may set a timeout for the result using
@@ -53,6 +52,10 @@ Use ::
 
     myfunc_async = async(conn.root.myfunc)
     res = myfunc_async(1,2,3)
+
+Furthermore, async requests provide **no guarantee on execution order**. In
+particular, multiple subsequent async requests may be executed in reverse
+order.
 
 
 timed()

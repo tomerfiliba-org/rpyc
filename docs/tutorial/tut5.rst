@@ -14,6 +14,8 @@ Instead of getting the result of the call, you get a special object known as an
 ``AsyncResult`` (also known as a `"future" or "promise" <http://en.wikipedia.org/wiki/Futures_and_promises>`_]),
 that will **eventually** hold the result.
 
+Note that there is no guarantee on execution order for async requests!
+
 In order to turn the invocation of a remote function (or any callable object) asynchronous,
 all you have to do is wrap it with :func:`async <rpyc.utils.helpers.async>`, which creates a
 wrapper function that will return an ``AsyncResult`` instead of blocking. ``AsyncResult``
@@ -214,6 +216,3 @@ incoming requests). Here's an example of that::
         new stat: (33188, 1564681L, 2051L, 1, 1011, 1011, 6L, 1225205197, 1225205218, 1225205218)
     <__main__.exposed_FileMonitor object at 0xb7a7a52c>
     >>>
-
-
-

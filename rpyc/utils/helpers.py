@@ -125,6 +125,11 @@ def async(proxy):
 
            a_foo = rpyc.async(foo)
            a_foo(5)
+
+    .. note::
+        Furthermore, async requests provide **no guarantee on execution
+        order**. In particular, multiple subsequent async requests may be
+        executed in reverse order.
     """
     pid = id(proxy)
     if pid in _async_proxies_cache:
