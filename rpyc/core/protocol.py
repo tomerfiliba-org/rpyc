@@ -486,8 +486,8 @@ class Connection(object):
 
             # lock or wait for signal
             if self._sync_lock.acquire(False):
-                self._sync_event.clear()
                 try:
+                    self._sync_event.clear()
                     self.serve(remaining_time)
                 finally:
                     self._sync_lock.release()
