@@ -1,3 +1,11 @@
+3.4.3
+-----
+Date: 26.07.2017
+
+* Add missing endpoints config in ThreadPoolServer (#222)
+* Fix jython support (#156,#171)
+* Improve documentation (#158,#185,#189,#198 and more)
+
 3.4.2
 -----
 Date: 14.06.2017
