@@ -61,12 +61,9 @@ class Service(object):
         (must not perform any IO on the connection)"""
         pass
 
-    def _rpyc_getattr(self, name):
-        if name.startswith("exposed_"):
-            name = name
-        else:
-            name = "exposed_" + name
-        return getattr(self, name)
+    # Using default defined in 'protocol.Connection._access_attr' for:
+    # def _rpyc_getattr(self, name):
+
     def _rpyc_delattr(self, name):
         raise AttributeError("access denied")
     def _rpyc_setattr(self, name, value):
