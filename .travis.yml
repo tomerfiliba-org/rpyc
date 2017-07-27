@@ -12,6 +12,8 @@ python:
     - "3.6"
     - "3.7-dev"
     - "nightly"
+    - pypy
+    - jython
 
 install:
     - pip install -e git+git://github.com/tomerfiliba/plumbum.git#egg=plumbum
