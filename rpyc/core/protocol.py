@@ -8,7 +8,7 @@ import socket
 import time
 import gc
 
-from threading import Lock, RLock, Event
+from threading import Lock, RLock, Event, Thread
 from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
@@ -337,17 +337,15 @@ class Connection(object):
     # dispatching
     #
     def _dispatch_request(self, seq, raw_args):
-        logger = self._config["logger"]
         try:
             handler, args = raw_args
-            if logger:
-                logger.debug("dispatching: %r (%r)", handler, seq)
             args = self._unbox(args)
             res = self._HANDLERS[handler](self, *args)
         except:
             # need to catch old style exceptions too
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
+            logger = self._config["logger"]
             if logger and t is not StopIteration:
                 logger.debug("Exception caught", exc_info=True)
             if t is SystemExit and self._config["propagate_SystemExit_locally"]:
@@ -404,17 +402,29 @@ class Connection(object):
         else:
             raise ValueError("invalid message type: %r" % (msg,))
 
+    def sync_recv_and_dispatch(self, timeout, wait_for_lock):
+        # lock or wait for signal
+        if self._sync_lock.acquire(False):
+            try:
+                self._sync_event.clear()
+                data = self._recv(timeout, wait_for_lock = False)
+                if not data:
+                    return False
+                self._dispatch(data)
+                return True
+            finally:
+                self._sync_lock.release()
+                self._sync_event.set()
+        else:
+            self._sync_event.wait()
+
     def poll(self, timeout = 0):
         """Serves a single transaction, should one arrives in the given
         interval. Note that handling a request/reply may trigger nested
         requests, which are all part of a single transaction.
 
         :returns: ``True`` if a transaction was served, ``False`` otherwise"""
-        data = self._recv(timeout, wait_for_lock = False)
-        if not data:
-            return False
-        self._dispatch(data)
-        return True
+        return self.sync_recv_and_dispatch(timeout, wait_for_lock=False)
 
     def serve(self, timeout = 1):
         """Serves a single request or reply that arrives within the given
@@ -425,18 +435,14 @@ class Connection(object):
         :returns: ``True`` if a request or reply were received, ``False``
                   otherwise.
         """
-        data = self._recv(timeout, wait_for_lock = True)
-        if not data:
-            return False
-        self._dispatch(data)
-        return True
+        return self.sync_recv_and_dispatch(timeout, wait_for_lock=True)
 
     def serve_all(self):
         """Serves all requests and replies for as long as the connection is
         alive."""
         try:
             while True:
-                self.serve(0.1)
+                self.serve(None)
         except (socket.error, select_error, IOError):
             if not self.closed:
                 raise
@@ -445,7 +451,34 @@ class Connection(object):
         finally:
             self.close()
 
-    def poll_all(self, timeout = 0):
+    def serve_threaded(self, thread_count=10):
+        def _thread_target():
+            try:
+                while True:
+                    self.serve(None)
+            except (socket.error, select_error, IOError):
+                if not self.closed:
+                    raise
+            except EOFError:
+                pass
+
+        threads = []
+
+        """Serves all requests and replies for as long as the connection is
+        alive."""
+        try:
+            for _ in range(thread_count):
+                thread = Thread(target=_thread_target)
+                thread.daemon = True
+                thread.start()
+                threads.append(thread)
+
+            for thread in threads:
+                thread.join()
+        finally:
+            self.close()
+
+    def poll_all(self, timeout=0):
         """Serves all requests and replies that arrive within the given interval.
 
         :returns: ``True`` if at least a single transaction was served, ``False`` otherwise
@@ -476,24 +509,10 @@ class Connection(object):
         """
         seq = self._get_seq_id()
         self._send_request(seq, handler, args)
-        start_time = time.time()
+
         timeout = self._config["sync_request_timeout"]
-
         while seq not in self._sync_replies:
-            remaining_time = timeout - (time.time() - start_time)
-            if remaining_time < 0:
-                raise socket.timeout
-
-            # lock or wait for signal
-            if self._sync_lock.acquire(False):
-                try:
-                    self._sync_event.clear()
-                    self.serve(remaining_time)
-                finally:
-                    self._sync_lock.release()
-                    self._sync_event.set()
-            else:
-                self._sync_event.wait(remaining_time)
+            self.sync_recv_and_dispatch(timeout, True)
 
         isexc, obj = self._sync_replies.pop(seq)
         if isexc:
