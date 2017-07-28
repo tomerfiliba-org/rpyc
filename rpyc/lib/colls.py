@@ -73,13 +73,13 @@ class RefCountingColl(object):
     def clear(self):
         with self._lock:
             self._dict.clear()
-    def decref(self, key):
+    def decref(self, key, count=1):
         with self._lock:
             slot = self._dict[key]
-            if slot[1] < 1:
+            if slot[1] < count:
                 del self._dict[key]
             else:
-                slot[1] -= 1
+                slot[1] -= count
                 self._dict[key] = slot
     def __getitem__(self, key):
         with self._lock:

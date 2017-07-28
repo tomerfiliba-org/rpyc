@@ -124,14 +124,13 @@ class BaseNetref(object):
         self.____refcount__ = 1
 
     def __del__(self):
-        for _ in xrange(self.____refcount__):
-            try:
-                asyncreq(self, consts.HANDLE_DEL)
-            except Exception:
-                # raised in a destructor, most likely on program termination,
-                # when the connection might have already been closed.
-                # it's safe to ignore all exceptions here
-                pass
+        try:
+            asyncreq(self, consts.HANDLE_DEL, self.____refcount__)
+        except Exception:
+            # raised in a destructor, most likely on program termination,
+            # when the connection might have already been closed.
+            # it's safe to ignore all exceptions here
+            pass
 
     def __getattribute__(self, name):
         if name in _local_netref_attrs:
