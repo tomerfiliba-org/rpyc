@@ -1,3 +1,4 @@
+import os
 import rpyc
 import time
 import tempfile
@@ -31,9 +32,8 @@ class Test_ThreadedServer(unittest.TestCase):
 
 class Test_ThreadedServerOverUnixSocket(unittest.TestCase):
 
-    socket_path = tempfile.mktemp()
-
     def setUp(self):
+        self.socket_path = tempfile.mktemp()
         self.server = ThreadedServer(SlaveService, socket_path=self.socket_path, auto_register=False)
         self.server.logger.quiet = False
         t = threading.Thread(target=self.server.start)
@@ -43,6 +43,7 @@ class Test_ThreadedServerOverUnixSocket(unittest.TestCase):
 
     def tearDown(self):
         self.server.close()
+        os.remove(self.socket_path)
 
     def test_connection(self):
         c = rpyc.classic.unix_connect(self.socket_path)
