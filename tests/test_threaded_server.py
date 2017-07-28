@@ -25,7 +25,7 @@ class BaseServerTest(object):
     def tearDown(self):
         self.server.close()
 
-    def test_conenction(self):
+    def test_connection(self):
         c = self._create_client()
         print( c.modules.sys )
         print( c.modules["xml.dom.minidom"].parseString("<a/>") )
