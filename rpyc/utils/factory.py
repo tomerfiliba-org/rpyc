@@ -208,8 +208,17 @@ def connect_by_service(service_name, host = None, service = VoidService, config 
     :raises: ``DiscoveryError`` if no server is found
     :returns: an RPyC connection
     """
-    host, port = discover(service_name, host = host)[0]
-    return connect(host, port, service, config = config)
+    # The registry server may have multiple services registered for the same service name,
+    # some of which could be dead. We iterate over the list returned and return the first
+    # one we could connect to. If none of the registered servers is responsive we re-throw
+    # the exception
+    addrs = discover(service_name, host = host)
+    for host, port in addrs:
+        try:
+            return connect(host, port, service, config = config)
+        except socket.error:
+            pass
+    raise DiscoveryError("All services are down: %s" % (addrs,))
 
 def connect_subproc(args, service = VoidService, config = {}):
     """runs an rpyc server on a child process that and connects to it over
