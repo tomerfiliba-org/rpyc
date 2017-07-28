@@ -106,7 +106,7 @@ class RegistryServer(object):
     def cmd_unregister(self, host, port):
         """implementation of the ``unregister`` command"""
         self.logger.debug("unregistering %s:%s", host, port)
-        for name in self.services.keys():
+        for name in list(self.services.keys()):
             self._remove_service(name, (host, port))
         return "OK"
 
