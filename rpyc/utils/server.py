@@ -48,7 +48,8 @@ class Server(object):
 
     def __init__(self, service, hostname = "", ipv6 = False, port = 0,
             backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
-            auto_register = None, protocol_config = {}, logger = None, listener_timeout = 0.5):
+            auto_register = None, protocol_config = {}, logger = None, listener_timeout = 0.5,
+            socket_path = None):
         self.active = False
         self._closed = False
         self.service = service
@@ -61,29 +62,37 @@ class Server(object):
         self.protocol_config = protocol_config
         self.clients = set()
 
-        if ipv6:
-            if hostname == "localhost" and sys.platform != "win32":
-                # on windows, you should bind to localhost even for ipv6
-                hostname = "localhost6"
-            self.listener = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+        if socket_path is not None:
+            if hostname != "" or port != 0 or ipv6 != False:
+                raise ValueError("socket_path is mutually exclusive with: hostname, port, ipv6")
+            self.listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+            self.listener.bind(socket_path)
+            # set the self.port to the path as it's used for the registry and logging
+            self.host, self.port = "", socket_path
         else:
-            self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if ipv6:
+                if hostname == "localhost" and sys.platform != "win32":
+                    # on windows, you should bind to localhost even for ipv6
+                    hostname = "localhost6"
+                self.listener = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            else:
+                self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        if reuse_addr and sys.platform != "win32":
-            # warning: reuseaddr is not what you'd expect on windows!
-            # it allows you to bind an already bound port, resulting in "unexpected behavior"
-            # (quoting MSDN)
-            self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            if reuse_addr and sys.platform != "win32":
+                # warning: reuseaddr is not what you'd expect on windows!
+                # it allows you to bind an already bound port, resulting in "unexpected behavior"
+                # (quoting MSDN)
+                self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        self.listener.bind((hostname, port))
-        self.listener.settimeout(listener_timeout)
+            self.listener.bind((hostname, port))
+            self.listener.settimeout(listener_timeout)
 
-        # hack for IPv6 (the tuple can be longer than 2)
-        sockname = self.listener.getsockname()
-        self.host, self.port = sockname[0], sockname[1]
+            # hack for IPv6 (the tuple can be longer than 2)
+            sockname = self.listener.getsockname()
+            self.host, self.port = sockname[0], sockname[1]
 
         if logger is None:
-            logger = logging.getLogger("%s/%d" % (self.service.get_service_name(), self.port))
+            logger = logging.getLogger("%s/%s" % (self.service.get_service_name(), self.port))
         self.logger = logger
         if "logger" not in self.protocol_config:
             self.protocol_config["logger"] = self.logger
@@ -141,7 +150,7 @@ class Server(object):
             return
 
         sock.setblocking(True)
-        self.logger.info("accepted %s:%s with fd %d", addrinfo[0], addrinfo[1], sock.fileno())
+        self.logger.info("accepted %s with fd %d", addrinfo, sock.fileno())
         self.clients.add(sock)
         self._accept_method(sock)
 
@@ -156,15 +165,13 @@ class Server(object):
         try:
             if self.authenticator:
                 addrinfo = sock.getpeername()
-                h = addrinfo[0]
-                p = addrinfo[1]
                 try:
                     sock2, credentials = self.authenticator(sock)
                 except AuthenticationError:
-                    self.logger.info("[%s]:%s failed to authenticate, rejecting connection", h, p)
+                    self.logger.info("%s failed to authenticate, rejecting connection", addrinfo)
                     return
                 else:
-                    self.logger.info("[%s]:%s authenticated successfully", h, p)
+                    self.logger.info("%s authenticated successfully", addrinfo)
             else:
                 credentials = None
                 sock2 = sock
@@ -183,12 +190,10 @@ class Server(object):
 
     def _serve_client(self, sock, credentials):
         addrinfo = sock.getpeername()
-        h = addrinfo[0]
-        p = addrinfo[1]
         if credentials:
-            self.logger.info("welcome [%s]:%s (%r)", h, p, credentials)
+            self.logger.info("welcome %s (%r)", addrinfo, credentials)
         else:
-            self.logger.info("welcome [%s]:%s", h, p)
+            self.logger.info("welcome %s", addrinfo)
         try:
             config = dict(self.protocol_config, credentials = credentials,
                 endpoints = (sock.getsockname(), addrinfo), logger = self.logger)
@@ -197,7 +202,7 @@ class Server(object):
             conn._init_service()
             self._handle_connection(conn)
         finally:
-            self.logger.info("goodbye [%s]:%s", h, p)
+            self.logger.info("goodbye %s", addrinfo)
 
     def _handle_connection(self, conn):
         """This methoed should implement the server's logic."""
@@ -236,7 +241,10 @@ class Server(object):
         self.listener.listen(self.backlog)
         # On Jython, if binding to port 0, we can get the correct port only
         # once `listen()` was called, see #156:
-        self.port = self.listener.getsockname()[1]
+        if not self.port:
+            # Note that for AF_UNIX the following won't work (but we are safe
+            # since we already saved the socket_path into self.port):
+            self.port = self.listener.getsockname()[1]
         self.logger.info("server started on [%s]:%s", self.host, self.port)
         self.active = True
         if self.auto_register:

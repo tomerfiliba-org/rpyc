@@ -150,6 +150,19 @@ class SocketStream(Stream):
         return cls(cls._connect(host, port, **kwargs))
 
     @classmethod
+    def unix_connect(cls, path, timeout = 3):
+        """factory method that creates a ``SocketStream `` over a unix domain socket
+        located in *path*
+
+        :param path: the path to the unix domain socket
+        :param timeout: socket timeout
+        """
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.settimeout(timeout)
+        s.connect(path)
+        return cls(s)
+
+    @classmethod
     def ssl_connect(cls, host, port, ssl_kwargs, **kwargs):
         """factory method that creates a ``SocketStream`` over an SSL-wrapped
         socket, connected to *host* and *port* with the given credentials.
