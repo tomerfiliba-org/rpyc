@@ -241,7 +241,10 @@ class Server(object):
         self.listener.listen(self.backlog)
         # On Jython, if binding to port 0, we can get the correct port only
         # once `listen()` was called, see #156:
-        self.port = self.listener.getsockname()[1]
+        if not self.port:
+            # Note that for AF_UNIX the following won't work (but we are safe
+            # since we already saved the socket_path into self.port):
+            self.port = self.listener.getsockname()[1]
         self.logger.info("server started on [%s]:%s", self.host, self.port)
         self.active = True
         if self.auto_register:
