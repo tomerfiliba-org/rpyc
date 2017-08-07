@@ -35,7 +35,7 @@ RPyC - Transparent, Symmetric Distributed Computing
    <strong>Sticky</strong><br/>
 
    <p> 2017.07.26:
-   <a class="reference external" href="https://pypi.python.org/pypi/rpyc/3.4.3">Version 3.4.3</a> has been released!.
+   <a class="reference external" href="https://pypi.python.org/pypi/rpyc/3.4.4">Version 3.4.4</a> has been released!.
    More info on the <a href="http://rpyc.readthedocs.org/en/latest/changelog.html">changelog</a>
    </p>
 

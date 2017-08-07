@@ -1,3 +1,15 @@
+3.4.4
+-----
+Date: 07.08.2017
+
+* Fix refcount leakage when unboxing from cache (#196)
+* Fix TypeError when dispatching exceptions on py2 (unicode)
+* Respect ``rpyc_protocol_config`` for default Service getattr (#202)
+* Support unix domain sockets (#100,#208)
+* Use first accessible server in ``connect_by_service`` (#220)
+* Fix deadlock problem with logging (#207,#212)
+
+
 3.4.3
 -----
 Date: 26.07.2017
