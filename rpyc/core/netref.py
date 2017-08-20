@@ -214,6 +214,7 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     def __exit__(self, exc, typ, tb):
         return syncreq(self, consts.HANDLE_CTXEXIT, exc)  # can't pass type nor traceback
 
+    # support for pickling netrefs
     def __reduce_ex__(self, proto):
         # support for pickling netrefs
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
