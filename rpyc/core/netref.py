@@ -21,7 +21,7 @@ LOCAL_ATTRS = frozenset([
     '__dir__', '__doc__', '__getattr__', '__getattribute__', '__hash__', '__instancecheck__',
     '__init__', '__metaclass__', '__module__', '__new__', '__reduce__',
     '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__',
-    '__weakref__', '__dict__', '__methods__', '__exit__',
+    '__weakref__', '__dict__', '__members__', '__methods__', '__exit__',
     '__eq__', '__ne__', '__lt__', '__gt__', '__le__', '__ge__',
 ]) | DELETED_ATTRS
 """the set of attributes that are local to the netref object"""
