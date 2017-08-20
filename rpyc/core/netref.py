@@ -14,7 +14,7 @@ _local_netref_attrs = frozenset([
     '__dir__', '__doc__', '__getattr__', '__getattribute__', '__hash__',
     '__init__', '__metaclass__', '__module__', '__new__', '__reduce__',
     '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__',
-    '__weakref__', '__dict__', '__members__', '__methods__',
+    '__weakref__', '__dict__', '__members__', '__methods__', '__exit__',
 ])
 """the set of attributes that are local to the netref object"""
 
@@ -173,7 +173,8 @@ class BaseNetref(object):
         return syncreq(self, consts.HANDLE_REPR)
     def __str__(self):
         return syncreq(self, consts.HANDLE_STR)
-
+    def __exit__(self, exc, typ, tb):
+        return syncreq(self, consts.HANDLE_CTXEXIT, exc)  # can't pass type nor traceback
     # support for pickling netrefs
     def __reduce_ex__(self, proto):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
