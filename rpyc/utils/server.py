@@ -150,7 +150,7 @@ class Server(object):
             return
 
         sock.setblocking(True)
-        self.logger.info("accepted %s with fd %d", addrinfo, sock.fileno())
+        self.logger.info("accepted %s with fd %s", addrinfo, sock.fileno())
         self.clients.add(sock)
         self._accept_method(sock)
 
