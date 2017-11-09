@@ -7,13 +7,13 @@ import itertools
 import socket
 import time
 import gc
+import inspect
 
 from threading import Lock, RLock, Event, Thread
 from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
-
 class PingError(Exception):
     """The exception raised should :func:`Connection.ping` fail"""
     pass
@@ -23,6 +23,7 @@ DEFAULT_CONFIG = dict(
     allow_safe_attrs = True,
     allow_exposed_attrs = True,
     allow_public_attrs = False,
+    allow_unprotected_calls = True,
     allow_all_attrs = False,
     safe_attrs = set(['__abs__', '__add__', '__and__', '__bool__', '__cmp__', '__contains__',
         '__delitem__', '__delslice__', '__div__', '__divmod__', '__doc__',
@@ -76,6 +77,25 @@ Parameter                                Default value     Description
                                                            (attributes that start with the ``exposed_prefix``)
 ``allow_public_attrs``                   ``False``         Whether to allow public attributes
                                                            (attributes that don't start with ``_``)
+``allow_unprotected_calls``              ``True``          Whether to allow netrefs to be called without special
+                                                           checking. If this is False you will not be able to
+                                                           call *any* Python callables unless one of the
+                                                           following two things are true:
+
+                                                             - The callable is bound to a parent object, and
+                                                               protocol security allows access from the parent
+                                                               to the object via callable.__name__
+                                                             - Protocol security allows the callable.__call__
+                                                               to be accessed, such as via::
+
+                                                                  callable._rpyc_getattr('__call__')
+
+                                                           Since static methods and functions do not have
+                                                           have _rpyc_getattr, they will not be callable
+                                                           unless exported some way.
+
+                                                           Using ``restricted( function, ["__call__"])`` works.
+
 ``allow_all_attrs``                      ``False``         Whether to allow all attributes (including private)
 ``safe_attrs``                           ``set([...])``    The set of attributes considered safe
 ``exposed_prefix``                       ``"exposed_"``    The prefix of exposed attributes
@@ -575,7 +595,11 @@ class Connection(object):
             return name
         return False
 
-    def _access_attr(self, oid, name, args, overrider, param, default):
+    def _access_attr(self, oid, name, args, class_overrider, overrider, param, default):
+        obj = self._local_objects[oid]
+        return self._access_attr_with_obj(obj, name, args, class_overrider, overrider, param, default)
+
+    def _access_attr_with_obj(self, obj, name, args, class_overrider, overrider, param, default):
         if is_py3k:
             if type(name) is bytes:
                 name = str(name, "utf8")
@@ -585,15 +609,70 @@ class Connection(object):
             if type(name) not in (str, unicode):
                 raise TypeError("name must be a string")
             name = str(name) # IronPython issue #10 + py3k issue
-        obj = self._local_objects[oid]
-        accessor = getattr(type(obj), overrider, None)
+
+        #Allow for class bound attributes method. This should handle classmethods and
+        #the like.
+        if inspect.isclass(obj):
+            accessor = getattr(obj, class_overrider, None)
+        else:
+            #This used to get accessor from type(obj) so it wasn't bound.
+            #There is no point in doing that anymore. It didn't work for class objects
+            #and it just made us have to pass an extra parameter for instances.
+            accessor = getattr(obj, overrider, None)
+            nextAccessor = getattr(obj, class_overrider, None)
+            if accessor is not None:
+                try:
+                    return accessor(name, *args)
+                except AttributeError as e:
+                    if nextAccessor is None:
+                        raise
+            if nextAccessor is not None:
+                accessor = nextAccessor
+
         if accessor is None:
             name2 = self._check_attr(obj, name)
             if not self._config[param] or not name2:
                 raise AttributeError("cannot access %r" % (name,))
             accessor = default
             name = name2
-        return accessor(obj, name, *args)
+        return accessor(name, *args)
+
+    def _get_binding(self, function):
+        if is_py3k:
+            parentName="__self__"
+        else:
+            parentName="im_self"
+
+        parent=getattr(function, parentName, None)
+        return parent
+
+    def _smart_call(self, oid, args, kwargs=()):
+        obj = self._local_objects[oid]
+
+        if not self._config["allow_unprotected_calls"]:
+            #First check to see if forward allowed ("__call__" id accessible)
+            try:
+                return self._handle_callattr(oid, "__call__", args, kwargs)
+            except AttributeError as e:
+                #Now check to see if we can backwards check a bound version:
+                parent = self._get_binding(obj)
+
+                if parent is not None: #Recertify safe to call
+                    newObj=self._access_attr_with_obj(parent, obj.__name__, (),
+                                                      "_rpyc_class_getattr", "_rpyc_getattr",
+                                                      "allow_getattr", getattr)
+
+                    #Believe it or not eval("function.__call__ is function.__call__")
+                    #will return False for any function, must use equality comparison
+                    if newObj != obj:
+                        raise
+
+                    #We are good, we can fall through and call
+                else:
+                    raise
+
+        #Default call technique
+        return obj(*args, **dict(kwargs))
 
     #
     # request handlers
@@ -621,17 +700,17 @@ class Connection(object):
     def _handle_hash(self, oid):
         return hash(self._local_objects[oid])
     def _handle_call(self, oid, args, kwargs=()):
-        return self._local_objects[oid](*args, **dict(kwargs))
+        return self._smart_call(oid, args, kwargs)
     def _handle_dir(self, oid):
         return tuple(dir(self._local_objects[oid]))
     def _handle_inspect(self, oid):
         return tuple(netref.inspect_methods(self._local_objects[oid]))
     def _handle_getattr(self, oid, name):
-        return self._access_attr(oid, name, (), "_rpyc_getattr", "allow_getattr", getattr)
+        return self._access_attr(oid, name, (), "_rpyc_class_getattr", "_rpyc_getattr", "allow_getattr", getattr)
     def _handle_delattr(self, oid, name):
-        return self._access_attr(oid, name, (), "_rpyc_delattr", "allow_delattr", delattr)
+        return self._access_attr(oid, name, (), "_rpyc_class_delattr", "_rpyc_delattr", "allow_delattr", delattr)
     def _handle_setattr(self, oid, name, value):
-        return self._access_attr(oid, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
+        return self._access_attr(oid, name, (value,), "_rpyc_class_setattr", "_rpyc_setattr", "allow_setattr", setattr)
     def _handle_callattr(self, oid, name, args, kwargs):
         return self._handle_getattr(oid, name)(*args, **dict(kwargs))
     def _handle_pickle(self, oid, proto):
