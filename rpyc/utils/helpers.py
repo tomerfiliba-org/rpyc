@@ -72,6 +72,26 @@ def restricted(obj, attrs, wattrs = None):
     if wattrs is None:
         wattrs = attrs
     class Restricted(object):
+
+        #Make restricted callable if it needs to
+        #be.
+        def __call__(self, *args, **kwargs):
+            #It is critical that we check for __call__ being
+            #explicitly enabled since the older version restricted
+            #did not have __call__ and therefore was not a callable
+            #type.
+            if "__call__" not in attrs:
+                raise AttributError(name)
+
+            #We use obj.__call__() rather than obj() because if we wrap a
+            #class definition that has a classmethod __call__, we want to invoke
+            #that method rather than __init__.
+
+            #A __call__ will still invoke __init__ if no __call__ method of
+            #any kind is defined at all for the class
+
+            return obj.__call__(*args, **kwargs)
+
         def _rpyc_getattr(self, name):
             if name not in attrs:
                 raise AttributeError(name)
