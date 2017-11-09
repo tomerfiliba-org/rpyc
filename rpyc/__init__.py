@@ -51,5 +51,8 @@ from rpyc.utils.helpers import async, timed, buffiter, BgServingThread, restrict
 from rpyc.utils import classic
 from rpyc.version import version as __version__
 
+from rpyc.lib import setup_logger
+from rpyc.utils.server import OneShotServer, ThreadedServer, ThreadPoolServer, ForkingServer
+
 __author__ = "Tomer Filiba (tomerfiliba@gmail.com)"
 
