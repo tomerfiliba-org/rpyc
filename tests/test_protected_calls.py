@@ -25,7 +25,7 @@ class MyService(rpyc.Service):
 
     @classmethod
     def _rpyc_class_getattr(cls, name):
-        if name in {"enable", "classToggle"}:
+        if name in ["enable", "classToggle"]:
             try:
                 return getattr(cls, name)
             except AttributeError as e:
@@ -38,7 +38,7 @@ class MyService(rpyc.Service):
         raise AttributeError("name %s not found" % name)
 
     def _rpyc_getattr(self, name):
-        if name in {"getCall", "getFunction", "getStaticMethod", "getClassMethod", "getMethod"}:
+        if name in ["getCall", "getFunction", "getStaticMethod", "getClassMethod", "getMethod"]:
             try:
                 return getattr(self, name)
             except AttributeError as e:
