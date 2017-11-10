@@ -8,6 +8,7 @@ import socket
 import time
 import gc
 import inspect
+import functools
 
 from threading import Lock, RLock, Event, Thread
 from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
@@ -619,7 +620,7 @@ class Connection(object):
             #There is no point in doing that anymore. It didn't work for class objects
             #and it just made us have to pass an extra parameter for instances.
             accessor = getattr(obj, overrider, None)
-            nextAccessor = getattr(obj, class_overrider, None)
+            nextAccessor = getattr(obj.__class__, class_overrider, None)
             if accessor is not None:
                 try:
                     return accessor(name, *args)
@@ -633,7 +634,7 @@ class Connection(object):
             name2 = self._check_attr(obj, name)
             if not self._config[param] or not name2:
                 raise AttributeError("cannot access %r" % (name,))
-            accessor = default
+            accessor = functools.partial(default, obj)
             name = name2
         return accessor(name, *args)
 
