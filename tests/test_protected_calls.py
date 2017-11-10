@@ -126,14 +126,23 @@ class TestProtectedCalls(unittest.TestCase):
             #protocol vectors -- That's okay, but not for this test.
             callable=getattr(root, type)()
 
-            if type != "call": #We call constructor!!!!
-                self.assertEqual(callable(3,5), 8)
+            self.assertEqual(callable(3,5), 8)
             self.assertEqual(callable.__call__(5,6), 11)
             root.enable(False)
             callable=getattr(root, type)()
-            with self.assertRaises(AttributeError):
-                if type != "call": #We call constructor!!!!
-                    callable(3,5)
-            with self.assertRaises(AttributeError):
+
+            valid=False
+            try:
+                callable(3,5)
+            except AttributeError:
+                valid=True
+            self.assertTrue(valid)
+
+            valid=False
+            try:
                 callable.__call__(5,6)
+            except AttributeError:
+                valid=True
+            self.assertTrue(valid)
+
 
