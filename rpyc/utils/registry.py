@@ -70,10 +70,10 @@ class RegistryServer(object):
         self.services[name].pop(addrinfo, None)
         if not self.services[name]:
             del self.services[name]
-            try:
-                self.on_service_removed(name, addrinfo)
-            except Exception:
-                self.logger.exception('error executing service remove callback')
+        try:
+            self.on_service_removed(name, addrinfo)
+        except Exception:
+            self.logger.exception('error executing service remove callback')
 
     def cmd_query(self, host, name):
         """implementation of the ``query`` command"""
