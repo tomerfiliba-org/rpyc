@@ -634,6 +634,15 @@ class Connection(object):
         return self._access_attr(oid, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
     def _handle_callattr(self, oid, name, args, kwargs):
         return self._handle_getattr(oid, name)(*args, **dict(kwargs))
+    def _handle_ctxexit(self, oid, exc):
+        if exc:
+            try:
+                raise exc
+            except:
+                exc, typ, tb = sys.exc_info()
+        else:
+            typ = tb = None
+        return self._handle_getattr(oid, "__exit__")(exc, typ, tb)
     def _handle_pickle(self, oid, proto):
         if not self._config["allow_pickle"]:
             raise ValueError("pickling is disabled")
