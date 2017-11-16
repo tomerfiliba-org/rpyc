@@ -1,24 +1,23 @@
-### Expected result
+Describe the issue briefly here, including:
 
-description
-
-
-### Actual result
-
-description
+- expected result versus actual result
+- involved/problematic methods, e.g. `__call__`
+- steps to reproduce
+- for bugs, please attach a
 
 ```
 stack trace / error log
 ```
 
 
-### Environment
+##### Environment
 
+- rpyc version
 - python version
 - operating system
 
 
-### Minimal example
+##### Minimal example
 
 Server:
 
