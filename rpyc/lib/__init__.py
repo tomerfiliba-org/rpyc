@@ -9,6 +9,7 @@ import threading
 import time
 import random
 from rpyc.lib.compat import maxint  # noqa: F401
+import logging.handlers
 
 
 class MissingModule(object):
