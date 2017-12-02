@@ -1,4 +1,6 @@
 from rpyc.security.restrictor import *
+from rpyc.security.utility import *
+from rpyc.security.exceptions import *
 from rpyc.security.restrictor import exposed_mark as emark
 from rpyc.security import lock_profiles
 from rpyc.security import locks
@@ -323,7 +325,7 @@ class TestRestrictorIdentity(unittest.TestCase):
         valid = False
         try:
             value = check_restricted(a_proxy)
-        except exceptions.SecurityWrapError:
+        except SecurityWrapError:
             valid = True
         self.assertTrue(valid)
 

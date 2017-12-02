@@ -74,6 +74,7 @@ def LAD(value):
 #be changed. To that extend, this code should never
 #append or changes those values, just replace or wrap them
 class LockProfile(object):
+    """Placeholder"""
     def __init__(self, getattr_locks = dict(),
                        setattr_locks = dict(),
                        delattr_locks = dict(),
@@ -316,6 +317,7 @@ class LockProfile(object):
         return new_value
 
     def read_only_copy(self):
+        """Placeholder"""
         new_value = self.__class__()
         new_value.getattr_locks = self.getattr_locks.read_only_copy()
         new_value.setattr_locks = self.setattr_locks.read_only_copy()

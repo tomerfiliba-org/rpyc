@@ -1,5 +1,52 @@
 """
-Exposer class used for high level exposing objects for RPYC
+The :mod:`rpyc.security.exposer` module is used to do high level exposure
+of classes as `RPyC Exposed`
+
+This is chiefly accomplished via methods of the class :class:`Exposer`.
+
+Module Level Functions
+----------------------
+
+Most users will not have any need to use more than one instance of
+:class:`Exposer`. For that reason, an instance is
+already instantiated as
+:data:`rpyc.security.exposer.default_exposer`. Many of the methods
+of this instance are also accessable as module level functions for
+convenience:
+
+.. decorator:: expose
+
+    This is actually :meth:`@Exposer.expose <Exposer.expose>` of
+    :data:`rpyc.security.exposer.default_exposer`
+
+.. function:: class_expose
+
+    This is :meth:`Exposer.class_expose` of
+    :data:`rpyc.security.exposer.default_exposer`
+
+.. function:: field_expose
+
+    This is :meth:`Exposer.field_expose` of
+    :data:`rpyc.security.exposer.default_exposer`
+
+.. function:: field_unexpose
+
+    This is :meth:`Exposer.field_unexpose` of
+    :data:`rpyc.security.exposer.default_exposer`
+
+.. function:: routine_expose
+
+    This is :meth:`Exposer.routine_expose` of
+    :data:`rpyc.security.exposer.default_exposer`
+
+.. function:: routine_descriptor_expose
+
+    This is :meth:`Exposer.routine_descriptor_expose` of
+    :data:`rpyc.security.exposer.default_exposer`
+
+Exposer Class
+-------------
+
 """
 
 import functools
@@ -8,7 +55,8 @@ import types
 
 from rpyc.lib.compat import is_py3k
 from rpyc.security.restrictor import SecurityRestrictor, \
-    security_restrict, is_restricted
+    security_restrict
+from rpyc.security.utility import is_restricted
 
 from rpyc.security import locks
 from rpyc.security import lock_profiles
@@ -44,6 +92,88 @@ EXPOSE_ALL_MASK = EXPOSE_INSTANCE_GET | EXPOSE_INSTANCE_SET \
 MERGE_WIPE_AND_REPLACE = -1
 
 class Exposer:
+    """This is a class that implements a high level api to create
+    `RPyC Exposed` objects.
+
+    In most use cases there will be only one instance of this
+    class.  In this case, use
+    :data:`rpyc.security.exposer.default_exposer` which is a
+    pre-instantiated version of this class.
+
+    Many of the methods of that instance can also
+    be accessed as functions of the :mod:`rpyc.security.exposer`
+    module.
+
+    .. decoratormethod:: expose
+                         expose(lock=None, inherit=None, mark=True)
+
+        This is a decorator that can be used to expose functions, classes,
+        methods, static methods, class methods, and properties as
+        `RPyC Exposed` objects. For other forms of data, use
+        :meth:`field_expose`. You do not have to specify
+        any arguments for the decorator. `@expose` will use
+        the default arguments.
+
+        :param lock: This can be a single :class:`Lock <rpyc.security.locks.Lock>`,
+            or a :class:`LockListShared <rpyc.security.locks.LockListShared>`
+        :param inherit: Argument can be an olp or `RPyC Exposed` class (which will
+            effectively act the same as passing in
+            :func:`get_olp(inherit) <rpyc.security.utils.get_olp>`)
+        :param bool mark: Whether instances of this object should
+            be marked as `RPyC exposed` when :func:`repr` is called
+            on them.
+
+        If `lock` is ``None``, no locks are applied. You can also pass in any
+        iterable, and it will be treated as if you passed in a
+        :class:`LockListAnd <rpyc.security.locks.LockListAnd>`
+        of those elements.
+
+        If `inherit` is ``None`` nothing is inherited.
+
+        .. note ::
+
+            `inherit` is usually only used when exposing classes.
+            Use it on methods and routines only if you want
+            to inherit an :class:`olp` that specifically
+            configures access to the attributes of a
+            routine object of the type being exposed.
+
+        The :class:`olp <rpyc.security.lock_profiles.LockProfile>` is
+        created for the target using the following steps:
+
+            * A blank :class:`olp` is created, configured with `mark`.
+            * :meth:`and_profile <rpyc.security.lock_profiles.LockProfile.and_profile>`
+              is used with the new :class:`olp` and the `inherit`
+              :class:`olp` (if any) to update the new :class:`olp`.
+            * A default `olp` is created via the
+              :class:`Profiles <rpyc.security.defaults.Profiles>`
+              instance set for :class:`Exposer`, based on what type the target
+              is.
+              :meth:`and_profile <rpyc.security.lock_profiles.LockProfile.and_profile>`
+              is used to merge these defaults into the 'olp' being constructed.
+            * If the target is a class, any new (non-inherited)
+              members of the class are scanned to see if they themselves
+              were exposed using the :class:Exposer. If they are, access to
+              them is added to the newly generated :class:`olp` by name,
+              using the `lock` parameter provided (if any).
+
+        Access to members of the class is as follows (using `lock`):
+
+            * :meth:`_rpyc_getattr` access is added for
+              class and  static methods. This access is
+              added both for instances and the class
+              itself.
+            * :meth:`_rpyc_getattr` access is added for
+              regular methods. Access is only added for
+              instances.
+            * For properties access via :meth:`_rpyc_getattr`,
+              :meth:`_rpyc_setattr`, and
+              :meth:`_rpyc_delattr` are added, but only
+              if each of their respective getter, setter, and
+              deleter methods have been exposed. Access is only
+              added for instances.
+
+    """
     def __init__(self, restrictor=security_restrict,
                  default_profiles=defaults.default_profiles):
         if not isinstance(restrictor, SecurityRestrictor):
@@ -51,10 +181,7 @@ class Exposer:
                            + "SecurityRestrictor")
         self._restrictor = restrictor
 
-        if not isinstance(default_profiles, defaults.Profiles):
-            raise ValueError("default_profiles must be an instance of "
-                           + "Profiles")
-        self._defaults = default_profiles
+        self.default_profiles = default_profiles
 
         #This only holds routines and classes
         #that are exposed, not all attributes.
@@ -179,7 +306,7 @@ class Exposer:
         return results
 
     #This is a decorator we can use.
-    def decorate(self, *args, lock=None, inherit=None, mark=True):
+    def expose(self, *args, lock=None, inherit=None, mark=True):
         wrapped = None
         if len(args) == 1:
             #Is it a lock or an argument?
@@ -211,7 +338,7 @@ class Exposer:
 
         lock_list = locks.sanitize_lock_parameter(lock)
         if wrapped is None:
-            return functools.partial(self.decorate,
+            return functools.partial(self.expose,
                                      lock = lock_list,
                                      inherit = inherit,
                                      mark = mark)
@@ -234,15 +361,228 @@ class Exposer:
             raise ValueError("cls must be an exposed class that has been "
                              "exposed by this Exposer")
 
+    def class_expose(self, value, lock = None, inherit=None, mark=True):
+        """This can be used to expose a class that hasn't been exposed
+        using the @expose decorator
+
+        :param value: Class to expose
+        :param lock: This can be a single :class:`Lock <rpyc.security.locks.Lock>`,
+            or a :class:`LockListShared <rpyc.security.locks.LockListShared>`
+        :param inherit: Argument can be an olp or `RPyC Exposed` class (which will
+            effectively act the same as passing in
+            :func:`get_olp(inherit) <rpyc.security.utils.get_olp>`)
+        :param bool mark: Whether instances of this object should
+            be marked as `RPyC exposed` when :func:`repr` is called
+            on them.
+        :return: A `RPyC Exposed` version of the class that can be used.
+
+        If `lock` is ``None``, no locks are applied. You can also pass in any
+        iterable, and it will be treated as if you passed in a
+        :class:`LockListAnd <rpyc.security.locks.LockListAnd>`
+        of those elements.
+
+        if `inherit` is ``None`` nothing is inherited.
+
+        This operates the same as the
+        :meth:rpyc.exposer.Exposer.@expose decorator does on a class.
+        """
+        if not inspect.isclass(value):
+            raise ValueError("class_expose first parameter isn't a class")
+        if self._is_exposed(value):
+            raise ValueError("class already exposed")
+
+        new_profile = self._new_profile(inherit = inherit, mark = mark)
+
+        cls_lock_list = locks.sanitize_lock_parameter(lock)
+
+        items=[(key, item) for key, item in self._get_direct_members(value)]
+        for key, member in items:
+            exposure = EXPOSE_DEFAULT
+            #If it is a direct member of new class, WIPE access to it on inherted
+            #profile so we don't accidentally access it via shadowed permission.
+            new_profile.wipe_name(key)
+
+            #Deal with properties
+            #We only allow property access on instance, not on class.
+            if isinstance(member, property):
+                dict_setup = {"fget":EXPOSE_INSTANCE_GET,
+                              "fset":EXPOSE_INSTANCE_SET,
+                              "fdel":EXPOSE_INSTANCE_DEL}
+
+                for sub_key in dict_setup:
+                    sub_member = getattr(member, sub_key)
+                    if (sub_member != None) and self._is_exposed(sub_member):
+                        lock_list, old_profile = self._get_exposed(sub_member)
+
+                        sub_exposure=dict_setup[sub_key]
+                        self._inner_class_expose(value, key,
+                                                 cls_lock_list,
+                                                 lock_list,
+                                                 new_profile,
+                                                 exposure = sub_exposure,
+                                                 merge_mode = MERGE_REPLACE)
+
+            elif self._is_exposed(member):
+                lock_list, old_profile = self._get_exposed(member)
+                dict_member = self._get_dict_version_first(value, key)
+
+                if self.is_routine_descriptor(dict_member):
+                    if not is_restricted(dict_member):
+                        member = \
+                            self.routine_descriptor_expose(dict_member,
+                                                          lock = lock_list)
+                        #Restore new member
+                        setattr(value, key, member)
+
+                self._inner_class_expose(value, key,
+                                         cls_lock_list,
+                                         lock_list,
+                                         new_profile,
+                                         exposure = exposure,
+                                         member = member,
+                                         member_set = True)
+
+        #Merge with default profile.
+        defaults = self._defaults
+        class_lock_profile = \
+            defaults.create_class_olp(value,
+                                      lock = cls_lock_list)
+
+        new_profile.and_profile(class_lock_profile)
+        security_wrapped_class=self._restrictor(value,
+                                                new_profile,
+                                                default=True)
+
+        self._set_exposed(value, (cls_lock_list, new_profile))
+        self._set_exposed(security_wrapped_class,
+                         (cls_lock_list, new_profile))
+        return security_wrapped_class
+
+
+
+
     #This exposes one attribute of a class.
     #This has finer grained access than the decorator.
-    #This will not make functions callable, you might
-    #want to use routine_expose on the function first.
     #Can also be used for wildcard access.
     def field_expose(self, cls, name, lock = None,
                      inherit = None,
                      exposure = EXPOSE_DEFAULT,
                      merge_mode = MERGE_WIPE_AND_REPLACE):
+        #Sphinx replaces constants with actual values, so use first line of doc to override that.
+        """field_expose(cls, name, lock=None, inherit=None, exposure=EXPOSE_DEFAULT, merge_mode=MERGE_WIPE_AND_REPLACE)
+
+        This can be used to explicitly expose fields and/or
+        methods after a class has been exposed.
+
+        :param cls: Class the field is in
+        :param (str) name: Name of the field
+        :param lock: This can be a single :class:`Lock <rpyc.security.locks.Lock>`,
+            or a :class:`LockListShared <rpyc.security.locks.LockListShared>`
+        :param inherit: Argument can be an olp or `RPyC Exposed` class (which will
+            effectively act the same as passing in
+            :func:`get_olp(inherit) <rpyc.security.utils.get_olp>`)
+        :param exposure: Bit field that specifies how the field can be
+             exposed.
+        :param merge_mode: Specifies how the `olp` settings for `name` are
+            merged with any other already existing settings for `name`
+            (if present).
+
+        `name` is usually a field name, but it can also be
+        set to a
+        :class:`olp <rpyc.security.lock_profiles.LockProfile>`
+        wildcard, to modify wildcard :class:`olp` settings.
+
+        `exposure` is a bit field:
+
+            * :data:`EXPOSE_DEFAULT` = 0
+                Do default exposure based on what `name` is inside
+                `cls`. To use this option, `name` must exist in the
+                class and not be a wildcard.
+
+                Methods, class methods,
+                and static methods are exposed the same was if
+                they were hit with the @expose decorator.
+
+                Data elements must already exist at the class level
+                for EXPOSE_DEFAULT to work, so they are given
+                :meth:`_rpyc_getattr` access for both classes and
+                istances.
+                That is unless, they implement :meth:`__get__`, in which
+                case they are considered descriptors and
+                :meth:`_rpyc_getattr` access is only added for
+                any instances (not on the class itself).
+
+            * :data:`EXPOSE_INSTANCE_GET` = 1
+                If this bit is set, :meth:`_rpyc_getattr` access is set up
+                to `name`
+                on instances of `cls`
+                using the `lock` parameter provided.
+
+            * :data:`EXPOSE_INSTANCE_SET` = 2
+                If this bit is set, :meth:`_rpyc_setattr` access is set up
+                to `name`
+                on instances of `cls`
+                using the `lock` parameter provided.
+
+            * :data:`EXPOSE_INSTANCE_DEL` = 4
+                If this bit is set, :meth:`_rpyc_delattr` access is set up
+                to `name`
+                on instances of `cls`
+                using the `lock` parameter provided.
+
+            * :data:`EXPOSE_CLASS_GET` = 16
+                If this bit is set, :meth:`_rpyc_getattr` access is set up
+                to `name`
+                on `cls` itself
+                using the `lock` parameter provided.
+
+             * :data:`EXPOSE_CLASS_SET` = 32
+                If this bit is set, :meth:`_rpyc_setattr` access is set up
+                to `name`
+                on `cls` itself
+                using the `lock` parameter provided.
+
+            * :data:`EXPOSE_CLASS_DEL` = 64
+                If this bit is set, :meth:`_rpyc_delattr` access is set up
+                to `name`
+                on `cls` itself
+                using the `lock` parameter provided.
+
+            * :data:`EXPOSE_INSTANCE` is shorthand for :data:`EXPOSE_INSTANCE_GET`
+
+            * :data:`EXPOSE_CLASS` is shorthand for :data:`EXPOSE_CLASS_GET`
+
+            * :data:`EXPOSE_BOTH_GET` is shorthand for:
+                :data:`EXPOSE_INSTANCE_GET` | :data:`EXPOSE_CLASS_GET`
+
+            * :Data:`EXPOSE_BOTH` is shorthand for :data:`EXPOSE_BOTH_GET`
+
+        `merge_mode` is as specified for
+        :meth:`olp.merge_specified <rpyc.security.lock_profiles.LockProfile.merge_specified>`.
+        The parameters ```getattr_locks``. ``setattr_locks``,
+        ``delattr_locks``, ``cls_getattr_locks``, ``cls_setattr_locks``,
+        and ``cls_delattr_locks`` will all be set to  ``None`` for the
+        underlying call to :meth:`olp.merge_specified` unless they are
+        explicitly being changed given the setting of `exposure`.
+
+        Additionally, you can use :data:`MERGE_WIPE_AND_REPLACE` defined in :mod:`rpyc.security.exposer`
+        for this function, which means all data in the :class:`olp` for `name` will be wiped
+        prior to doing a :data:`MERGE_REPLACE`, via
+        :meth:`olp.wipe_name() <rpyc.security.lock_profiles.LockProfile.wipe_name>`.
+
+        .. note ::
+            Exposing existing methods via :meth:`field_expose()` will
+            automatically expose those routines via
+            :meth:`routine_expose(cls.name, lock = lock, inherit = inherit) <routine_expose>`
+            for convenience. If you use :meth:`field_expose` to expose a
+            routine that doesn't exist yet, and later want to add the routine
+            to a class or instance, use :meth:`routine_expose` to
+            make a `RPyC exposed` version of the routine to add.
+
+            An un-exposed method may otherwise not be callable
+            (depending on protocol settings). This is because
+            ``_rpyc_getattr("__call__")`` will not work.
+        """
 
         new_profile = \
             self._new_profile(inherit = inherit, mark = True)
@@ -299,6 +639,19 @@ class Exposer:
     #Will not remove wildcard access, unless that is name
     #provided..
     def field_unexpose(self, cls, name):
+        """This can be used to remove an exposed
+        field or method from an existing `RPyC Exposed`
+        class
+
+        :param cls: Class the field is in
+        :param (str) name: Name of the field
+
+        This wipes all references to `name` from the associated
+        :class:`olp`. It can be used with `name` set to an :class:`olp`
+        wildcard if desirable to remove all references to that wildcard
+        from the :class:`olp`
+        """
+
         self._is_exposed_class(cls)
         lock_list, olp = self._get_exposed(cls)
         olp.wipe_name(name)
@@ -409,80 +762,6 @@ class Exposer:
                 raise ValueError("Must set `inherit` to LockProfile or class")
         return new_profile
 
-    def class_expose(self, value, lock = None, inherit=None, mark=True):
-        if not inspect.isclass(value):
-            raise ValueError("class_expose first parameter isn't a class")
-        if self._is_exposed(value):
-            raise ValueError("class already exposed")
-
-        new_profile = self._new_profile(inherit = inherit, mark = mark)
-
-        cls_lock_list = locks.sanitize_lock_parameter(lock)
-
-        items=[(key, item) for key, item in self._get_direct_members(value)]
-        for key, member in items:
-            exposure = EXPOSE_DEFAULT
-            #If it is a direct member of new class, WIPE access to it on inherted
-            #profile so we don't accidentally access it via shadowed permission.
-            new_profile.wipe_name(key)
-
-            #Deal with properties
-            #We only allow property access on instance, not on class.
-            if isinstance(member, property):
-                dict_setup = {"fget":EXPOSE_INSTANCE_GET,
-                              "fset":EXPOSE_INSTANCE_SET,
-                              "fdel":EXPOSE_INSTANCE_DEL}
-
-                for sub_key in dict_setup:
-                    sub_member = getattr(member, sub_key)
-                    if (sub_member != None) and self._is_exposed(sub_member):
-                        lock_list, old_profile = self._get_exposed(sub_member)
-
-                        sub_exposure=dict_setup[sub_key]
-                        self._inner_class_expose(value, key,
-                                                 cls_lock_list,
-                                                 lock_list,
-                                                 new_profile,
-                                                 exposure = sub_exposure,
-                                                 merge_mode = MERGE_REPLACE)
-
-            elif self._is_exposed(member):
-                lock_list, old_profile = self._get_exposed(member)
-                dict_member = self._get_dict_version_first(value, key)
-
-                if self.is_routine_descriptor(dict_member):
-                    if not is_restricted(dict_member):
-                        member = \
-                            self.routine_descriptor_expose(dict_member,
-                                                          lock = lock_list)
-                        #Restore new member
-                        setattr(value, key, member)
-
-                self._inner_class_expose(value, key,
-                                         cls_lock_list,
-                                         lock_list,
-                                         new_profile,
-                                         exposure = exposure,
-                                         member = member,
-                                         member_set = True)
-
-        #Merge with default profile.
-        defaults = self._defaults
-        class_lock_profile = \
-            defaults.create_class_olp(value,
-                                      lock = cls_lock_list)
-
-        new_profile.and_profile(class_lock_profile)
-        security_wrapped_class=self._restrictor(value,
-                                                new_profile,
-                                                default=True)
-
-        self._set_exposed(value, (cls_lock_list, new_profile))
-        self._set_exposed(security_wrapped_class,
-                         (cls_lock_list, new_profile))
-        return security_wrapped_class
-
-
     @classmethod
     def is_routine_descriptor(cls, value):
         if not inspect.isroutine(value):
@@ -511,32 +790,40 @@ class Exposer:
             new_descriptor = original.__class__(function)
         return new_descriptor
 
-    def routine_descriptor_expose(self, value, lock = None):
-        if not self.is_routine_descriptor(value):
-            raise ValueError("value must be a routine descriptor (IE: classmethod)")
-
-        lock_list = locks.sanitize_lock_parameter(lock)
-
-        descriptor_profile = self._new_profile()
-
-        defaults = self._defaults
-        restrictor = self._restrictor
-
-        call_descriptor_profile = \
-            defaults.create_routine_descriptor_olp(value,
-                                                   lock = lock_list)
-
-        descriptor_profile.and_profile(call_descriptor_profile)
-
-        restricted_descriptor = restrictor(value,
-                                           descriptor_profile,
-                                           default = False)
-        #Cannot expose weak refs to the base types, so we do the
-        #best we can.
-        self._set_exposed(restricted_descriptor, (lock_list, descriptor_profile))
-        return restricted_descriptor
-
     def routine_expose(self, value, lock = None, inherit = None):
+        """This works on both routines and routine descriptors
+        to expose a routine. This works identically to how it
+        the :meth:`expose` decorator works on routines.
+
+        :param value: Routine to expose
+        :param lock: This can be a single :class:`Lock <rpyc.security.locks.Lock>`,
+            or a :class:`LockListShared <rpyc.security.locks.LockListShared>`
+        :param inherit: Argument can be an olp or `RPyC Exposed` class (which will
+            effectively act the same as passing in
+            :func:`get_olp(inherit) <rpyc.security.utils.get_olp>`)
+        :param bool mark: Whether instances of this object should
+            be marked as `RPyC exposed` when :func:`repr` is called
+            on them.
+        :return: A `RPyC Exposed` version of the routine that can be used.
+
+        If `lock` is ``None``, no locks are applied. You can also pass in any
+        iterable, and it will be treated as if you passed in a
+        :class:`LockListAnd <rpyc.security.locks.LockListAnd>`
+        of those elements.
+
+        if `inherit` is ``None`` nothing is inherited.
+
+        .. note ::
+            Since this operates with routines, `inherit` should not
+            normally be used (as it is typically used with classes). Use
+            `inherit` only if you want to inherit an :class:`olp` that
+            that specifically configures access to the attributes of a
+            routine object of the same type as `value`.
+
+        This operates the same as the
+        :meth:rpyc.exposer.Exposer.@expose decorator does on a routine
+        """
+
         new_function_profile = \
             self._new_profile(inherit = inherit, mark = True)
 
@@ -594,6 +881,82 @@ class Exposer:
 
         return return_value
 
+    def routine_descriptor_expose(self, value, lock = None):
+        """This works on routine descriptors
+        (IE: ``classmethod(func)`` creates a routine descriptor).
+
+        This should rarely be used. It is used to expose
+        a routine descriptor without exposing the underlying
+        routine.
+
+        :param value: Routine to expose
+        :param lock: This can be a single :class:`Lock <rpyc.security.locks.Lock>`,
+            or a :class:`LockListShared <rpyc.security.locks.LockListShared>`
+        :return: A `RPyC Exposed` version of the routine descriptor
+
+        If `lock` is ``None``, no locks are applied. You can also pass in any
+        iterable, and it will be treated as if you passed in a
+        :class:`LockListAnd <rpyc.security.locks.LockListAnd>`
+        of those elements.
+
+        This would typically be used in rare cases where you have
+        an already exposed routine, but need to expose the descriptor
+        for it.
+
+        IE::
+
+            def foo(obj):
+                return obj.info
+
+            class bar:
+                pass
+
+            routine_expose(foo)
+            class_expose(bar)
+
+            bar.foo = routine_descriptor_expose(classmethod(foo))
+
+        Nearly the same effect for this example could be
+        accomplished more simply::
+
+            def foo(obj):
+                return obj.info
+
+            class bar:
+                pass
+
+            class_expose(bar)
+
+            bar.foo = routine_expose(classmethod(foo))
+
+        The difference of course would be that the naked ``foo``
+        function would not be exposed.
+        """
+
+        if not self.is_routine_descriptor(value):
+            raise ValueError("value must be a routine descriptor (IE: classmethod)")
+
+        lock_list = locks.sanitize_lock_parameter(lock)
+
+        descriptor_profile = self._new_profile()
+
+        defaults = self._defaults
+        restrictor = self._restrictor
+
+        call_descriptor_profile = \
+            defaults.create_routine_descriptor_olp(value,
+                                                   lock = lock_list)
+
+        descriptor_profile.and_profile(call_descriptor_profile)
+
+        restricted_descriptor = restrictor(value,
+                                           descriptor_profile,
+                                           default = False)
+        #Cannot expose weak refs to the base types, so we do the
+        #best we can.
+        self._set_exposed(restricted_descriptor, (lock_list, descriptor_profile))
+        return restricted_descriptor
+
     def _generic_expose(self, value, lock_list = None,
                         inherit=None, mark=True):
         if inspect.isclass(value):
@@ -606,27 +969,75 @@ class Exposer:
             raise TypeError("Unable to expose %s " % repr(value)
                           + "of type %s" % (repr(type(value))) )
 
+
+    @property
+    def default_profiles(self):
+        """The default profiles property is a
+        :class:`rpyc.security.default.Profiles`
+        object that can be get/set for the
+        :class:`Exposer`. The initial value is
+        set by the :class:`Exposer` constructor.
+
+        The current value is used as documented
+        in the :meth:`@expose <expose>` when creating
+        a :class:`olp` for
+        classes/routines/routine_descriptors/etc.
+        """
+        return self._defaults
+
+    @default_profiles.setter
+    def default_profiles(self, value):
+        if not isinstance(value, defaults.Profiles):
+            raise ValueError("default_profiles must be an instance of "
+                           + "Profiles")
+        self._defaults = value
+
     #Defines expose/class_expose/routine_expose/field_expose
     #in the current module based on this instance of Exposer
     #
     #Defined to allow use of multple Exposers (not
     #a common thing)
-    def define_shortcuts(self):
+    def define_module_functions(self):
+        """This exports methods of
+        the :class:`Exposer` class to the
+        current calling global namespace.
+
+        :func:`expose`, :func:`class_expose`,
+        :func:`field_expose`, :func:`field_unexpose`
+        :func:`routine_expose`, and
+        :func:`routine_descriptor_expose` are all
+        created as new functions in the containing
+        namespace, and they call the methods of the same
+        name on `self`.
+
+        This can be used if you have a need for multiple
+        :class:`Exposer` instances, and you wish to swap
+        out the convenience functions (or use them
+        in a different namespace).
+        """
+
         global expose
         global class_expose
-        global routine_expose
-        global routine_descriptor_expose
         global field_expose
         global field_unexpose
+        global routine_expose
+        global routine_descriptor_expose
 
-        expose = default_exposer.decorate
+        expose = default_exposer.expose
         class_expose = default_exposer.class_expose
-        routine_expose = default_exposer.routine_expose
-        routine_descriptor_expose = default_exposer.routine_descriptor_expose
         field_expose = default_exposer.field_expose
         field_unexpose = default_exposer.field_unexpose
+        routine_expose = default_exposer.routine_expose
+        routine_descriptor_expose = default_exposer.routine_descriptor_expose
 
 #define default.
 default_exposer = Exposer()
-default_exposer.define_shortcuts()
+"""This is a default instance of :class:`Exposer`. Use this (and
+the module level convenience functions that refer to it) if
+you have no need of multiple instances of :class:`Exposer`.
+"""
+
+
+default_exposer.define_module_functions()
+
 

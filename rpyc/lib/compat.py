@@ -7,6 +7,12 @@ import time
 
 is_py3k = (sys.version_info[0] >= 3)
 
+#Python 2 & 3 safe definition of basestring
+try:
+    basestring = basestring
+except:
+    basestring = str
+
 if is_py3k:
     exec("execute = exec")
     def BYTES_LITERAL(text):

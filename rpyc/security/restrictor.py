@@ -1,5 +1,10 @@
 """
-SecurityRestrictor creates proxies used for low level exposing objects for RPyC
+The :mod:`rpyc.security.restrictor` module is used to do low level exposure
+of objects and classes as `RPyC Exposed` objects.
+
+Usually the :class:`Exposer <rpyc.security.exposer.Exposer>` interface
+inside :mod:`rpyc.security.exposer` is used instead. However, understanding
+the API at this level is useful.
 """
 
 #THIS FILE is full of such ridiculously arcane MAGIC that it is ridiculous
@@ -12,6 +17,7 @@ import inspect
 
 from rpyc.security import lock_profiles
 from rpyc.security import exceptions
+from rpyc.security.utility import get_olp
 from rpyc.lib.colls import WeakIdMap
 
 #This compatibility hack is duplicated,
@@ -457,6 +463,13 @@ class SecurityInstanceRestrictor(object):
         return return_value
 
 class SecurityRestrictor(object):
+    """This class is used to create `RPyC Exposed` values.
+    Normally only one is needed (a singleton) and in that case you should
+    use the
+    :data:`security_restrict <rpyc.security.restrictor.security_restrict>`
+    instance provided. Most users should have no need to instantiate this
+    class themselves.
+    """
     def __init__(self):
         class_restrictor = \
             SecurityClassRestrictor()
@@ -474,9 +487,41 @@ class SecurityRestrictor(object):
     #Set default to True if you want this to be the default profile for the class
     def __call__(self, obj, olp = None,
                   default = False): #Don't document default yet
+        """
+        Create a `RPyC exposed` version of `obj`
 
+        :param obj: Instance or class to create `RPyC Exposed` proxy for
+        :param olp: An
+            :class:`object lock profile <rpyc.security.lock_profiles.LockProfile>`
+            specifying how the attributes of ``obj`` are to be accessed
+        :param bool default: Whether to store ``olp`` as the default for
+            the class
+        :return: `RPyC Exposed` version of ``obj``
 
+        This method is simple: pass in ``obj`` and ``olp`` and receive
+        the `RPyC Exposed` version of ``obj``.
 
+        If ``obj`` is a type that can be weak referenced, this method
+        urther guarantees that calling it again with the same
+        ``obj`` and ``olp`` will yield the exact same
+        `RPyC Exposed` value.
+
+        if ``olp`` is set to ``None``, a default
+        :class:`olp <rpyc.security.lock_profiles.LockProfile>`
+        ill be instantiated that does not yet allow access to anything.
+
+        The ``default`` parameter is a boolean used to signify that the
+        ``olp`` parameter should be used as the default olp for the
+        class. If ``True`` this method registers the class such that
+        :meth:`get_default_profile_for_class`
+        will return ``olp`` when passed in the class in question.
+
+        The :class:`Exposer <rpyc.security.exposer.Exposer>` class uses
+        this registry to determine what olp to inherit from when the
+        ``inherit`` arg to
+        :func:`@expose <rpyc.security.exposer.Exposer.decorate>` is specified
+        as a class.
+        """
 
         if olp is None:
             olp = lock_profiles.LockProfile()
@@ -492,49 +537,24 @@ class SecurityRestrictor(object):
 
     #This can only be set by calling with default=True
     def get_default_profile_for_class(self, cls):
+        """Returns the last
+        :class:`olp <rpyc.security.lock_profiles.LockProfile>`
+        associated as the default for ``cls``
+
+        :param cls: Class you want to get default olp for
+        :return: The :class:`olp` registered
+        :raises KeyError: if cls does not have a default registered :class:`olp`
+
+        This returns the
+        :class:`olp <rpyc.security.lock_profiles.LockProfile>` last
+        registered as the `default` via a call to
+        :class:`SecurityRestrictor <rpyc.security.restrictor.SecurityRestrictor>`
+        """
         return self._class_restrictor.get_default_profile_for_class(cls)
 
 security_restrict = SecurityRestrictor()
-
-def check_restricted(value):
-    try:
-        #This checks also to see if the value
-        #has been wrapped by another wrapper.
-        if (value._rpyc__restricted__ != id(value)):
-            raise exceptions.SecurityWrapError("RPYC restricted object "
-                + "has been wrapped, or proxied by another.")
-        return True
-    except AttributeError:
-        return False
-
-#The difference between check_restricted and this
-#is that check_restricted can throw a security
-#wrap error.
-def is_restricted(value):
-    try:
-        return check_restricted(value)
-    except exceptions.SecurityWrapError:
-        return False
-
-def unwrap(value):
-    try:
-        return value._rpyc__unwrapped__
-    except AttributeError:
-        return value
-
-def get_olp(value):
-    try:
-        return value._rpyc__olp__
-    except AttributeError:
-        raise ValueError("No olp found for value")
-
-def rpyc_type(value):
-    return type(unwrap(value))
-
-def rpyc_isinstance(instance, cls):
-    return issubclass(rpyc_type(instance), cls)
-
-def rpyc_issubclass(cls, otherCls):
-    return issubclass(unwrap(cls), otherCls)
-
+"""The default instance of
+:class:`SecurityRestrictor <rpyc.security.restrictor.SecurityRestrictor>`
+that should be used unless there is a compelling case to have multiple
+instantiations of :class:`SecurityRestrictor`."""
 

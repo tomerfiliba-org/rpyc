@@ -3,6 +3,7 @@ Security Exceptions
 """
 
 class SecurityError(Exception):
+    """Placeholder"""
     pass
 
 #fail_locks is a list of locks that we couldn't
