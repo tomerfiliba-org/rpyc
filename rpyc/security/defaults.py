@@ -1,10 +1,10 @@
 """
-Default LockProfiles base definitions for common python objects
+Default OLP base definitions for common Python objects
 """
 
 from rpyc.lib.compat import is_py3k
 from rpyc.security import locks
-from rpyc.security import lock_profiles
+from rpyc.security import olps
 
 class Profiles(object):
     def __init__(self):
@@ -58,7 +58,7 @@ class Profiles(object):
         new_list = []
         for item in value:
             try:
-                item = lock_profiles.sanitize_attr_key(item)
+                item = olps.sanitize_attr_key(item)
             except (ValueError, TypeError) as e:
                 raise ValueError("items in %s must be valid python identifiers" % property_name)
             new_list.append(item)
@@ -128,9 +128,9 @@ class Profiles(object):
         for value in cls_items:
             cls_getattr_locks[value] = lock_list
 
-        profile=lock_profiles.LockProfile(getattr_locks = getattr_locks,
-                                          cls_getattr_locks = cls_getattr_locks)
-        return profile
+        olp=olps.OLP(getattr_locks = getattr_locks,
+                     cls_getattr_locks = cls_getattr_locks)
+        return olp
 
     def create_class_olp(self, value, lock = None):
         lock_list = locks.sanitize_lock_parameter(lock)

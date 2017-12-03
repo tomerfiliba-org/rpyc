@@ -96,7 +96,7 @@ Security
    api/security_restrictor
    api/security_exposer
    api/security_locks
-   api/security_lock_profiles
+   api/security_olps
    api/security_defaults
    api/security_utility
    api/security_exceptions
@@ -111,7 +111,7 @@ Security
 
 * :ref:`api-security-locks` - Contains the definition of the :class:`Lock <rpyc.security.Lock>` interface and some implementations.
 
-* :ref:`api-security-lock-profiles` - The storage object that stores what in a class/instance is exposed
+* :ref:`api-security-olps` - The storage object that stores what in a class/instance is exposed
 
 * :ref:`Defaults <api-security-defaults>` - Overrideable defaults for object lock profiles for basic objects
 

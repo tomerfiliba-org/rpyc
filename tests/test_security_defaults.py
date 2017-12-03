@@ -1,12 +1,12 @@
 
 import unittest
-from rpyc.security import lock_profiles
+from rpyc.security import olps
 from rpyc.security import locks
 from rpyc.security.defaults import default_profiles
 
 class TestDefaults(unittest.TestCase):
     def test_default_properties(self):
-        blank_olp = lock_profiles.LockProfile()
+        blank_olp = olps.OLP()
         def stupid_hook(value, lock_list):
             self.assertEqual(lock_list, [locks.BLOCKED])
             return blank_olp

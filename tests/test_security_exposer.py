@@ -11,7 +11,7 @@ output="""
 import unittest
 import functools
 from rpyc.security import locks
-from rpyc.security import lock_profiles
+from rpyc.security import olps
 from rpyc.security.exposer import expose, routine_expose, field_expose
 from rpyc.security.exceptions import SecurityError, SecurityAttrError
 from nose.tools import nottest
@@ -52,14 +52,14 @@ property_lock_del = ToggleLock("prop_del")
 
 
 inherit_blob_c = \
-    lock_profiles.LockProfile(getattr_locks={"&":toggle_lock_c},
+    olps.OLP(getattr_locks={"&":toggle_lock_c},
                               setattr_locks={"&":toggle_lock_c},
                               delattr_locks={"&":toggle_lock_c},
                               cls_getattr_locks={"&":toggle_lock_c},
                               cls_setattr_locks={"&":toggle_lock_c},
                               cls_delattr_locks={"&":toggle_lock_c} )
 inherit_blob_f = \
-    lock_profiles.LockProfile(getattr_locks={"&":toggle_lock_f},
+    olps.OLP(getattr_locks={"&":toggle_lock_f},
                               setattr_locks={"&":toggle_lock_f},
                               delattr_locks={"&":toggle_lock_f},
                               cls_getattr_locks={"&":toggle_lock_f},

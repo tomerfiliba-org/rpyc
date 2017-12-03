@@ -68,21 +68,21 @@ def unwrap(value):
 def get_olp(value):
     """
     Gets the
-    :class:`object lock profile<rpyc.security.lock_profiles.LockProfile>`
+    :class:`OLP <rpyc.security.olps.OLP>`
     associated with a `RPyC Exposed` value.
 
     :param value: Value that has been `RPyC Exposed`
-    :return: The **olp** associated with that value.
+    :return: The :class:`OLP` associated with that value.
 
     Locally this will generally return a modifiable
-    copy of the associated **olp**. Remotely, it will
+    copy of the associated :class:`OLP`. Remotely, it will
     return
-    :meth:`olp.read_only_copy() <rpyc.security.lock_profiles.LockProfile.read_only_copy>`
+    :meth:`olp.read_only_copy() <rpyc.security.olps.OLP.read_only_copy>`
     """
     try:
         return value._rpyc__olp__
     except AttributeError:
-        raise ValueError("No olp found for value")
+        raise ValueError("No OLP found for value")
 
 def rpyc_type(value):
     """

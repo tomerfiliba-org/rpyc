@@ -2,7 +2,7 @@ from rpyc.security.restrictor import *
 from rpyc.security.utility import *
 from rpyc.security.exceptions import *
 from rpyc.security.restrictor import exposed_mark as emark
-from rpyc.security import lock_profiles
+from rpyc.security import olps
 from rpyc.security import locks
 
 import unittest
@@ -107,7 +107,7 @@ class TestRestrictorIdentity(unittest.TestCase):
                     'collections.namedtuple("foo",["a","b"])' ]
 
         self.add_version_dependent(not_called)
-        olp = lock_profiles.LockProfile()
+        olp = olps.OLP()
         olp.total_expose()
 
         for string_value in test_values:
@@ -231,7 +231,7 @@ class TestRestrictorIdentity(unittest.TestCase):
             def foo(self):
                 pass
 
-        olp = lock_profiles.LockProfile()
+        olp = olps.OLP()
         olp.total_expose()
         olp.replace_specified(getattr_locks={"|":locks.BLOCKED})
 
@@ -271,19 +271,19 @@ class TestRestrictorIdentity(unittest.TestCase):
         self.assertTrue(valid)
 
     def test_multiple_olp(self):
-        olp = lock_profiles.LockProfile()
+        olp = olps.OLP()
         class A:
             pass
 
         A1 = security_restrict(A, olp)
         A2 = security_restrict(A, olp)
         #There is logic that if you use same
-        #lock profile you get same object.
+        #object lock profile you get same object.
         self.assertIs(A1, A2)
 
         instanceA=A()
-        olp = lock_profiles.LockProfile()
-        olp2 = lock_profiles.LockProfile()
+        olp = olps.OLP()
+        olp2 = olps.OLP()
         a=A()
         a1 = security_restrict(a, olp)
         a2 = security_restrict(a, olp)
@@ -341,7 +341,7 @@ class TestRestrictorIdentity(unittest.TestCase):
         self.assertTrue(valid)
 
     def test_weird_use_of_class_dir(self):
-        olp = lock_profiles.LockProfile()
+        olp = olps.OLP()
         class A:
             pass
 
@@ -352,7 +352,7 @@ class TestRestrictorIdentity(unittest.TestCase):
         self.assertEqual(set(type(A1).__dir__(D)), set(type(A).__dir__(D)))
 
     def test__rpyc__unwrapped__(self):
-        olp = lock_profiles.LockProfile()
+        olp = olps.OLP()
         class A:
             pass
 
@@ -364,7 +364,7 @@ class TestRestrictorIdentity(unittest.TestCase):
         self.assertIs(unwrap(instanceA1), instanceA)
 
     def test_simple_exercise_of_attr_functions(self):
-        olp = lock_profiles.LockProfile()
+        olp = olps.OLP()
         class A:
             pass
         A = security_restrict(A, olp)
@@ -399,7 +399,7 @@ class TestRestrictorIdentity(unittest.TestCase):
         self.assertTrue(valid)
 
     def test_unmarked(self):
-        olp = lock_profiles.LockProfile(mark=False)
+        olp = olps.OLP(mark=False)
         class A:
             def __repr__(self):
                 #define so no id/address printed.
@@ -411,7 +411,7 @@ class TestRestrictorIdentity(unittest.TestCase):
         self.assertNotEqual(repr(A1()), repr(A()))
 
     def test_instance_dir(self):
-        olp = lock_profiles.LockProfile(mark=False)
+        olp = olps.OLP(mark=False)
         class A:
             pass
         A1 = security_restrict(A, olp)

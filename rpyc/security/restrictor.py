@@ -15,7 +15,7 @@ the API at this level is useful.
 
 import inspect
 
-from rpyc.security import lock_profiles
+from rpyc.security import olps
 from rpyc.security import exceptions
 from rpyc.security.utility import get_olp
 from rpyc.lib.colls import WeakIdMap
@@ -484,7 +484,7 @@ class SecurityRestrictor(object):
         class_restrictor.set_instance_restrictor(instance_restrictor)
         instance_restrictor.set_class_restrictor(class_restrictor)
 
-    #Set default to True if you want this to be the default profile for the class
+    #Set default to True if you want this to be the default OLP for the class
     def __call__(self, obj, olp = None,
                   default = False): #Don't document default yet
         """
@@ -492,7 +492,7 @@ class SecurityRestrictor(object):
 
         :param obj: Instance or class to create `RPyC Exposed` proxy for
         :param olp: An
-            :class:`object lock profile <rpyc.security.lock_profiles.LockProfile>`
+            :class:`OLP <rpyc.security.olps.OLP>`
             specifying how the attributes of ``obj`` are to be accessed
         :param bool default: Whether to store ``olp`` as the default for
             the class
@@ -507,24 +507,24 @@ class SecurityRestrictor(object):
         `RPyC Exposed` value.
 
         if ``olp`` is set to ``None``, a default
-        :class:`olp <rpyc.security.lock_profiles.LockProfile>`
-        ill be instantiated that does not yet allow access to anything.
+        :class:`OLP <rpyc.security.olps.OLP>`
+        will be instantiated that does not yet allow access to anything.
 
         The ``default`` parameter is a boolean used to signify that the
-        ``olp`` parameter should be used as the default olp for the
-        class. If ``True`` this method registers the class such that
+        ``olp`` parameter should be used as the default :class:`OLP` for
+        the class. If ``True`` this method registers the class such that
         :meth:`get_default_profile_for_class`
         will return ``olp`` when passed in the class in question.
 
         The :class:`Exposer <rpyc.security.exposer.Exposer>` class uses
-        this registry to determine what olp to inherit from when the
-        ``inherit`` arg to
+        this registry to determine what :class:`OLP` to inherit from when
+        the ``inherit`` arg to
         :func:`@expose <rpyc.security.exposer.Exposer.decorate>` is specified
         as a class.
         """
 
         if olp is None:
-            olp = lock_profiles.LockProfile()
+            olp = olps.OLP()
 
         if inspect.isclass(obj):
             return self._class_restrictor(obj,
@@ -538,15 +538,15 @@ class SecurityRestrictor(object):
     #This can only be set by calling with default=True
     def get_default_profile_for_class(self, cls):
         """Returns the last
-        :class:`olp <rpyc.security.lock_profiles.LockProfile>`
+        :class:`OLP <rpyc.security.olps.OLP>`
         associated as the default for ``cls``
 
-        :param cls: Class you want to get default olp for
-        :return: The :class:`olp` registered
-        :raises KeyError: if cls does not have a default registered :class:`olp`
+        :param cls: Class you want to get default :class:`OLP` for
+        :return: The :class:`OLP` registered
+        :raises KeyError: if cls does not have a default registered :class:`OLP`
 
         This returns the
-        :class:`olp <rpyc.security.lock_profiles.LockProfile>` last
+        :class:`OLP <rpyc.security.olps.OLP>` last
         registered as the `default` via a call to
         :class:`SecurityRestrictor <rpyc.security.restrictor.SecurityRestrictor>`
         """

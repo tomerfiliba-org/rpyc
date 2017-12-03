@@ -1,7 +1,7 @@
 import unittest
 from rpyc.security.exposer import *
 from rpyc.security import locks
-from rpyc.security import lock_profiles
+from rpyc.security import olps
 from rpyc.security import exceptions
 
 class TestExposerCornerCases(unittest.TestCase):
@@ -39,7 +39,7 @@ class TestExposerCornerCases(unittest.TestCase):
 
     def test_set_exposed_key_error(self):
         valid = False
-        olp = lock_profiles.LockProfile()
+        olp = olps.OLP()
         try:
             default_exposer._set_exposed(None, olp)#Someday weakrefs to None
                                                   #will be supported and
@@ -238,7 +238,7 @@ class TestExposerCornerCases(unittest.TestCase):
             class B(A):
                 pass
         except ValueError as e:
-            #"hello" is a string, not a profile or class
+            #"hello" is a string, not an OLP or class
             valid = True
         self.assertTrue(valid)
 
@@ -319,7 +319,7 @@ class TestExposerCornerCases(unittest.TestCase):
         valid = False
         try:
             #inherit of non-defined routine.
-            field_expose(A, "rhutabaga", inherit=lock_profiles.LockProfile())
+            field_expose(A, "rhutabaga", inherit=olps.OLP())
         except ValueError as e:
             valid = True
         self.assertTrue(valid)

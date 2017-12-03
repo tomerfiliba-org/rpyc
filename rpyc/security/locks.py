@@ -1,5 +1,5 @@
 """
-Definition of a Lock for an object lock profile (olp), support routines
+Definition of a Lock for an Object Lock Profile (OLP), support routines
 and/or predefined Locks
 """
 

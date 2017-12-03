@@ -1,5 +1,5 @@
 """
-Definition of a an object LockProfile (olp)
+Definition of a an Object Lock Profile (OLP)
 """
 
 import types
@@ -73,7 +73,7 @@ def LAD(value):
 #delattr_locks, etc...they are LIVE values, they can
 #be changed. To that extend, this code should never
 #append or changes those values, just replace or wrap them
-class LockProfile(object):
+class OLP(object):
     """Placeholder"""
     def __init__(self, getattr_locks = dict(),
                        setattr_locks = dict(),
@@ -229,7 +229,7 @@ class LockProfile(object):
         self.merge_specified(merge_mode = MERGE_OR,
                             **kwargs)
 
-    def and_profile(self, other):
+    def and_olp(self, other):
         self.and_specified(getattr_locks = other.getattr_locks,
                            setattr_locks = other.setattr_locks,
                            delattr_locks = other.delattr_locks,
@@ -237,7 +237,7 @@ class LockProfile(object):
                            cls_setattr_locks = other.cls_setattr_locks,
                            cls_delattr_locks = other.cls_delattr_locks)
 
-    def or_profile(self, other):
+    def or_olp(self, other):
         self.and_specified(getattr_locks = other.getattr_locks,
                            setattr_locks = other.setattr_locks,
                            delattr_locks = other.delattr_locks,
@@ -292,7 +292,7 @@ class LockProfile(object):
 
     def pop(self):
         if self._push is None:
-            raise SecurityError("LockProfile stack underflow--too many LockProfile.pop calls")
+            raise SecurityError("OLP stack underflow--too many OLP.pop calls")
         self.copy_into(self, self._push, include_stack = True)
 
     def copy_into(self, other, include_stack = False):

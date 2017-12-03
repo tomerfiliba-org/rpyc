@@ -53,8 +53,7 @@ with a few exceptions:
 
     * Only certain attributes are accessible via the :meth:`rpyc_???attr` methods, 
       and only in specific ways. The specific attributes exposed are determined
-      by an :class:`object lock profile<rpyc.security.lock_profiles.LockProfile>`,
-      which is commonly refered to as an **olp**.
+      by an object lock profile (:class:`OLP <rpyc.security.olps.OLP>`).
 
     * Classes that use metaclasses *may* not get wrapped properly when 
       `RPyC Exposed`. Classes that use metaclasses should probably 
@@ -93,7 +92,7 @@ This is done for multiple reasons:
 
     * The policy for access of attributes on the class 
       and instance are individually controllable, but the 
-      **olp** definition for both ends up in one place. 
+      :class:`OLP` definition for both ends up in one place. 
 
 The last point is important--in general you'd want to do things
 like expose a standard method call on instance, but not expose the same method
@@ -144,7 +143,7 @@ design.
 Object Lock Profile Inheritance
 -------------------------------
 
-If you do wish to inherit the :class:`olp` restrictions from one class
+If you do wish to inherit the :class:`OLP` restrictions from one class
 to another class, you may do so via the alternate mechanism of the
 ``inherit`` argument of the  :func:`@expose <rpyc.security.exposer.expose>` decorator.
 
@@ -212,8 +211,8 @@ internally.
 .. attribute:: rpyc_exposed._rpyc__olp__
 
 This is set to the 
-:class:`object lock profile<rpyc.security.lock_profiles.LockProfile>`
-(**olp**) associated with ``rpyc_exposed``. The value returned will
+:class:`OLP <rpyc.security.olps.OLP>`
+associated with ``rpyc_exposed``. The value returned will
 be   special read only copy if accessed via :meth:`_rpyc_getattr`
 rather than via :func:`getattr` means.
 
@@ -231,7 +230,7 @@ object that is being wrapped.
 
 This magic attribute cannot be accessed via 
 :meth:`_rpyc_getattr` unless specifically exposed by 
-the **olp** for security reasons.
+the :class:`OLP` for security reasons.
 
 Normally you should use the 
 :func:`unwrap() <rpyc.security.utility.unwrap>`
