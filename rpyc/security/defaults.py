@@ -7,6 +7,11 @@ from rpyc.security import locks
 from rpyc.security import olps
 
 class Profiles(object):
+    """This is a class that can be inherited and overridden to
+    set certain default :class:`OLP <rpyc.security.olps.OLP>`
+    definitions for specific object types.
+    """
+
     def __init__(self):
         #It is very important that I don't expose anything whose members
         #might be modifiable. For that reason I don't expose __defaults__
@@ -66,6 +71,17 @@ class Profiles(object):
 
     @property
     def class_exposed(self):
+        """This property stores a list of values automatically
+        exposed when you use
+        :class:`Exposer <rpyc.security.exposer.Exposer>` to
+        expose a class. The default setting is::
+
+            ["__module__", "__name__", "__qualname__", "__doc__"]
+
+        You can set this property to change this list.
+        Each of these properties will be locked with the any lock(s)
+        associated with the exposure of the class.
+        """
         return self._class_exposed
 
     @class_exposed.setter
@@ -75,6 +91,20 @@ class Profiles(object):
 
     @property
     def instance_exposed(self):
+        """This property stores a list of values automatically
+        exposed for instances of a class exposed with
+        :class:`Exposer <rpyc.security.exposer.Exposer>`.
+        The default setting is::
+
+            ["__module__", "__class__"]
+
+        The "__class__" attribute will return the `RPyC Exposed`
+        version of the class.
+
+        You can set this property to change this list.
+        Each of these properties will be locked with the any lock(s)
+        associated with the exposure of the class.
+        """
         return self._instance_exposed
 
     @instance_exposed.setter
@@ -84,6 +114,25 @@ class Profiles(object):
 
     @property
     def routine_exposed(self):
+        """This property stores a list of values automatically
+        exposed for routines when exposed with
+        :class:`Exposer <rpyc.security.exposer.Exposer>`.
+        The default settings is::
+
+            ["__dir__", "__doc__", "__eq__", "__format__",
+             "__ge__", "__gt__", "__hash__", "__le__", "__lt__",
+             "__ne__", "__repr__", "__sizeof__", "__str__", "__subclasshook__",
+             "__module__", "__name__", "__qualname__", "__call__,
+             "__text_signature__"]
+
+        If you are using Python 2, the list will also contain::
+
+             ["func_doc", "func_name"]
+
+        You can set this property to change this list.
+        Each of these properties will be locked with the any lock(s)
+        associated with the exposure of the routine.
+        """
         return self._routine_exposed
 
     @routine_exposed.setter
@@ -93,6 +142,24 @@ class Profiles(object):
 
     @property
     def routine_descriptor_exposed(self):
+        """This property stores a list of values automatically
+        exposed for routine descriptors when exposed with
+        :class:`Exposer <rpyc.security.exposer.Exposer>`.
+        The default settings is::
+
+            ["__dir__", "__doc__", "__eq__", "__format__",
+             "__ge__", "__gt__", "__hash__", "__le__", "__lt__",
+             "__ne__", "__repr__", "__sizeof__", "__str__", "__subclasshook__",
+             "__class__", "__isabstractmethod__"]
+
+        "__get__" is not exposed. (It will generally be
+        invoked locally in response to a remote access).
+
+        You can set this property to change this list.
+        Each of these properties will be locked with the any lock(s)
+        associated with the exposure of the routine descriptor
+        (or routine if done as part of a routine exposure).
+        """
         return self._routine_descriptor_exposed
 
     @routine_descriptor_exposed.setter
@@ -133,6 +200,24 @@ class Profiles(object):
         return olp
 
     def create_class_olp(self, value, lock = None):
+        """This creates a default olp for a newly
+        exposed class and its instances. You can
+        override this for fine control of the creation.
+
+        :param value: non-exposed class that we are creating the
+            :class:`OLP <rpyc.security.olps.OLP>` for
+        :param lock: lock parameter as commonly used in :class:`Exposer`
+        :return: A new baseline :class:`OLP` configured for the
+            class and its instances
+
+        The default version of this uses the :attr:`class_exposed`
+        and :attr:`instance_exposed` properties to build the
+        :class:`OLP <rpyc.security.olps.OLP>`
+        """
+
+        #It may not be in the API documentation, but you
+        #can safely use sanitize_lock_parameter
+        #and items_get_olp without fear when overriding.
         lock_list = locks.sanitize_lock_parameter(lock)
 
         return self.items_get_olp(lock_list = lock_list,
@@ -140,12 +225,47 @@ class Profiles(object):
                                   cls_items = self.class_exposed)
 
     def create_routine_olp(self, value, lock = None):
+        """This creates a default olp for a newly
+        exposed routine. You can override this for fine control
+        of the creation.
+
+        :param value: non-exposed routine that we are creating the
+            :class:`OLP <rpyc.security.olps.OLP>` for
+        :param lock: lock parameter as commonly used in :class:`Exposer`
+        :return: A new baseline :class:`OLP` configured for the
+            routine
+
+        The default version of this uses the :attr:`routine_exposed`
+        property to build the :class:`OLP <rpyc.security.olps.OLP>`
+        """
+
+        #It may not be in the API documentation, but you
+        #can safely use sanitize_lock_parameter
+        #and items_get_olp without fear when overriding.
         lock_list = locks.sanitize_lock_parameter(lock)
 
         return self.items_get_olp(lock_list = lock_list,
                                   items = self.routine_exposed)
 
     def create_routine_descriptor_olp(self, value, lock = None):
+        """This creates a default olp for a newly
+        exposed routine descriptor. You can override this for fine
+        control of the creation.
+
+        :param value: non-exposed routine descriptor that we are creating
+            the :class:`OLP <rpyc.security.olps.OLP>` for
+        :param lock: lock parameter as commonly used in :class:`Exposer`
+        :return: A new baseline :class:`OLP` configured for the
+            routine descriptor
+
+        The default version of this uses the
+        :attr:`routine_descriptor_exposed` property to build the
+        :class:`OLP <rpyc.security.olps.OLP>`
+        """
+
+        #It may not be in the API documentation, but you
+        #can safely use sanitize_lock_parameter
+        #and items_get_olp without fear when overriding.
         lock_list = locks.sanitize_lock_parameter(lock)
 
         return self.items_get_olp(lock_list = lock_list,
@@ -166,3 +286,7 @@ class Profiles(object):
                                   items = self.coroutine_exposed)
 
 default_profiles = Profiles()
+"""This is the default instance of :class:`Profiles` used by
+default by :data:`rpyc.security.exposer.default_exposer`
+"""
+

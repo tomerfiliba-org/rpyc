@@ -56,7 +56,7 @@ import types
 from rpyc.lib.compat import is_py3k
 from rpyc.security.restrictor import SecurityRestrictor, \
     security_restrict
-from rpyc.security.utility import is_restricted
+from rpyc.security.utility import is_exposed
 
 from rpyc.security import locks
 from rpyc.security import olps
@@ -182,7 +182,10 @@ class Exposer:
                            + "SecurityRestrictor")
         self._restrictor = restrictor
 
-        self.default_profiles = default_profiles
+        if not isinstance(default_profiles, defaults.Profiles):
+            raise ValueError("default_profiles must be an instance of "
+                           + "Profiles")
+        self._defaults = default_profiles
 
         #This only holds routines and classes
         #that are exposed, not all attributes.
@@ -206,7 +209,10 @@ class Exposer:
         try:
             lookup_id = self._peel(value)._rpyc__unwrapped_id__
             self._exposed.get_by_id(lookup_id)
-            return is_restricted(self._peel(value))
+
+            #this test if exposed by SecurityRestrictor--different
+            #than exposed by Exposer.
+            return is_exposed(self._peel(value))
         except (KeyError, AttributeError):
             pass
         return False
@@ -295,7 +301,7 @@ class Exposer:
     #simpler as we do not recurse into subclasses.
     def _get_direct_members(self, search_cls):
         results = []
-        names = type(search_cls).__dir__(search_cls)
+        names = dir(search_cls)
         for key in names:
             try:
                 value = self._get_direct(search_cls, key)
@@ -307,7 +313,15 @@ class Exposer:
         return results
 
     #This is a decorator we can use.
-    def expose(self, *args, lock=None, inherit=None, mark=True):
+    def expose(self, *args, **kwargs):
+        for key in kwargs:
+            if key not in ["lock", "inherit", "mark"]:
+                raise TypeError("expose() got unexpected keyword argument %s" % repr(key))
+
+        lock = kwargs.get("lock", None)
+        inherit = kwargs.get("inherit", None)
+        mark = kwargs.get("mark", True)
+
         wrapped = None
         if len(args) == 1:
             #Is it a lock or an argument?
@@ -397,6 +411,7 @@ class Exposer:
         cls_lock_list = locks.sanitize_lock_parameter(lock)
 
         items=[(key, item) for key, item in self._get_direct_members(value)]
+
         for key, member in items:
             exposure = EXPOSE_DEFAULT
             #If it is a direct member of new class, WIPE access to it on inherted
@@ -428,7 +443,10 @@ class Exposer:
                 dict_member = self._get_dict_version_first(value, key)
 
                 if self.is_routine_descriptor(dict_member):
-                    if not is_restricted(dict_member):
+                    #We only check is_exposed rather than
+                    #self._is_exposed here, because some
+                    #desciptors can't be weak ref'd.
+                    if not is_exposed(dict_member):
                         member = \
                             self.routine_descriptor_expose(dict_member,
                                                           lock = lock_list)

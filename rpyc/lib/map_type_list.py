@@ -5,7 +5,7 @@ go through _map_item
 
 class MapTypeList(list):
     def __init__(self, *args):
-        super().__init__()
+        super(MapTypeList, self).__init__()
         argument=tuple()
 
         if len(args) > 1:
@@ -16,22 +16,22 @@ class MapTypeList(list):
 
         for value in iter(argument):
             new_value = self._map_item(value)
-            super().append(new_value)
+            super(MapTypeList, self).append(new_value)
 
     def _map_item(self, item):
         raise NotImplementedError()
 
     def __add__(self, other):
-        return self.__class__(super().__add__(other))
+        return self.__class__(super(MapTypeList, self).__add__(other))
 
     def __mul__(self, other):
-        return self.__class__(super().__mul__(other))
+        return self.__class__(super(MapTypeList, self).__mul__(other))
 
     def __rmul__(self, other):
-        return self.__class__(super().__rmul__(other))
+        return self.__class__(super(MapTypeList, self).__rmul__(other))
 
     def __getitem__(self, index_or_slice):
-        result = super().__getitem__(index_or_slice)
+        result = super(MapTypeList, self).__getitem__(index_or_slice)
         if isinstance(index_or_slice, slice):
             return self.__class__(result)
         return result
@@ -42,7 +42,7 @@ class MapTypeList(list):
             value=self.__class__(value)
         else:
             value=self._map_item(value)
-        super().__setitem__(index_or_slice, value)
+        super(MapTypeList, self).__setitem__(index_or_slice, value)
 
     def append(self, value):
         self[len(self):]=[value]

@@ -47,7 +47,7 @@ with a few exceptions:
 
     * :meth:`_rpyc_getattr`, :meth:`_rpyc_setattr`, and
       :meth:`_rpyc_delattr` methods are added  to the value. If you create
-      a `RPyC restricted` object from any object that has already 
+      a `RPyC Exposed` object from any object that has already 
       defined one or more of these methods, they will be called within
       the new :meth:`_rpyc_???attr` definitions.
 
@@ -78,16 +78,16 @@ Simultaneous Class and Instance Definition
 ==========================================
 
 Whenever a `RPyC Exposed` object is created, a definition for both
-the class and instance are created. Instantiating a `RPyC Restricted` class
+the class and instance are created. Instantiating a `RPyC Exposed` class
 will create a `RPyC Exposed` instance.  Similarly, the :attr:`__class__` 
-attribute of a `RPyC Restricted` instance will return a `RPyC Restricted`
+attribute of a `RPyC Exposed` instance will return a `RPyC Exposed`
 class.
 
 This is done for multiple reasons:
     * To make the wrapping of multiple objects more seamless.
 
     * So that you can pass classes to other pieces of 
-      code and have them instantiate restricted objects without
+      code and have them instantiate exposed objects without
       requiring modification.
 
     * The policy for access of attributes on the class 
@@ -102,7 +102,7 @@ the definition for instance and class exposure with the class definition.
 
 It is still possible to have two different objects of the same class have two
 different security policies.  However, in that case, each will have their own 
-`RPyC Restricted` class returned by their :attr:`__class__` attribute.
+`RPyC Exposed` class returned by their :attr:`__class__` attribute.
 
 .. _api-security-rpyc-exposed-isinstance:
 
@@ -129,12 +129,12 @@ Inheritance
 ===========
 
 There are several caveats having to do with class inheritance of `RPyC
-Restricted` classes
+Exposed` classes
 
 Proxy Stripping
 ---------------
 
-When you inherit a `RPyC Restricted` class locally the `RPyC Restricted`
+When you inherit a `RPyC Exposed` class locally the `RPyC Exposed`
 proxy wrapping is removed via metaclass magic.
 
 Therefore the new class will not be a `RPyC Exposed` class at all. This is by
@@ -153,10 +153,10 @@ Remote Inheritance
 Python inheritance of `RPyC Exposed` classes on the remote side over a 
 :ref:`netref <api-netref>` wll not work at all.
 
-Multiple `RPyC Restricted` Inheritance
+Multiple `RPyC Exposed` Inheritance
 --------------------------------------
 
-Unfortunately, inheriting from two `RPyC Restricted` classes will cause
+Unfortunately, inheriting from two `RPyC Exposed` classes will cause
 a problem::
 
     @expose
@@ -174,7 +174,7 @@ Will yield the error::
 
     TypeError: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases
 
-The solution is to allow only one `RPyC restricted` class to be inherited.
+The solution is to allow only one `RPyC Exposed` class to be inherited.
 You can use the :func:`unwrap() <rpyc.security.utility.unwrap>` function
 if necessary.
 
@@ -183,19 +183,19 @@ Magic Attributes
 
 `RPyC exposed` values have the following magic attributes:
 
-.. attribute:: rpyc_exposed._rpyc__restricted__
+.. attribute:: rpyc_exposed._rpyc__exposed__
 
 This is set to `id(rpyc_exposed)` at the time of the wrapping.
 The value is an id rather than a simple boolean, such that
 one can detect whether the value has been wrapped or 
-restricted further in another way (such as via netref).
+otherwise proxied further in some way (such as via netref).
 
 This magic attribute is always accessible, regardless of
 whatever else may or may not be exposed.
 
 Normally you should use the
-:func:`check_restricted() <rpyc.security.utility.check_restricted>`
-or :func:`is_restricted() <rpyc.security.utility.is_restricted>` functions
+:func:`check_exposed() <rpyc.security.utility.check_exposed>`
+or :func:`is_exposed() <rpyc.security.utility.is_exposed>` functions
 rather than using this attribute directly.
 
 .. attribute:: rpyc_exposed._rpyc__unwrapped_id__

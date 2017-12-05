@@ -5,7 +5,7 @@ query :ref:`RPyC Exposed<api-security-rpyc-exposed>` objects.
 
 from rpyc.security import exceptions
 
-def check_restricted(value):
+def check_exposed(value):
     """Checks to see if ``value`` is a `RPyC Exposed` value.
 
     :param value: Value to see if `RPyC Exposed` object.
@@ -19,17 +19,17 @@ def check_restricted(value):
     try:
         #This checks also to see if the value
         #has been wrapped by another wrapper.
-        if (value._rpyc__restricted__ != id(value)):
-            raise exceptions.SecurityWrapError("RPYC restricted object "
+        if (value._rpyc__exposed__ != id(value)):
+            raise exceptions.SecurityWrapError("RPyC exposed object "
                 + "has been wrapped, or proxied by another.")
         return True
     except AttributeError:
         return False
 
-#The difference between check_restricted and this
-#is that check_restricted can throw a security
-#wrap error.
-def is_restricted(value):
+#The difference between check_exposed and this
+#is that check_exposed can throw a
+#SecurityWrapError.
+def is_exposed(value):
     """
     Checks to see if value is a `RPyC Exposed` value.
 
@@ -38,13 +38,13 @@ def is_restricted(value):
         otherwise.
 
     The difference between this and
-    :func:`check_restricted()  <rpyc.security.restrictor.check_restricted>`
+    :func:`check_exposed()  <rpyc.security.restrictor.check_exposed>`
     is that this version will return False rather than throwing a
     :class:`SecurityWrapError <rpyc.security.exceptions.SecurityWrapError>`
     """
 
     try:
-        return check_restricted(value)
+        return check_exposed(value)
     except exceptions.SecurityWrapError:
         return False
 

@@ -14,23 +14,15 @@ the API at this level is useful.
 #against the test suites, which hopefully catch all the important cases.
 
 import inspect
+import types
 
 from rpyc.security import olps
 from rpyc.security import exceptions
 from rpyc.security.utility import get_olp
 from rpyc.lib.colls import WeakIdMap
+from rpyc.lib.compat import basestring, is_py3k
 
-#This compatibility hack is duplicated,
-#need to put it in a module I inherit * from,
-#or do basestring = basestring
-
-#Python 2 & 3 compatibility hack
-try:
-    basestring
-except:
-    basestring = str
-
-#This is used to mark a vaue as restricted in various
+#This is used to mark a vaue as exposed in various
 #__repr__ functions. We also call it in test code
 #to make sure the mark is showing up.
 def exposed_mark(value):
@@ -41,6 +33,11 @@ def exposed_mark(value):
         return value[:-1] + " (RPyC exposed)>"
     else:
         return value + " (RPyC exposed)"
+
+def _force_metaclass(cls, meta):
+    # python 2 and 3 compatible metaclasses..
+    ns = dict(cls.__dict__)
+    return meta(cls.__name__, cls.__bases__, ns)
 
 class SecurityClassRestrictor(object):
     accessors = set(["_rpyc_getattr", "_rpyc_setattr", "_rpyc_delattr"])
@@ -62,7 +59,7 @@ class SecurityClassRestrictor(object):
 
         def _secure_getattr(cls, name, secured = True):
             #These are always visible.
-            if name == "_rpyc__restricted__":
+            if name == "_rpyc__exposed__":
                 return id(cls)
             elif name == "_rpyc__unwrapped_id__":
                 return id(obj)
@@ -97,16 +94,18 @@ class SecurityClassRestrictor(object):
 
         class FakeType(type):
             def __repr__(cls, *arg, **kwargs):
-                obj_class = obj.__class__
-                obj_class_class = obj_class.__class__
-                return_value = obj_class_class.__repr__(obj.__class__,
+                obj_class = type(obj)
+                obj_class_class = type(obj_class)
+                return_value = obj_class_class.__repr__(obj_class,
                                                         *arg, **kwargs)
                 return return_value
 
-        class SecureType(type, metaclass = FakeType):
+        #We will add the metaclass FakeType to this
+        class SecureType(type):
             __name__ = type.__name__
             __module__ = type.__module__
-            __qualname__ = type.__qualname__
+            if hasattr(type, "__qualname__"): #for python 2
+                __qualname__ = type.__qualname__
 
             #THIS IS INVOKED when subclassing, which is
             #good. we can replace bases.
@@ -145,9 +144,18 @@ class SecurityClassRestrictor(object):
                 if subtyped: #Bypass this class altogether.
                              #This is so important. inheritance will
                              #break badly without it.
-                    return type(name, tuple(new_bases), dict)
+                    if isinstance(obj, type):
+                        return type(name, tuple(new_bases), dict)
+                    else:
+                        #old style python objects.
+                        return type(obj)(name, tuple(new_bases), dict)
                 else:
-                    return type.__new__(cls, name, tuple(new_bases), dict)
+                    try:
+                        return type.__new__(cls, name, tuple(new_bases), dict)
+                    except TypeError:
+                        #python2 classobj type then.
+                        #We still simulate it with a new style object.
+                        return type.__new__(cls, name, tuple(new_bases+[object]), dict)
 
             def __init__(cls, name, bases, dict):
                 super(SecureType, cls).__init__(name, bases, dict)
@@ -166,7 +174,7 @@ class SecurityClassRestrictor(object):
 
             def __dir__(cls):
                 if cls is class_value:
-                    obj_dir = type(obj).__dir__(obj) #returns more than dir(obj)
+                    obj_dir = dir(obj)
                     obj_dir += list(SecurityClassRestrictor.accessors)
                 else:
                     obj_dir = type(obj).__dir__(cls)
@@ -175,7 +183,7 @@ class SecurityClassRestrictor(object):
                 return sorted(final_dir)
 
 
-            #This makes magical restricted construction happen.
+            #This makes magical exposed construction happen.
             def __call__(cls, *args, **kwargs):
                 #This is probably only necessary to ensure lock_local
                 #calls.
@@ -185,7 +193,8 @@ class SecurityClassRestrictor(object):
                 if security_enabled and olp.lock_local:
                     olp.cls_getattr_check(obj, "__call__")
 
-                return_value = obj.__call__(*args, **kwargs)
+                #return_value = obj.__call__(*args, **kwargs)
+                return_value = obj(*args, **kwargs)
                 #self here is from wrapping object--not a typo
                 return self._instance_restrictor(return_value, olp)
 
@@ -221,12 +230,36 @@ class SecurityClassRestrictor(object):
             def __instancecheck__(cls, other):
                 return isinstance(other, obj) or super(SecureType, cls).__instancecheck__(other)
 
+        #Add FakeType metaclass
+        SecureType = _force_metaclass(SecureType, FakeType)
+
+        #will be adding SecureType as metaclass of SecurityRestrictedClass
         try:
-            class SecurityRestrictedClass(obj, metaclass = SecureType):
+            class SecurityRestrictedClass(obj):
                 pass
         except TypeError: #not acceptable base type.
-            class SecurityRestrictedClass(*obj.__bases__, metaclass = SecureType):
-                pass
+            #Old version of this code:
+            #   class SecurityRestrictedClass(*obj.__bases__):
+            #        pass
+            #
+            #However, python2 doesn't support "*" with class
+            #inheritances..
+            #
+            #Therefore, we metaprogram.
+            exec_string = "class SecurityRestrictedClass("
+            base_strings = []
+            for i in range(len(obj.__bases__)):
+                base_strings.append("obj.__bases__[%s]" % i)
+            exec_string += ", ".join(base_strings)
+            exec_string += "):\n"
+            exec_string += "    pass\n"
+            new_locals = dict(locals())
+            exec(exec_string, globals(), new_locals)
+            SecurityRestrictedClass = new_locals["SecurityRestrictedClass"]
+
+        #Add SecureType metaclass
+        SecurityRestrictedClass = \
+            _force_metaclass(SecurityRestrictedClass, SecureType)
 
         #Register object, so we always get back same class instance with same
         #olp.
@@ -280,7 +313,7 @@ class SecurityInstanceRestrictor(object):
 
         def _secure_getattr(self, name, secured = True):
             #These are always visible.
-            if name == "_rpyc__restricted__":
+            if name == "_rpyc__exposed__":
                 return id(self) #For comparison purposes to see if wrapped.
             elif name == "_rpyc__unwrapped_id__":
                 return id(obj)
@@ -332,19 +365,20 @@ class SecurityInstanceRestrictor(object):
 
         class FakeType(type):
             def __repr__(cls, *arg, **kwargs):
-                return_repr = exposed_mark(repr(obj.__class__))
+                return_repr = exposed_mark(repr(type(obj)))
                 return return_repr
 
             #This is here to prevent type() from exposing
             #a whole bunch of modifiable things.
             def __getattribute__(cls, name):
-                if name == "_rpyc__restricted__":
+                if name == "_rpyc__exposed__":
                     return id(cls)
                 if name == "__repr__":
-                    return super().__getattribute__(name)
+                    return super(FakeType, cls).__getattribute__(name)
                 raise AttributeError("Not Found, try using rpyc_type")
 
-        class SecurityRestrictedProxy(metaclass = FakeType):
+        #Will be adding FakeType metaclass
+        class SecurityRestrictedProxy(object):
             #Has to be here or isn't callable.
             def __call__(self, *args, **kwargs):
                 return obj.__call__(*args, **kwargs)
@@ -377,15 +411,19 @@ class SecurityInstanceRestrictor(object):
                 return _secure_delattr(self, name, secured = olp.lock_local)
 
             def __repr__(self, *arg, **kwargs):
-                repr_value = obj.__repr__(*arg, **kwargs)
+                if is_py3k:
+                    repr_value = obj.__repr__(*arg, **kwargs)
+                else:
+                    repr_value = repr(obj)
+
                 if olp.mark:
                     repr_value = exposed_mark(repr_value)
                 return repr_value
 
             #This is like __call__, if not defined, builtin code fails.
             #for function binding we need this.
-            def __get__(self, *arg, **kwargs):
-                value = obj.__get__(*arg, **kwargs)
+            def __get__(self, bind_obj, bind_type=None):
+                value = obj.__get__(bind_obj, bind_type)
                 if inspect.isroutine(obj):
                     #deal with function/method binding
                     new_olp = olp #use same olp as us if we
@@ -404,6 +442,15 @@ class SecurityInstanceRestrictor(object):
                         except (AttributeError, ValueError):
                             #approprate OLP wasn't found
                             new_olp=None
+                    else:
+                        #the __get__ for python2 for class
+                        #is problematic. When we wrap it
+                        #__get__ still returns original
+                        #version.
+                        if not is_py3k:
+                            if type(value) == types.UnboundMethodType:
+                                if value.__func__ is not self:
+                                    value = types.UnboundMethodType(self, bind_obj, bind_type)
 
                     if new_olp != None:
                         #expose new binding same as this one.
@@ -411,11 +458,15 @@ class SecurityInstanceRestrictor(object):
                 return value
 
             def __dir__(self):
-                obj_dir = obj.__dir__()
+                obj_dir = dir(obj)
                 #set is to remove duplicates.
                 final_dir = list(set(obj_dir
                                + list(SecurityInstanceRestrictor.accessors)))
                 return sorted(final_dir)
+
+        #Add FakeType metaclass
+        SecurityRestrictedProxy = \
+            _force_metaclass(SecurityRestrictedProxy, FakeType)
 
         #This is always taken. Find a python object without a __class__
         #and we can test it without resorting to a weird proxy obj
@@ -423,6 +474,7 @@ class SecurityInstanceRestrictor(object):
             class_value = self.class_restrictor(obj.__class__,
                                                 olp,
                                                 default=default)
+
         security_enabled = True
 
         created = False

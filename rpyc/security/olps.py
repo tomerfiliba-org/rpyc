@@ -1,5 +1,10 @@
 """
-Definition of a an Object Lock Profile (OLP)
+The :mod:`rpyc.security.olps` contains the definition of
+:class:`OLP`, otherwise known as an object lock profile.
+
+An object lock profile specifies what attributes can
+be remotely accessed for a `RPyC Exposed`
+class and its instances.
 """
 
 import types
@@ -8,6 +13,10 @@ from rpyc.lib.compat import is_py3k
 from rpyc.lib.colls import MapTypeDict
 from rpyc.security import locks
 from rpyc.security.exceptions import SecurityError, SecurityAttrError
+
+if not is_py3k:
+    import keyword
+    import re
 
 #MERGE modification types
 MERGE_REPLACE = 0
@@ -24,8 +33,8 @@ def is_identifier(value):
             value = str(value)
         except UnicodeEncodeError:
             return False
-        if value in keyword.kwlist:
-            return valse
+        if keyword.iskeyword(value):
+            return False
         return re.match(r'^[a-z_][a-z0-9_]*$', value, re.I) is not None
 
 def is_attr_wildcard(key):
@@ -39,6 +48,17 @@ def sanitize_attr_key(key):
     return key
 
 class LockAttrDictionary(MapTypeDict):
+    """Implementation of :class:`dict` that:
+
+        * Only allows wildcards and valid Python
+           identifier strings as keys.
+        * Only allows
+          :class:`LockListShared <rpyc.security.locks.LockListShared>`
+          values as items.
+
+        The constructor has the same interface as :class:`dict`
+    """
+
     def _map_key(self, key):
         key = sanitize_attr_key(key)
         return key
@@ -74,7 +94,84 @@ def LAD(value):
 #be changed. To that extend, this code should never
 #append or changes those values, just replace or wrap them
 class OLP(object):
-    """Placeholder"""
+    """Object Lock Profile Class (OLP) class
+
+    An :class:`OLP` specifies what attributes can be
+    remotely accessed via :func:_rpyc_getattr,
+    :func:_rpyc_setattr, and :func_rpyc_delattr
+    for a `RPyC Exposed` class and its instances.
+
+    :param getattr_locks: A :class:`LockAttrDictionary` or value for
+        which ``LockAttrDictionary(value)`` works
+    :param setattr_locks: A :class:`LockAttrDictionary` or value for
+        which ``LockAttrDictionary(value)`` works
+    :param delattr_locks: A :class:`LockAttrDictionary` or value for
+        which ``LockAttrDictionary(value)`` works
+    :param cls_getattr_locks: A :class:`LockAttrDictionary` or value for
+        which ``LockAttrDictionary(value)`` works
+    :param cls_setattr_locks: A :class:`LockAttrDictionary` or value for
+        which ``LockAttrDictionary(value)`` works
+    :param cls_delattr_locks: A :class:`LockAttrDictionary` or value for
+        which ``LockAttrDictionary(value)`` works
+    :param bool lock_local: Used for currently unimplemented feature
+    :param bool mark: Set this to ``True`` or ``False`` to indicate
+        whether ``repr(instance)`` will mark instances with "RPyC exposed"
+
+    All these parameters are optional.
+
+    Conceptually use of this class is very simple.
+
+    Associated with each :class:`OLP` are a set of dictionaries.
+    Each of these dictionaries is known as a
+    :class:`LockAttrDictionary` or
+    :class:`LAD <LockAttrDictionary>`
+    Each of these dictionaries is in charge of
+    a different type of access:
+
+        * ``getattr_locks`` is in charge of get accesses to instances
+        * ``setattr_locks`` is in charge of set accesses to instances
+        * ``delattr_locks`` is in charge of del accesses to instances
+        * ``cls_getattr_locks`` is in charge of get accesses to the class
+        * ``cls_setattr_locks`` is in charge of set accesses to the class
+        * ``cls_delattr_locks`` is in charge of del accesses to the class
+
+    The keys of each dictionary are the names of accessible attributes.
+
+    If a key doesn't exist, it isn't accessible.
+
+    Each item stored in a key slot is a
+    :class:`LockListShared <rpyc.security.locks.LockListShared>`
+    representing a boolean expression of
+    :class:`Lock <rpyc.security.locks.Lock>` types that must
+    evaluate to ``True`` in order to access that attribute.
+
+    Additionally the keys "*", "&", and "|" can be present in a
+    :class:`LockAttrDictionary` to allow special wildcard based access.
+
+    Access checking proceeds as follows::
+
+        (check_locks(attribute_name) and check_locks('&')) or check_locks('|')
+
+    That is, any :class:`LockListShared` stored with the "&" wildcard key
+    can be used to impose additional constraints for all attribute accesses
+    of a type.
+
+    A :class:`LockListShared` stored to the "|" wildcard key can be used
+    to bypass normal access for a specific type of access.
+
+    The '*' wildcard only comes into play only if an attribute name is not
+    found in the :class:`LockAttrDictionary`. Normally a missing attribute
+    name makes the first term in the parenthesis of the expression above
+    automatically ``False``. However the `*` wildcard can be used to
+    specify locks to use for accessing attributes missing from the
+    :class:`LockAttrDictionary`.
+
+    .. note ::
+
+        Each :class:`LockAttrDictionary` specified by the constructor
+        will be copied before being stored internally. The copies will be
+        a deep copy of everything but the :class:`Lock` values themselves.
+    """
     def __init__(self, getattr_locks = dict(),
                        setattr_locks = dict(),
                        delattr_locks = dict(),
@@ -100,6 +197,10 @@ class OLP(object):
 
     #Makes nothing readable, but no locks included
     def wipe(self):
+        """Replaces all the :class:`LockAttrDictionary`
+        items associated with the :class:`OLP` with
+        empty ones, making nothing accessible.
+        """
         self.replace(getattr_locks = dict(),
                      setattr_locks = dict(),
                      delattr_locks = dict(),
@@ -123,7 +224,33 @@ class OLP(object):
                              cls_getattr_locks = set(),
                              cls_setattr_locks = set(),
                              cls_delattr_locks = set()):
+        """Used to remove access associated with identifiers
+        and wildcards on a case by case basis.
 
+        :param getattr_locks: A :class:`set` of specified Python identifiers and/or
+            wildcards to wipe from the internal ``getattr_locks``
+            :class:`LockAttrDictionary`
+        :param setattr_locks: A :class:`set` of specified Python identifiers and/or
+            wildcards to wipe from the internal ``setattr_locks``
+            :class:`LockAttrDictionary`
+        :param delattr_locks: A :class:`set` of specified Python identifiers and/or
+            wildcards to wipe from the internal ``delattr_locks``
+            :class:`LockAttrDictionary`
+        :param cls_getattr_locks: A :class:`set` of specified Python identifiers and/or
+            wildcards to wipe from the internal ``cls_getattr_locks``
+            :class:`LockAttrDictionary`
+        :param cls_setattr_locks: A :class:`set` of specified Python identifiers and/or
+            wildcards to wipe from the internal ``cls_setattr_locks``
+            :class:`LockAttrDictionary`
+        :param cls_delattr_locks: A :class:`set` of specified Python identifiers and/or
+            wildcards to wipe from the internal ``cls_delattr_locks``
+            :class:`LockAttrDictionary`
+
+        Any identifier of wildcard found in one of these :class:`set` values will be
+        wiped from the associated internal :class:`LockAttrDictionary`.
+
+        These are all empty by default which means nothing will be wiped.
+        """
         self._wipe_attr_locks(self.getattr_locks, getattr_locks)
         self._wipe_attr_locks(self.setattr_locks, setattr_locks)
         self._wipe_attr_locks(self.delattr_locks, delattr_locks)
@@ -133,6 +260,14 @@ class OLP(object):
 
     #Makes nothing readable, but no locks included
     def wipe_name(self, name):
+        """Used to remove entries with the key of ``name`` from
+        all six internal :class:`LockAttrDictionary` values, making
+        `name` completely inaccessible (except possibly by wildcard).
+
+        :param str name: Name of identifier or wildcard to be removed
+            from :class:`OLP`
+        """
+
         value = set([name])
         self.wipe_specified(getattr_locks = value,
                             setattr_locks = value,
@@ -147,7 +282,31 @@ class OLP(object):
                       cls_getattr_locks = None,
                       cls_setattr_locks = None,
                       cls_delattr_locks = None):
+        """Used to replace one or more internal
+        :class:`LockAttrDictionary` values.
 
+        :param getattr_locks: A :class:`LockAttrDictionary`, a value for
+            which ``LockAttrDictionary(value)`` works, or None
+        :param setattr_locks: A :class:`LockAttrDictionary`, a value for
+            which ``LockAttrDictionary(value)`` works, or None
+        :param delattr_locks: A :class:`LockAttrDictionary`, a value for
+            which ``LockAttrDictionary(value)`` works, or None
+        :param cls_getattr_locks: A :class:`LockAttrDictionary`, a value for
+            which ``LockAttrDictionary(value)`` works, or None
+        :param cls_setattr_locks: A :class:`LockAttrDictionary`, a value for
+            which ``LockAttrDictionary(value)`` works, or None
+        :param cls_delattr_locks: A :class:`LockAttrDictionary`, a value for
+            which ``LockAttrDictionary(value)`` works, or None
+
+        Any parameter which isn't ``None`` will replace the internal
+        specified :class:`LockAttrDictionary`.
+
+        .. note ::
+
+            Each :class:`LockAttrDictionary` specified in :meth:`replace`
+            will be copied before being stored internally. The copies will be
+            a deep copy of everything but the :class:`Lock` values themselves.
+        """
         if getattr_locks is not None:
             self.getattr_locks = LAD(getattr_locks)
 
@@ -195,7 +354,54 @@ class OLP(object):
                          cls_getattr_locks = {},
                          cls_setattr_locks = {},
                          cls_delattr_locks = {}):
+        """Used to merge other :class:`LockAttrDictionary` values
+        into the :class:`OLP`.
 
+        :param merge_mode: Specifies how the data will be merged
+        :param getattr_locks: A :class:`LockAttrDictionary`, or a value for
+            which ``LockAttrDictionary(value)`` works
+        :param setattr_locks: A :class:`LockAttrDictionary`, or a value for
+            which ``LockAttrDictionary(value)`` works
+        :param delattr_locks: A :class:`LockAttrDictionary`, or a value for
+            which ``LockAttrDictionary(value)`` works
+        :param cls_getattr_locks: A :class:`LockAttrDictionary`, or a value for
+            which ``LockAttrDictionary(value)`` works
+        :param cls_setattr_locks: A :class:`LockAttrDictionary`, or a value for
+            which ``LockAttrDictionary(value)`` works
+        :param cls_delattr_locks: A :class:`LockAttrDictionary`, or a value for
+            which ``LockAttrDictionary(value)`` works
+
+        For each of the :class:`LockAttrDictionary` parameters, the keys
+        of that :class:`LockAttrDictionary` are iterated over. If the key
+        doesn't exist in the associated internal :class:`LockAttrDictionary`,
+        it is added::
+
+            internal[key] = parameter[key]
+
+        If a value already *does* exist internally, the information
+        from ``internal[key]`` is *merged* with the information
+        from ``parameter[key]``.
+
+        The merge can be one of several different types, specified by
+        the `merge_mode` parameter:
+
+            * :data:`MERGE_REPLACE` specifies::
+
+                internal[key] = parameter[key]
+
+            * :data:`MERGE_AND` specifies::
+
+               internal[key] = LockListAnd(internal[key], parameter[key])
+
+            * :data:`MERGE_OR` specifies::
+
+               internal[key] = LockListOr(internal[key], parameter[key])
+
+        .. note ::
+
+            All provided parameter data is copied. The copies will be
+            a deep copy of everything but the :class:`Lock` values themselves.
+        """
         if merge_mode == MERGE_REPLACE:
             merger = self._merge_replace
         elif merge_mode == MERGE_AND:
@@ -218,18 +424,49 @@ class OLP(object):
 
     #Will only replace attr locks if there is a key.
     def replace_specified(self, **kwargs):
+        """Shorthand for::
+
+            self.merge_specified(merge_mode=MERGE_REPLACE, **kwargs)
+
+        ..
+        """
         self.merge_specified(merge_mode = MERGE_REPLACE,
                              **kwargs)
 
     def and_specified(self, **kwargs):
+        """Shorthand for::
+
+            self.merge_specified(merge_mode=MERGE_AND, **kwargs)
+
+        ..
+        """
         self.merge_specified(merge_mode = MERGE_AND,
                              **kwargs)
 
     def or_specified(self, **kwargs):
+        """Shorthand for::
+
+            self.merge_specified(merge_mode=MERGE_OR, **kwargs)
+
+        ..
+        """
         self.merge_specified(merge_mode = MERGE_OR,
                             **kwargs)
 
     def and_olp(self, other):
+        """this performs an :meth:`and_specified`
+        over all six :class:`LockAttrDictionary` values of the
+        `other` parameter merging its data into our self.
+
+        :param OLP other: the other :class:`OLP` to merge in.
+
+        using `and_olp` to merge in usually does the right thing,
+        but may not be what is desired in particular if wildcards
+        are in use.
+        """
+        if not isinstance(other, OLP):
+            raise ValueError("other is not an OLP")
+
         self.and_specified(getattr_locks = other.getattr_locks,
                            setattr_locks = other.setattr_locks,
                            delattr_locks = other.delattr_locks,
@@ -238,14 +475,49 @@ class OLP(object):
                            cls_delattr_locks = other.cls_delattr_locks)
 
     def or_olp(self, other):
-        self.and_specified(getattr_locks = other.getattr_locks,
-                           setattr_locks = other.setattr_locks,
-                           delattr_locks = other.delattr_locks,
-                           cls_getattr_locks = other.getattr_locks,
-                           cls_setattr_locks = other.cls_setattr_locks,
-                           cls_delattr_locks = other.cls_delattr_locks)
+        """this performs an :meth:`or_specified`
+        over all six :class:`LockAttrDictionary` values of the
+        `other` parameter merging its data into our self.
+
+        :param OLP other: the other :class:`OLP` to merge in.
+        """
+        self.or_specified(getattr_locks = other.getattr_locks,
+                          setattr_locks = other.setattr_locks,
+                          delattr_locks = other.delattr_locks,
+                          cls_getattr_locks = other.cls_getattr_locks,
+                          cls_setattr_locks = other.cls_setattr_locks,
+                          cls_delattr_locks = other.cls_delattr_locks)
 
     def total_expose(self, lock_list=[], wildcard="|"):
+        """This is a convenience function to totally expose
+        an :class:`OLP`.
+
+        :param lock_list: A
+            :class:`LockListShared <rpyc.security.locks.LockListShared>`
+            (or an iterable suitable to be passed into
+            :class:`LockListAnd <rpyc.security.locks.LockListAnd>`
+            constructor)
+
+        :param wildcard: '*', '&', or '|'
+
+        This uses :meth:`or_specified` to merge::
+
+            LockAttrDictionary({wildcard:lock_list})
+
+        Into all six internal :class:`LockAttrDictionary`
+        values.
+
+        Using "*" exposes anything that isn't already
+        exposed with the locks of ``lock_list``.
+
+        Using "|" exposes anything with the locks of
+        ``lock_list``.
+
+        Using "&" adds the need to pass the locks
+        of ``lock_list`` to access anything (at least
+        anything that does not have an alternate "|" wildcard
+        accessor)
+        """
         lock_list = locks.sanitize_and_copy_lock_list(lock_list)
 
         if not wildcard in "*&|":
@@ -266,6 +538,33 @@ class OLP(object):
                           cls_delattr_locks = cls_delattr_locks)
 
     def read_expose(self, lock_list=[], wildcard="|"):
+        """This is a convenience function to make every attribute
+        :meth:`_rpyc_getattr`` accessible for an :class:`OLP`.
+
+        :param lock_list: A
+            :class:`LockListShared <rpyc.security.locks.LockListShared>`
+            (or an iterable suitable to be passed into
+            :class:`LockListAnd <rpyc.security.locks.LockListAnd>`
+            constructor)
+        :param wildcard: '*', '&', or '|'
+
+        This uses :meth:`or_specified` to merge::
+
+            LockAttrDictionary({wildcard:lock_list})
+
+        Into ``getattr_locks`` and ``cls_getattr_locks``.
+
+        Using "*" exposes anything for reading that isn't already
+        exposed with the locks of ``lock_list``.
+
+        Using "|" exposes anything for reading with the locks of
+        ``lock_list``.
+
+        Using "&" adds the need to pass the locks
+        of ``lock_list`` to read anything (at least
+        anything that does not have an alternate "|" wildcard
+        accessor)
+        """
         lock_list = locks.sanitize_and_copy_lock_list(locks_list)
 
         if not wildcard in "*&|":
@@ -274,11 +573,17 @@ class OLP(object):
         getattr_locks = {wildcard:lock_list}
         cls_getattr_locks = {wildcard:lock_list}
 
-        self.replace_specified(getattr_locks = getattr_locks,
-                               cls_getattr_locks = cls_getattr_locks)
+        self.or_specified(getattr_locks = getattr_locks,
+                          cls_getattr_locks = cls_getattr_locks)
 
 
     def push(self):   #Stores copy of self on stack to pop to.
+        """Convenience function that pushes copy of entire
+        :class:`OLP` :class:`LockAttrDictionary` state into an
+        internal stack. It can then be modified temporarily,
+        used, and restored with a :meth:`pop`
+        """
+
         self._push = ( self.copy(self, include_stack = True))
 
         #new version should be copy, a deepcopy, using replace does the
@@ -291,11 +596,19 @@ class OLP(object):
                      cls_delattr_locks = self.cls_delattr_locks)
 
     def pop(self):
-        if self._push is None:
-            raise SecurityError("OLP stack underflow--too many OLP.pop calls")
-        self.copy_into(self, self._push, include_stack = True)
+        """Convenience function that restores copy of entire
+        :class:`OLP` :class:`LockAttrDictionary` state from
+        head of internal stack, if previously :meth:`push`
+        was called.
 
-    def copy_into(self, other, include_stack = False):
+        :raises SecurityError: if stack is empty.
+        """
+
+        if self._push is None:
+            raise SecurityError("OLP stack underflow--too many OLP.pop() calls")
+        self._copy_into(self, self._push, include_stack = True)
+
+    def _copy_into(self, other, include_stack = False):
         self.getattr_locks = LAD(other.getattr_locks)
         self.setattr_locks = LAD(other.setattr_locks)
         self.delattr_locks = LAD(other.delattr_locks)
@@ -306,18 +619,42 @@ class OLP(object):
         self._mark = other._mark
 
         if include_stack:
-            self._push = other._push
+            self._push = self.copy(other._push, include_stack = True)
         else:
             self._push = None
 
     def copy(self, include_stack = False):
+        """Create an identical copy of this `OLP`
+
+        :param bool include_stack: Whether to copy the internal
+            stack state
+
+        Creates new :class:`OLP` that is a deep copy of this
+        one, except for the
+        :class:`Lock <rpyc.security.locks.Lock>` values themselves.
+
+        the internal stack of :class:`OLP` states is not
+        copied (new value has empty stack)
+        unless ``include_stack`` is ``True``
+        """
+
         new_value = self.__class__()
-        new_value.copy_into( self, include_stack = include_stack )
+        new_value._copy_into( self, include_stack = include_stack )
 
         return new_value
 
     def read_only_copy(self):
-        """Placeholder"""
+        """Create 'read only copy' of :class:`OLP`
+
+        Creates new :class:`OLP` that is a deep copy of this
+        one (except not including internal stack state).
+
+        However, all :class:`Lock <rpyc.security.locks.Lock>` values are
+        replaced with whatever they return when their
+        :meth:`read_only_copy` method is called.
+
+        The internal stack state (if any) is not copied.
+        """
         new_value = self.__class__()
         new_value.getattr_locks = self.getattr_locks.read_only_copy()
         new_value.setattr_locks = self.setattr_locks.read_only_copy()
@@ -526,10 +863,9 @@ class OLP(object):
                          "wildcard" : None }
 
         keyword_args.update( extra_info )
-        blocked = {"__s_unwrapped_type__",
-                   "__s_restricted__"}
+        blocked = {"_rpyc__unwrapped__"}
 
-        #A few things are blocked out of hand, if they made it this far:
+        #__rpyc_unwrapped__ current blocked.
         if name in blocked:
             raise SecurityAttrError("Magic Attribute Blocked: "
                                   + "%s" % repr(name),
@@ -619,6 +955,11 @@ class OLP(object):
 
     @property
     def mark(self):
+        """The :attr:`mark` property can be set to ``True`` or
+        ``False`` in order to turn on/off "RPyC exposed"
+        marking of instances when :func:`repr` is
+        called.
+        """
         return self._mark
 
     @mark.setter
@@ -626,6 +967,9 @@ class OLP(object):
         self._mark = bool(value)
 
     def dump(self):
+        """This dumps a multiple line formatted string
+        representation of :class:`OLP` state.
+        """
         value = "\n{\n" \
               + " 'getattr_locks':\n%s" % str(self.getattr_locks) \
               + " 'setattr_locks':\n%s" % str(self.setattr_locks) \

@@ -4,6 +4,7 @@ from rpyc.security.exceptions import *
 from rpyc.security.restrictor import exposed_mark as emark
 from rpyc.security import olps
 from rpyc.security import locks
+from rpyc.lib.compat import is_py3k
 
 import unittest
 import sys
@@ -19,7 +20,32 @@ def function(x,y):
 def closure(x,y):
     yield x+y
 
+#old style Python object (for python 2)
 class A:
+    def method(self, x, y):
+        return x+y
+
+    @staticmethod
+    def statmethod(x, y):
+        return x+y
+
+    @classmethod
+    def clsmethod(cls, x, y):
+        return x+y
+
+    def methclosure(self, x, y):
+        yield x+y
+
+    @staticmethod
+    def statclosure(x, y):
+        yield x+y
+
+    @classmethod
+    def clsclosure(cls, x, y):
+        yield x+y
+
+#New style Python object (for python2)
+class B(object):
     def method(self, x, y):
         return x+y
 
@@ -54,45 +80,61 @@ class TestRestrictorIdentity(unittest.TestCase):
         else:
             input_array+=[ "types.DictType()" ]
 
-    #Test to make sure security restricted objects
+    #Test to make sure RPyC exposed objects
     #are passing the tests for identity--they are marked
     #right and are behaving like the objects that
     #they wrap, and don't break minor functionality.
     def test_identity(self):
         #'type' doesn't work for esoteric reasons
         test_values=["function", "hex", "A", "A()", #function, builtin, class, custom instance
-                    "A.method", "A().method",  #method, bound method
-                    "A.statmethod", "A().statmethod", #static method--twice.
-                    "A.clsmethod",  "A().clsmethod",  #class method--twice
-                    "closure", "A.methclosure", "A().methclosure",
-                    "A.statclosure", "A().statclosure",
-                    "A.clsclosure", "A().clsclosure",
-                    "sys", "unittest", #builtin module, module
-                    "tuple()", "list([1,2])", "dict()", "set()",
-                    "reversed([])",#Need a generator
-                    "reversed((1,2))",#Actually a different type
-                    "sys.stdin", "range(2,3)", #filetype, rangetype
-                    "slice(1,100,1)", "lambda x,y:x+y",
-                    "function.__code__", '"hello"',
-                    'u"hello"', "5.0", "5", "54239059892890525", "5.0+1j",
-                    "True", "NotImplemented", "None",
-                    "datetime.timedelta.days",
-                    "array.array.typecode", "property()", "Ellipsis",
-                    'collections.namedtuple("foo",["a","b"])' ]
+                     "B", "B()",
+                     "A.method", "A().method", #method, bound method (old)
+                     "B.method", "B().method", #method, bound method (new)
+                     "A.statmethod", "A().statmethod", #static method (old)
+                     "B.statmethod", "B().statmethod", #static method (new)
+                     "A.clsmethod",  "A().clsmethod",  #class method (old)
+                     "B.clsmethod",  "B().clsmethod",  #class method (new)
+                     "closure", "A.methclosure", "A().methclosure",
+                     "B.methclosure", "B().methclosure",
+                     "A.statclosure", "A().statclosure",
+                     "B.statclosure", "B().statclosure",
+                     "A.clsclosure", "A().clsclosure",
+                     "B.clsclosure", "B().clsclosure",
+                      "sys", "unittest", #builtin module, module
+                      "tuple()", "list([1,2])", "dict()", "set()",
+                      "reversed([])",#Need a generator
+                      "reversed((1,2))",#Actually a different type
+                      "sys.stdin", "range(2,3)", #filetype, rangetype
+                      "slice(1,100,1)", "lambda x,y:x+y",
+                      "function.__code__", '"hello"',
+                      'u"hello"', "5.0", "5", "54239059892890525", "5.0+1j",
+                      "True", "NotImplemented", "None",
+                      "datetime.timedelta.days",
+                      "array.array.typecode", "property()", "Ellipsis",
+                      'collections.namedtuple("foo",["a","b"])' ]
 
         self.add_version_dependent(test_values)
 
         standard_callables=["function", "A.statmethod", "A().statmethod", "A().method", "A.clsmethod",
-                           "A().clsmethod", "lambda x,y:x+y", "closure", "A().methclosure",
-                           "A.statclosure", "A().statclosure", "A.clsclosure", "A().clsclosure"]
+                            "A().clsmethod", "B.statmethod", "B().statmethod", "B().method",
+                            "B.clsmethod", "B().clsmethod",
+                            "lambda x,y:x+y", "closure",
+                            "A().methclosure", "A.statclosure", "A().statclosure",
+                            "A.clsclosure", "A().clsclosure",
+                            "B().methclosure", "B.statclosure", "B().statclosure",
+                            "B.clsclosure", "B().clsclosure"]
 
-        loose_callables=["A.method", "A.methclosure"]
+        loose_callables={"A.method":A(), "A.methclosure":A(),
+                         "B.method":B(), "B.methclosure":B()}
 
         closures=[ "closure", "A.methclosure", "A().methclosure",
                    "A.statclosure", "A().statclosure",
-                   "A.clsclosure", "A().clsclosure" ]
+                   "A.clsclosure", "A().clsclosure",
+                   "B.methclosure", "B().methclosure",
+                   "B.statclosure", "B().statclosure",
+                   "B.clsclosure", "B().clsclosure" ]
 
-        not_called=["hex", "A", "A()",
+        not_called=["hex", "A", "A()", "B", "B()",
                     "sys", "unittest",
                     "tuple()", "list([1,2])", "dict()", "set()", 'buffer("a")',
                     "reversed([])",#Need a generator
@@ -124,35 +166,56 @@ class TestRestrictorIdentity(unittest.TestCase):
             value=eval(string_value)
             doppelganger=security_restrict(value, olp)
 
-            for test in [(value, doppelganger), (value.__class__, doppelganger.__class__)]:
+            if hasattr(value, "__class__"):
+                values = [(value, doppelganger), (value.__class__, doppelganger.__class__)]
+            else:
+                #old style python class.
+                self.assertFalse(hasattr(doppelganger, "__class__"))
+                values = [(value, doppelganger), (type(value), type(doppelganger))]
+
+            for test in values:
 
                 if test[0] is type:
-                    self.assertFalse(is_restricted(test[1]))
+                    self.assertFalse(is_exposed(test[1]))
+                    self.assertEqual(repr(test[0]), repr(test[1]))
+                elif (not is_py3k) and (test[0] is types.ClassType): #python2 classobj
+                    self.assertFalse(is_exposed(test[1]))
                     self.assertEqual(repr(test[0]), repr(test[1]))
                 else:
                     self.assertTrue(test[1] is not type)
-                    self.assertTrue(is_restricted(test[1]))
+                    self.assertTrue(is_exposed(test[1]))
                     self.assertEqual(emark(repr(test[0])), repr(test[1]))
 
                 if type(test[0]) is type:
-                    self.assertFalse(is_restricted( type(test[1])))
-                    self.assertFalse(is_restricted( test[1].__class__))
+                    self.assertFalse(is_exposed( type(test[1])))
+                    self.assertFalse(is_exposed( test[1].__class__))
+
+                    if (not is_py3k) and (test[0] is types.ClassType):
+                        #just continue---there will be a lot of issues
+                        #with this type.
+                        continue
                     self.assertEqual(repr(type(test[0])), repr(type(test[1])))
                     self.assertEqual(repr(test[0].__class__), repr(test[1].__class__))
+
+                elif (not is_py3k) and (type(test[0]) is types.ClassType): #python2 classobj
+                    self.assertFalse(is_exposed( type(test[1])))
+                    self.assertEqual(repr(type(test[0])), repr(type(test[1])))
                 else:
-                    self.assertTrue(is_restricted( type(test[1])))
-                    self.assertTrue(is_restricted( test[1].__class__))
+                    self.assertTrue(is_exposed( type(test[1])))
+                    self.assertTrue(is_exposed( test[1].__class__))
                     self.assertEqual(emark(repr(type(test[0]))), repr(type(test[1])))
                     self.assertEqual(emark(type(test[0]).__repr__(test[0])), type(test[1]).__repr__(test[1]))
                     self.assertEqual(emark(repr(test[0].__class__)), repr(test[1].__class__))
 
-                self.assertEqual(type(test[0]), rpyc_type(test[1]))
+                if (is_py3k) or not (test[0] is types.ClassType):
+                    self.assertEqual(type(test[0]), rpyc_type(test[1]))
                 self.assertEqual(inspect.isclass(test[0]), inspect.isclass(test[1]))
 
                 #This doesn't work--need rpyc_type
                 #self.assertEqual(type(test[0]), type(test[1]))
 
-                self.assertEqual(test[0].__class__, test[1].__class__)
+                if hasattr(test[0], "__class__"):
+                    self.assertEqual(test[0].__class__, test[1].__class__)
 
                 self.assertEqual(getattr(test[0], "__module__", None),
                                  getattr(test[1], "__module__", None))
@@ -166,28 +229,31 @@ class TestRestrictorIdentity(unittest.TestCase):
                 #with isinstance and issubclass.
                 one_way = False
                 try:
-                    class Test(value.__class__):
+                    class Test(type(value)):
                         pass
                 except TypeError:
                     one_way = True
 
-                if not one_way:
-                    self.assertTrue(issubclass(doppelganger.__class__, value.__class__))
-                self.assertTrue(issubclass(value.__class__, doppelganger.__class__))
+                if hasattr(value, "__class__"):
+                    if not one_way:
+                       self.assertTrue(issubclass(doppelganger.__class__, value.__class__))
+                    self.assertTrue(issubclass(value.__class__, doppelganger.__class__))
 
-                if not one_way:
-                    self.assertTrue(isinstance(doppelganger, value.__class__))
-                self.assertTrue(isinstance(value, doppelganger.__class__))
+                    if not one_way:
+                        self.assertTrue(isinstance(doppelganger, value.__class__))
+                    self.assertTrue(isinstance(value, doppelganger.__class__))
 
-                self.assertTrue(inspect.isclass(doppelganger.__class__))
+                    self.assertTrue(inspect.isclass(doppelganger.__class__))
+
+                self.assertTrue(inspect.isclass( type(doppelganger) ))
 
             if string_value not in not_called:
                 if string_value in standard_callables:
                     result = value(2,3)
                     result2 = doppelganger(2,3)
                 elif string_value in loose_callables:
-                    result = value(None, 2,3)
-                    result2 = doppelganger(None, 2, 3)
+                    result = value(loose_callables[string_value], 2,3)
+                    result2 = doppelganger(loose_callables[string_value], 2, 3)
 
                 if string_value in closures:
                     result=next(result)
@@ -244,7 +310,7 @@ class TestRestrictorIdentity(unittest.TestCase):
         other_olp = get_olp(instance)
         self.assertTrue(other_olp is olp)
 
-        #now test restricted case
+        #now test exposed case
         other_olp_cls = cls._rpyc_getattr("_rpyc__olp__")
         self.assertFalse(other_olp_cls is olp)
 
@@ -291,7 +357,7 @@ class TestRestrictorIdentity(unittest.TestCase):
         self.assertIs(a1, a2)
         self.assertIsNot(a2, a3)
 
-    def test_is_restricted(self):
+    def test_is_exposed(self):
         class A:
             pass
 
@@ -302,15 +368,15 @@ class TestRestrictorIdentity(unittest.TestCase):
         a_instance=A()
         b_instance=B()
 
-        self.assertTrue(is_restricted(A))
-        self.assertTrue(check_restricted(A))
-        self.assertTrue(is_restricted(a_instance))
-        self.assertTrue(check_restricted(a_instance))
+        self.assertTrue(is_exposed(A))
+        self.assertTrue(check_exposed(A))
+        self.assertTrue(is_exposed(a_instance))
+        self.assertTrue(check_exposed(a_instance))
 
-        self.assertFalse(is_restricted(B))
-        self.assertFalse(check_restricted(B))
-        self.assertFalse(is_restricted(b_instance))
-        self.assertFalse(check_restricted(b_instance))
+        self.assertFalse(is_exposed(B))
+        self.assertFalse(check_exposed(B))
+        self.assertFalse(is_exposed(b_instance))
+        self.assertFalse(check_exposed(b_instance))
 
         class SimpleProxy(object):
             def __init__(self, proxy):
@@ -321,16 +387,16 @@ class TestRestrictorIdentity(unittest.TestCase):
         a_proxy = SimpleProxy(a_instance)
         b_proxy = SimpleProxy(b_instance)
 
-        self.assertFalse(is_restricted(a_proxy))
+        self.assertFalse(is_exposed(a_proxy))
         valid = False
         try:
-            value = check_restricted(a_proxy)
+            value = check_exposed(a_proxy)
         except SecurityWrapError:
             valid = True
         self.assertTrue(valid)
 
-        self.assertFalse(is_restricted(b_proxy))
-        self.assertFalse(check_restricted(b_proxy))
+        self.assertFalse(is_exposed(b_proxy))
+        self.assertFalse(check_exposed(b_proxy))
 
     def test_get_olp_error(self):
         valid = False
@@ -341,15 +407,18 @@ class TestRestrictorIdentity(unittest.TestCase):
         self.assertTrue(valid)
 
     def test_weird_use_of_class_dir(self):
-        olp = olps.OLP()
-        class A:
-            pass
+        if is_py3k: #Python3 only test.
+            olp = olps.OLP()
+            class A:
+                pass
 
-        class D:
-            x=3
+            class D:
+                x=3
 
-        A1 = security_restrict(A, olp)
-        self.assertEqual(set(type(A1).__dir__(D)), set(type(A).__dir__(D)))
+            A1 = security_restrict(A, olp)
+            self.assertEqual(set(type(A1).__dir__(D)), set(type(A).__dir__(D)))
+        else:
+            self.assertTrue(True)
 
     def test__rpyc__unwrapped__(self):
         olp = olps.OLP()
@@ -422,10 +491,6 @@ class TestRestrictorIdentity(unittest.TestCase):
         other=dir(instanceA)
         other+=["_rpyc_getattr", "_rpyc_setattr", "_rpyc_delattr"]
         self.assertEqual(set(dir(instanceA1)), set(other))
-        other=instanceA.__dir__()
-        other+=["_rpyc_getattr", "_rpyc_setattr", "_rpyc_delattr"]
-        self.assertEqual(set(instanceA1.__dir__()), set(other))
-
 
     def test_subclass_identity(self):
         from rpyc.security.exposer import expose

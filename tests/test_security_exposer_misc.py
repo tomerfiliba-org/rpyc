@@ -123,7 +123,8 @@ class TestExposerCornerCases(unittest.TestCase):
     def test_bad_dir_get_direct_members(self):
         class A(object):
             def __dir__(self):
-                return list(super(A, self).__dir__())+["rhutabaga"]
+                return list(A.__dict__.keys())+["rhutabaga"]
+                #return list(super(A, self).__dir__())+["rhutabaga"]
 
         for key, item in default_exposer._get_direct_members(A()):
             self.assertFalse(key == "rhutabaga")
@@ -408,13 +409,13 @@ class TestExposerCornerCases(unittest.TestCase):
         def foo2(self):
             pass
         self.assertIs(A.__dict__['foo'].__func__, A.foo.__func__)
-        self.assertTrue(is_restricted(A.__dict__['foo']))
+        self.assertTrue(is_exposed(A.__dict__['foo']))
         A.foo=classmethod(foo2)
         self.assertIs(A.__dict__['foo'].__func__, foo2)
-        self.assertFalse(is_restricted(A.__dict__['foo']))
+        self.assertFalse(is_exposed(A.__dict__['foo']))
         A.foo=routine_descriptor_expose(classmethod(foo2))
         self.assertIs(A.__dict__['foo'].__func__, foo2)
-        self.assertTrue(is_restricted(A.__dict__['foo']))
+        self.assertTrue(is_exposed(A.__dict__['foo']))
 
     #code coverage case to cover one branch.
     def test_non_exposed_property(self):

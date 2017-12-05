@@ -5,7 +5,7 @@ go through _map_key and _map_item
 
 class MapTypeDict(dict):
     def __init__(self, *args, **kwargs):
-        super().__init__([])
+        super(MapTypeDict, self).__init__([])
         other=[]
         if len(args) > 1:
             raise TypeError("dict expected at most 1 arguments, got %d" % len(args))
@@ -22,12 +22,12 @@ class MapTypeDict(dict):
     def __setitem__(self, key, value):
         key=self._map_key(key)
         value=self._map_item(value)
-        super().__setitem__(key, value)
+        super(MapTypeDict, self).__setitem__(key, value)
 
     def setdefault(self, key, item=None):
         key=self._map_key(key)
         item=self._map_item(item)
-        super().setdefault(key, item)
+        super(MapTypeDict, self).setdefault(key, item)
 
     def copy(self):
         return self.__class__.__init__(self)
