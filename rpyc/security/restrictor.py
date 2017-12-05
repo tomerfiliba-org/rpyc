@@ -169,8 +169,13 @@ class SecurityClassRestrictor(object):
 
             #Weird format to make this work as metaclass function.
             def __eq__(cls, other_value):
-                return (id(class_value) == id(other_value)) or \
-                       (id(obj) == id(other_value))
+                try:
+                    other_id = other_value._rpyc__unwrapped_id__
+                except AttributeError:
+                    other_id = id(other_value)
+
+                return (id(class_value) == other_id) or \
+                       (id(obj) == other_id)
 
             def __dir__(cls):
                 if cls is class_value:
@@ -181,7 +186,6 @@ class SecurityClassRestrictor(object):
 
                 final_dir = list(set(obj_dir)) #deduplicate
                 return sorted(final_dir)
-
 
             #This makes magical exposed construction happen.
             def __call__(cls, *args, **kwargs):
@@ -368,14 +372,29 @@ class SecurityInstanceRestrictor(object):
                 return_repr = exposed_mark(repr(type(obj)))
                 return return_repr
 
+            def __eq__(cls, value):
+                return value == class_value
+
+            #__hash__ has to be
+            #defined to be hashable and callable
+            #by certain forms of inspection
+            def __hash__(cls):
+                return hash(class_value)
+
             #This is here to prevent type() from exposing
             #a whole bunch of modifiable things.
             def __getattribute__(cls, name):
                 if name == "_rpyc__exposed__":
                     return id(cls)
-                if name == "__repr__":
+                elif name in ["__repr__", "__eq__", "__hash__"]:
                     return super(FakeType, cls).__getattribute__(name)
-                raise AttributeError("Not Found, try using rpyc_type")
+                return getattr(class_value, name)
+
+            def __setattr__(cls, name, value):
+                return setattr(class_value, name, value)
+
+            def __delattr__(cls, name):
+                return delattr(class_value, name)
 
         #Will be adding FakeType metaclass
         class SecurityRestrictedProxy(object):

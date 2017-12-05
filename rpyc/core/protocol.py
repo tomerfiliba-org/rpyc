@@ -7,6 +7,7 @@ import itertools
 import socket
 import time
 import gc
+import functools
 
 from threading import Lock, RLock, Event, Thread
 from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
@@ -23,6 +24,7 @@ DEFAULT_CONFIG = dict(
     allow_safe_attrs = True,
     allow_exposed_attrs = True,
     allow_public_attrs = False,
+    allow_unsafe_calls = True,
     allow_all_attrs = False,
     safe_attrs = set(['__abs__', '__add__', '__and__', '__bool__', '__cmp__', '__contains__',
         '__delitem__', '__delslice__', '__div__', '__divmod__', '__doc__',
@@ -76,6 +78,15 @@ Parameter                                Default value     Description
                                                            (attributes that start with the ``exposed_prefix``)
 ``allow_public_attrs``                   ``False``         Whether to allow public attributes
                                                            (attributes that don't start with ``_``)
+``allow_unsafe_calls``                   ``True``          Whether to allow calling any object you have a
+                                                           netref reference to. RPyC used to require this,
+                                                           as once you got a routine in a variable, there was
+                                                           no way after the fact to check if it was allowed to
+                                                           be called. This means :meth:`__call__` is
+                                                           totally unprotected on any class/instace that you
+                                                           can get a ref to. If you disable this, you have to
+                                                           use :class:`rpyc.security.exposer.Exposer` to expose
+                                                           routines in order to call them.
 ``allow_all_attrs``                      ``False``         Whether to allow all attributes (including private)
 ``safe_attrs``                           ``set([...])``    The set of attributes considered safe
 ``exposed_prefix``                       ``"exposed_"``    The prefix of exposed attributes
@@ -576,6 +587,10 @@ class Connection(object):
         return False
 
     def _access_attr(self, oid, name, args, overrider, param, default):
+        obj = self._local_objects[oid]
+        return self._access_attr_by_obj(obj, name, args, overrider, param, default)
+
+    def _access_attr_by_obj(self, obj, name, args, overrider, param, default):
         if is_py3k:
             if type(name) is bytes:
                 name = str(name, "utf8")
@@ -585,15 +600,15 @@ class Connection(object):
             if type(name) not in (str, unicode):
                 raise TypeError("name must be a string")
             name = str(name) # IronPython issue #10 + py3k issue
-        obj = self._local_objects[oid]
-        accessor = getattr(type(obj), overrider, None)
+
+        accessor = getattr(obj, overrider, None)
         if accessor is None:
             name2 = self._check_attr(obj, name)
             if not self._config[param] or not name2:
                 raise AttributeError("cannot access %r" % (name,))
-            accessor = default
+            accessor = functools.partial(default, obj)
             name = name2
-        return accessor(obj, name, *args)
+        return accessor(name, *args)
 
     #
     # request handlers
@@ -621,7 +636,11 @@ class Connection(object):
     def _handle_hash(self, oid):
         return hash(self._local_objects[oid])
     def _handle_call(self, oid, args, kwargs=()):
-        return self._local_objects[oid](*args, **dict(kwargs))
+        if self._config["allow_unsafe_calls"]:
+            return self._local_objects[oid](*args, **dict(kwargs))
+        else:
+            return self._handle_getattr(oid, "__call__")(*args, **dict(kwargs))
+
     def _handle_dir(self, oid):
         return tuple(dir(self._local_objects[oid]))
     def _handle_inspect(self, oid):
@@ -633,7 +652,12 @@ class Connection(object):
     def _handle_setattr(self, oid, name, value):
         return self._access_attr(oid, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
     def _handle_callattr(self, oid, name, args, kwargs):
-        return self._handle_getattr(oid, name)(*args, **dict(kwargs))
+        if self._config["allow_unsafe_calls"]:
+            return self._handle_getattr(oid, name)(*args, **dict(kwargs))
+        else:
+            obj = self._handle_gettattr(oid, name)
+            attr = self._access_attr_by_obj(obj, "__call__", (), "_rpyc_getattr", "allow_getattr", getattr)
+            return attr(*args, **dict(kwargs))
     def _handle_ctxexit(self, oid, exc):
         if exc:
             try:

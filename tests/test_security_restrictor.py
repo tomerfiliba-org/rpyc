@@ -276,21 +276,14 @@ class TestRestrictorIdentity(unittest.TestCase):
             valid = True
         self.assertTrue(valid)
 
-    def test_type_protection(self):
+    def test_type_comparison(self):
         class A:
-            def foo(self):
-                pass
+            pass
         A=security_restrict(A, None) #uses default
         a=A()
-        valid = False
-        try:
-            type(a).__dict__
-        except AttributeError:
-            valid = True
-        self.assertTrue(valid)
-        #Only true for instances currently.
-        #can't do it for classes.
-        #Not the most critical thing
+        self.assertTrue(type(a) == A)
+        self.assertTrue(A == type(a))
+        self.assertTrue(type(a)._rpyc_getattr == A._rpyc_getattr)
 
     def test_get_olp(self):
         class A:

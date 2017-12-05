@@ -1,16 +1,16 @@
 """
 These are exceptions associated with the :mod:`rpyc.security` modules.
 
-.. note ::
-    This needs to integrated better. At the very least we should add support for these to :ref:`api-vinegar`
-
-..
+These exceptions will serialize via :ref:`api-vinegar`, and are
+used to signify security errors when accessing `RPyC Exposed` values.
 """
 
 class SecurityError(Exception):
     """This is the base exception for all SecurityErrors
 
     It is also used directly for some security errors.
+    It has the same interface as the Python
+    :class:`Exception` type.
     """
     pass
 
@@ -95,8 +95,8 @@ class SecurityAttrError(AttributeError, SecurityError):
 #another wrapper/proxy.
 class SecurityWrapError(SecurityError):
     """This is a simple exception that inherits from
-    SecurityError. It behaves like the Python
-    class :class:`Exception` except it used by
+    SecurityError. It has the same interface as the Python
+    :class:`Exception` type. It is used by
     :func:`check_exposed <rpyc.security.utility.check_exposed>`
     to signify that something has proxied a
     `RPyC Exposed` value.
