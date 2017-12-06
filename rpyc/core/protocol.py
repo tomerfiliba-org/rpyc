@@ -655,7 +655,7 @@ class Connection(object):
         if self._config["allow_unsafe_calls"]:
             return self._handle_getattr(oid, name)(*args, **dict(kwargs))
         else:
-            obj = self._handle_gettattr(oid, name)
+            obj = self._handle_getattr(oid, name)
             attr = self._access_attr_by_obj(obj, "__call__", (), "_rpyc_getattr", "allow_getattr", getattr)
             return attr(*args, **dict(kwargs))
     def _handle_ctxexit(self, oid, exc):

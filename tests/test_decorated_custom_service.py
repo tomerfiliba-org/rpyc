@@ -1,9 +1,11 @@
 import math
 import time
+from threading import Thread
 
 import rpyc
 import unittest
 
+from rpyc import ThreadedServer
 from rpyc.security.exposer import expose
 
 on_connect_called = False
@@ -49,13 +51,19 @@ class MyService(rpyc.Service):
 
 
 class TestCustomService(unittest.TestCase):
-    config = {"allow_safe_attrs":False,
-              "allow_exposed_attrs":False,
-              "allow_unsafe_calls":False}
-
     def setUp(self):
+        config = {"allow_safe_attrs":False,
+                  "allow_exposed_attrs":False,
+                  "allow_unsafe_calls":False}
+
+        self.server = ThreadedServer(MyService, port = 0, protocol_config = config)
+        self.thd = Thread(target = self.server.start)
+        self.thd.start()
+        time.sleep(1)
+
         global on_connect_called
-        self.conn = rpyc.connect_thread(remote_service=MyService)
+        self.conn = rpyc.connect("localhost", self.server.port)
+
         self.conn.root # this will block until the service is initialized,
         # so we can be sure on_connect_called is True by that time
         self.assertTrue(on_connect_called)
@@ -64,6 +72,9 @@ class TestCustomService(unittest.TestCase):
     def tearDown(self):
         global on_disconnect_called
         self.conn.close()
+        self.server.close()
+        self.thd.join()
+
         time.sleep(0.5) # this will wait a little, making sure
         # on_disconnect_called is already True
         self.assertTrue(on_disconnect_called)
@@ -73,7 +84,7 @@ class TestCustomService(unittest.TestCase):
         print( "service name: %s" % (self.conn.root.get_service_name(),) )
 
     def test_distance(self):
-        assert self.conn.root.distance((2,7), (5,11)) == 5
+        self.assertEqual(self.conn.root.distance((2,7), (5,11)) , 5)
 
     def test_attributes(self):
         self.conn.root.distance
@@ -81,16 +92,9 @@ class TestCustomService(unittest.TestCase):
         # this is not an exposed attribute:
         self.assertRaises(AttributeError, lambda: self.conn.root.foobar())
 
-    def test_safeattrs(self):
-        x = self.conn.root.getlist()
-        #self.require(x == [1, 2, 3]) -- can't compare remote objects, sorry
-        #self.require(x * 2 == [1, 2, 3, 1, 2, 3])
-        self.assertEqual([y*2 for y in x], [2, 4, 6])
-
     def test_metaclasses(self):
         x = self.conn.root.getmeta()
         print( x )
-
 
 if __name__ == "__main__":
     unittest.main()

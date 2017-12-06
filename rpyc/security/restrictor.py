@@ -79,17 +79,44 @@ class SecurityClassRestrictor(object):
             if name == "_rpyc__unwrapped__":
                 return obj
 
+            #We do not defer class accesses to
+            #obj._rpyc_getattr -- even if it exists
+            #because under the old usage--the class
+            #version of rpyc_???attr was a method
+            #used for accessing the instance (the
+            #first parameter needs to be the instance).
+            #Calling it will not work, unless
+            #The implementer used a metaclass, a class
+            #method, or checks "self" to see if it is the
+            #class. Old implementations will break, because
+            #the argument count is wrong.
+
             return_value = getattr(obj, name)
             return return_value
 
         def _secure_setattr(cls, name, value, secured = True):
             if security_enabled and secured:
                 olp.cls_setattr_check(obj, name, value)
+
+            #We do not defer class accesses to
+            #obj._rpyc_setattr -- even if it exists
+            #for similar reasons I don't vector
+            #to obj._rpyc_getattr above.
+            #
+            #Fine for the instance/bad for the class
+
             setattr(obj, name, value)
 
         def _secure_delattr(cls, name, secured = True):
             if security_enabled and secured:
                 olp.cls_delattr_check(obj, name)
+
+            #We do not defer class accesses to
+            #obj._rpyc_delattr -- even if it exists
+            #for similar reasons I don't vector
+            #to obj._rpyc_getattr above.
+            #
+            #Fine for the instance/bad for the class
             delattr(obj, name)
 
         class FakeType(type):
@@ -334,37 +361,66 @@ class SecurityInstanceRestrictor(object):
             if security_enabled and secured:
                 olp.getattr_check(obj, name)
 
-            #Do class replacement
-
-            if name == "__class__":
-                if class_value != None: # pragma: no branch
-                    return class_value
-                else:
-                    #This is only the case if obj does not have __class__
-                    #All python objects have __class__, thus this branch
-                    #isn't tested.
-                    raise AttributeError("__class__ not found") # pragma: no cover
-
             #Only if allowed
             if name == "_rpyc__unwrapped__":
                 return obj
 
+            if security_enabled and secured:
+                if hasattr(obj, "_rpyc_getattr"):
+                    use_rpyc_getattr=True
+
+                    #Really weird descriptor case that you won't understand
+                    #unless you try this code without it.
+                    #Only checking it in get case because only really issue
+                    #there unless something perverse is going on
+                    if inspect.isroutine(obj):
+                        try:
+                            func_getattr = obj.__func__._rpyc_getattr
+                            #is won't work
+                            if (func_getattr == obj._rpyc_getattr):
+                                use_rpyc_getattr = False
+
+                        except AttributeError:
+                            #not the problem case, move on
+                            pass
+
+                    if use_rpyc_getattr:
+                        return obj._rpyc_getattr(name)
+
+            #Do class replacement
+            if name == "__class__":
+                return class_value
+
             #Maybe should make a version of dir
             #that only shows accessible ones.
-            elif name == "__dir__":
+            if name == "__dir__":
                 return super(SecurityRestrictedProxy, self).__getattribute__(name)
 
             return_value = getattr(obj, name)
             return return_value
 
         def _secure_setattr(self, name, value, secured = True):
+            if name == "__class__":
+                #don't worry about deletions--it is blocked anyways.
+                raise AttributeError('Cannot set "__class__" of RPyC exposed object.')
             if security_enabled and secured:
                 olp.setattr_check(obj, name, value)
+
+                if hasattr(obj, "_rpyc_setattr"):
+                    #Defer to that function.
+                    obj._rpyc_setattr(name, value)
+                    return
+
             setattr(obj, name, value)
 
         def _secure_delattr(self, name, secured=True):
             if security_enabled and secured:
                 olp.delattr_check(obj, name)
+                if hasattr(obj, "_rpyc_delattr"):
+                    #Defer to that function.
+                    obj._rpyc_delattr(name)
+                    return
+
             delattr(obj, name)
 
         class FakeType(type):
@@ -487,12 +543,9 @@ class SecurityInstanceRestrictor(object):
         SecurityRestrictedProxy = \
             _force_metaclass(SecurityRestrictedProxy, FakeType)
 
-        #This is always taken. Find a python object without a __class__
-        #and we can test it without resorting to a weird proxy obj
-        if hasattr(obj, "__class__"): #pragma: no branch
-            class_value = self.class_restrictor(obj.__class__,
-                                                olp,
-                                                default=default)
+        class_value = self.class_restrictor(obj.__class__,
+                                            olp,
+                                            default=default)
 
         security_enabled = True
 

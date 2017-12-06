@@ -147,6 +147,18 @@ If you do wish to inherit the :class:`OLP` restrictions from one class
 to another class, you may do so via the alternate mechanism of the
 ``inherit`` argument of the  :func:`@expose <rpyc.security.exposer.expose>` decorator.
 
+For instance when defining a service::
+
+    @expose(inherit=rpyc.Service)
+    class MyService(rpyc.Service):
+        ...
+
+The ``inherit`` argument inherits the exposure of
+:meth:`get_service_name <rpyc.core.service.Service.get_service_name>`
+and
+:meth:`get_service_aliases <rpyc.core.service.Service.get_service_aliases>`
+
+
 Remote Inheritance
 ------------------
 

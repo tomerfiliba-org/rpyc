@@ -64,9 +64,7 @@ class LockAttrDictionary(MapTypeDict):
         return key
 
     def _map_item(self, item):
-        if isinstance(item, locks.Lock):
-            item=[item]
-        item = locks.sanitize_and_copy_lock_list(item)
+        item = locks.sanitize_lock_parameter(item)
         return item
 
     def read_only_copy(self):
@@ -97,8 +95,8 @@ class OLP(object):
     """Object Lock Profile Class (OLP) class
 
     An :class:`OLP` specifies what attributes can be
-    remotely accessed via :func:_rpyc_getattr,
-    :func:_rpyc_setattr, and :func_rpyc_delattr
+    remotely accessed via :meth:`_rpyc_getattr`,
+    :meth:`_rpyc_setattr`, and :meth:`_rpyc_delattr`
     for a `RPyC Exposed` class and its instances.
 
     :param getattr_locks: A :class:`LockAttrDictionary` or value for
@@ -488,37 +486,37 @@ class OLP(object):
                           cls_setattr_locks = other.cls_setattr_locks,
                           cls_delattr_locks = other.cls_delattr_locks)
 
-    def total_expose(self, lock_list=[], wildcard="|"):
+    def total_expose(self, lock=[], wildcard="|"):
         """This is a convenience function to totally expose
         an :class:`OLP`.
 
-        :param lock_list: A
-            :class:`LockListShared <rpyc.security.locks.LockListShared>`
-            (or an iterable suitable to be passed into
+        :param lock: :class:`Lock <rpyc.security.locks.Lock>`,
+            :class:`LockListShared <rpyc.security.locks.LockListShared>`,
+            or an iterable suitable to be passed into
             :class:`LockListAnd <rpyc.security.locks.LockListAnd>`
-            constructor)
+            constructor
 
         :param wildcard: '*', '&', or '|'
 
         This uses :meth:`or_specified` to merge::
 
-            LockAttrDictionary({wildcard:lock_list})
+            LockAttrDictionary({wildcard:lock})
 
         Into all six internal :class:`LockAttrDictionary`
         values.
 
         Using "*" exposes anything that isn't already
-        exposed with the locks of ``lock_list``.
+        exposed with the lock(s) of ``lock``.
 
-        Using "|" exposes anything with the locks of
-        ``lock_list``.
+        Using "|" exposes anything with the lock(s) of
+        ``lock``.
 
-        Using "&" adds the need to pass the locks
-        of ``lock_list`` to access anything (at least
+        Using "&" adds the need to pass the lock(s)
+        of ``lock`` to access anything (at least
         anything that does not have an alternate "|" wildcard
         accessor)
         """
-        lock_list = locks.sanitize_and_copy_lock_list(lock_list)
+        lock_list = locks.sanitize_lock_parameter(lock)
 
         if not wildcard in "*&|":
             raise ValueError("wildcard must be '*', '&', or '|'")
@@ -537,35 +535,36 @@ class OLP(object):
                           cls_setattr_locks = cls_setattr_locks,
                           cls_delattr_locks = cls_delattr_locks)
 
-    def read_expose(self, lock_list=[], wildcard="|"):
+    def read_expose(self, lock=[], wildcard="|"):
         """This is a convenience function to make every attribute
         :meth:`_rpyc_getattr`` accessible for an :class:`OLP`.
 
-        :param lock_list: A
-            :class:`LockListShared <rpyc.security.locks.LockListShared>`
-            (or an iterable suitable to be passed into
+        :param lock: :class:`Lock <rpyc.security.locks.Lock>`,
+            :class:`LockListShared <rpyc.security.locks.LockListShared>`,
+            or an iterable suitable to be passed into
             :class:`LockListAnd <rpyc.security.locks.LockListAnd>`
-            constructor)
+            constructor
+
         :param wildcard: '*', '&', or '|'
 
         This uses :meth:`or_specified` to merge::
 
-            LockAttrDictionary({wildcard:lock_list})
+            LockAttrDictionary({wildcard:lock})
 
         Into ``getattr_locks`` and ``cls_getattr_locks``.
 
         Using "*" exposes anything for reading that isn't already
-        exposed with the locks of ``lock_list``.
+        exposed with the lock(s) of ``lock``.
 
-        Using "|" exposes anything for reading with the locks of
-        ``lock_list``.
+        Using "|" exposes anything for reading with the lock(s) of
+        ``lock``.
 
-        Using "&" adds the need to pass the locks
-        of ``lock_list`` to read anything (at least
+        Using "&" adds the need to pass the lock(s)
+        of ``lock`` to read anything (at least
         anything that does not have an alternate "|" wildcard
         accessor)
         """
-        lock_list = locks.sanitize_and_copy_lock_list(locks_list)
+        lock_list = locks.sanitize_and_copy_lock_list(lock)
 
         if not wildcard in "*&|":
             raise ValueError("wildcard must be '*', '&', or '|'")
@@ -729,7 +728,10 @@ class OLP(object):
                 return (True, [])
         else: #permitted CAN return a new list of locks.
             try:
-                new_lock_list = locks.sanitize_and_copy_lock_list(valid)
+                if valid is None:
+                    raise TypeError("None returned") #caught by outside block.
+
+                new_lock_list = locks.sanitize_lock_parameter(valid)
             except Exception as e:
                 try:
                     error_string = "Lock %s" % cls._lock_name(lock) \
