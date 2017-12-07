@@ -36,6 +36,11 @@ class MapTypeList(list):
             return self.__class__(result)
         return result
 
+    #python2 version of list still has these functions, so even though
+    #deprecated they are still used -- because they exist.
+    def __getslice__(self, start, end):
+        return self.__getitem__(slice(start,end))
+
     def __setitem__(self, index_or_slice, value):
         if isinstance(index_or_slice, slice):
             #Deal with slice actually.
@@ -43,6 +48,11 @@ class MapTypeList(list):
         else:
             value=self._map_item(value)
         super(MapTypeList, self).__setitem__(index_or_slice, value)
+
+    #python2 version of list still has these functions, so even though
+    #deprecated they are still used -- because they exist.
+    def __setslice__(self, start, end, values):
+        self.__setitem__(slice(start,end), values)
 
     def append(self, value):
         self[len(self):]=[value]

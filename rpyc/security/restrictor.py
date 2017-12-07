@@ -285,7 +285,17 @@ class SecurityClassRestrictor(object):
             exec_string += "):\n"
             exec_string += "    pass\n"
             new_locals = dict(locals())
-            exec(exec_string, globals(), new_locals)
+
+            #Having to do this metaprogramming sucks.
+
+            #eval/compile is used because exec syntax is incompatible between
+            #python 2 & 3 when inside subfunction. Only the old style exec syntax
+            #avoids the following error in python2 (before 2.7.9):
+            #   ``SyntaxError: unqualified exec is not allowed in function ......`
+            #The only way to avoid it is to use exec qualification using the old syntax
+            #But the old syntax is syntactically illegal for Python3.
+            eval(compile(exec_string, __name__+".metacode", 'exec'), globals(), new_locals)
+
             SecurityRestrictedClass = new_locals["SecurityRestrictedClass"]
 
         #Add SecureType metaclass

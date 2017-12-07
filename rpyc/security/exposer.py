@@ -91,7 +91,7 @@ EXPOSE_ALL_MASK = EXPOSE_INSTANCE_GET | EXPOSE_INSTANCE_SET \
 #all the other ones are defined in olps
 MERGE_WIPE_AND_REPLACE = -1
 
-class Exposer:
+class Exposer(object):
     """This is a class that implements a high level api to create
     `RPyC Exposed` objects.
 
