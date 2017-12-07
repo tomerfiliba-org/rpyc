@@ -865,7 +865,7 @@ class OLP(object):
                          "wildcard" : None }
 
         keyword_args.update( extra_info )
-        blocked = {"_rpyc__unwrapped__"}
+        blocked = set(["_rpyc__unwrapped__"])
 
         #__rpyc_unwrapped__ current blocked.
         if name in blocked:
