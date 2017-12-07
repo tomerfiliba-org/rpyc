@@ -7,8 +7,9 @@ exposed *service A*, while the other may expose *service B*. As long as the two
 can interoperate, you're good to go.
 """
 from rpyc.lib.compat import execute, is_py3k
+from rpyc.security.exposer import expose
 
-
+@expose
 class Service(object):
     """The service base-class. Derive from this class to implement custom RPyC
     services:
@@ -69,6 +70,7 @@ class Service(object):
     def _rpyc_setattr(self, name, value):
         raise AttributeError("access denied")
 
+    @expose
     @classmethod
     def get_service_aliases(cls):
         """returns a list of the aliases of this service"""
@@ -78,6 +80,8 @@ class Service(object):
         if name.endswith("SERVICE"):
             name = name[:-7]
         return (name,)
+
+    @expose
     @classmethod
     def get_service_name(cls):
         """returns the canonical name of the service (which is its first

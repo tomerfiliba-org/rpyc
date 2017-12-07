@@ -84,6 +84,41 @@ Client-Side
 * :ref:`api-helpers` - Various helpers (``timed``, ``async``, ``buffiter``, ``BgServingThread``,
   etc.)
 
+.. _api-security:
+
+Security
+--------
+.. toctree::
+   :maxdepth: 1
+   :hidden:
+
+   api/security_rpyc_exposed
+   api/security_restrictor
+   api/security_exposer
+   api/security_locks
+   api/security_olps
+   api/security_defaults
+   api/security_utility
+   api/security_exceptions
+
+* :ref:`api-security-rpyc-exposed` - Behavior and purpose of  `RPyC Exposed` objects.
+
+* :ref:`api-security-restrictor` - Low level proxy interface for wrapping objects to exposed over an
+  RPyC connection
+
+* :ref:`api-security-exposer` - High level interface that provides the @expose decorator for marking
+  objects as exposed over an RPyC connection
+
+* :ref:`api-security-locks` - Contains the definition of the :class:`Lock <rpyc.security.Lock>` interface and some implementations.
+
+* :ref:`api-security-olps` - The storage object that stores what in a class/instance is exposed
+
+* :ref:`Defaults <api-security-defaults>` - Overrideable defaults for object lock profiles for basic objects
+
+* :ref:`api-security-utility` - Utility functions for `RPyC Exposed` objects.
+
+* :ref:`api-security-exceptions` - Security exceptions.
+
 Misc
 ----
 .. toctree::

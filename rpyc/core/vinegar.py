@@ -1,6 +1,6 @@
 """
 **Vinegar** ("when things go sour") is a safe serializer for exceptions.
-The :data`configuration parameters <rpyc.core.protocol.DEFAULT_CONFIG>` control
+The :data:`configuration parameters <rpyc.core.protocol.DEFAULT_CONFIG>` control
 its mode of operation, for instance, whether to allow *old-style* exceptions
 (that do not derive from ``Exception``), whether to allow the :func:`load` to
 import custom modules (imposes a security risk), etc.
@@ -22,7 +22,7 @@ except ImportError:
 from rpyc.core import brine
 from rpyc.core import consts
 from rpyc.lib.compat import is_py3k
-
+from rpyc.security import exceptions as security_exceptions_module
 
 try:
     BaseException
@@ -119,6 +119,9 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
             cls = None
     elif modname == exceptions_module.__name__:
         cls = getattr(exceptions_module, clsname, None)
+    #allow security exceptions over Vinegar.
+    elif modname == security_exceptions_module.__name__:
+        cls = getattr(security_exceptions_module, clsname, None)
     else:
         cls = None
 

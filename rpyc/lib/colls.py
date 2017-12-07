@@ -1,6 +1,9 @@
 from __future__ import with_statement
 import weakref
 from threading import Lock
+from rpyc.lib.weak_id_map import WeakIdMap
+from rpyc.lib.map_type_dict import MapTypeDict
+from rpyc.lib.map_type_list import MapTypeList
 
 class WeakValueDict(object):
     """a light-weight version of weakref.WeakValueDictionary"""
