@@ -774,9 +774,9 @@ class OLP(object):
 
         #Both of the methods below return (valid, fail_locks) tuple
         if isinstance(list_item, locks.Lock):
-            return cls._check_lock(list_item)
+            return cls._check_lock(list_item, **kwargs)
         else:
-            return cls._check_lock_list(list_item)
+            return cls._check_lock_list(list_item, **kwargs)
 
     @classmethod
     def _check_lock_list_and(cls, lock_list, **kwargs):

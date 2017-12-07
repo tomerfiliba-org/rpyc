@@ -27,6 +27,7 @@ setup(name = "rpyc",
         'rpyc.lib',
         'rpyc.experimental',
         'rpyc.utils',
+        'rpyc.security',
     ],
     scripts = [
         os.path.join(here, "bin", "rpyc_classic.py"),

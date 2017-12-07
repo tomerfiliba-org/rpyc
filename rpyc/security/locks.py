@@ -30,6 +30,7 @@ objects.
 """
 
 from rpyc.lib.colls import MapTypeList
+from rpyc.lib.compat import basestring
 
 #A lock just implements permitted, which returns True or False
 #or can also raise a SecurityException
@@ -293,25 +294,26 @@ class CollectionLock(Lock):
     store a :class:`LockListShared` expression
     to evaluate should some other condition
     be met.
+
+    :param lock: A :class:`Lock`, :class:`LockListShared`,
+        or an iterable suitable to passed into
+        :class:`LockListAnd` constructor
+
+    Whatever ``lock`` is will be evaluated in its entirety
+    when :meth:`permitted` is called.
+
+    By default ``lock`` is an empty :class:`LockListAnd'
+    which will always evaluate as ``True``.
     """
-    def __init__(self, lock_list = LockListAnd()):
-        """
-        Constructor for CollectionLock
-
-        :param lock_list: A :class:`LockListShared` to evaluate
-            in place of a single lock.
-
-        By default the `lock_list` is an empty :class:`LockListAnd"
-        which will always evaluate as ``True``.
-        """
-        lock_list = _sanitize_and_copy_lock_list(lock_list)
+    def __init__(self, lock = []):
+        lock_list = sanitize_lock_parameter(lock)
         self.locks = lock_list
 
     def permitted( self, **kwargs ):
         return self.locks
 
     def __str__(self):
-        return "CollectionLock(%s)" % lock_list
+        return "CollectionLock(%s)" % self.locks
 
 class PrefixLock(CollectionLock):
     """:class:`PrefixLock` is a :class:`CollectionLock`
@@ -328,28 +330,35 @@ class PrefixLock(CollectionLock):
     functions and methods unless `allow_unsafe_calls` is enabled
     in the :ref:`RPyC protocol <api-protocol>`
 
+    :param lock: A :class:`Lock`, :class:`LockListShared`,
+        or an iterable suitable to passed into
+        :class:`LockListAnd` constructor
     :param str prefix: A prefix string that a field
         or method must start with in order for the :class:`PrefixLock`
         to not be blocked
-    :param lock_list: A :class:`LockListShared` to evaluate
-        in place of a single lock if the prefix is found
 
-    If the `prefix` is found, then the `lock_list` is checked.
-    By default the `lock_list` is an empty :class:`LockListAnd`
+    If the ``prefix`` is found, then ``lock`` is checked.
+    By default ``lock`` is an empty :class:`LockListAnd`
     which will always evaluate as ``True``.
     """
-    def __init__(self, prefix="exposed_", lock_list = LockListAnd()):
+    def __init__(self, lock=[], prefix="exposed_"):
+        lock_list = sanitize_lock_parameter(lock)
+
+        if not isinstance(prefix, basestring): #basestring from compat
+                                               #library
+            raise TypeError("prefix must be a string.")
+
         super(PrefixLock, self).__init__(lock_list)
         self.prefix = prefix
 
     def permitted( self, **kwargs ):
-        if "name" in kwargs:
-            if name.startswith(self.prefix):
-                return super(PrefixLock, self).permitted(**kwargs)
+        name = kwargs['attribute']
+        if name.startswith(self.prefix):
+            return super(PrefixLock, self).permitted(**kwargs)
         return False
 
     def __str__(self):
-        return "PrefixLock(%s, %s)" % (self.prefix, lock_list)
+        return "PrefixLock(%s, %s)" % (self.prefix, self.locks)
 
 SAFE_ATTRS = \
     set(['__int__', '__ror__', '__ipow__', '__lshift__', '__getslice__',
@@ -393,7 +402,7 @@ used.
 """
 
 class SafeAttrLock(CollectionLock):
-    """SafeAttrLock(lock_list=LockListAnd(), safe_attrs=SAFE_ATTRS)
+    """SafeAttrLock(lock=[], safe_attrs=SAFE_ATTRS)
 
     SafeAttrLock is a :class:`CollectionLock` subclass
     that can be used to check to see if the name of the
@@ -409,24 +418,31 @@ class SafeAttrLock(CollectionLock):
     functions and methods unless `allow_unsafe_calls` is enabled
     in the :ref:`RPyC protocol <api-protocol>`
 
-    :param lock_list: A :class:`LockListShared` to evaluate
-        in place of a single lock
-    :param (set) safe_attrs: A set of attribute names to consider
+    :param lock: A :class:`Lock`, :class:`LockListShared`,
+        or an iterable suitable to passed into
+        :class:`LockListAnd` constructor
+    :param set safe_attrs: A set of attribute names to consider
         "*safe*"
 
-    If the `prefix` is found, then the `lock_list` is checked.
-    By default the `lock_list` is an empty :class:`LockListAnd`
+    If the ``prefix`` is found, then ``lock`` is checked.
+    By default ``lock`` is an empty :class:`LockListAnd`
     which will always evaluate as ``True``.
     """
-    def __init__(self, lock_list = LockListAnd(),
+    def __init__(self, lock = [],
                  safe_attrs = SAFE_ATTRS):
+
+        lock_list = sanitize_lock_parameter(lock)
+
         super(SafeAttrLock, self).__init__(lock_list)
         self.safe_attrs = safe_attrs
 
     def permitted( self, **kwargs ):
-        if "name" in kwargs:
-            if name in self.safe_attrs:
-                return super(SafeAttrLock, self).permitted( **kwargs )
+        name = kwargs["attribute"]
+        if name in self.safe_attrs:
+            return super(SafeAttrLock, self).permitted( **kwargs )
         return False
+
+    def __str__(self):
+        return "SafeAttrLock(%s)" % self.locks
 
 

@@ -3,6 +3,7 @@ from rpyc.security.exposer import *
 from rpyc.security import locks
 from rpyc.security import olps
 from rpyc.security import exceptions
+from rpyc.security import defaults
 
 class TestExposerCornerCases(unittest.TestCase):
     def test_double_expose(self):
@@ -52,7 +53,17 @@ class TestExposerCornerCases(unittest.TestCase):
         valid = False
         try:
             @expose(locks.BLOCKED, lock=locks.BLOCKED)
-            class a:
+            class A:
+                pass
+        except TypeError as e:
+            valid = True
+        self.assertTrue(valid)
+
+    def test_expose_bad_named_arg(self):
+        valid = False
+        try:
+            @expose(locks.BLOCKED, inhesit=None)
+            class A:
                 pass
         except TypeError as e:
             valid = True
@@ -248,14 +259,14 @@ class TestExposerCornerCases(unittest.TestCase):
         valid = False
         try:
             Exposer(restrictor = None)
-        except ValueError:
+        except TypeError:
             valid = True
         self.assertTrue(valid)
 
         valid = False
         try:
             Exposer(default_profiles = None)
-        except ValueError:
+        except TypeError:
             valid = True
         self.assertTrue(valid)
 
@@ -266,7 +277,7 @@ class TestExposerCornerCases(unittest.TestCase):
         valid = False
         try:
             class_expose(x) #not a class
-        except ValueError:
+        except TypeError:
             valid = True
         self.assertTrue(valid)
 
@@ -375,7 +386,7 @@ class TestExposerCornerCases(unittest.TestCase):
         valid = False
         try:
             routine_expose(A) #not a routine
-        except ValueError:
+        except TypeError:
             valid = True
         self.assertTrue(valid)
 
@@ -394,7 +405,7 @@ class TestExposerCornerCases(unittest.TestCase):
         valid = False
         try:
             routine_descriptor_expose(None)
-        except ValueError:
+        except TypeError:
             valid = True
 
     def test_routine_descriptor_separate_wrap(self):
@@ -452,6 +463,24 @@ class TestExposerCornerCases(unittest.TestCase):
         new_foo = default_exposer._routine_descriptor_remake(a.foo, a.foo.__func__)
         self.assertIsNot(new_foo, a.foo)
         self.assertEqual(new_foo, a.foo)
+
+    def test_default_profiles_property(self):
+        #Test getter.
+        self.assertIs(default_exposer.default_profiles, defaults.default_profiles)
+        old_profile = default_exposer.default_profiles
+        valid = False
+        try:
+            default_exposer.default_profiles = None
+        except TypeError:
+            valid = True
+        self.assertTrue(valid)
+
+        new_profile = defaults.Profiles()
+        default_exposer.default_profiles = new_profile
+
+        self.assertIs(default_exposer.default_profiles, new_profile)
+        #restore to normal
+        default_exposer.default_profiles = old_profile
 
 if __name__ == "__main__":
     unittest.main()

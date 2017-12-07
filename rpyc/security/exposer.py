@@ -178,12 +178,12 @@ class Exposer:
     def __init__(self, restrictor=security_restrict,
                  default_profiles=defaults.default_profiles):
         if not isinstance(restrictor, SecurityRestrictor):
-            raise ValueError("restrictor must be an instance of "
+            raise TypeError("restrictor must be an instance of "
                            + "SecurityRestrictor")
         self._restrictor = restrictor
 
         if not isinstance(default_profiles, defaults.Profiles):
-            raise ValueError("default_profiles must be an instance of "
+            raise TypeError("default_profiles must be an instance of "
                            + "Profiles")
         self._defaults = default_profiles
 
@@ -402,7 +402,7 @@ class Exposer:
         :meth:rpyc.exposer.Exposer.@expose decorator does on a class.
         """
         if not inspect.isclass(value):
-            raise ValueError("class_expose first parameter isn't a class")
+            raise TypeError("class_expose first parameter isn't a class")
         if self._is_exposed(value):
             raise ValueError("class already exposed")
 
@@ -854,7 +854,7 @@ class Exposer:
         if self._is_exposed(value):
             raise ValueError("value already exposed")
         if not inspect.isroutine(value):
-            raise ValueError("routine_expose first parameter isn't routine")
+            raise TypeError("routine_expose first parameter isn't routine")
 
         lock_list = locks.sanitize_lock_parameter(lock)
 
@@ -953,7 +953,7 @@ class Exposer:
         """
 
         if not self.is_routine_descriptor(value):
-            raise ValueError("value must be a routine descriptor (IE: classmethod)")
+            raise TypeError("value must be a routine descriptor (IE: classmethod)")
 
         lock_list = locks.sanitize_lock_parameter(lock)
 
@@ -1007,7 +1007,7 @@ class Exposer:
     @default_profiles.setter
     def default_profiles(self, value):
         if not isinstance(value, defaults.Profiles):
-            raise ValueError("default_profiles must be an instance of "
+            raise TypeError("default_profiles must be an instance of "
                            + "Profiles")
         self._defaults = value
 
