@@ -4,6 +4,7 @@ from rpyc.security import locks
 from rpyc.security import olps
 from rpyc.security import exceptions
 from rpyc.security import defaults
+from rpyc.lib.compat import py_get_func
 
 class TestExposerCornerCases(unittest.TestCase):
     def test_double_expose(self):
@@ -419,13 +420,13 @@ class TestExposerCornerCases(unittest.TestCase):
         @expose
         def foo2(self):
             pass
-        self.assertIs(A.__dict__['foo'].__func__, A.foo.__func__)
+        self.assertIs(py_get_func(A.__dict__['foo']), py_get_func(A.foo))
         self.assertTrue(is_exposed(A.__dict__['foo']))
         A.foo=classmethod(foo2)
-        self.assertIs(A.__dict__['foo'].__func__, foo2)
+        self.assertIs(py_get_func(A.__dict__['foo']), foo2)
         self.assertFalse(is_exposed(A.__dict__['foo']))
         A.foo=routine_descriptor_expose(classmethod(foo2))
-        self.assertIs(A.__dict__['foo'].__func__, foo2)
+        self.assertIs(py_get_func(A.__dict__['foo']), foo2)
         self.assertTrue(is_exposed(A.__dict__['foo']))
 
     #code coverage case to cover one branch.
@@ -460,7 +461,7 @@ class TestExposerCornerCases(unittest.TestCase):
             def foo(self):
                 pass
         a=A()
-        new_foo = default_exposer._routine_descriptor_remake(a.foo, a.foo.__func__)
+        new_foo = default_exposer._routine_descriptor_remake(a.foo, py_get_func(a.foo))
         self.assertIsNot(new_foo, a.foo)
         self.assertEqual(new_foo, a.foo)
 

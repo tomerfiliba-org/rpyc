@@ -4,6 +4,7 @@ and various platforms (posix/windows)
 """
 import sys
 import time
+import types
 
 is_py3k = (sys.version_info[0] >= 3)
 
@@ -12,6 +13,27 @@ try:
     basestring = basestring
 except:
     basestring = str
+
+def py_get_func(value):
+    #Had to add this to support python2.6. It is ugly
+    if sys.hexversion < 0x02070000:
+        if hasattr(value, "im_func"): #bound/unbound methods
+            return value.im_func
+        elif isinstance(value, classmethod):
+            return value.__get__(True).im_func
+        elif isinstance(value, staticmethod):
+            return value.__get__(True)
+        else:
+            raise AttributeError("%s has no way to get original function" % (value,))
+    else: #continue to use this for python3 -- it supports abstractmethod for instance.
+        return value.__func__ #Throw attribute error if not found
+
+def py_has_func(value):
+    try:
+        py_get_func(value)
+        return True
+    except AttributeError:
+        return False
 
 if is_py3k:
     exec("execute = exec")

@@ -64,6 +64,7 @@ from rpyc.security.olps import MERGE_REPLACE, MERGE_OR, MERGE_AND
 from rpyc.security import defaults
 from rpyc.security import exceptions
 from rpyc.lib.colls import WeakIdMap
+from rpyc.lib.compat import py_get_func, py_has_func
 
 #Exposure types.
 EXPOSE_DEFAULT = 0
@@ -201,7 +202,7 @@ class Exposer(object):
 
     def _peel(self, value):
         try:
-            return value.__func__
+            return py_get_func(value)
         except AttributeError:
             return value
 
@@ -785,7 +786,8 @@ class Exposer(object):
     def is_routine_descriptor(cls, value):
         if not inspect.isroutine(value):
             return False
-        if hasattr(value, "__func__") and hasattr(value, "__get__"):
+
+        if py_has_func(value) and hasattr(value, "__get__"):
             return True
         return False
 
@@ -869,7 +871,7 @@ class Exposer(object):
 
         if self.is_routine_descriptor(value):
             routine_descriptor = True
-            function = value.__func__
+            function = py_get_func(value)
         else:
             routine_descriptor = False
             function = value

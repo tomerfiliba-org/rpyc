@@ -20,7 +20,7 @@ from rpyc.security import olps
 from rpyc.security import exceptions
 from rpyc.security.utility import get_olp
 from rpyc.lib.colls import WeakIdMap
-from rpyc.lib.compat import basestring, is_py3k
+from rpyc.lib.compat import basestring, is_py3k, py_get_func
 
 #This is used to mark a vaue as exposed in various
 #__repr__ functions. We also call it in test code
@@ -385,7 +385,7 @@ class SecurityInstanceRestrictor(object):
                     #there unless something perverse is going on
                     if inspect.isroutine(obj):
                         try:
-                            func_getattr = obj.__func__._rpyc_getattr
+                            func_getattr = py_get_func(obj)._rpyc_getattr
                             #is won't work
                             if (func_getattr == obj._rpyc_getattr):
                                 use_rpyc_getattr = False
@@ -516,7 +516,7 @@ class SecurityInstanceRestrictor(object):
 
                     func_found = False
                     try:
-                        func = obj.__func__
+                        func = py_get_func(obj)
                         func_found = True
                     except AttributeError:
                         pass
@@ -534,7 +534,7 @@ class SecurityInstanceRestrictor(object):
                         #version.
                         if not is_py3k:
                             if type(value) == types.UnboundMethodType:
-                                if value.__func__ is not self:
+                                if py_get_func(value) is not self:
                                     value = types.UnboundMethodType(self, bind_obj, bind_type)
 
                     if new_olp != None:
