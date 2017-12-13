@@ -648,16 +648,8 @@ class Connection(object):
             raise ValueError("pickling is disabled")
         return pickle.dumps(self._local_objects[oid], proto)
     def _handle_buffiter(self, oid, count):
-        items = []
         obj = self._local_objects[oid]
-        i = 0
-        try:
-            while i < count:
-                items.append(next(obj))
-                i += 1
-        except StopIteration:
-            pass
-        return tuple(items)
+        return tuple(itertools.islice(obj, count))
     def _handle_oldslicing(self, oid, attempt, fallback, start, stop, args):
         try:
             # first try __xxxitem__
