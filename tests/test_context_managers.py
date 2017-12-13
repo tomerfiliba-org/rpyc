@@ -51,12 +51,14 @@ class TestContextManagers(unittest.TestCase):
         class MyException(Exception):
             pass
 
-        with self.assertRaises(MyException):
+        def use_context():
             with self.conn.root.context(3):
                 self.assertTrue(on_context_enter)
                 self.assertFalse(on_context_exc)
                 self.assertFalse(on_context_exit)
                 raise MyException()
+
+        self.assertRaises(MyException, use_context)
 
         self.assertTrue(on_context_exc)
         self.assertTrue(on_context_exit)
