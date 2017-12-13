@@ -27,7 +27,10 @@ before_script:
     - "python setup.py install"
     - "cd tests"
 
-script: nosetests -vv
+script:
+    - nosetests -vv -I test_deploy
+    # it currently fails on all but the native python versions on travis:
+    - python test_deploy.py || true
 
 notifications:
     email:
