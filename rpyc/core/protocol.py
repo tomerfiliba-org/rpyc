@@ -9,7 +9,8 @@ import time
 import gc
 
 from threading import Lock, RLock, Event, Thread
-from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
+from rpyc.lib.compat import (pickle, next, is_py3k, maxint, select_error,
+                             with_metaclass)
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
@@ -121,7 +122,18 @@ Parameter                                Default value     Description
 
 _connection_id_generator = itertools.count(1)
 
-class Connection(object):
+class ConnMeta(type):
+
+    def __init__(cls, name, bases, members):
+        super(ConnMeta, cls).__init__(name, bases, members)
+        cls._HANDLERS = handlers = {}
+        for name, obj in members.items():
+            if name.startswith("_handle_"):
+                const_name = "HANDLE_" + name[8:].upper()
+                handlers[getattr(consts, const_name)] = obj
+
+
+class Connection(with_metaclass(ConnMeta, object)):
     """The RPyC *connection* (AKA *protocol*).
 
     :param service: the :class:`Service <rpyc.core.service.Service>` to expose
@@ -646,15 +658,3 @@ class Connection(object):
                 stop = maxint
             getslice = self._handle_getattr(oid, fallback)
             return getslice(start, stop, *args)
-
-    # collect handlers
-    _HANDLERS = {}
-    for name, obj in dict(locals()).items():
-        if name.startswith("_handle_"):
-            name2 = "HANDLE_" + name[8:].upper()
-            if hasattr(consts, name2):
-                _HANDLERS[getattr(consts, name2)] = obj
-            else:
-                raise NameError("no constant defined for %r", name)
-    del name, name2, obj
-
