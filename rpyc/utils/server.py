@@ -48,12 +48,13 @@ class Server(object):
 
     def __init__(self, service, hostname = "", ipv6 = False, port = 0,
             backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
-            auto_register = None, protocol_config = {}, logger = None, listener_timeout = 0.5,
+            auto_register = None, conn_cls=Connection, protocol_config = {}, logger = None, listener_timeout = 0.5,
             socket_path = None):
         self.active = False
         self._closed = False
         self.service = service
         self.authenticator = authenticator
+        self.conn_cls = conn_cls
         self.backlog = backlog
         if auto_register is None:
             self.auto_register = bool(registrar)
@@ -154,10 +155,6 @@ class Server(object):
         self.clients.add(sock)
         self._accept_method(sock)
 
-    def _create_connection(self, service, channel, config={}, _lazy=False):
-        """Override this method in order to inject your own Connection subclass."""
-        return Connection(service, channel, config=config, _lazy=_lazy)
-
     def _accept_method(self, sock):
         """this method should start a thread, fork a child process, or
         anything else in order to serve the client. once the mechanism has
@@ -201,7 +198,7 @@ class Server(object):
         try:
             config = dict(self.protocol_config, credentials = credentials,
                 endpoints = (sock.getsockname(), addrinfo), logger = self.logger)
-            conn = self._create_connection(
+            conn = self.conn_cls(
                 self.service, Channel(SocketStream(sock)),
                 config = config, _lazy = True)
             conn._init_service()
@@ -482,7 +479,7 @@ class ThreadPoolServer(Server):
         h, p = sock.getpeername()
         config = dict(self.protocol_config, credentials=credentials, connid="%s:%d"%(h, p),
                       endpoints=(sock.getsockname(), (h, p)))
-        return self._create_connection(
+        return self.conn_cls(
             self.service, Channel(SocketStream(sock)), config=config)
 
     def _accept_method(self, sock):
