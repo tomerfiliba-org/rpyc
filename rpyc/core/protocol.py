@@ -126,11 +126,27 @@ class ConnMeta(type):
 
     def __init__(cls, name, bases, members):
         super(ConnMeta, cls).__init__(name, bases, members)
-        cls._HANDLERS = handlers = {}
-        for name, obj in members.items():
-            if name.startswith("_handle_"):
-                const_name = "HANDLE_" + name[8:].upper()
-                handlers[getattr(consts, const_name)] = obj
+        cls._HANDLERS = {
+            consts.HANDLE_PING:        cls._handle_ping,
+            consts.HANDLE_CLOSE:       cls._handle_close,
+            consts.HANDLE_GETROOT:     cls._handle_getroot,
+            consts.HANDLE_GETATTR:     cls._handle_getattr,
+            consts.HANDLE_DELATTR:     cls._handle_delattr,
+            consts.HANDLE_SETATTR:     cls._handle_setattr,
+            consts.HANDLE_CALL:        cls._handle_call,
+            consts.HANDLE_CALLATTR:    cls._handle_callattr,
+            consts.HANDLE_REPR:        cls._handle_repr,
+            consts.HANDLE_STR:         cls._handle_str,
+            consts.HANDLE_CMP:         cls._handle_cmp,
+            consts.HANDLE_HASH:        cls._handle_hash,
+            consts.HANDLE_DIR:         cls._handle_dir,
+            consts.HANDLE_PICKLE:      cls._handle_pickle,
+            consts.HANDLE_DEL:         cls._handle_del,
+            consts.HANDLE_INSPECT:     cls._handle_inspect,
+            consts.HANDLE_BUFFITER:    cls._handle_buffiter,
+            consts.HANDLE_OLDSLICING:  cls._handle_oldslicing,
+            consts.HANDLE_CTXEXIT:     cls._handle_ctxexit,
+        }
 
 
 class Connection(with_metaclass(ConnMeta, object)):
