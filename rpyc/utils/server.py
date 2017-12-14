@@ -154,6 +154,10 @@ class Server(object):
         self.clients.add(sock)
         self._accept_method(sock)
 
+    def _create_connection(self, service, channel, config={}, _lazy=False):
+        """Override this method in order to inject your own Connection subclass."""
+        return Connection(service, channel, config=config, _lazy=_lazy)
+
     def _accept_method(self, sock):
         """this method should start a thread, fork a child process, or
         anything else in order to serve the client. once the mechanism has
@@ -197,7 +201,8 @@ class Server(object):
         try:
             config = dict(self.protocol_config, credentials = credentials,
                 endpoints = (sock.getsockname(), addrinfo), logger = self.logger)
-            conn = Connection(self.service, Channel(SocketStream(sock)),
+            conn = self._create_connection(
+                self.service, Channel(SocketStream(sock)),
                 config = config, _lazy = True)
             conn._init_service()
             self._handle_connection(conn)
@@ -477,7 +482,8 @@ class ThreadPoolServer(Server):
         h, p = sock.getpeername()
         config = dict(self.protocol_config, credentials=credentials, connid="%s:%d"%(h, p),
                       endpoints=(sock.getsockname(), (h, p)))
-        return Connection(self.service, Channel(SocketStream(sock)), config=config)
+        return self._create_connection(
+            self.service, Channel(SocketStream(sock)), config=config)
 
     def _accept_method(self, sock):
         '''Implementation of the accept method : only pushes the work to the internal queue.
