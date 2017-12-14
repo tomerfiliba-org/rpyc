@@ -595,6 +595,12 @@ class Connection(object):
             name = name2
         return accessor(obj, name, *args)
 
+    def _do_call_by_obj(self, obj, args, kwargs=()):
+        if hasattr(self._local_root, "on_call"): #See issue #239
+            return self._local_root.on_call(obj, args, dict(kwargs))
+        else:
+            return obj(*args, **dict(kwargs))
+
     #
     # request handlers
     #
@@ -621,7 +627,9 @@ class Connection(object):
     def _handle_hash(self, oid):
         return hash(self._local_objects[oid])
     def _handle_call(self, oid, args, kwargs=()):
-        return self._local_objects[oid](*args, **dict(kwargs))
+        obj=self._local_objects[oid]
+        return self._do_call_by_obj(obj, args, kwargs=kwargs)
+
     def _handle_dir(self, oid):
         return tuple(dir(self._local_objects[oid]))
     def _handle_inspect(self, oid):
@@ -632,8 +640,9 @@ class Connection(object):
         return self._access_attr(oid, name, (), "_rpyc_delattr", "allow_delattr", delattr)
     def _handle_setattr(self, oid, name, value):
         return self._access_attr(oid, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
-    def _handle_callattr(self, oid, name, args, kwargs):
-        return self._handle_getattr(oid, name)(*args, **dict(kwargs))
+    def _handle_callattr(self, oid, name, args, kwargs=()):
+        obj = self._handle_getattr(oid, name)
+        return self._do_call_by_obj(obj, args, kwargs=kwargs)
     def _handle_ctxexit(self, oid, exc):
         if exc:
             try:
