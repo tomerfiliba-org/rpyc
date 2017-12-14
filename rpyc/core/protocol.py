@@ -48,6 +48,7 @@ DEFAULT_CONFIG = dict(
     instantiate_custom_exceptions = False,
     import_custom_exceptions = False,
     instantiate_oldstyle_exceptions = False, # which don't derive from Exception
+    exception_filter_function = None,
     propagate_SystemExit_locally = False, # whether to propagate SystemExit locally or to the other party
     propagate_KeyboardInterrupt_locally = True,  # whether to propagate KeyboardInterrupt locally or to the other party
     log_exceptions = True,
@@ -93,6 +94,8 @@ Parameter                                Default value     Description
 ``instantiate_oldstyle_exceptions``      ``False``         Whether to allow instantiation of exceptions
                                                            which don't derive from ``Exception``. This
                                                            is not applicable for Python 3 and later.
+``exception_filter_function``            ``None``          Parameter is passed to :func:`rpyc.core.vinegar.load`
+                                                           to control what exceptions can be loaded.
 ``propagate_SystemExit_locally``         ``False``         Whether to propagate ``SystemExit``
                                                            locally (kill the server) or to the other
                                                            party (kill the client)
@@ -371,7 +374,8 @@ class Connection(object):
         obj = vinegar.load(raw,
             import_custom_exceptions = self._config["import_custom_exceptions"],
             instantiate_custom_exceptions = self._config["instantiate_custom_exceptions"],
-            instantiate_oldstyle_exceptions = self._config["instantiate_oldstyle_exceptions"])
+            instantiate_oldstyle_exceptions = self._config["instantiate_oldstyle_exceptions"],
+            exception_filter_function = self._config["exception_filter_function"])
         if seq in self._async_callbacks:
             self._async_callbacks.pop(seq)(True, obj)
         else:

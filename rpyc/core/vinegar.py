@@ -78,7 +78,8 @@ def dump(typ, val, tb, include_local_traceback):
             attrs.append((name, attrval))
     return (typ.__module__, typ.__name__), tuple(args), tuple(attrs), tbtext
 
-def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantiate_oldstyle_exceptions):
+def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantiate_oldstyle_exceptions,
+         exception_filter_function = None):
     """
     Loads a dumped exception (the tuple returned by :func:`dump`) info a
     throwable exception object. If the exception cannot be instantiated for any
@@ -97,8 +98,34 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
                                             classes that do not derive from ``BaseException``.
                                             This is required to support old-style exceptions.
                                             Not applicable for Python 3 and above.
+    :param exception_filter_function: None or a function that can be used to filter exceptions.
 
     :returns: A throwable exception object
+
+    If :func:`exception_filter_function` is not ``None`` it is defined as follows:
+
+        :func:`exception_filter_function(**kwargs) <exception_filter_function>`
+
+            * ``kwargs["modname"]`` is the name of the module for the exception
+            * ``kwargs["clsname"]`` is the name of the class for the exception
+            * ``kwargs["attrs"]`` has all the attributes for the exception instance
+              as a list of ``(name, value)`` tuples
+            * ``kwargs["tbtext"]`` has the text of the traceback
+            * ``kwargs["builtin"]`` is a boolean that is ``True`` if the exception is
+              not considered a custom exception
+
+        The return value is a boolean that should be ``False`` if you want to
+        filter the exception, and ``True`` if the exception should be instantiated.
+
+        Even if not filtered, an exception is still subject to the rules set by
+        ``import_custom_exceptions``, ``instantiate_custom_exceptions``, and
+        ``instantiate_oldstyle_exceptions``.
+
+        To use :func:`exception_filter_function` to allow specific custom exceptions
+        those flags still have to be set appropriately. However, the filtering
+        occurs before exception module import or exception instantiation. Therefore
+        it can be used as an alternate protection mechanism.
+
     """
     if val == consts.EXC_STOP_ITERATION:
         return StopIteration # optimization
@@ -106,18 +133,30 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
         return val # deprecated string exceptions
 
     (modname, clsname), args, attrs, tbtext = val
-    if import_custom_exceptions and modname not in sys.modules:
+    filter_allow = True
+    if exception_filter_function != None:
+        full_attrs=list(attrs)+[("args", args)]
+        builtin_exception=(modname == exceptions_module.__name__)
+
+        filter_allow = \
+            exception_filter_function(modname=modname,
+                                      clsname=clsname,
+                                      attrs=full_attrs,
+                                      tbtext=tbtext,
+                                      builtin=builtin_exception)
+
+    if filter_allow and import_custom_exceptions and modname not in sys.modules:
         try:
             __import__(modname, None, None, "*")
         except Exception:
             pass
 
-    if instantiate_custom_exceptions:
+    if filter_allow and instantiate_custom_exceptions:
         if modname in sys.modules:
             cls = getattr(sys.modules[modname], clsname, None)
         else:
             cls = None
-    elif modname == exceptions_module.__name__:
+    elif filter_allow and (modname == exceptions_module.__name__):
         cls = getattr(exceptions_module, clsname, None)
     else:
         cls = None
