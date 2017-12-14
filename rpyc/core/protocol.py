@@ -157,7 +157,7 @@ class Connection(with_metaclass(ConnMeta, object)):
     :param config: the connection's configuration dict (overriding parameters
                    from the :data:`default configuration <DEFAULT_CONFIG>`)
     :param _lazy: whether or not to initialize the service with the creation of
-                  the connection. Default is True. If set to False, you will
+                  the connection. Default is False. If set to True, you will
                   need to call :func:`_init_service` manually later
     """
 
