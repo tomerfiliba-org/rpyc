@@ -284,12 +284,26 @@ class Connection(object):
     def _box(self, obj):
         """store a local object in such a way that it could be recreated on
         the remote party either by-value or by-reference"""
-        if brine.dumpable(obj):
-            return consts.LABEL_VALUE, obj
+        #Check to see if already boxed.
+        if isinstance(obj, netref.BaseNetref) and obj.____conn__() is self:
+            return consts.LABEL_LOCAL_REF, obj.____oid__
+
+        #Support on_box feature.
+        if hasattr(self._local_root, "on_box"):
+            new_obj = self._local_root.on_box(obj)
+            if new_obj is not obj:
+                #Up to the user to prevent infinite recursion.
+                return self._box(new_obj)
+
+        #brine.dumpable will happily brine tuples of only
+        #brine.dumpable items. However, we want to get those
+        #sub values sent to on_box, so we check for tuple first,
+        #then we check if brine.dumpable. This is the reverse
+        #of the old way.
         if type(obj) is tuple:
             return consts.LABEL_TUPLE, tuple(self._box(item) for item in obj)
-        elif isinstance(obj, netref.BaseNetref) and obj.____conn__() is self:
-            return consts.LABEL_LOCAL_REF, obj.____oid__
+        elif brine.dumpable(obj):
+            return consts.LABEL_VALUE, obj
         else:
             self._local_objects.add(obj)
             try:
