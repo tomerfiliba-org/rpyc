@@ -5,7 +5,7 @@ import inspect
 import unittest
 
 class MyService(rpyc.Service):
-    def on_call(self, obj, args, kwargs):
+    def _dispatch_call(self, obj, args, kwargs):
         if inspect.isroutine(obj):
            return obj(*args, **kwargs)
         else:
