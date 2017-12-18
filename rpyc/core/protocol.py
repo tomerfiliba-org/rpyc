@@ -639,8 +639,8 @@ class Connection(with_metaclass(ConnMeta, object)):
     def _handle_hash(self, oid):
         return hash(self._local_objects[oid])
     def _handle_call(self, oid, args, kwargs=()):
-        obj=self._local_objects[oid]
-        return self._dispatch_call(obj, args, kwargs=dict(kwargs))
+        obj = self._local_objects[oid]
+        return self._dispatch_call(obj, args, dict(kwargs))
     def _handle_dir(self, oid):
         return tuple(dir(self._local_objects[oid]))
     def _handle_inspect(self, oid):
@@ -653,7 +653,7 @@ class Connection(with_metaclass(ConnMeta, object)):
         return self._access_attr(oid, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
     def _handle_callattr(self, oid, name, args, kwargs=()):
         obj = self._handle_getattr(oid, name)
-        return self._dispatch_call(obj, args, kwargs=dict(kwargs))
+        return self._dispatch_call(obj, args, dict(kwargs))
     def _handle_ctxexit(self, oid, exc):
         if exc:
             try:
