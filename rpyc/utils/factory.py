@@ -38,7 +38,8 @@ def connect_channel(channel, service = VoidService, config = {}):
 
     :returns: an RPyC connection
     """
-    return Connection(service, channel, config = config)
+    conn_cls = config.get('conn_cls') or Connection
+    return conn_cls(service, channel, config = config)
 
 def connect_stream(stream, service = VoidService, config = {}):
     """creates a connection over a given stream
@@ -182,6 +183,7 @@ def ssh_connect(remote_machine, remote_port, service = VoidService, config = {})
         tun = remote_machine.tunnel(loc_port, remote_port)
         stream = TunneledSocketStream.connect("localhost", loc_port)
         stream.tun = tun
+    conn_cls = config.get('conn_cls') or Connection
     return Connection(service, Channel(stream), config = config)
 
 def discover(service_name, host = None, registrar = None, timeout = 2):

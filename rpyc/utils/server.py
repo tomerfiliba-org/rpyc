@@ -48,13 +48,13 @@ class Server(object):
 
     def __init__(self, service, hostname = "", ipv6 = False, port = 0,
             backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
-            auto_register = None, conn_cls=Connection, protocol_config = {}, logger = None, listener_timeout = 0.5,
+            auto_register = None, conn_cls = None, protocol_config = {}, logger = None, listener_timeout = 0.5,
             socket_path = None):
         self.active = False
         self._closed = False
         self.service = service
         self.authenticator = authenticator
-        self.conn_cls = conn_cls
+        self.conn_cls = conn_cls or protocol_config.get('conn_cls') or Connection
         self.backlog = backlog
         if auto_register is None:
             self.auto_register = bool(registrar)
