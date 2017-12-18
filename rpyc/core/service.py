@@ -182,3 +182,16 @@ class SlaveService(Service):
         return self._conn
 
 
+class VoidSlaveService(VoidService):
+    """The VoidSlaveService allows a remote peer to connect using SlaveService
+    wihtout exposing any local service."""
+
+    def __getattr__(self, name):
+        if name.startswith("exposed_"):
+            return self.void
+
+        return super(VoidSlaveService, self).__getattr__(name)
+
+    def void(*args, **kwargs):
+        pass
+
