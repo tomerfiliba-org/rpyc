@@ -183,6 +183,8 @@ class Connection(with_metaclass(ConnMeta, object)):
         self._remote_root = None
         self._send_queue = []
         self._local_root = service(weakref.proxy(self))
+        if hasattr(self._local_root, "_dispatch_call"): #See issue #239
+            self._dispatch_call = self._local_root._dispatch_call
         if not _lazy:
             self._init_service()
         self._closed = False
@@ -608,6 +610,9 @@ class Connection(with_metaclass(ConnMeta, object)):
             name = name2
         return accessor(obj, name, *args)
 
+    def _dispatch_call(self, obj, args, kwargs):
+        return obj(*args, **kwargs)
+
     #
     # request handlers
     #
@@ -634,7 +639,8 @@ class Connection(with_metaclass(ConnMeta, object)):
     def _handle_hash(self, oid):
         return hash(self._local_objects[oid])
     def _handle_call(self, oid, args, kwargs=()):
-        return self._local_objects[oid](*args, **dict(kwargs))
+        obj=self._local_objects[oid]
+        return self._dispatch_call(obj, args, kwargs=dict(kwargs))
     def _handle_dir(self, oid):
         return tuple(dir(self._local_objects[oid]))
     def _handle_inspect(self, oid):
@@ -645,8 +651,9 @@ class Connection(with_metaclass(ConnMeta, object)):
         return self._access_attr(oid, name, (), "_rpyc_delattr", "allow_delattr", delattr)
     def _handle_setattr(self, oid, name, value):
         return self._access_attr(oid, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
-    def _handle_callattr(self, oid, name, args, kwargs):
-        return self._handle_getattr(oid, name)(*args, **dict(kwargs))
+    def _handle_callattr(self, oid, name, args, kwargs=()):
+        obj = self._handle_getattr(oid, name)
+        return self._dispatch_call(obj, args, kwargs=dict(kwargs))
     def _handle_ctxexit(self, oid, exc):
         if exc:
             try:
