@@ -3,7 +3,7 @@ import sys
 import os
 import inspect
 from rpyc.lib.compat import pickle, execute, is_py3k
-from rpyc import SlaveService
+from rpyc.core.service import ClassicService
 from rpyc.utils import factory
 from rpyc.core.service import ModuleNamespace
 from contextlib import contextmanager
@@ -12,6 +12,8 @@ from contextlib import contextmanager
 DEFAULT_SERVER_PORT = 18812
 DEFAULT_SERVER_SSL_PORT = 18821
 
+SlaveService = ClassicService   # avoid renaming SlaveService in this module
+                                # for now
 
 #===============================================================================
 # connecting

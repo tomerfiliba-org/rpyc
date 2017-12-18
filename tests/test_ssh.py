@@ -5,7 +5,7 @@ import sys
 import os
 import unittest
 from rpyc.utils.server import ThreadedServer
-from rpyc import SlaveService
+from rpyc import SlaveService, MasterService
 from plumbum import SshMachine
 
 
@@ -36,7 +36,7 @@ class Test_Ssh(unittest.TestCase):
         conn.modules.sys.stdout.flush()
 
     def test_connect(self):
-        conn2 = rpyc.ssh_connect(self.remote_machine, 18888, service=SlaveService)
+        conn2 = rpyc.ssh_connect(self.remote_machine, 18888, service=MasterService)
         conn2.modules.sys.stdout.write("hello through rpyc.ssh_connect()\n")
         conn2.modules.sys.stdout.flush()
 
