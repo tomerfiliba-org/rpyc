@@ -157,16 +157,7 @@ class SlaveService(Service):
             instantiate_custom_exceptions = True,
             instantiate_oldstyle_exceptions = True,
         ))
-        # shortcuts
-        self._conn.modules = ModuleNamespace(self._conn.root.getmodule)
-        self._conn.eval = self._conn.root.eval
-        self._conn.execute = self._conn.root.execute
-        self._conn.namespace = self._conn.root.namespace
-        if is_py3k:
-            self._conn.builtin = self._conn.modules.builtins
-        else:
-            self._conn.builtin = self._conn.modules.__builtin__
-        self._conn.builtins = self._conn.builtin
+        super(SlaveService, self).on_connect()
 
     def exposed_execute(self, text):
         """execute arbitrary code (using ``exec``)"""
@@ -181,4 +172,25 @@ class SlaveService(Service):
         """returns the local connection instance to the other side"""
         return self._conn
 
+class MasterService(Service):
 
+    """Peer for a new-style (>=v3.5) :class:`SlaveService`. Use this service
+    if you want to connect to a ``SlaveService`` without exposing any
+    functionality to them."""
+
+    def on_connect(self):
+        super(MasterService, self).on_connect()
+        # shortcuts
+        self._conn.modules = ModuleNamespace(self._conn.root.getmodule)
+        self._conn.eval = self._conn.root.eval
+        self._conn.execute = self._conn.root.execute
+        self._conn.namespace = self._conn.root.namespace
+        if is_py3k:
+            self._conn.builtin = self._conn.modules.builtins
+        else:
+            self._conn.builtin = self._conn.modules.__builtin__
+        self._conn.builtins = self._conn.builtin
+
+class ClassicService(MasterService, SlaveService):
+    """Full duplex master/slave service, i.e. both parties have full control
+    over the other. Must be used by both parties."""
