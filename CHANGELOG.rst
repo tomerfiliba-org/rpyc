@@ -2,11 +2,13 @@
 -----
 Date: (unknown)
 
+NOTE: this release contains backward incompatible changes:
+
 * ``SlaveService`` is now split into two assymetric classes: ``SlaveService``
   and ``MasterService``. The slave exposes functionality to the master but can
   not anymore access remote objects on the master. (#232,#248)
 
-* Note: if you were previously using ``SlaveService``, you may experience
+  Note: if you were previously using ``SlaveService``, you may experience
   problems when feeding the slave with netrefs to objects on the master. In
   this case, do any of the following:
 
@@ -16,6 +18,24 @@ Date: (unknown)
 
     * use ``rpyc.utils.classic.deliver`` to feed copies rather than netrefs to
       the slave
+
+* Can override how function calls are dispatched in ``Service._dispatch_call``
+  (#239,#245)
+
+* Can override attribute access in ``Service._check_attr``
+
+* Can now subclass ``Connection`` and provide as ``conn_cls`` argument to
+  ``Server`` or in ``config``. More discussions and related features in
+  #239-#247.
+
+* ``RegistryServer.on_service_removed`` is now called whenever a service
+  instance is removed, making it symmetric to ``on_service_added`` again (#238)
+
+* fix bug with proxying context managers (#228)
+
+* expose server classes from ``rpyc`` top level module
+
+* fix logger issue on jython
 
 
 3.4.4
