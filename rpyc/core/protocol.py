@@ -224,6 +224,8 @@ class Connection(with_metaclass(ConnMeta, object)):
         self._local_root = None
         #self._seqcounter = None
         #self._config.clear()
+        self._dispatch_call = None
+        self._unbox_exception = None
 
     def close(self, _catchall = True):
         """closes the connection, releasing all held resources"""
