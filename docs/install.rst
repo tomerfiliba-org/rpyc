@@ -95,18 +95,5 @@ them:
 
 * Compatibiliy dependencies:
 
-  * `ssl-wrapper <http://pypi.python.org/pypi/ssl/>`_ - Required for SSL support
-    on python prior to v2.6 (``ssl_connect``)
-
-  * `TLSlite <http://trevp.net/tlslite/>`_ - Required for TLSlite support
-    (``VdbAuthenticator`` and ``tls_connect``). The project is no longer maintained,
-    but you can download v0.3.8 `ported to newer versions of python
-    <http://sourceforge.net/projects/rpyc/files/tlslite/>`_.
-
-    .. note::
-       **TLSLite has been deprecated** as of v3.2.0, and can only be used with v3.1.0 and below.
-
   * `zlib for IronPython <https://bitbucket.org/jdhardy/ironpythonzlib>`_ - Required
     for IronPython prior to v2.7
-
-
