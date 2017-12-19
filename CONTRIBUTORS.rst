@@ -1,3 +1,5 @@
+Contributors for newer versions are visible from the git commit history.
+
 v3.2.3
 ^^^^^^
 * Guy Rozendorn - backported lots of fixes from 3.3 branch
