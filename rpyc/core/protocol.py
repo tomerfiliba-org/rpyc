@@ -185,6 +185,8 @@ class Connection(with_metaclass(ConnMeta, object)):
         self._local_root = service(weakref.proxy(self))
         if hasattr(self._local_root, "_dispatch_call"): #See issue #239
             self._dispatch_call = self._local_root._dispatch_call
+        if hasattr(self._local_root, "_unbox_exception"): #See PR #247
+            self._unbox_exception = self._local_root._unbox_exception
         if not _lazy:
             self._init_service()
         self._closed = False
