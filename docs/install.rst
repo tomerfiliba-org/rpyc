@@ -19,9 +19,10 @@ platform that runs python (or one of its other implementations), both 32-
 and 64-bit. This is also true for a client and its server, which may run on
 different architectures. The latest release supports:
 
-* **Python** (CPython) 2.4-2.7 as well as 3.0-3.2
-* **Jython** 2.5 and later
-* **IronPython** 2.7 and later
+* **Python** (CPython) 2.7-3.7
+* May also work on py2.6
+* May also work with **Jython** and **IronPython**. However, these are not
+  primary concerns to keep supported for me.
 
 Cross-Interpreter Compatibility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
