@@ -4,7 +4,7 @@ Download and Install
 ====================
 
 You can always download the latest releases of RPyC from the project's
-`sourceforge page <http://sourceforge.net/projects/rpyc/files/main>`_ or
+`github page <https://github.com/tomerfiliba/rpyc/releases>`_ or
 its `PyPI page <http://pypi.python.org/pypi/rpyc>`_. RPyC is distributed as a
 ``zip``, a ``tar.gz``, and a win32 installer. Of course you can also use
 ``easy_install rpyc`` and ``pip install rpyc`` just as well.
