@@ -172,6 +172,16 @@ class SlaveService(Service):
         """returns the local connection instance to the other side"""
         return self._conn
 
+class FakeSlaveService(VoidService):
+    """VoidService that can be used for connecting to peers that operate a
+    :class:`MasterService`, :class:`ClassicService`, or the old
+    ``SlaveService`` (pre v3.5) without exposing any functionality to them."""
+    exposed_namespace = None
+    exposed_execute   = None
+    exposed_eval      = None
+    exposed_getmodule = None
+    exposed_getconn   = None
+
 class MasterService(Service):
 
     """Peer for a new-style (>=v3.5) :class:`SlaveService`. Use this service
@@ -194,3 +204,8 @@ class MasterService(Service):
 class ClassicService(MasterService, SlaveService):
     """Full duplex master/slave service, i.e. both parties have full control
     over the other. Must be used by both parties."""
+
+class ClassicClient(MasterService, FakeSlaveService):
+    """MasterService that can be used for connecting to peers that operate a
+    :class:`MasterService`, :class:`ClassicService`, or the old
+    ``SlaveService`` (pre v3.5) without exposing any functionality to them."""
