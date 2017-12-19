@@ -61,10 +61,9 @@ Development
 
 Mailing List
 ------------
-Feel free to use our `mailing list <http://groups.google.com/group/rpyc>`_ to
-ask questions and join the discussion, but please **do not send bug reports
-to the mailing list**. Please be sure to search the forum first, before asking
-questions. For *bug reports*, see below.
+There is an old `mailing list <http://groups.google.com/group/rpyc>`_ that
+you should search before asking questions. However, do not count on getting
+answers there for new questions nowadays.
 
 Repository
 ----------
@@ -76,14 +75,9 @@ can always find the latest code or fork the project.
 Bugs and Patches
 ----------------
 We're using github's `issue tracker <http://github.com/tomerfiliba/rpyc/issues>`_
-for bug reports, feature requests, and overall status. When stumbling upon what
-seems to be a bug, you may consult with the mailing list, but be sure to open
-an issue as well.
+for bug reports, feature requests, and overall status.
 
-Patches are accepted **only** through github's `pull requests <http://help.github.com/pull-requests/>`_
-mechanism, which provides a much more organized way to share patches: simply fork
-the project, commit your changes, and send a pull request. That way we can track,
-discuss, and integrate patches much more easily and concisely.
+Patches are accepted **only** through github `pull requests <http://help.github.com/pull-requests/>`_.
 
 .. _dependencies:
 
