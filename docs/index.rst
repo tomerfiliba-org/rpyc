@@ -142,6 +142,3 @@ Contents
    tutorial
    docs
    api
-   whatsnew33
-
-
