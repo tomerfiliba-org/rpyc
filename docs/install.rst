@@ -94,7 +94,5 @@ them:
 
 * SSH client - Required for :ref:`RPyC-over-SSH <ssh-tunneling>` (``ssh_connect``)
 
-* Compatibiliy dependencies:
-
-  * `zlib for IronPython <https://bitbucket.org/jdhardy/ironpythonzlib>`_ - Required
+* `zlib for IronPython <https://bitbucket.org/jdhardy/ironpythonzlib>`_ - Required
     for IronPython prior to v2.7
