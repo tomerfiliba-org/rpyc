@@ -4,7 +4,7 @@ Date: (unknown)
 
 NOTE: this release contains backward incompatible changes:
 
-* ``SlaveService`` is now split into two assymetric classes: ``SlaveService``
+* ``SlaveService`` is now split into two asymetric classes: ``SlaveService``
   and ``MasterService``. The slave exposes functionality to the master but can
   not anymore access remote objects on the master. (#232,#248)
 
@@ -12,12 +12,12 @@ NOTE: this release contains backward incompatible changes:
   problems when feeding the slave with netrefs to objects on the master. In
   this case, do any of the following:
 
-    * use ``ClassicService`` (acts exactly like the old ``SlaveService``)
+  * use ``ClassicService`` (acts exactly like the old ``SlaveService``)
 
-    * use ``SlaveService`` with a ``config`` that allows attribute access etc
+  * use ``SlaveService`` with a ``config`` that allows attribute access etc
 
-    * use ``rpyc.utils.classic.deliver`` to feed copies rather than netrefs to
-      the slave
+  * use ``rpyc.utils.deliver`` to feed copies rather than netrefs to
+    the slave
 
 * Can override how function calls are dispatched in ``Service._dispatch_call``
   (#239,#245)
