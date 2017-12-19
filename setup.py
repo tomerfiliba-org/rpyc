@@ -7,8 +7,8 @@ try:
 except ImportError:
     from distutils.core import setup
 
-if sys.version_info < (2, 5):
-    sys.exit("requires python 2.5 and up")
+if sys.version_info < (2, 6):
+    sys.exit("requires python 2.6 and up")
 
 here = os.path.dirname(__file__)
 exec(open(os.path.join(here, 'rpyc', 'version.py')).read())

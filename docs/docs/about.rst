@@ -10,8 +10,8 @@ way. RPyC is developed and maintained by `Tomer Filiba <http://tomerfiliba.com>`
 (tomerfiliba@gmail.com).
 
 .. note::
-   Please do not send questions directly to my email -- use our
-   `mailing list <https://groups.google.com/forum/?fromgroups#!forum/rpyc>`_ instead.
+   Please do not send questions directly to my email -- use our the github
+   issues instead
 
 Contributors
 ------------
