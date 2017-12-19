@@ -64,8 +64,8 @@ Getting Started
 ---------------
 :ref:`Installing <install>` RPyC is as easy as ``pip install rpyc``.
 
-If you're new to RPyC, be sure to check out the :ref:`tutorial` and
-:ref:`screencasts`. Next, refer to the :ref:`documentation` and :ref:`api-ref`,
+If you're new to RPyC, be sure to check out the :ref:`tutorial`.
+Next, refer to the :ref:`documentation` and :ref:`api-ref`,
 as well as the :ref:`mailing-list`.
 
 For an introductory reading, `David Mertz <http://gnosis.cx/dW/>`_ wrote a very thorough
@@ -140,7 +140,6 @@ Contents
 .. toctree::
 
    tutorial
-   screencasts
    docs
    api
    whatsnew33
