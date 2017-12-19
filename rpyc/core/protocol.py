@@ -397,11 +397,14 @@ class Connection(with_metaclass(ConnMeta, object)):
         else:
             self._sync_replies[seq] = (False, obj)
 
-    def _dispatch_exception(self, seq, raw):
-        obj = vinegar.load(raw,
+    def _unbox_exception(self, raw):
+        return vinegar.load(raw,
             import_custom_exceptions = self._config["import_custom_exceptions"],
             instantiate_custom_exceptions = self._config["instantiate_custom_exceptions"],
             instantiate_oldstyle_exceptions = self._config["instantiate_oldstyle_exceptions"])
+
+    def _dispatch_exception(self, seq, raw):
+        obj = self._unbox_exception(raw)
         if seq in self._async_callbacks:
             self._async_callbacks.pop(seq)(True, obj)
         else:
