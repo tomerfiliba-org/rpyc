@@ -9,8 +9,7 @@ import time
 import gc
 
 from threading import Lock, RLock, Event, Thread
-from rpyc.lib.compat import (pickle, next, is_py3k, maxint, select_error,
-                             with_metaclass)
+from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
@@ -122,34 +121,8 @@ Parameter                                Default value     Description
 
 _connection_id_generator = itertools.count(1)
 
-class ConnMeta(type):
 
-    def __init__(cls, name, bases, members):
-        super(ConnMeta, cls).__init__(name, bases, members)
-        cls._HANDLERS = {
-            consts.HANDLE_PING:        cls._handle_ping,
-            consts.HANDLE_CLOSE:       cls._handle_close,
-            consts.HANDLE_GETROOT:     cls._handle_getroot,
-            consts.HANDLE_GETATTR:     cls._handle_getattr,
-            consts.HANDLE_DELATTR:     cls._handle_delattr,
-            consts.HANDLE_SETATTR:     cls._handle_setattr,
-            consts.HANDLE_CALL:        cls._handle_call,
-            consts.HANDLE_CALLATTR:    cls._handle_callattr,
-            consts.HANDLE_REPR:        cls._handle_repr,
-            consts.HANDLE_STR:         cls._handle_str,
-            consts.HANDLE_CMP:         cls._handle_cmp,
-            consts.HANDLE_HASH:        cls._handle_hash,
-            consts.HANDLE_DIR:         cls._handle_dir,
-            consts.HANDLE_PICKLE:      cls._handle_pickle,
-            consts.HANDLE_DEL:         cls._handle_del,
-            consts.HANDLE_INSPECT:     cls._handle_inspect,
-            consts.HANDLE_BUFFITER:    cls._handle_buffiter,
-            consts.HANDLE_OLDSLICING:  cls._handle_oldslicing,
-            consts.HANDLE_CTXEXIT:     cls._handle_ctxexit,
-        }
-
-
-class Connection(with_metaclass(ConnMeta, object)):
+class Connection(object):
     """The RPyC *connection* (AKA *protocol*).
 
     :param service: the :class:`Service <rpyc.core.service.Service>` to expose
@@ -168,7 +141,7 @@ class Connection(with_metaclass(ConnMeta, object)):
         if self._config["connid"] is None:
             self._config["connid"] = "conn%d" % (next(_connection_id_generator),)
 
-        self._HANDLERS = self._HANDLERS.copy()
+        self._HANDLERS = self._request_handlers()
         self._channel = channel
         self._seqcounter = itertools.count()
         self._recvlock = Lock()
@@ -624,6 +597,30 @@ class Connection(with_metaclass(ConnMeta, object)):
     #
     # request handlers
     #
+    @classmethod
+    def _request_handlers(cls):
+        return {
+            consts.HANDLE_PING:        cls._handle_ping,
+            consts.HANDLE_CLOSE:       cls._handle_close,
+            consts.HANDLE_GETROOT:     cls._handle_getroot,
+            consts.HANDLE_GETATTR:     cls._handle_getattr,
+            consts.HANDLE_DELATTR:     cls._handle_delattr,
+            consts.HANDLE_SETATTR:     cls._handle_setattr,
+            consts.HANDLE_CALL:        cls._handle_call,
+            consts.HANDLE_CALLATTR:    cls._handle_callattr,
+            consts.HANDLE_REPR:        cls._handle_repr,
+            consts.HANDLE_STR:         cls._handle_str,
+            consts.HANDLE_CMP:         cls._handle_cmp,
+            consts.HANDLE_HASH:        cls._handle_hash,
+            consts.HANDLE_DIR:         cls._handle_dir,
+            consts.HANDLE_PICKLE:      cls._handle_pickle,
+            consts.HANDLE_DEL:         cls._handle_del,
+            consts.HANDLE_INSPECT:     cls._handle_inspect,
+            consts.HANDLE_BUFFITER:    cls._handle_buffiter,
+            consts.HANDLE_OLDSLICING:  cls._handle_oldslicing,
+            consts.HANDLE_CTXEXIT:     cls._handle_ctxexit,
+        }
+
     def _handle_ping(self, data):
         return data
     def _handle_close(self):
