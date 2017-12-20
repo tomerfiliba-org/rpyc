@@ -5,7 +5,7 @@ of *magic*, so beware.
 import sys
 import inspect
 import types
-from rpyc.lib.compat import pickle, is_py3k, maxint
+from rpyc.lib.compat import pickle, is_py3k, maxint, with_metaclass
 from rpyc.core import consts
 
 
@@ -101,7 +101,7 @@ class NetrefMetaclass(type):
         else:
             return "<netref class '%s'>" % (self.__name__,)
 
-class BaseNetref(object):
+class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     """The base netref class, from which all netref classes derive. Some netref
     classes are "pre-generated" and cached upon importing this module (those
     defined in the :data:`_builtin_types`), and they are shared between all
@@ -115,8 +115,6 @@ class BaseNetref(object):
     :param conn: the :class:`rpyc.core.protocol.Connection` instance
     :param oid: the unique object ID of the remote object
     """
-    # this is okay with py3k -- see below
-    __metaclass__ = NetrefMetaclass
     __slots__ = ["____conn__", "____oid__", "__weakref__", "____refcount__"]
     def __init__(self, conn, oid):
         self.____conn__ = conn
@@ -178,13 +176,6 @@ class BaseNetref(object):
     # support for pickling netrefs
     def __reduce_ex__(self, proto):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
-
-if not isinstance(BaseNetref, NetrefMetaclass):
-    # python 2 and 3 compatible metaclass...
-    ns = dict(BaseNetref.__dict__)
-    for slot in BaseNetref.__slots__:
-        ns.pop(slot)
-    BaseNetref = NetrefMetaclass(BaseNetref.__name__, BaseNetref.__bases__, ns)
 
 
 def _make_method(name, doc):
