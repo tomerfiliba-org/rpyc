@@ -168,6 +168,7 @@ class Connection(with_metaclass(ConnMeta, object)):
         if self._config["connid"] is None:
             self._config["connid"] = "conn%d" % (next(_connection_id_generator),)
 
+        self._HANDLERS = self._HANDLERS.copy()
         self._channel = channel
         self._seqcounter = itertools.count()
         self._recvlock = Lock()
@@ -226,6 +227,7 @@ class Connection(with_metaclass(ConnMeta, object)):
         #self._config.clear()
         self._dispatch_call = None
         self._unbox_exception = None
+        del self._HANDLERS
 
     def close(self, _catchall = True):
         """closes the connection, releasing all held resources"""
