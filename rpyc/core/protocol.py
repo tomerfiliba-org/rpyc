@@ -630,7 +630,7 @@ class Connection(with_metaclass(ConnMeta, object)):
     def _handle_getroot(self):
         return self._local_root
     def _handle_del(self, oid, count=1):
-        self._local_objects.decref(oid)
+        self._local_objects.decref(oid, count)
     def _handle_repr(self, oid):
         return repr(self._local_objects[oid])
     def _handle_str(self, oid):
