@@ -597,7 +597,7 @@ class Connection(with_metaclass(ConnMeta, object)):
     # attribute access
     #
 
-    def _access_attr(self, oid, name, args, overrider, param, default):
+    def _access_attr(self, obj, name, args, overrider, param, default):
         if is_py3k:
             if type(name) is bytes:
                 name = str(name, "utf8")
@@ -607,7 +607,6 @@ class Connection(with_metaclass(ConnMeta, object)):
             if type(name) not in (str, unicode):
                 raise TypeError("name must be a string")
             name = str(name) # IronPython issue #10 + py3k issue
-        obj = self._local_objects[oid]
         accessor = getattr(type(obj), overrider, None)
         if accessor is None:
             name2 = self._local_root._check_attr(obj, name)
@@ -629,39 +628,37 @@ class Connection(with_metaclass(ConnMeta, object)):
         self._cleanup()
     def _handle_getroot(self):
         return self._local_root
-    def _handle_del(self, oid, count=1):
-        self._local_objects.decref(oid, count)
-    def _handle_repr(self, oid):
-        return repr(self._local_objects[oid])
-    def _handle_str(self, oid):
-        return str(self._local_objects[oid])
-    def _handle_cmp(self, oid, other):
+    def _handle_del(self, obj, count=1):
+        self._local_objects.decref(id(obj), count)
+    def _handle_repr(self, obj):
+        return repr(obj)
+    def _handle_str(self, obj):
+        return str(obj)
+    def _handle_cmp(self, obj, other):
         # cmp() might enter recursive resonance... yet another workaround
-        #return cmp(self._local_objects[oid], other)
-        obj = self._local_objects[oid]
+        #return cmp(obj, other)
         try:
             return type(obj).__cmp__(obj, other)
         except (AttributeError, TypeError):
             return NotImplemented
-    def _handle_hash(self, oid):
-        return hash(self._local_objects[oid])
-    def _handle_call(self, oid, args, kwargs=()):
-        obj = self._local_objects[oid]
+    def _handle_hash(self, obj):
+        return hash(obj)
+    def _handle_call(self, obj, args, kwargs=()):
         return self._dispatch_call(obj, args, dict(kwargs))
-    def _handle_dir(self, oid):
-        return tuple(dir(self._local_objects[oid]))
+    def _handle_dir(self, obj):
+        return tuple(dir(obj))
     def _handle_inspect(self, oid):
         return tuple(netref.inspect_methods(self._local_objects[oid]))
-    def _handle_getattr(self, oid, name):
-        return self._access_attr(oid, name, (), "_rpyc_getattr", "allow_getattr", getattr)
-    def _handle_delattr(self, oid, name):
-        return self._access_attr(oid, name, (), "_rpyc_delattr", "allow_delattr", delattr)
-    def _handle_setattr(self, oid, name, value):
-        return self._access_attr(oid, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
-    def _handle_callattr(self, oid, name, args, kwargs=()):
-        obj = self._handle_getattr(oid, name)
+    def _handle_getattr(self, obj, name):
+        return self._access_attr(obj, name, (), "_rpyc_getattr", "allow_getattr", getattr)
+    def _handle_delattr(self, obj, name):
+        return self._access_attr(obj, name, (), "_rpyc_delattr", "allow_delattr", delattr)
+    def _handle_setattr(self, obj, name, value):
+        return self._access_attr(obj, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
+    def _handle_callattr(self, obj, name, args, kwargs=()):
+        obj = self._handle_getattr(obj, name)
         return self._dispatch_call(obj, args, dict(kwargs))
-    def _handle_ctxexit(self, oid, exc):
+    def _handle_ctxexit(self, obj, exc):
         if exc:
             try:
                 raise exc
@@ -669,22 +666,21 @@ class Connection(with_metaclass(ConnMeta, object)):
                 exc, typ, tb = sys.exc_info()
         else:
             typ = tb = None
-        return self._handle_getattr(oid, "__exit__")(exc, typ, tb)
-    def _handle_pickle(self, oid, proto):
+        return self._handle_getattr(obj, "__exit__")(exc, typ, tb)
+    def _handle_pickle(self, obj, proto):
         if not self._config["allow_pickle"]:
             raise ValueError("pickling is disabled")
-        return pickle.dumps(self._local_objects[oid], proto)
-    def _handle_buffiter(self, oid, count):
-        obj = self._local_objects[oid]
+        return pickle.dumps(obj, proto)
+    def _handle_buffiter(self, obj, count):
         return tuple(itertools.islice(obj, count))
-    def _handle_oldslicing(self, oid, attempt, fallback, start, stop, args):
+    def _handle_oldslicing(self, obj, attempt, fallback, start, stop, args):
         try:
             # first try __xxxitem__
-            getitem = self._handle_getattr(oid, attempt)
+            getitem = self._handle_getattr(obj, attempt)
             return getitem(slice(start, stop), *args)
         except Exception:
             # fallback to __xxxslice__. see issue #41
             if stop is None:
                 stop = maxint
-            getslice = self._handle_getattr(oid, fallback)
+            getslice = self._handle_getattr(obj, fallback)
             return getslice(start, stop, *args)
