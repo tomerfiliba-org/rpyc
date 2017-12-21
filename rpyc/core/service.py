@@ -87,25 +87,6 @@ class Service(object):
     exposed_get_service_aliases = get_service_aliases
     exposed_get_service_name = get_service_name
 
-    def _check_attr(self, obj, name):
-        """Override this to define how to resolve attribute accesses for
-        arbitrary objects."""
-        config = self._conn._config
-        if config["allow_exposed_attrs"]:
-            if name.startswith(config["exposed_prefix"]):
-                name2 = name
-            else:
-                name2 = config["exposed_prefix"] + name
-            if hasattr(obj, name2):
-                return name2
-        if config["allow_all_attrs"]:
-            return name
-        if config["allow_safe_attrs"] and name in config["safe_attrs"]:
-            return name
-        if config["allow_public_attrs"] and not name.startswith("_"):
-            return name
-        return False
-
 
 class VoidService(Service):
     """void service - an do-nothing service"""
