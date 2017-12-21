@@ -125,16 +125,13 @@ _connection_id_generator = itertools.count(1)
 class Connection(object):
     """The RPyC *connection* (AKA *protocol*).
 
-    :param service: the :class:`Service <rpyc.core.service.Service>` to expose
+    :param root: the :class:`Service <rpyc.core.service.Service>` object to expose
     :param channel: the :class:`Channel <rpyc.core.channel.Channel>` over which messages are passed
     :param config: the connection's configuration dict (overriding parameters
                    from the :data:`default configuration <DEFAULT_CONFIG>`)
-    :param _lazy: whether or not to initialize the service with the creation of
-                  the connection. Default is False. If set to True, you will
-                  need to call :func:`_init_service` manually later
     """
 
-    def __init__(self, service, channel, config = {}, _lazy = False):
+    def __init__(self, root, channel, config={}):
         self._closed = True
         self._config = DEFAULT_CONFIG.copy()
         self._config.update(config)
@@ -156,14 +153,8 @@ class Connection(object):
         self._netref_classes_cache = {}
         self._remote_root = None
         self._send_queue = []
-        self._local_root = service(weakref.proxy(self))
-        if not _lazy:
-            self._init_service()
+        self._local_root = root
         self._closed = False
-
-
-    def _init_service(self):
-        self._local_root.on_connect()
 
     def __del__(self):
         self.close()
