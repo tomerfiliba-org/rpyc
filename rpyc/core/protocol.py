@@ -157,8 +157,6 @@ class Connection(object):
         self._remote_root = None
         self._send_queue = []
         self._local_root = service(weakref.proxy(self))
-        if hasattr(self._local_root, "_dispatch_call"): #See issue #239
-            self._dispatch_call = self._local_root._dispatch_call
         if hasattr(self._local_root, "_unbox_exception"): #See PR #247
             self._unbox_exception = self._local_root._unbox_exception
         if not _lazy:
@@ -198,7 +196,6 @@ class Connection(object):
         self._local_root = None
         #self._seqcounter = None
         #self._config.clear()
-        self._dispatch_call = None
         self._unbox_exception = None
         del self._HANDLERS
 
@@ -591,9 +588,6 @@ class Connection(object):
             name = name2
         return accessor(obj, name, *args)
 
-    def _dispatch_call(self, obj, args, kwargs):
-        return obj(*args, **kwargs)
-
     #
     # request handlers
     #
@@ -643,7 +637,7 @@ class Connection(object):
     def _handle_hash(self, obj):
         return hash(obj)
     def _handle_call(self, obj, args, kwargs=()):
-        return self._dispatch_call(obj, args, dict(kwargs))
+        return obj(*args, **dict(kwargs))
     def _handle_dir(self, obj):
         return tuple(dir(obj))
     def _handle_inspect(self, oid):
@@ -656,7 +650,7 @@ class Connection(object):
         return self._access_attr(obj, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
     def _handle_callattr(self, obj, name, args, kwargs=()):
         obj = self._handle_getattr(obj, name)
-        return self._dispatch_call(obj, args, dict(kwargs))
+        return self._handle_call(obj, args, kwargs)
     def _handle_ctxexit(self, obj, exc):
         if exc:
             try:
