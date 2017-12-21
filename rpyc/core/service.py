@@ -7,6 +7,7 @@ exposed *service A*, while the other may expose *service B*. As long as the two
 can interoperate, you're good to go.
 """
 from rpyc.lib.compat import execute, is_py3k
+from rpyc.core.protocol import Connection
 
 
 class Service(object):
@@ -50,9 +51,11 @@ class Service(object):
     """
     __slots__ = ["_conn"]
     ALIASES = ()
+    _protocol = Connection
 
-    def __init__(self, conn):
-        self._conn = conn
+    def __init__(self):
+        self._conn = None
+
     def on_connect(self):
         """called when the connection is established"""
         pass
@@ -86,6 +89,14 @@ class Service(object):
 
     exposed_get_service_aliases = get_service_aliases
     exposed_get_service_name = get_service_name
+
+    def connect(self, channel, config={}):
+        """Setup a connection via the given channel."""
+        if self._conn is not None:
+            raise ValueError("Already connected!")
+        self._conn = self._protocol(self, channel, config)
+        self.on_connect()
+        return self._conn
 
 
 class VoidService(Service):

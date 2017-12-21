@@ -19,9 +19,13 @@ NOTE: this release contains backward incompatible changes:
   * use ``rpyc.utils.deliver`` to feed copies rather than netrefs to
     the slave
 
-* Can now subclass ``Connection`` and provide as ``conn_cls`` argument to
-  ``Server`` or the various ``connect`` functions. More discussions and related
-  features in #239-#247.
+* The service now has a method ``Service.connect`` that is in charge of
+  setting up the connection and initializing the service. This allows using
+  custom protocols by e.g. subclassing ``Connection``.
+  More discussions and related features in #239-#247.
+
+  This also breaks backward compatibility by removing the ``conn`` argument
+  from the ``Service.__init__`` call!
 
 * ``RegistryServer.on_service_removed`` is now called whenever a service
   instance is removed, making it symmetric to ``on_service_added`` again (#238)
