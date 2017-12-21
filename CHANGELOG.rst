@@ -19,14 +19,9 @@ NOTE: this release contains backward incompatible changes:
   * use ``rpyc.utils.deliver`` to feed copies rather than netrefs to
     the slave
 
-* Can override how function calls are dispatched in ``Service._dispatch_call``
-  (#239,#245)
-
-* Can override attribute access in ``Service._check_attr``
-
 * Can now subclass ``Connection`` and provide as ``conn_cls`` argument to
-  ``Server`` or in ``config``. More discussions and related features in
-  #239-#247.
+  ``Server`` or the various ``connect`` functions. More discussions and related
+  features in #239-#247.
 
 * ``RegistryServer.on_service_removed`` is now called whenever a service
   instance is removed, making it symmetric to ``on_service_added`` again (#238)
