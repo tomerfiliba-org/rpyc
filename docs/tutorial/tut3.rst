@@ -94,7 +94,9 @@ In the second case where you pass in a fully constructed service instance, it
 is trivial to pass additional arguments to the ``__init__`` function. However,
 the situation is slightly more tricky if you want to pass arguments while
 separating the root objects for each connection. In this case, use
-``rpyc.utils.helpers.classpartial`` like so::
+:func:`~rpyc.utils.helpers.classpartial` like so::
+
+        from rpyc.utils.helpers import classpartial
 
         service = classpartial(MyService, 1, 2, pi=3)
         t = ThreadedServer(service, port=18861)

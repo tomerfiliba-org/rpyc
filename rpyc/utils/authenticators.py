@@ -17,7 +17,7 @@ RPyC comes bundled with an authenticator for ``SSL`` (using certificates).
 This authenticator, for instance, both verifies the peer's identity and wraps the
 socket with an encrypted transport (which replaces the original socket).
 
-Authenticators are used by :class:`servers <rpyc.utils.server.Server>` to
+Authenticators are used by :class:`~rpyc.utils.server.Server` to
 validate an incoming connection. Using them is pretty trivial ::
 
     s = ThreadedServer(...., authenticator = magic_word_authenticator)
