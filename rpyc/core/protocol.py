@@ -174,7 +174,7 @@ class Connection(object):
             return
         self._closed = True
         self._channel.close()
-        self._local_root.on_disconnect()
+        self._local_root.on_disconnect(self)
         self._sync_replies.clear()
         self._async_callbacks.clear()
         self._local_objects.clear()

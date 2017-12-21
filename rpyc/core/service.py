@@ -49,17 +49,14 @@ class Service(object):
        You can override ``_rpyc_getattr``, ``_rpyc_setattr`` and ``_rpyc_delattr``
        to change attribute lookup -- but beware of possible **security implications!**
     """
-    __slots__ = ["_conn"]
+    __slots__ = ()
     ALIASES = ()
     _protocol = Connection
 
-    def __init__(self):
-        self._conn = None
-
-    def on_connect(self):
+    def on_connect(self, conn):
         """called when the connection is established"""
         pass
-    def on_disconnect(self):
+    def on_disconnect(self, conn):
         """called when the connection had already terminated for cleanup
         (must not perform any IO on the connection)"""
         pass
@@ -92,11 +89,9 @@ class Service(object):
 
     def connect(self, channel, config={}):
         """Setup a connection via the given channel."""
-        if self._conn is not None:
-            raise ValueError("Already connected!")
-        self._conn = self._protocol(self, channel, config)
-        self.on_connect()
-        return self._conn
+        conn = self._protocol(self, channel, config)
+        self.on_connect(conn)
+        return conn
 
 
 class VoidService(Service):
@@ -135,10 +130,11 @@ class SlaveService(Service):
 
     This service is very useful in local, secure networks, but it exposes
     a **major security risk** otherwise."""
-    __slots__ = ["exposed_namespace"]
+    __slots__ = ["_conn", "exposed_namespace"]
 
-    def on_connect(self):
+    def on_connect(self, conn):
         self.exposed_namespace = {}
+        self._conn = conn
         self._conn._config.update(dict(
             allow_all_attrs = True,
             allow_pickle = True,
@@ -149,7 +145,7 @@ class SlaveService(Service):
             instantiate_custom_exceptions = True,
             instantiate_oldstyle_exceptions = True,
         ))
-        super(SlaveService, self).on_connect()
+        super(SlaveService, self).on_connect(conn)
 
     def exposed_execute(self, text):
         """execute arbitrary code (using ``exec``)"""
@@ -182,18 +178,18 @@ class MasterService(Service):
     functionality to them."""
     __slots__ = ()
 
-    def on_connect(self):
-        super(MasterService, self).on_connect()
+    def on_connect(self, conn):
+        super(MasterService, self).on_connect(conn)
         # shortcuts
-        self._conn.modules = ModuleNamespace(self._conn.root.getmodule)
-        self._conn.eval = self._conn.root.eval
-        self._conn.execute = self._conn.root.execute
-        self._conn.namespace = self._conn.root.namespace
+        conn.modules = ModuleNamespace(conn.root.getmodule)
+        conn.eval = conn.root.eval
+        conn.execute = conn.root.execute
+        conn.namespace = conn.root.namespace
         if is_py3k:
-            self._conn.builtin = self._conn.modules.builtins
+            conn.builtin = conn.modules.builtins
         else:
-            self._conn.builtin = self._conn.modules.__builtin__
-        self._conn.builtins = self._conn.builtin
+            conn.builtin = conn.modules.__builtin__
+        conn.builtins = conn.builtin
 
 class ClassicService(MasterService, SlaveService):
     """Full duplex master/slave service, i.e. both parties have full control

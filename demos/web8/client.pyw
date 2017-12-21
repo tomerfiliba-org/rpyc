@@ -8,8 +8,8 @@ from safegtk import SafeGTK
 
 def BrowserServiceFactory(browser):
     class BrowserService(rpyc.Service):
-        def on_connect(self):
-            self._conn._config["allow_public_attrs"] = True
+        def on_connect(self, conn):
+            conn._config["allow_public_attrs"] = True
         def exposed_navigate(self, url):
             old_url = browser.txt_url.get_text()
             if url.startswith("/"):

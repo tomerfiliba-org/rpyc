@@ -4,6 +4,11 @@ Date: (unknown)
 
 NOTE: this release contains backward incompatible changes:
 
+* ``Service.on_connect`` and ``on_disconnect`` get the connection as
+  additional argument. On the other hand, the connection is no longer
+  automatically stored into ``self._conn``. (This may better agree with
+  services that serve multiple clients using the same service object).
+
 * ``SlaveService`` is now split into two asymetric classes: ``SlaveService``
   and ``MasterService``. The slave exposes functionality to the master but can
   not anymore access remote objects on the master. (#232,#248)

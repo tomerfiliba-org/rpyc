@@ -18,12 +18,12 @@ has the following boilerplate::
     import rpyc
 
     class MyService(rpyc.Service):
-        def on_connect(self):
+        def on_connect(self, conn):
             # code that runs when a connection is created
             # (to init the serivce, if needed)
             pass
 
-        def on_disconnect(self):
+        def on_disconnect(self, conn):
             # code that runs when the connection has already closed
             # (to finalize the service, if needed)
             pass
