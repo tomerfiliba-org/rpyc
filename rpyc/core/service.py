@@ -89,7 +89,7 @@ class Service(object):
     exposed_get_service_name = get_service_name
 
     @hybridmethod
-    def connect(self, channel, config={}):
+    def _connect(self, channel, config={}):
         """Setup a connection via the given channel."""
         if isinstance(self, type):  # autovivify if accessed as class method
             self = self()
