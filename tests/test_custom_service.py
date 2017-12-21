@@ -19,11 +19,11 @@ if not isinstance(MyMeta, MyMeta):
     MyClass = MyMeta(MyClass.__name__, MyClass.__bases__, dict(MyClass.__dict__))
 
 class MyService(rpyc.Service):
-    def on_connect(self):
+    def on_connect(self, conn):
         global on_connect_called
         on_connect_called = True
 
-    def on_disconnect(self):
+    def on_disconnect(self, conn):
         global on_disconnect_called
         on_disconnect_called = True
 

@@ -9,8 +9,7 @@ import time
 import gc
 
 from threading import Lock, RLock, Event, Thread
-from rpyc.lib.compat import (pickle, next, is_py3k, maxint, select_error,
-                             with_metaclass)
+from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
@@ -122,52 +121,24 @@ Parameter                                Default value     Description
 
 _connection_id_generator = itertools.count(1)
 
-class ConnMeta(type):
 
-    def __init__(cls, name, bases, members):
-        super(ConnMeta, cls).__init__(name, bases, members)
-        cls._HANDLERS = {
-            consts.HANDLE_PING:        cls._handle_ping,
-            consts.HANDLE_CLOSE:       cls._handle_close,
-            consts.HANDLE_GETROOT:     cls._handle_getroot,
-            consts.HANDLE_GETATTR:     cls._handle_getattr,
-            consts.HANDLE_DELATTR:     cls._handle_delattr,
-            consts.HANDLE_SETATTR:     cls._handle_setattr,
-            consts.HANDLE_CALL:        cls._handle_call,
-            consts.HANDLE_CALLATTR:    cls._handle_callattr,
-            consts.HANDLE_REPR:        cls._handle_repr,
-            consts.HANDLE_STR:         cls._handle_str,
-            consts.HANDLE_CMP:         cls._handle_cmp,
-            consts.HANDLE_HASH:        cls._handle_hash,
-            consts.HANDLE_DIR:         cls._handle_dir,
-            consts.HANDLE_PICKLE:      cls._handle_pickle,
-            consts.HANDLE_DEL:         cls._handle_del,
-            consts.HANDLE_INSPECT:     cls._handle_inspect,
-            consts.HANDLE_BUFFITER:    cls._handle_buffiter,
-            consts.HANDLE_OLDSLICING:  cls._handle_oldslicing,
-            consts.HANDLE_CTXEXIT:     cls._handle_ctxexit,
-        }
-
-
-class Connection(with_metaclass(ConnMeta, object)):
+class Connection(object):
     """The RPyC *connection* (AKA *protocol*).
 
-    :param service: the :class:`Service <rpyc.core.service.Service>` to expose
+    :param root: the :class:`Service <rpyc.core.service.Service>` object to expose
     :param channel: the :class:`Channel <rpyc.core.channel.Channel>` over which messages are passed
     :param config: the connection's configuration dict (overriding parameters
                    from the :data:`default configuration <DEFAULT_CONFIG>`)
-    :param _lazy: whether or not to initialize the service with the creation of
-                  the connection. Default is False. If set to True, you will
-                  need to call :func:`_init_service` manually later
     """
 
-    def __init__(self, service, channel, config = {}, _lazy = False):
+    def __init__(self, root, channel, config={}):
         self._closed = True
         self._config = DEFAULT_CONFIG.copy()
         self._config.update(config)
         if self._config["connid"] is None:
             self._config["connid"] = "conn%d" % (next(_connection_id_generator),)
 
+        self._HANDLERS = self._request_handlers()
         self._channel = channel
         self._seqcounter = itertools.count()
         self._recvlock = Lock()
@@ -182,18 +153,8 @@ class Connection(with_metaclass(ConnMeta, object)):
         self._netref_classes_cache = {}
         self._remote_root = None
         self._send_queue = []
-        self._local_root = service(weakref.proxy(self))
-        if hasattr(self._local_root, "_dispatch_call"): #See issue #239
-            self._dispatch_call = self._local_root._dispatch_call
-        if hasattr(self._local_root, "_unbox_exception"): #See PR #247
-            self._unbox_exception = self._local_root._unbox_exception
-        if not _lazy:
-            self._init_service()
+        self._local_root = root
         self._closed = False
-
-
-    def _init_service(self):
-        self._local_root.on_connect()
 
     def __del__(self):
         self.close()
@@ -213,7 +174,7 @@ class Connection(with_metaclass(ConnMeta, object)):
             return
         self._closed = True
         self._channel.close()
-        self._local_root.on_disconnect()
+        self._local_root.on_disconnect(self)
         self._sync_replies.clear()
         self._async_callbacks.clear()
         self._local_objects.clear()
@@ -224,8 +185,7 @@ class Connection(with_metaclass(ConnMeta, object)):
         self._local_root = None
         #self._seqcounter = None
         #self._config.clear()
-        self._dispatch_call = None
-        self._unbox_exception = None
+        del self._HANDLERS
 
     def close(self, _catchall = True):
         """closes the connection, releasing all held resources"""
@@ -596,6 +556,20 @@ class Connection(with_metaclass(ConnMeta, object)):
     #
     # attribute access
     #
+    def _check_attr(self, obj, name, perm):
+        config = self._config
+        if not config[perm]:
+            raise AttributeError("cannot access %r" % (name,))
+        if config["allow_exposed_attrs"]:
+            prefix = config["exposed_prefix"]
+            name2 = name if name.startswith(prefix) else prefix+name
+            if hasattr(obj, name2):
+                return name2
+        if  (self._config["allow_all_attrs"] or
+             self._config["allow_safe_attrs"] and name in self._config["safe_attrs"] or
+             self._config["allow_public_attrs"] and not name.startswith("_")):
+            return name
+        raise AttributeError("cannot access %r" % (name,))
 
     def _access_attr(self, obj, name, args, overrider, param, default):
         if is_py3k:
@@ -609,19 +583,37 @@ class Connection(with_metaclass(ConnMeta, object)):
             name = str(name) # IronPython issue #10 + py3k issue
         accessor = getattr(type(obj), overrider, None)
         if accessor is None:
-            name2 = self._local_root._check_attr(obj, name)
-            if not self._config[param] or not name2:
-                raise AttributeError("cannot access %r" % (name,))
             accessor = default
-            name = name2
+            name = self._check_attr(obj, name, param)
         return accessor(obj, name, *args)
-
-    def _dispatch_call(self, obj, args, kwargs):
-        return obj(*args, **kwargs)
 
     #
     # request handlers
     #
+    @classmethod
+    def _request_handlers(cls):
+        return {
+            consts.HANDLE_PING:        cls._handle_ping,
+            consts.HANDLE_CLOSE:       cls._handle_close,
+            consts.HANDLE_GETROOT:     cls._handle_getroot,
+            consts.HANDLE_GETATTR:     cls._handle_getattr,
+            consts.HANDLE_DELATTR:     cls._handle_delattr,
+            consts.HANDLE_SETATTR:     cls._handle_setattr,
+            consts.HANDLE_CALL:        cls._handle_call,
+            consts.HANDLE_CALLATTR:    cls._handle_callattr,
+            consts.HANDLE_REPR:        cls._handle_repr,
+            consts.HANDLE_STR:         cls._handle_str,
+            consts.HANDLE_CMP:         cls._handle_cmp,
+            consts.HANDLE_HASH:        cls._handle_hash,
+            consts.HANDLE_DIR:         cls._handle_dir,
+            consts.HANDLE_PICKLE:      cls._handle_pickle,
+            consts.HANDLE_DEL:         cls._handle_del,
+            consts.HANDLE_INSPECT:     cls._handle_inspect,
+            consts.HANDLE_BUFFITER:    cls._handle_buffiter,
+            consts.HANDLE_OLDSLICING:  cls._handle_oldslicing,
+            consts.HANDLE_CTXEXIT:     cls._handle_ctxexit,
+        }
+
     def _handle_ping(self, data):
         return data
     def _handle_close(self):
@@ -644,7 +636,7 @@ class Connection(with_metaclass(ConnMeta, object)):
     def _handle_hash(self, obj):
         return hash(obj)
     def _handle_call(self, obj, args, kwargs=()):
-        return self._dispatch_call(obj, args, dict(kwargs))
+        return obj(*args, **dict(kwargs))
     def _handle_dir(self, obj):
         return tuple(dir(obj))
     def _handle_inspect(self, oid):
@@ -657,7 +649,7 @@ class Connection(with_metaclass(ConnMeta, object)):
         return self._access_attr(obj, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
     def _handle_callattr(self, obj, name, args, kwargs=()):
         obj = self._handle_getattr(obj, name)
-        return self._dispatch_call(obj, args, dict(kwargs))
+        return self._handle_call(obj, args, kwargs)
     def _handle_ctxexit(self, obj, exc):
         if exc:
             try:
