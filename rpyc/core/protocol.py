@@ -565,21 +565,20 @@ class Connection(object):
     #
     # attribute access
     #
-    def _check_attr(self, obj, name):
-        if self._config["allow_exposed_attrs"]:
-            if name.startswith(self._config["exposed_prefix"]):
-                name2 = name
-            else:
-                name2 = self._config["exposed_prefix"] + name
+    def _check_attr(self, obj, name, perm):
+        config = self._config
+        if not config[perm]:
+            raise AttributeError("cannot access %r" % (name,))
+        if config["allow_exposed_attrs"]:
+            prefix = config["exposed_prefix"]
+            name2 = name if name.startswith(prefix) else prefix+name
             if hasattr(obj, name2):
                 return name2
-        if self._config["allow_all_attrs"]:
+        if  (self._config["allow_all_attrs"] or
+             self._config["allow_safe_attrs"] and name in self._config["safe_attrs"] or
+             self._config["allow_public_attrs"] and not name.startswith("_")):
             return name
-        if self._config["allow_safe_attrs"] and name in self._config["safe_attrs"]:
-            return name
-        if self._config["allow_public_attrs"] and not name.startswith("_"):
-            return name
-        return False
+        raise AttributeError("cannot access %r" % (name,))
 
     def _access_attr(self, obj, name, args, overrider, param, default):
         if is_py3k:
@@ -593,11 +592,8 @@ class Connection(object):
             name = str(name) # IronPython issue #10 + py3k issue
         accessor = getattr(type(obj), overrider, None)
         if accessor is None:
-            name2 = self._check_attr(obj, name)
-            if not self._config[param] or not name2:
-                raise AttributeError("cannot access %r" % (name,))
             accessor = default
-            name = name2
+            name = self._check_attr(obj, name, param)
         return accessor(obj, name, *args)
 
     #
