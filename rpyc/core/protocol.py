@@ -157,8 +157,6 @@ class Connection(object):
         self._remote_root = None
         self._send_queue = []
         self._local_root = service(weakref.proxy(self))
-        if hasattr(self._local_root, "_unbox_exception"): #See PR #247
-            self._unbox_exception = self._local_root._unbox_exception
         if not _lazy:
             self._init_service()
         self._closed = False
@@ -196,7 +194,6 @@ class Connection(object):
         self._local_root = None
         #self._seqcounter = None
         #self._config.clear()
-        self._unbox_exception = None
         del self._HANDLERS
 
     def close(self, _catchall = True):
