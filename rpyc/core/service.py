@@ -93,6 +93,9 @@ class Service(object):
         """Setup a connection via the given channel."""
         if isinstance(self, type):  # autovivify if accessed as class method
             self = self()
+        # Note that we are here passing in `self` as root object for backward
+        # compatibility and convenience. You could pass in a different root if
+        # you wanted:
         conn = self._protocol(self, channel, config)
         self.on_connect(conn)
         return conn
