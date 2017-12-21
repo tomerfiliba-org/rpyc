@@ -176,6 +176,7 @@ class FakeSlaveService(VoidService):
     """VoidService that can be used for connecting to peers that operate a
     :class:`MasterService`, :class:`ClassicService`, or the old
     ``SlaveService`` (pre v3.5) without exposing any functionality to them."""
+    __slots__ = ()
     exposed_namespace = None
     exposed_execute   = None
     exposed_eval      = None
@@ -187,6 +188,7 @@ class MasterService(Service):
     """Peer for a new-style (>=v3.5) :class:`SlaveService`. Use this service
     if you want to connect to a ``SlaveService`` without exposing any
     functionality to them."""
+    __slots__ = ()
 
     def on_connect(self):
         super(MasterService, self).on_connect()
@@ -204,8 +206,10 @@ class MasterService(Service):
 class ClassicService(MasterService, SlaveService):
     """Full duplex master/slave service, i.e. both parties have full control
     over the other. Must be used by both parties."""
+    __slots__ = ()
 
 class ClassicClient(MasterService, FakeSlaveService):
     """MasterService that can be used for connecting to peers that operate a
     :class:`MasterService`, :class:`ClassicService`, or the old
     ``SlaveService`` (pre v3.5) without exposing any functionality to them."""
+    __slots__ = ()
