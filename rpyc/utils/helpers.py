@@ -234,3 +234,14 @@ class hybridmethod(object):
         return self.func.__get__(cls if obj is None else obj, obj)
     def __set__(self, obj, val):
         raise AttributeError("Cannot overwrite method")
+
+
+def classpartial(*args, **kwargs):
+    """Bind arguments to a class's __init__."""
+    cls, args = args[0], args[1:]
+    class Partial(cls):
+        __doc__ = cls.__doc__
+        def __new__(self):
+            return cls(*args, **kwargs)
+    Partial.__name__ = cls.__name__
+    return Partial
