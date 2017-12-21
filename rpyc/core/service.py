@@ -8,6 +8,7 @@ can interoperate, you're good to go.
 """
 from rpyc.lib.compat import execute, is_py3k
 from rpyc.core.protocol import Connection
+from rpyc.utils.helpers import hybridmethod
 
 
 class Service(object):
@@ -87,8 +88,11 @@ class Service(object):
     exposed_get_service_aliases = get_service_aliases
     exposed_get_service_name = get_service_name
 
+    @hybridmethod
     def connect(self, channel, config={}):
         """Setup a connection via the given channel."""
+        if isinstance(self, type):  # autovivify if accessed as class method
+            self = self()
         conn = self._protocol(self, channel, config)
         self.on_connect(conn)
         return conn
