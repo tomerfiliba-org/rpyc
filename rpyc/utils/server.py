@@ -197,7 +197,7 @@ class Server(object):
         try:
             config = dict(self.protocol_config, credentials = credentials,
                 endpoints = (sock.getsockname(), addrinfo), logger = self.logger)
-            conn = self.service().connect(
+            conn = self.service.connect(
                 Channel(SocketStream(sock)),
                 config)
             self._handle_connection(conn)
@@ -477,7 +477,7 @@ class ThreadPoolServer(Server):
         h, p = sock.getpeername()
         config = dict(self.protocol_config, credentials=credentials, connid="%s:%d"%(h, p),
                       endpoints=(sock.getsockname(), (h, p)))
-        return self.service().connect(
+        return self.service.connect(
             Channel(SocketStream(sock)), config)
 
     def _accept_method(self, sock):
