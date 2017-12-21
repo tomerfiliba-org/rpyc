@@ -47,10 +47,10 @@ class UserToken(object):
 
 
 class ChatService(Service):
-    def on_connect(self):
+    def on_connect(self, conn):
         self.token = None
 
-    def on_disconnect(self):
+    def on_disconnect(self, conn):
         if self.token:
             self.token.exposed_logout()
 
