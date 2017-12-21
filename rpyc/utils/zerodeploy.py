@@ -169,7 +169,7 @@ class DeployedServer(object):
             self._tmpdir_ctx = None
 
     def connect(self, service = VoidService, config = {}):
-        """Same as :func:`connect <rpyc.utils.factory.connect>`, but with the ``host`` and ``port``
+        """Same as :func:`~rpyc.utils.factory.connect`, but with the ``host`` and ``port``
         parameters fixed"""
         if self.local_port is None:
             # ParamikoMachine

@@ -15,10 +15,10 @@ asynchronous behavior.
 
 async()
 -------
-The wrapper :func:`async <rpyc.utils.helpers.async>` takes any *callable*
+The wrapper :func:`~rpyc.utils.helpers.async` takes any *callable*
 :ref:`netref <api-netref>` and returns an asynchronous-wrapper around that netref.
 When invoked, this wrapper object dispatches the request and immediately returns an
-:class:`AsyncResult <rpyc.core.async.AsyncResult>`, instead of waiting for the response.
+:class:`~rpyc.core.async.AsyncResult`, instead of waiting for the response.
 
 Usage
 ^^^^^
@@ -60,10 +60,10 @@ order.
 
 timed()
 -------
-:class:`timed <rpyc.utils.helpers.timed>` allows you to set a timeout for a synchronous invocation.
+:class:`~rpyc.utils.helpers.timed` allows you to set a timeout for a synchronous invocation.
 When a ``timed`` function is invoked, you'll synchronously wait for the result, but no longer
 than the specified timeout. Should the invocation take longer, a
-:class:`AsyncResultTimeout <rpyc.core.async.AsyncResultTimeout>` will be raised.
+:class:`~rpyc.core.async.AsyncResultTimeout` will be raised.
 
 Under the hood, ``timed`` is actually implemented with ``async``: it begins dispatches the
 operation, sets a timeout on the ``AsyncResult``, and waits for the response.
@@ -86,7 +86,7 @@ Example
 
 Background Serving Thread
 -------------------------
-:class:`BgServingThread <rpyc.utils.helpers.BgServingThread>` is a helper class that simply starts
+:class:`~rpyc.utils.helpers.BgServingThread` is a helper class that simply starts
 a background thread to serve incoming requests. Using it is quite simple::
 
     bgsrv = rpyc.BgServingThread(conn)

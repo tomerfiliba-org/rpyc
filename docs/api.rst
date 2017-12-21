@@ -40,7 +40,7 @@ Protocol
    api/core_service
 
 
-* :ref:`api-protocol` - The RPyC protocol (:class:`Connection <rpyc.core.protocol.Connection>` class)
+* :ref:`api-protocol` - The RPyC protocol (:class:`~rpyc.core.protocol.Connection` class)
 
 * :ref:`api-service` - The RPyC service model
 

@@ -125,8 +125,8 @@ _connection_id_generator = itertools.count(1)
 class Connection(object):
     """The RPyC *connection* (AKA *protocol*).
 
-    :param root: the :class:`Service <rpyc.core.service.Service>` object to expose
-    :param channel: the :class:`Channel <rpyc.core.channel.Channel>` over which messages are passed
+    :param root: the :class:`~rpyc.core.service.Service` object to expose
+    :param channel: the :class:`~rpyc.core.channel.Channel` over which messages are passed
     :param config: the connection's configuration dict (overriding parameters
                    from the :data:`default configuration <DEFAULT_CONFIG>`)
     """
