@@ -29,7 +29,7 @@ class DiscoveryError(Exception):
 #------------------------------------------------------------------------------
 # API
 #------------------------------------------------------------------------------
-def connect_channel(channel, service = VoidService, config = {}):
+def connect_channel(channel, service=VoidService, config={}):
     """creates a connection over a given channel
 
     :param channel: the channel to use
@@ -40,7 +40,7 @@ def connect_channel(channel, service = VoidService, config = {}):
     """
     return service._connect(channel, config)
 
-def connect_stream(stream, service = VoidService, config = {}):
+def connect_stream(stream, service=VoidService, config={}):
     """creates a connection over a given stream
 
     :param stream: the stream to use
@@ -49,9 +49,9 @@ def connect_stream(stream, service = VoidService, config = {}):
 
     :returns: an RPyC connection
     """
-    return connect_channel(Channel(stream), service = service, config = config)
+    return connect_channel(Channel(stream), service=service, config=config)
 
-def connect_pipes(input, output, service = VoidService, config = {}):
+def connect_pipes(input, output, service=VoidService, config={}):
     """
     creates a connection over the given input/output pipes
 
@@ -62,9 +62,9 @@ def connect_pipes(input, output, service = VoidService, config = {}):
 
     :returns: an RPyC connection
     """
-    return connect_stream(PipeStream(input, output), service = service, config = config)
+    return connect_stream(PipeStream(input, output), service=service, config=config)
 
-def connect_stdpipes(service = VoidService, config = {}):
+def connect_stdpipes(service=VoidService, config={}):
     """
     creates a connection over the standard input/output pipes
 
@@ -73,9 +73,9 @@ def connect_stdpipes(service = VoidService, config = {}):
 
     :returns: an RPyC connection
     """
-    return connect_stream(PipeStream.from_std(), service = service, config = config)
+    return connect_stream(PipeStream.from_std(), service=service, config=config)
 
-def connect(host, port, service = VoidService, config = {}, ipv6 = False, keepalive = False):
+def connect(host, port, service=VoidService, config={}, ipv6=False, keepalive=False):
     """
     creates a socket-connection to the given host and port
 
@@ -87,10 +87,10 @@ def connect(host, port, service = VoidService, config = {}, ipv6 = False, keepal
 
     :returns: an RPyC connection
     """
-    s = SocketStream.connect(host, port, ipv6 = ipv6, keepalive = keepalive)
+    s = SocketStream.connect(host, port, ipv6=ipv6, keepalive=keepalive)
     return connect_stream(s, service, config)
 
-def unix_connect(path, service = VoidService, config = {}):
+def unix_connect(path, service=VoidService, config={}):
     """
     creates a socket-connection to the given host and port
 
@@ -103,9 +103,9 @@ def unix_connect(path, service = VoidService, config = {}):
     s = SocketStream.unix_connect(path)
     return connect_stream(s, service, config)
 
-def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
-        cert_reqs = None, ssl_version = None, ciphers = None,
-        service = VoidService, config = {}, ipv6 = False, keepalive = False):
+def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
+                cert_reqs=None, ssl_version=None, ciphers=None,
+                service=VoidService, config={}, ipv6=False, keepalive=False):
     """
     creates an SSL-wrapped connection to the given host (encrypted and
     authenticated).
@@ -146,7 +146,7 @@ def ssl_connect(host, port, keyfile = None, certfile = None, ca_certs = None,
         ssl_kwargs["ssl_version"] = ssl_version
     if ciphers is not None:
         ssl_kwargs["ciphers"] = ciphers
-    s = SocketStream.ssl_connect(host, port, ssl_kwargs, ipv6 = ipv6, keepalive = keepalive)
+    s = SocketStream.ssl_connect(host, port, ssl_kwargs, ipv6=ipv6, keepalive=keepalive)
     return connect_stream(s, service, config)
 
 def _get_free_port():
@@ -159,7 +159,7 @@ def _get_free_port():
 
 _ssh_connect_lock = threading.Lock()
 
-def ssh_connect(remote_machine, remote_port, service = VoidService, config = {}):
+def ssh_connect(remote_machine, remote_port, service=VoidService, config={}):
     """
     Connects to an RPyC server over an SSH tunnel (created by plumbum).
     See `Plumbum tunneling <http://plumbum.readthedocs.org/en/latest/remote.html#tunneling>`_
@@ -184,7 +184,7 @@ def ssh_connect(remote_machine, remote_port, service = VoidService, config = {})
         stream.tun = tun
     return service._connect(Channel(stream), config=config)
 
-def discover(service_name, host = None, registrar = None, timeout = 2):
+def discover(service_name, host=None, registrar=None, timeout=2):
     """
     discovers hosts running the given service
 
@@ -199,7 +199,7 @@ def discover(service_name, host = None, registrar = None, timeout = 2):
     :returns: a list of (ip, port) pairs
     """
     if registrar is None:
-        registrar = UDPRegistryClient(timeout = timeout)
+        registrar = UDPRegistryClient(timeout=timeout)
     addrs = registrar.discover(service_name)
     if not addrs:
         raise DiscoveryError("no servers exposing %r were found" % (service_name,))
@@ -210,7 +210,7 @@ def discover(service_name, host = None, registrar = None, timeout = 2):
         raise DiscoveryError("no servers exposing %r were found on %r" % (service_name, host))
     return addrs
 
-def connect_by_service(service_name, host = None, service = VoidService, config = {}):
+def connect_by_service(service_name, host=None, service=VoidService, config={}):
     """create a connection to an arbitrary server that exposes the requested service
 
     :param service_name: the service to discover
@@ -225,15 +225,15 @@ def connect_by_service(service_name, host = None, service = VoidService, config 
     # some of which could be dead. We iterate over the list returned and return the first
     # one we could connect to. If none of the registered servers is responsive we re-throw
     # the exception
-    addrs = discover(service_name, host = host)
+    addrs = discover(service_name, host=host)
     for host, port in addrs:
         try:
-            return connect(host, port, service, config = config)
+            return connect(host, port, service, config=config)
         except socket.error:
             pass
     raise DiscoveryError("All services are down: %s" % (addrs,))
 
-def connect_subproc(args, service = VoidService, config = {}):
+def connect_subproc(args, service=VoidService, config={}):
     """runs an rpyc server on a child process that and connects to it over
     the stdio pipes. uses the subprocess module.
 
@@ -242,12 +242,12 @@ def connect_subproc(args, service = VoidService, config = {}):
     :param config: configuration dict
     """
     from subprocess import Popen, PIPE
-    proc = Popen(args, stdin = PIPE, stdout = PIPE)
-    conn = connect_pipes(proc.stdout, proc.stdin, service = service, config = config)
+    proc = Popen(args, stdin=PIPE, stdout=PIPE)
+    conn = connect_pipes(proc.stdout, proc.stdin, service=service, config=config)
     conn.proc = proc # just so you can have control over the processs
     return conn
 
-def connect_thread(service = VoidService, config = {}, remote_service = VoidService, remote_config = {}):
+def connect_thread(service=VoidService, config={}, remote_service=VoidService, remote_config={}):
     """starts an rpyc server on a new thread, bound to an arbitrary port,
     and connects to it over a socket.
 
@@ -260,23 +260,23 @@ def connect_thread(service = VoidService, config = {}, remote_service = VoidServ
     listener.bind(("localhost", 0))
     listener.listen(1)
 
-    def server(listener = listener):
+    def server(listener=listener):
         client = listener.accept()[0]
         listener.close()
-        conn = connect_stream(SocketStream(client), service = remote_service,
-            config = remote_config)
+        conn = connect_stream(SocketStream(client), service=remote_service,
+                              config=remote_config)
         try:
             conn.serve_all()
         except KeyboardInterrupt:
             interrupt_main()
 
-    t = threading.Thread(target = server)
+    t = threading.Thread(target=server)
     t.setDaemon(True)
     t.start()
     host, port = listener.getsockname()
-    return connect(host, port, service = service, config = config)
+    return connect(host, port, service=service, config=config)
 
-def connect_multiprocess(service = VoidService, config = {}, remote_service = VoidService, remote_config = {}, args={}):
+def connect_multiprocess(service=VoidService, config={}, remote_service=VoidService, remote_config={}, args={}):
     """starts an rpyc server on a new process, bound to an arbitrary port,
     and connects to it over a socket. Basically a copy of connect_thread().
     However if args is used and if these are shared memory then changes
@@ -299,7 +299,7 @@ def connect_multiprocess(service = VoidService, config = {}, remote_service = Vo
     def server(listener=listener, args=args):
         client = listener.accept()[0]
         listener.close()
-        conn = connect_stream(SocketStream(client), service = remote_service, config = remote_config)
+        conn = connect_stream(SocketStream(client), service=remote_service, config=remote_config)
         try:
             for k in args:
                 conn._local_root.exposed_namespace[k] = args[k]
@@ -307,9 +307,7 @@ def connect_multiprocess(service = VoidService, config = {}, remote_service = Vo
         except KeyboardInterrupt:
             interrupt_main()
 
-    t = Process(target = server)
+    t = Process(target=server)
     t.start()
     host, port = listener.getsockname()
-    return connect(host, port, service = service, config = config)
-
-
+    return connect(host, port, service=service, config=config)
