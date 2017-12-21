@@ -7,6 +7,8 @@ exposed *service A*, while the other may expose *service B*. As long as the two
 can interoperate, you're good to go.
 """
 from rpyc.lib.compat import execute, is_py3k
+from rpyc.core.protocol import Connection
+from rpyc.utils.helpers import hybridmethod
 
 
 class Service(object):
@@ -48,15 +50,14 @@ class Service(object):
        You can override ``_rpyc_getattr``, ``_rpyc_setattr`` and ``_rpyc_delattr``
        to change attribute lookup -- but beware of possible **security implications!**
     """
-    __slots__ = ["_conn"]
+    __slots__ = ()
     ALIASES = ()
+    _protocol = Connection
 
-    def __init__(self, conn):
-        self._conn = conn
-    def on_connect(self):
+    def on_connect(self, conn):
         """called when the connection is established"""
         pass
-    def on_disconnect(self):
+    def on_disconnect(self, conn):
         """called when the connection had already terminated for cleanup
         (must not perform any IO on the connection)"""
         pass
@@ -87,24 +88,14 @@ class Service(object):
     exposed_get_service_aliases = get_service_aliases
     exposed_get_service_name = get_service_name
 
-    def _check_attr(self, obj, name):
-        """Override this to define how to resolve attribute accesses for
-        arbitrary objects."""
-        config = self._conn._config
-        if config["allow_exposed_attrs"]:
-            if name.startswith(config["exposed_prefix"]):
-                name2 = name
-            else:
-                name2 = config["exposed_prefix"] + name
-            if hasattr(obj, name2):
-                return name2
-        if config["allow_all_attrs"]:
-            return name
-        if config["allow_safe_attrs"] and name in config["safe_attrs"]:
-            return name
-        if config["allow_public_attrs"] and not name.startswith("_"):
-            return name
-        return False
+    @hybridmethod
+    def connect(self, channel, config={}):
+        """Setup a connection via the given channel."""
+        if isinstance(self, type):  # autovivify if accessed as class method
+            self = self()
+        conn = self._protocol(self, channel, config)
+        self.on_connect(conn)
+        return conn
 
 
 class VoidService(Service):
@@ -143,10 +134,11 @@ class SlaveService(Service):
 
     This service is very useful in local, secure networks, but it exposes
     a **major security risk** otherwise."""
-    __slots__ = ["exposed_namespace"]
+    __slots__ = ["_conn", "exposed_namespace"]
 
-    def on_connect(self):
+    def on_connect(self, conn):
         self.exposed_namespace = {}
+        self._conn = conn
         self._conn._config.update(dict(
             allow_all_attrs = True,
             allow_pickle = True,
@@ -157,7 +149,7 @@ class SlaveService(Service):
             instantiate_custom_exceptions = True,
             instantiate_oldstyle_exceptions = True,
         ))
-        super(SlaveService, self).on_connect()
+        super(SlaveService, self).on_connect(conn)
 
     def exposed_execute(self, text):
         """execute arbitrary code (using ``exec``)"""
@@ -190,18 +182,18 @@ class MasterService(Service):
     functionality to them."""
     __slots__ = ()
 
-    def on_connect(self):
-        super(MasterService, self).on_connect()
+    def on_connect(self, conn):
+        super(MasterService, self).on_connect(conn)
         # shortcuts
-        self._conn.modules = ModuleNamespace(self._conn.root.getmodule)
-        self._conn.eval = self._conn.root.eval
-        self._conn.execute = self._conn.root.execute
-        self._conn.namespace = self._conn.root.namespace
+        conn.modules = ModuleNamespace(conn.root.getmodule)
+        conn.eval = conn.root.eval
+        conn.execute = conn.root.execute
+        conn.namespace = conn.root.namespace
         if is_py3k:
-            self._conn.builtin = self._conn.modules.builtins
+            conn.builtin = conn.modules.builtins
         else:
-            self._conn.builtin = self._conn.modules.__builtin__
-        self._conn.builtins = self._conn.builtin
+            conn.builtin = conn.modules.__builtin__
+        conn.builtins = conn.builtin
 
 class ClassicService(MasterService, SlaveService):
     """Full duplex master/slave service, i.e. both parties have full control

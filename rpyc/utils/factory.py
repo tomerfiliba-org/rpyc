@@ -16,7 +16,7 @@ except ImportError:
         from java.lang import System
         interrupt_main = System.exit
 
-from rpyc import Connection, Channel, SocketStream, TunneledSocketStream, PipeStream, VoidService
+from rpyc import Channel, SocketStream, TunneledSocketStream, PipeStream, VoidService
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.lib import safe_import
 ssl = safe_import("ssl")
@@ -38,8 +38,7 @@ def connect_channel(channel, service = VoidService, config = {}):
 
     :returns: an RPyC connection
     """
-    conn_cls = config.get('conn_cls') or Connection
-    return conn_cls(service, channel, config = config)
+    return service.connect(channel, config)
 
 def connect_stream(stream, service = VoidService, config = {}):
     """creates a connection over a given stream
@@ -183,8 +182,7 @@ def ssh_connect(remote_machine, remote_port, service = VoidService, config = {})
         tun = remote_machine.tunnel(loc_port, remote_port)
         stream = TunneledSocketStream.connect("localhost", loc_port)
         stream.tun = tun
-    conn_cls = config.get('conn_cls') or Connection
-    return Connection(service, Channel(stream), config = config)
+    return service.connect(Channel(stream), config=config)
 
 def discover(service_name, host = None, registrar = None, timeout = 2):
     """

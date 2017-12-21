@@ -12,7 +12,7 @@ try:
     import Queue
 except ImportError:
     import queue as Queue
-from rpyc.core import SocketStream, Channel, Connection
+from rpyc.core import SocketStream, Channel
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
 from rpyc.lib import safe_import
@@ -48,13 +48,12 @@ class Server(object):
 
     def __init__(self, service, hostname = "", ipv6 = False, port = 0,
             backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
-            auto_register = None, conn_cls = None, protocol_config = {}, logger = None, listener_timeout = 0.5,
+            auto_register = None, protocol_config = {}, logger = None, listener_timeout = 0.5,
             socket_path = None):
         self.active = False
         self._closed = False
         self.service = service
         self.authenticator = authenticator
-        self.conn_cls = conn_cls or protocol_config.get('conn_cls') or Connection
         self.backlog = backlog
         if auto_register is None:
             self.auto_register = bool(registrar)
@@ -198,10 +197,9 @@ class Server(object):
         try:
             config = dict(self.protocol_config, credentials = credentials,
                 endpoints = (sock.getsockname(), addrinfo), logger = self.logger)
-            conn = self.conn_cls(
-                self.service, Channel(SocketStream(sock)),
-                config = config, _lazy = True)
-            conn._init_service()
+            conn = self.service.connect(
+                Channel(SocketStream(sock)),
+                config)
             self._handle_connection(conn)
         finally:
             self.logger.info("goodbye %s", addrinfo)
@@ -479,8 +477,8 @@ class ThreadPoolServer(Server):
         h, p = sock.getpeername()
         config = dict(self.protocol_config, credentials=credentials, connid="%s:%d"%(h, p),
                       endpoints=(sock.getsockname(), (h, p)))
-        return self.conn_cls(
-            self.service, Channel(SocketStream(sock)), config=config)
+        return self.service.connect(
+            Channel(SocketStream(sock)), config)
 
     def _accept_method(self, sock):
         '''Implementation of the accept method : only pushes the work to the internal queue.

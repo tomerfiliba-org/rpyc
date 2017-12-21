@@ -4,6 +4,14 @@ Date: (unknown)
 
 NOTE: this release contains backward incompatible changes:
 
+* Changed signature of ``Service.on_connect`` and ``on_disconnect``, adding
+  the connection as argument.
+
+* Changed signature of ``Service.__init__``, removing the connection argument
+
+* no longer store connection as ``self._conn``. (allows services that serve
+  multiple clients using the same service object, see #198).
+
 * ``SlaveService`` is now split into two asymetric classes: ``SlaveService``
   and ``MasterService``. The slave exposes functionality to the master but can
   not anymore access remote objects on the master. (#232,#248)
@@ -19,17 +27,28 @@ NOTE: this release contains backward incompatible changes:
   * use ``rpyc.utils.deliver`` to feed copies rather than netrefs to
     the slave
 
-* Can override how function calls are dispatched in ``Service._dispatch_call``
-  (#239,#245)
+* ``RegistryServer.on_service_removed`` is once again called whenever a service
+  instance is removed, making it symmetric to ``on_service_added`` (#238)
+  This reverts PR #173 on issue #172.
 
-* Can override attribute access in ``Service._check_attr``
+More changes:
 
-* Can now subclass ``Connection`` and provide as ``conn_cls`` argument to
-  ``Server`` or in ``config``. More discussions and related features in
-  #239-#247.
+* added ``rpyc.utils.helpers.classpartial`` to bind arguments to services (#244)
 
-* ``RegistryServer.on_service_removed`` is now called whenever a service
-  instance is removed, making it symmetric to ``on_service_added`` again (#238)
+* can now pass services optionally as instance or class (could only pass as
+  class, #244)
+
+* The service is now charged with setting up the connection, doing so in
+  ``Service.connect``. This allows using custom protocols by e.g. subclassing
+  ``Connection``.  More discussions and related features in #239-#247.
+
+* service can now easily override protocol handlers, by updating
+  ``conn._HANDLERS`` in ``connect`` or ``on_connect``. For example:
+  ``conn._HANDLERS[HANDLE_GETATTR] = self._handle_getattr``.
+
+* most protocol handlers (``Connection._handle_XXX``) now directly get the
+  object rather than its ID as first argument. This makes overriding
+  individual handlers feel much more high-level.
 
 * fix bug with proxying context managers (#228)
 
@@ -93,13 +112,13 @@ Please excuse the briefity for this versions changelist.
   doesn't change much, except that ``ssh_connect`` now accept a ``plumbum.SshMachine`` instance
   instead of ``SshContext``.
 
-* Zero deploy: deploy RPyC to a remote machine over an SSH connection and form an SSH tunnel 
+* Zero deploy: deploy RPyC to a remote machine over an SSH connection and form an SSH tunnel
   connected to it, in just one line of code. All you need is SSH access and a Python interpreter
   installed on the remote machine.
 
 * Dropping Python 2.4 support. RPyC now requires Python 2.5 - 3.3.
 
-* rpycd - a well-behaved daemon for ``rpyc_classic.py``, based on 
+* rpycd - a well-behaved daemon for ``rpyc_classic.py``, based on
   `python-daemon <http://pypi.python.org/pypi/python-daemon/>`_
 
 * The ``OneShotServer`` is now exposed by ``rpyc_classic -m oneshot``
@@ -109,12 +128,12 @@ Please excuse the briefity for this versions changelist.
 * Introducing ``Splitbrain Python`` - running code on remote machines transparently. Although tested,
   it is still considered experimental.
 
-* Removing the ``BgServerThread`` and all polling/timeout hacks in favor of a "global background 
-  reactor thread" that handles all incoming transport from all connections. This should solve 
+* Removing the ``BgServerThread`` and all polling/timeout hacks in favor of a "global background
+  reactor thread" that handles all incoming transport from all connections. This should solve
   all threading issues once and for all.
 
 * Added ``MockClassicConnection`` - a mock RPyC "connection" that allows you to write code that runs
-  either locally or remotely without modification 
+  either locally or remotely without modification
 
 * Added ``teleport_function``
 
@@ -146,10 +165,10 @@ Please excuse the briefity for this versions changelist.
 
 * The server now logs all exceptions (`#73 <https://github.com/tomerfiliba/rpyc/issues/73>`_)
 
-* Forking server: call ``siginterrupt(False)`` in forked child 
+* Forking server: call ``siginterrupt(False)`` in forked child
   (`#76 <https://github.com/tomerfiliba/rpyc/issues/76>`_)
 
-* Shutting down the old wikidot site 
+* Shutting down the old wikidot site
 
 * Adding `Travis CI <http://travis-ci.org/#!/tomerfiliba/rpyc>`_ integration
 
@@ -159,8 +178,8 @@ Please excuse the briefity for this versions changelist.
 
 * Fixing site documentation issue (`#54 <https://github.com/tomerfiliba/rpyc/issues/54>`_)
 
-* Fixing Python 3 incompatibilities (`#58 <https://github.com/tomerfiliba/rpyc/issues/58>`_, 
-  `#59 <https://github.com/tomerfiliba/rpyc/issues/59>`_, 
+* Fixing Python 3 incompatibilities (`#58 <https://github.com/tomerfiliba/rpyc/issues/58>`_,
+  `#59 <https://github.com/tomerfiliba/rpyc/issues/59>`_,
   `#60 <https://github.com/tomerfiliba/rpyc/issues/60>`_,
   `#61 <https://github.com/tomerfiliba/rpyc/issues/61>`_,
   `#66 <https://github.com/tomerfiliba/rpyc/issues/66>`_)
@@ -181,15 +200,15 @@ Please excuse the briefity for this versions changelist.
 
 * Added the ``ThreadPoolServer``
 
-* Fixed some minor (harmless) races that caused tracebacks occasionally when 
+* Fixed some minor (harmless) races that caused tracebacks occasionally when
   server-threads terminated
 
-* Fixes issues `#8 <https://github.com/tomerfiliba/rpyc/issues/8>`_, 
-  `#41 <https://github.com/tomerfiliba/rpyc/issues/41>`_, 
-  `#42 <https://github.com/tomerfiliba/rpyc/issues/42>`_, 
+* Fixes issues `#8 <https://github.com/tomerfiliba/rpyc/issues/8>`_,
+  `#41 <https://github.com/tomerfiliba/rpyc/issues/41>`_,
+  `#42 <https://github.com/tomerfiliba/rpyc/issues/42>`_,
   `#43 <https://github.com/tomerfiliba/rpyc/issues/43>`_,
   `#46 <https://github.com/tomerfiliba/rpyc/issues/46>`_, and
-  `#49 <https://github.com/tomerfiliba/rpyc/issues/49>`_. 
+  `#49 <https://github.com/tomerfiliba/rpyc/issues/49>`_.
 
 * Converted all ``CRLF`` to ``LF`` (`#40 <https://github.com/tomerfiliba/rpyc/issues/40>`_)
 
@@ -198,8 +217,8 @@ Please excuse the briefity for this versions changelist.
 
 * **New documentation** (both the website and docstrings) written in **Sphinx**
 
-  * The site has moved to `sourceforge <http://rpyc.sourceforge.net>`_. Wikidot 
-    had served us well over the past three years, but they began displaying way too 
+  * The site has moved to `sourceforge <http://rpyc.sourceforge.net>`_. Wikidot
+    had served us well over the past three years, but they began displaying way too
     many ads and didn't support uploading files over ``rsync``, which made my life hard.
 
   * New docs are part of the git repository. Updating the site is as easy as

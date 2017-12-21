@@ -223,3 +223,25 @@ class BgServingThread(object):
         self._thread.join()
         self._conn = None
 
+
+class hybridmethod(object):
+    """Decorator for hybrid instance/class methods that will act like a normal
+    method if accessed via an instance, but act like classmethod if accessed
+    via the class."""
+    def __init__(self, func):
+        self.func = func
+    def __get__(self, obj, cls):
+        return self.func.__get__(cls if obj is None else obj, obj)
+    def __set__(self, obj, val):
+        raise AttributeError("Cannot overwrite method")
+
+
+def classpartial(*args, **kwargs):
+    """Bind arguments to a class's __init__."""
+    cls, args = args[0], args[1:]
+    class Partial(cls):
+        __doc__ = cls.__doc__
+        def __new__(self):
+            return cls(*args, **kwargs)
+    Partial.__name__ = cls.__name__
+    return Partial
