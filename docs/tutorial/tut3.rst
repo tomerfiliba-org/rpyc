@@ -54,7 +54,7 @@ ways to do that, but the simplest is ::
 
     if __name__ == "__main__":
         from rpyc.utils.server import ThreadedServer
-        t = ThreadedServer(MyService, port = 18861)
+        t = ThreadedServer(MyService, port=18861)
         t.start()
 
 To the remote party, the service is exposed as the root object of the connection, e.g.,
@@ -77,6 +77,27 @@ To the remote party, the service is exposed as the root object of the connection
       File "/home/tomer/workspace/rpyc/core/protocol.py", line 298, in sync_request
         raise obj
     AttributeError: cannot access 'get_question'
+
+
+Note that we have here passed the *class* ``MyService`` to the server with the
+effect that every incoming connection will use its own, independent
+``MyService`` instance as root object.
+
+If you pass in an *instance* instead, all incoming connections will use this
+instance as their shared root object, e.g.::
+
+        t = ThreadedServer(MyService(), port=18861)
+
+Note the subtle difference (parentheses!) to the example above.
+
+In the second case where you pass in a fully constructed service instance, it
+is trivial to pass additional arguments to the ``__init__`` function. However,
+the situation is slightly more tricky if you want to pass arguments while
+separating the root objects for each connection. In this case, use
+``rpyc.utils.helpers.classpartial`` like so::
+
+        service = classpartial(MyService, 1, 2, pi=3)
+        t = ThreadedServer(service, port=18861)
 
 But Wait, There's More!
 -----------------------

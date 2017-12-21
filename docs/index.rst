@@ -32,10 +32,8 @@ RPyC - Transparent, Symmetric Distributed Computing
    <div style="width:795px; margin: 1em 0 2em 0; display: block; padding: 1em; border: 1px dotted #DDD;
     background-color: rgba(255, 255, 202, 0.69); border-radius: 5px;">
 
-   <strong>Sticky</strong><br/>
-
-   <p> 2017.07.26:
-   <a class="reference external" href="https://pypi.python.org/pypi/rpyc/3.4.4">Version 3.4.4</a> has been released!.
+   <p> <strong>2017.07.26</strong>:
+   <a class="reference external" href="https://pypi.python.org/pypi/rpyc/3.4.4">Version 3.4.4</a> has been released!
    More info on the <a href="http://rpyc.readthedocs.org/en/latest/changelog.html">changelog</a>
    </p>
 
@@ -68,7 +66,8 @@ If you're new to RPyC, be sure to check out the :ref:`tutorial`.
 Next, refer to the :ref:`documentation` and :ref:`api-ref`,
 as well as the :ref:`mailing-list`.
 
-For an introductory reading, `David Mertz <http://gnosis.cx/dW/>`_ wrote a very thorough
+For an introductory reading (that may or may not be slightly outdated),
+`David Mertz <http://gnosis.cx/dW/>`_ wrote a very thorough
 `Charming Python <http://www.ibm.com/developerworks/linux/library/l-rpyc/>`_ installment
 about RPyC, explaining how it's different from existing alternatives (Pyro, XMLRPC, etc.),
 what roles it can play, and even show-cases some key features of RPyC (like the security model,
