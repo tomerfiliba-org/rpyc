@@ -4,6 +4,7 @@ import daemon
 import lockfile
 import sys
 import signal
+import os
 from rpyc.utils.server import ThreadedServer, ForkingServer
 from rpyc.core.service import SlaveService
 from rpyc.lib import setup_logger
@@ -13,12 +14,18 @@ except ImportError:
     from ConfigParser import ConfigParser
 
 server = None
+cur_dir = os.getcwd()
+bin_dir = os.path.dirname(__file__)
+
 
 def start():
     global server
 
     conf = ConfigParser()
-    conf.read('rpycd.conf')
+    conf.read([
+        os.path.join(cur_dir, 'rpycd.conf'),
+        os.path.join(bin_dir, 'rpycd.conf'),    # later files trump earlier ones
+    ])
 
     mode = conf.get("rpycd", "mode").lower()
     if mode == "threaded":
@@ -33,6 +40,7 @@ def start():
     server = factory(SlaveService, hostname = conf.get("rpycd", "host"),
         port = conf.getint("rpycd", "port"), reuse_addr = True)
     server.start()
+    server.serve_all()
 
 def reload(*args):
     server.close()
@@ -45,7 +53,7 @@ def stop(*args):
 
 if __name__ == "__main__":
     with daemon.DaemonContext(
-            pidfile = lockfile.FileLock('/var/run/rpydc.pid'),
+            working_directory = cur_dir,
+            pidfile = lockfile.FileLock('rpycd.pid'),
             signal_map = {signal.SIGTERM: stop, signal.SIGHUP: reload}):
         start()
-
