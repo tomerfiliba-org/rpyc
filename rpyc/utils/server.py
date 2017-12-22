@@ -24,7 +24,7 @@ signal = safe_import("signal")
 class Server(object):
     """Base server implementation
 
-    :param service: the :class:`service <service.Service>` to expose
+    :param service: the :class:`~rpyc.core.service.Service` to expose
     :param hostname: the host to bind to. Default is IPADDR_ANY, but you may
                      want to restrict it only to ``localhost`` in some setups
     :param ipv6: whether to create an IPv6 or IPv4 socket. The default is IPv4
@@ -33,8 +33,8 @@ class Server(object):
     :param reuse_addr: whether or not to create the socket with the ``SO_REUSEADDR`` option set.
     :param authenticator: the :ref:`api-authenticators` to use. If ``None``, no authentication
                           is performed.
-    :param registrar: the :class:`registrar <rpyc.utils.registry.RegistryClient>` to use.
-                          If ``None``, a default :class:`rpyc.utils.registry.UDPRegistryClient`
+    :param registrar: the :class:`~rpyc.utils.registry.RegistryClient` to use.
+                          If ``None``, a default :class:`~rpyc.utils.registry.UDPRegistryClient`
                           will be used
     :param auto_register: whether or not to register using the *registrar*. By default, the
                           server will attempt to register only if a registrar was explicitly given.
@@ -197,9 +197,7 @@ class Server(object):
         try:
             config = dict(self.protocol_config, credentials = credentials,
                 endpoints = (sock.getsockname(), addrinfo), logger = self.logger)
-            conn = self.service.connect(
-                Channel(SocketStream(sock)),
-                config)
+            conn = self.service._connect(Channel(SocketStream(sock)), config)
             self._handle_connection(conn)
         finally:
             self.logger.info("goodbye %s", addrinfo)
@@ -477,8 +475,7 @@ class ThreadPoolServer(Server):
         h, p = sock.getpeername()
         config = dict(self.protocol_config, credentials=credentials, connid="%s:%d"%(h, p),
                       endpoints=(sock.getsockname(), (h, p)))
-        return self.service.connect(
-            Channel(SocketStream(sock)), config)
+        return self.service._connect(Channel(SocketStream(sock)), config)
 
     def _accept_method(self, sock):
         '''Implementation of the accept method : only pushes the work to the internal queue.

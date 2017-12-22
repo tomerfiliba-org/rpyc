@@ -24,15 +24,23 @@ has the following boilerplate::
             pass
 
         def on_disconnect(self, conn):
-            # code that runs when the connection has already closed
+            # code that runs after the connection has already closed
             # (to finalize the service, if needed)
             pass
 
         def exposed_get_answer(self): # this is an exposed method
             return 42
 
+        exposed_the_real_answer_though = 43     # an exposed attribute
+
         def get_question(self):  # while this method is not exposed
             return "what is the airspeed velocity of an unladen swallow?"
+
+.. note::
+    The ``conn`` argument for ``on_connect`` and ``on_disconnect`` are added
+    in rpyc 3.5. This is backwards incompatible with previous versions where
+    instead the service constructor is called with a connection parameter and
+    stores it into ``self._conn``.
 
 As you can see, apart from the special initialization/finalization methods, you are free
 to define the class like any other class. Unlike regular classes, however, you can
@@ -41,12 +49,6 @@ with ``exposed_``, the attribute will be remotely accessible, otherwise it is on
 locally accessible. In this example, clients will be able to call ``get_answer``,
 but not ``get_question``, as we'll see in a moment.
 
-.. note::
-    The server creates a ``Service`` object for every instance. This means
-    that instance variables are not shared between different clients. If you
-    do need shared state, you have to use globals or subclass the ``Server``
-    class to pass additional variables to new ``Service`` objects.
-
 To expose your service to the world, however, you will need to start a server. There are many
 ways to do that, but the simplest is ::
 
@@ -54,7 +56,7 @@ ways to do that, but the simplest is ::
 
     if __name__ == "__main__":
         from rpyc.utils.server import ThreadedServer
-        t = ThreadedServer(MyService, port = 18861)
+        t = ThreadedServer(MyService, port=18861)
         t.start()
 
 To the remote party, the service is exposed as the root object of the connection, e.g.,
@@ -62,25 +64,66 @@ To the remote party, the service is exposed as the root object of the connection
 
     >>> import rpyc
     >>> c = rpyc.connect("localhost", 18861)
-    >>> c.root     # this is the "root object", i.e., the service that is exposed to this client
+    >>> c.root
     <__main__.MyService object at 0x834e1ac>
-    >>>
-    >>> c.root.get_answer
-    <bound method MyService.exposed_get_answer of <__main__.MyService object at 0x834e1ac>>
+
+This "root object" is a reference (netref) to the service instance living in the
+server process. It can be used access and invoke exposed attributes and methods:
+
     >>> c.root.get_answer()
     42
-    >>> c.root.exposed_get_answer()    # it can be accessed with the 'exposed_' prefix as well
-    42
-    >>> c.root.get_question()   # but "get_question" is not exposed!
+    >>> c.root.the_real_answer_though
+    43
+
+Meanwhile, the question is not exposed:
+
+    >>> c.root.get_question()
     ======= Remote traceback =======
     ...
       File "/home/tomer/workspace/rpyc/core/protocol.py", line 298, in sync_request
         raise obj
     AttributeError: cannot access 'get_question'
 
+
+Shared service instance
+-----------------------
+Note that we have here passed the *class* ``MyService`` to the server with the
+effect that every incoming connection will use its own, independent
+``MyService`` instance as root object.
+
+If you pass in an *instance* instead, all incoming connections will use this
+instance as their shared root object, e.g.::
+
+        t = ThreadedServer(MyService(), port=18861)
+
+Note the subtle difference (parentheses!) to the example above.
+
+.. note::
+    Passing instances is supported starting with rpyc 3.5. In earlier
+    versions, you can only pass a class of which every connection will receive
+    a separate instance.
+
+
+Passing arguments to the service
+--------------------------------
+In the second case where you pass in a fully constructed service instance, it
+is trivial to pass additional arguments to the ``__init__`` function. However,
+the situation is slightly more tricky if you want to pass arguments while
+separating the root objects for each connection. In this case, use
+:func:`~rpyc.utils.helpers.classpartial` like so::
+
+        from rpyc.utils.helpers import classpartial
+
+        service = classpartial(MyService, 1, 2, pi=3)
+        t = ThreadedServer(service, port=18861)
+
+.. note::
+    classpartial is added in version 3.5.
+
+
 But Wait, There's More!
 -----------------------
-All services have a //name//, which is normally the name of the class, minus the
+All services have a *name*, which is normally the name of the class, minus the
 ``"Service"`` suffix. In our case, the service name is ``"MY"`` (service names are
 case-insensitive). If you wish to define a custom name, or multiple names (aliases),
 you can do so by setting the ``ALIASES`` list. The first alias is considered to be the
@@ -99,21 +142,19 @@ In the original code snippet, this is what the client gets::
 
 The reason services have names is for the **service registry**: normally, a server will
 broadcast its details to a nearby :ref:`registry server <registry-server>` for discovery.
-To use service discovery, a make sure you start the ``registry_server.py`` that comes in
-the ``rpyc/scripts`` directory. This server listens on a broadcast UDP socket, and will
+To use service discovery, a make sure you start the ``bin/rpyc_registry.py``.
+This server listens on a broadcast UDP socket, and will
 answer to queries about  which services are running where.
-
-.. figure:: _static/registry_server.png
-   :align: center
 
 Once a registry server is running somewhere "broadcastable" on your network, and the
 servers are configured to auto-register with it (the default), clients can discover
-services *automagically*::
+services *automagically*. To find servers running a given service name::
 
-    >>> rpyc.discover("MY")      # to find servers running a given service name
+    >>> rpyc.discover("MY")
     (('192.168.1.101', 18861),)
 
-    # and if you don't care to which you server you connect, you use connect_by_service:
+And if you don't care to which you server you connect, you use connect_by_service:
+
     >>> c2 = rpyc.connect_by_service("MY")
     >>> c2.root.get_answer()
     42

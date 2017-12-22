@@ -40,7 +40,7 @@ Protocol
    api/core_service
 
 
-* :ref:`api-protocol` - The RPyC protocol (:class:`Connection <rpyc.core.protocol.Connection>` class)
+* :ref:`api-protocol` - The RPyC protocol (:class:`~rpyc.core.protocol.Connection` class)
 
 * :ref:`api-service` - The RPyC service model
 
@@ -90,15 +90,7 @@ Misc
    :maxdepth: 1
    :hidden:
 
-   api/utils_splitbrain
    api/utils_zerodeploy
 
 * :ref:`api-zerodeploy` - Deploy short-living RPyC servers on remote machines with ease - all you'll
   need is SSH access and a Python interpreter installed on the host
-
-* :ref:`api-splitbrain` - Run code on the local machine, but have it operating on a remote one! The splitbrain
-  context redirects all OS-level operations to the server, while "pure computation" remains on your local machine
-
-
-
-

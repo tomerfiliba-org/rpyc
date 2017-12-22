@@ -2,7 +2,7 @@
 -----
 Date: (unknown)
 
-NOTE: this release contains backward incompatible changes:
+**NOTE: this release contains backward incompatible changes:**
 
 * Changed signature of ``Service.on_connect`` and ``on_disconnect``, adding
   the connection as argument.
@@ -31,7 +31,7 @@ NOTE: this release contains backward incompatible changes:
   instance is removed, making it symmetric to ``on_service_added`` (#238)
   This reverts PR #173 on issue #172.
 
-More changes:
+**More changes:**
 
 * added ``rpyc.utils.helpers.classpartial`` to bind arguments to services (#244)
 
