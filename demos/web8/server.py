@@ -5,6 +5,9 @@ import threading
 
 
 class Web8Service(rpyc.Service):
+    def on_connect(self, conn):
+        self._conn = conn
+
     def exposed_get_page(self, gtk, content, page):
         self.gtk = gtk
         self.content = content
