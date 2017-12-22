@@ -38,6 +38,9 @@ Date: (unknown)
 * Removed module ``rpyc.experimental.retunnel``. Seemingly unused anywhere, no
   documentation, no clue what this is about.
 
+* ``bin/rpyc_classic.py`` will bind to ``127.0.0.1`` instead of ``0.0.0.0`` by
+  default
+
 **More changes:**
 
 * added ``rpyc.utils.helpers.classpartial`` to bind arguments to services (#244)
