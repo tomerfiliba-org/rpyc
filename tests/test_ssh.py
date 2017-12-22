@@ -16,8 +16,8 @@ class Test_Ssh(unittest.TestCase):
             os.environ["HOME"] = os.path.expanduser("~")
             self.remote_machine = SshMachine("localhost")
         else:
-            # assume "ssh localhost" is configured to run without asking for password 
-            self.server = ThreadedServer(SlaveService, hostname = "localhost", 
+            # assume "ssh localhost" is configured to run without asking for password
+            self.server = ThreadedServer(SlaveService, hostname = "localhost",
                 ipv6 = False, port = 18888, auto_register=False)
             t = threading.Thread(target=self.server.start)
             t.setDaemon(True)
@@ -42,5 +42,3 @@ class Test_Ssh(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-

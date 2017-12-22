@@ -54,9 +54,5 @@ class TeleportationTest(unittest.TestCase):
         self.assertNotEqual(h(7), h2(7))
 
 
-
 if __name__ == "__main__":
     unittest.main()
-
-
-

@@ -52,6 +52,3 @@ class Test_Multithreaded(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-

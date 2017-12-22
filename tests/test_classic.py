@@ -6,11 +6,11 @@ import unittest
 class ClassicMode(unittest.TestCase):
     def setUp(self):
         self.conn = rpyc.classic.connect_thread()
-    
+
     def tearDown(self):
         self.conn.close()
         self.conn = None
-    
+
     def test_piped_server(self):
         # this causes the following lines to be printed to stderr on Windows:
         #
@@ -50,7 +50,7 @@ class ClassicMode(unittest.TestCase):
         print( x.__class__ )
         self.assertTrue(isinstance(x, list))
         self.assertTrue(isinstance(x, rpyc.BaseNetref))
-    
+
     def test_mock_connection(self):
         from rpyc.utils.classic import MockClassicConnection
         import sys
@@ -64,5 +64,3 @@ class ClassicMode(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
