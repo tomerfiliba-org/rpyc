@@ -1,88 +1,40 @@
 .. _tut2:
 
-Part 2: Code Samples
-====================
+Part 2: Netrefs and Exceptions
+==============================
 
-In this part, we'll dive deeper into the classic mode by analyzing some more code samples.
+In :ref:`tut1`, we have seen how to use rpyc classic connection to do almost
+anything remotely.
+
+So far everything seemed normal. Now it's time to get our hands dirty and
+understand more what happens under the hood!
 
 Setup
 -----
-Creating a connection and accessing modules ::
+Start a classic server using::
+
+    python bin/rpyc_classic.py
+
+And connect your client::
 
     >>> import rpyc
     >>> conn = rpyc.classic.connect("localhost")
-    >>> conn
-    <rpyc.core.protocol.Protocol object at 0x00B9F830>
-    >>> conn.modules
-    <rpyc.services.slave.ModuleNamespace object at 0x00B77DA0>
 
-    >>> conn.modules.sys
-    <module 'sys' (built-in)>
-    >>> conn.modules.os
-    <module 'os' from 'C:\Python25\lib\os.pyc'>
-    >>> conn.modules.telnetlib
-    <module 'telnetlib' from 'C:\Python25\lib\telnetlib.pyc'>
-    >>> conn.modules["xml.dom.minidom"]
-    <module 'xml.dom.minidom' from 'C:\Python25\lib\xml\dom\minidom.pyc'>
 
-Basic usage
------------
-Working with remote objects ::
+Netrefs
+-------
 
-    >>> conn.modules.sys.path
-    ['D:\\projects\\rpyc\\servers', 'd:\\projects', .....]
-    >>> conn.modules.sys.path.append("regina victoria")
-    >>> conn.modules.sys.path
-    ['D:\\projects\\rpyc\\servers', 'd:\\projects', ....., 'regina victoria']
+We know that we can use ``conn.modules.sys`` to access the ``sys`` module the
+server… But what kind of magical object is that thing anyway?
 
-    >>> conn.modules.sys.stdout
-    <open file '<stdout>', mode 'w' at 0x0098F068>
-    >>> conn.modules.sys.stdout.write("hello world\n")
-    # 'hello world' is printed on the server
-
-    >>> conn.modules.os.path.abspath("lalala")
-    'D:\\eclipse\\lalala'
-    [[/code]]
-
-    Experimenting with remote objects:
-    [[code type="python"]]
-    >>> conn.modules.sys.path[0]
-    'D:\\projects\\rpyc\\servers'
-    >>> conn.modules.sys.path[1]
-    'd:\\projects'
-    >>> conn.modules.sys.path[3:6]
-    ['C:\\Python25\\DLLs', 'C:\\Python25\\lib', 'C:\\Python25\\lib\\plat-win']
-    >>> len(conn.modules.sys.path)
-    12
-    >>> for i in conn.modules.sys.path:
-    ...     print i
-    ...
-    D:\projects\rpyc\servers
-    d:\projects
-    C:\WINDOWS\system32\python25.zip
-    C:\Python25\DLLs
-    C:\Python25\lib
-    C:\Python25\lib\plat-win
-    C:\Python25\lib\lib-tk
-    C:\Python25
-    C:\Python25\lib\site-packages
-    C:\Python25\lib\site-packages\gtk-2.0
-    C:\Python25\lib\site-packages\wx-2.8-msw-unicode
-    regina victoria
-
-Introspection
--------------
-So far everything seemed normal. Now it's time to get our hands dirty and figure out what
-exactly are these magical objects... ::
+    >>> type(conn.modules.sys)
+    <netref class 'builtins.module'>
 
     >>> type(conn.modules.sys.path)
-    <netref class '__builtin__.list'>
-    >>> type(conn.modules.sys.stdout)
-    <netref class '__builtin__.file'>
-    >>> type(conn.modules.os.listdir)
-    <netref class '__builtin__.builtin_function_or_method'>
+    <netref class 'builtins.list'>
+
     >>> type(conn.modules.os.path.abspath)
-    <netref class '__builtin__.function'>
+    <netref class 'builtins.function'>
 
 Voila, **netrefs** (*network references*, also known as *transparent object proxies*) are
 special objects that delegate everything done on them locally to the corresponding remote
@@ -92,6 +44,7 @@ introspection mechanisms! ::
 
     >>> isinstance(conn.modules.sys.path, list)
     True
+
     >>> import inspect
     >>> inspect.isbuiltin(conn.modules.os.listdir)
     True
@@ -101,6 +54,12 @@ introspection mechanisms! ::
     False
     >>> inspect.ismethod(conn.modules.sys.stdout.write)
     True
+
+Cool, eh?
+
+We all know that the best way to understand something is to smash it, slice it
+up and spill the contents into the world! So let's do that::
+
     >>> dir(conn.modules.sys.path)
     ['____conn__', '____oid__', '__add__', '__class__', '__contains__', '__delattr__',
     '__delitem__', '__delslice__', '__doc__', '__eq__', '__ge__', '__getattribute__',
@@ -110,11 +69,17 @@ introspection mechanisms! ::
     '__setitem__', '__setslice__', '__str__', 'append', 'count', 'extend', 'index', 'insert',
     'pop', 'remove', 'reverse', 'sort']
 
+In addition to some expected methods and properties, you will have noticed
+``____conn__`` and ``____oid__``. These properties store over which connection
+the object should be resolved and an identifier that allows the server to
+lookup the object from a dictionary.
+
 Exceptions
 ----------
-But things are not always bright, and exceptions must be dealt with. When a client makes a
-request that fails (an exception is raised on the server side), the exception propagates
-transparently to the client. Have a look at this snippet::
+Let's continue on this exhilarating path of destruction. After all, things are
+not always bright, and problems must be dealt with. When a client makes a
+request that fails (an exception is raised on the server side), the exception
+propagates transparently to the client. Have a look at this snippet::
 
     >>> conn.modules.sys.path[300]         # there are only 12 elements in the list...
     ======= Remote traceback =======
@@ -146,28 +111,5 @@ transparently to the client. Have a look at this snippet::
 As you can see, we get two tracebacks: the remote one, showing what went wrong on the server,
 and a local one, showing what we did to cause it.
 
-Misc
-----
-Aside from the very useful ``.modules`` attribute of ``conn``, classic RPyC provides
-some more useful entry points:
 
-* ``builtins`` - the ``__builtin__`` module (short for ``conn.modules.__builin__``)
-* ``eval(expr : str)`` - evaluates the expression on the server (a remote ``eval`` function)
-* ``execute(code : str)`` - executes the code on the server (a remote ``exec`` statement)
-* ``namespace`` - a per-connection ``dict`` in which code is executed and evaluated (
-  (by the ``execute`` and ``eval`` methods)
-
-Here are some examples ::
-
-    >>> remlist = conn.builtin.range(50)
-    >>> conn.execute("print 'world'")      # 'world' is printed on the server
-    >>> conn.execute("x = 7")              # a variable named 'x' is defined on the server
-    >>> conn.namespace["x"]
-    7
-    >>> conn.eval("x + 6")                 # this code is evaluated on the server
-    13
-
-
-
-Continue to :ref:`part 3 <tut3>`...
-
+Continue to :ref:`tut3`...
