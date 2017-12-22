@@ -5,7 +5,7 @@ RPyC Servers
 
 Since RPyC is a symmetric protocol (where both client and server can process requests),
 an :ref:`RPyC server <api-server>` is a largely just a main-loop that accepts incoming
-connections and calls :func:`serve_all <rpyc.core.protocol.Connection.serve_all>`. RPyC comes
+connections and calls :func:`~rpyc.core.protocol.Connection.serve_all`. RPyC comes
 with three built-in servers:
 
 * Forking - forks a child-process to handle each incoming connection (POSIX only)

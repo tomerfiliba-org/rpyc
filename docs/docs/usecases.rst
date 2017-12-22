@@ -20,7 +20,7 @@ may expose a ``TrackYourPackage`` service with ::
 
 RPyC is configured (by default) to prevent the use of ``getattr`` on remote objects to
 all but "allowed attributes", and the rest of the security model is based on passing
-:ref:`capabilities`. Passing capabilities is explicit and fine grained -- for instance,
+*capabilities*. Passing capabilities is explicit and fine grained -- for instance,
 instead of allowing the other party call ``open()`` and attempting to block disallowed calls
 at the file-name level (which is `weak <http://en.wikipedia.org/wiki/Directory_traversal>`_),
 you can pass an open file object to the other party. The other party could manipulate the

@@ -189,7 +189,7 @@ And here's a live demonstration of events::
     >>> bgsrv.stop()
     >>> conn.close()
 
-Note that in this demo I used :class:`BgServingThread <rpyc.utils.helpers.BgServingThread>`,
+Note that in this demo I used :class:`~rpyc.utils.helpers.BgServingThread`,
 which basically starts a background thread to serve all incoming requests, while the main
 thread is free to do as it wills. You don't have to open a second thread for that,
 if your application has a reactor (like ``gtk``'s ``gobject.io_add_watch``): simply register

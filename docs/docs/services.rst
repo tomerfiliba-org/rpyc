@@ -73,7 +73,7 @@ has been established, and when it's been disconnected. Note that during ``on_dis
 the connection is already dead, so you can no longer access any remote objects.
 
 Other than that, your service instance has the ``_conn`` attribute, which represents the
-:class:`connection <rpyc.core.protocol.Connection>` that it serves. This attribute already
+:class:`~rpyc.core.protocol.Connection` that it serves. This attribute already
 exists when ``on_connected`` is called.
 
 .. note::
@@ -84,11 +84,11 @@ Built-in Services
 -----------------
 RPyC comes bundled with two built-in services:
 
-* :class:`VoidService <rpyc.core.service.VoidService>`, which is an empty "do-nothing"
+* :class:`~rpyc.core.service.VoidService`, which is an empty "do-nothing"
   service. It's useful when you want only one side of the connection to provide a service,
   while the other side a "consumer".
 
-* :class:`SlaveService <rpyc.core.service.SlaveService>`, which implements
+* :class:`~rpyc.core.service.SlaveService`, which implements
   :ref:`Classic Mode<classic>` RPyC.
 
 Decoupled Services

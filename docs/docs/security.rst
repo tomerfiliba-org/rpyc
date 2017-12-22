@@ -35,7 +35,7 @@ has the attributes ``foo``, ``bar``, and ``spam``, and you wish to restrict acce
             self.foo = obj.foo
             self.bar = obj.bar
 
-Since this is a common idiom, RPyC provides :func:`restricted <rpyc.utils.helpers.restricted>`.
+Since this is a common idiom, RPyC provides :func:`~rpyc.utils.helpers.restricted`.
 This function returns a "restricted view" of the given object, limiting access only to the
 explicitly given set of attributes. ::
 
