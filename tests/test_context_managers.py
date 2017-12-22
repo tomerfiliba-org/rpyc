@@ -7,62 +7,56 @@ from contextlib import contextmanager
 
 class MyService(rpyc.Service):
 
-    def exposed_reset(self):
-        global on_context_enter, on_context_exit, on_context_exc
-        on_context_enter = False
-        on_context_exit = False
-        on_context_exc = False
+    on_context_enter = False
+    on_context_exit = False
+    on_context_exc = False
 
     @contextmanager
     def exposed_context(self, y):
-        global on_context_enter, on_context_exit, on_context_exc
-        on_context_enter = True
+        self.on_context_enter = True
         try:
             yield 17 + y
         except:
-            on_context_exc = True
+            self.on_context_exc = True
             raise
         finally:
-            on_context_exit = True
+            self.on_context_exit = True
 
 
 class TestContextManagers(unittest.TestCase):
     def setUp(self):
-        self.conn = rpyc.connect_thread(remote_service=MyService)
-        self.conn.root.reset()
+        self.service = MyService()
+        self.conn = rpyc.connect_thread(remote_service=self.service)
 
     def tearDown(self):
         self.conn.close()
 
     def test_context(self):
+        service = self.service
         with self.conn.root.context(3) as x:
-            print( "entering test" )
-            self.assertTrue(on_context_enter)
-            self.assertFalse(on_context_exc)
-            self.assertFalse(on_context_exit)
-            print( "got past context enter" )
+            self.assertTrue(service.on_context_enter)
+            self.assertFalse(service.on_context_exc)
+            self.assertFalse(service.on_context_exit)
             self.assertEqual(x, 20)
-            print( "got past x=20" )
-        self.assertFalse(on_context_exc)
-        self.assertTrue(on_context_exit)
-        print( "got past on_context_exit" )
+        self.assertFalse(service.on_context_exc)
+        self.assertTrue(service.on_context_exit)
 
     def test_context_exception(self):
         class MyException(Exception):
             pass
 
+        service = self.service
         def use_context():
             with self.conn.root.context(3):
-                self.assertTrue(on_context_enter)
-                self.assertFalse(on_context_exc)
-                self.assertFalse(on_context_exit)
+                self.assertTrue(service.on_context_enter)
+                self.assertFalse(service.on_context_exc)
+                self.assertFalse(service.on_context_exit)
                 raise MyException()
 
         self.assertRaises(MyException, use_context)
 
-        self.assertTrue(on_context_exc)
-        self.assertTrue(on_context_exit)
+        self.assertTrue(service.on_context_exc)
+        self.assertTrue(service.on_context_exit)
 
 if __name__ == "__main__":
     unittest.main()
-

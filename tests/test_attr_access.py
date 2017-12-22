@@ -55,7 +55,7 @@ class Protector(object):
 class MyService(rpyc.Service):
     def exposed_get_one(self):
         return rpyc.restricted(MyClass(), ["foo", "bar"])
-    
+
     def exposed_get_two(self):
         protector = Protector()
         protector.register(MyClass, ["foo", "spam"])
@@ -99,12 +99,8 @@ class TestRestricted(unittest.TestCase):
 #            pass
 #        else:
 #            assert False, "expected an attribute error!"
-#        
+#
 
 
 if __name__ == "__main__":
     unittest.main()
-
-
-
-
