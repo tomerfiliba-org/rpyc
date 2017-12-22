@@ -29,7 +29,7 @@ class ClassicServer(cli.Application):
     port = cli.SwitchAttr(["-p", "--port"], cli.Range(0, 65535), default = None,
         help="The TCP listener port (default = %s, default for SSL = %s)" %
             (DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT), group = "Socket Options")
-    host = cli.SwitchAttr(["--host"], str, default = "", help = "The host to bind to. "
+    host = cli.SwitchAttr(["--host"], str, default = "127.0.0.1", help = "The host to bind to. "
         "The default is INADDR_ANY", group = "Socket Options")
     ipv6 = cli.Flag(["--ipv6"], help = "Enable IPv6", group = "Socket Options")
 

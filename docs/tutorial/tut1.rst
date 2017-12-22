@@ -15,14 +15,16 @@ the client on the same machine (the ``localhost``). The classic server can be
 started using::
 
     $ python bin/rpyc_classic.py
-    INFO:SLAVE/18812:server started on [0.0.0.0]:18812
+    INFO:SLAVE/18812:server started on [127.0.0.1]:18812
 
 On windows, the server can be started by double-clicking the script file.
 
-The first (and only) line shows the parameters this server is running with: ``SLAVE``
-indicates the ``SlaveService`` (you'll learn more about :ref:`services <services>` later on),
-``tid`` is the thread ID (``tid`` if server is threaded, ``pid`` if it is forking),
-and ``0.0.0.0:18812`` is the address on which the server binds.
+The first (and only) line shows the parameters this server is running with:
+``SLAVE`` indicates the ``SlaveService`` (you'll learn more about
+:ref:`services <services>` later on), and ``[127.0.0.1]:18812`` is the address
+on which the server binds, in this case the server will only accept
+connections from localhost. If you run a server with ``--host 0.0.0.0``, you
+are free for arbitrary code execution from anywhere.
 
 Running a Client
 ----------------
