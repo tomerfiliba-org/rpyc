@@ -35,6 +35,9 @@ Date: (unknown)
   undocumented for me and I won't be developing it, so better remove it
   altogether. (It's still available in the ``splitbrain`` branch)
 
+* Removed module ``rpyc.experimental.retunnel``. Seemingly unused anywhere, no
+  documentation, no clue what this is about.
+
 **More changes:**
 
 * added ``rpyc.utils.helpers.classpartial`` to bind arguments to services (#244)
