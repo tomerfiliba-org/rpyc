@@ -39,6 +39,3 @@ class DummyObject(object):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-

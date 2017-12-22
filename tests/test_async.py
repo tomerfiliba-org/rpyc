@@ -10,7 +10,7 @@ class TestAsync(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
-    
+
     def test_asyncresult_api(self):
         res = self.a_sleep(2)
         self.assertFalse(res.ready)
@@ -46,7 +46,7 @@ class TestAsync(unittest.TestCase):
         res.add_callback(g)
         res.wait()
         self.assertEqual(set(visited), set(["f", "g"]))
-        
+
     def test_timed(self):
         timed_sleep = rpyc.timed(self.conn.modules.time.sleep, 5)
         res = timed_sleep(3)
@@ -62,4 +62,3 @@ class TestAsync(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

@@ -4,8 +4,6 @@ import time
 import rpyc
 import unittest
 
-on_connect_called = False
-on_disconnect_called = False
 
 class MyMeta(type):
     def spam(self):
@@ -19,13 +17,14 @@ if not isinstance(MyMeta, MyMeta):
     MyClass = MyMeta(MyClass.__name__, MyClass.__bases__, dict(MyClass.__dict__))
 
 class MyService(rpyc.Service):
+    on_connect_called = False
+    on_disconnect_called = False
+
     def on_connect(self, conn):
-        global on_connect_called
-        on_connect_called = True
+        self.on_connect_called = True
 
     def on_disconnect(self, conn):
-        global on_disconnect_called
-        on_disconnect_called = True
+        self.on_disconnect_called = True
 
     def exposed_distance(self, p1, p2):
         x1, y1 = p1
@@ -46,20 +45,17 @@ class TestCustomService(unittest.TestCase):
     config = {}
 
     def setUp(self):
-        global on_connect_called
-        self.conn = rpyc.connect_thread(remote_service=MyService)
+        self.service = MyService()
+        self.conn = rpyc.connect_thread(remote_service=self.service)
         self.conn.root # this will block until the service is initialized,
         # so we can be sure on_connect_called is True by that time
-        self.assertTrue(on_connect_called)
-        on_connect_called = False
+        self.assertTrue(self.service.on_connect_called)
 
     def tearDown(self):
-        global on_disconnect_called
         self.conn.close()
         time.sleep(0.5) # this will wait a little, making sure
         # on_disconnect_called is already True
-        self.assertTrue(on_disconnect_called)
-        on_disconnect_called = False
+        self.assertTrue(self.service.on_disconnect_called)
 
     def test_aliases(self):
         print( "service name: %s" % (self.conn.root.get_service_name(),) )
@@ -73,7 +69,7 @@ class TestCustomService(unittest.TestCase):
         self.conn.root.getlist
         self.conn.root.exposed_getlist
         # this is not an exposed attribute:
-        self.assertRaises(AttributeError, lambda: self.conn.root.foobar()) 
+        self.assertRaises(AttributeError, lambda: self.conn.root.foobar())
 
     def test_safeattrs(self):
         x = self.conn.root.getlist()
@@ -88,5 +84,3 @@ class TestCustomService(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
