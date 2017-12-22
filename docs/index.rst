@@ -134,7 +134,12 @@ Contents
    changelog
 
 .. toctree::
+   :maxdepth: 2
 
    tutorial
+
+.. toctree::
+   :maxdepth: 2
+
    docs
    api

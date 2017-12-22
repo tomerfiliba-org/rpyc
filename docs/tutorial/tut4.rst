@@ -63,6 +63,4 @@ received on the client. In other words, the symmetry of RPyC means that both the
 the server are ultimately "servers", and the "role" is more semantic than programmatic.
 
 
-Continue to :ref:`part 5 <tut5>`...
-
-
+Continue to :ref:`tut5`...

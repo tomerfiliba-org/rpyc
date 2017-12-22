@@ -1,6 +1,6 @@
 """
 **Vinegar** ("when things go sour") is a safe serializer for exceptions.
-The :data`configuration parameters <rpyc.core.protocol.DEFAULT_CONFIG>` control
+The :data:`configuration parameters <rpyc.core.protocol.DEFAULT_CONFIG>` control
 its mode of operation, for instance, whether to allow *old-style* exceptions
 (that do not derive from ``Exception``), whether to allow the :func:`load` to
 import custom modules (imposes a security risk), etc.
