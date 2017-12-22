@@ -9,12 +9,19 @@ from rpyc.lib.compat import pickle, is_py3k, maxint, with_metaclass
 from rpyc.core import consts
 
 
+# If these can be accessed, numpy will try to load the array from local memory,
+# resulting in exceptions and/or segfaults, see #236:
+_deleted_netref_attrs = frozenset([
+    '__array_struct__', '__array_interface__',
+])
+
 _local_netref_attrs = frozenset([
     '____conn__', '____oid__', '____refcount__', '__class__', '__cmp__', '__del__', '__delattr__',
     '__dir__', '__doc__', '__getattr__', '__getattribute__', '__hash__',
     '__init__', '__metaclass__', '__module__', '__new__', '__reduce__',
     '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__',
     '__weakref__', '__dict__', '__members__', '__methods__', '__exit__',
+    '__array__', *_deleted_netref_attrs
 ])
 """the set of attributes that are local to the netref object"""
 
@@ -139,6 +146,8 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
                 return self.__getattr__("__doc__")
             elif name == "__members__":                       # for Python < 2.6
                 return self.__dir__()
+            elif name in _deleted_netref_attrs:
+                raise AttributeError()
             else:
                 return object.__getattribute__(self, name)
         elif name == "__call__":                          # IronPython issue #10
@@ -146,6 +155,8 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
         else:
             return syncreq(self, consts.HANDLE_GETATTR, name)
     def __getattr__(self, name):
+        if name in _deleted_netref_attrs:
+            raise AttributeError()
         return syncreq(self, consts.HANDLE_GETATTR, name)
     def __delattr__(self, name):
         if name in _local_netref_attrs:
@@ -174,6 +185,12 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     # support for pickling netrefs
     def __reduce_ex__(self, proto):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
+
+    # This is not strictly necessary, but a performance optimization:
+    # Note that protocol=-1 will only work between python interpreters of the
+    # same version:
+    def __array__(self):
+        return pickle.loads(syncreq(self, consts.HANDLE_PICKLE, -1))
 
 
 def _make_method(name, doc):

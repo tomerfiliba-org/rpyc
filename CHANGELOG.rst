@@ -43,6 +43,8 @@ Date: (unknown)
 
 **More changes:**
 
+* fix bug when copying remote numpy arrays (#236)
+
 * added ``rpyc.utils.helpers.classpartial`` to bind arguments to services (#244)
 
 * can now pass services optionally as instance or class (could only pass as
