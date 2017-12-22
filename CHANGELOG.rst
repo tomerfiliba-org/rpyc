@@ -31,6 +31,10 @@ Date: (unknown)
   instance is removed, making it symmetric to ``on_service_added`` (#238)
   This reverts PR #173 on issue #172.
 
+* Removed module ``rpyc.experimental.splitbrain``. It's too confusing and
+  undocumented for me and I won't be developing it, so better remove it
+  altogether. (It's still available in the ``splitbrain`` branch)
+
 **More changes:**
 
 * added ``rpyc.utils.helpers.classpartial`` to bind arguments to services (#244)
