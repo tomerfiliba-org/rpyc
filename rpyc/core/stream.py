@@ -151,7 +151,7 @@ class SocketStream(Stream):
 
     @classmethod
     def unix_connect(cls, path, timeout = 3):
-        """factory method that creates a ``SocketStream `` over a unix domain socket
+        """factory method that creates a ``SocketStream`` over a unix domain socket
         located in *path*
 
         :param path: the path to the unix domain socket

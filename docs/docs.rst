@@ -27,8 +27,6 @@ Introduction
 
 * :ref:`How to's <howto>` - solutions to specific problems
 
-* :ref:`Guidelines <guidelines>` - guidelines for improving your work with RPyC
-
 Reference
 ---------
 
