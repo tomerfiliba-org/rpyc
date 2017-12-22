@@ -21,8 +21,8 @@ _local_netref_attrs = frozenset([
     '__init__', '__metaclass__', '__module__', '__new__', '__reduce__',
     '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__',
     '__weakref__', '__dict__', '__members__', '__methods__', '__exit__',
-    '__array__', *_deleted_netref_attrs
-])
+    '__array__',
+]) | _deleted_netref_attrs
 """the set of attributes that are local to the netref object"""
 
 _builtin_types = [
