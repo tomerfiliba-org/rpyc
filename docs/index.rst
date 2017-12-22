@@ -1,6 +1,6 @@
 .. raw:: html
 
-    <div style="float:right; margin:1em; padding: 1em 2em 1em 2em; background-color: #efefef;
+    <div style="float:right; margin:1em 0em 1em 1em; padding: 1em 2em 1em 2em; background-color: #efefef;
         border-radius: 5px; border-width: thin; border-style: dotted; border-color: #0C3762;">
     <strong>Quick Links</strong><br/>
     <ul>
@@ -27,20 +27,17 @@
 
 RPyC - Transparent, Symmetric Distributed Computing
 ====================================================
-.. raw:: html
 
-   <div style="width:795px; margin: 1em 0 2em 0; display: block; padding: 1em; border: 1px dotted #DDD;
-    background-color: rgba(255, 255, 202, 0.69); border-radius: 5px;">
+.. admonition:: |release|_ has been released!
+   :class: note
 
-   <p> <strong>2017.07.26</strong>:
-   <a class="reference external" href="https://pypi.python.org/pypi/rpyc/3.4.4">Version 3.4.4</a> has been released!
-   More info on the <a href="http://rpyc.readthedocs.org/en/latest/changelog.html">changelog</a>
-   </p>
+   Be sure to read the :ref:`changelog <changelog>` before upgrading!
 
-   <p>Please use the
-   <a class="reference external" href="https://github.com/tomerfiliba/rpyc/issues">github issues</a>
-   to ask questions report problems. <strong>Please do not email me directly</strong>.</p>
-   </div>
+   Please use the `github issues <https://github.com/tomerfiliba/rpyc/issues>`_
+   to ask questions report problems. **Please do not email me directly**
+
+.. |release| replace:: Version |version|
+.. _release: https://pypi.python.org/pypi/rpyc/
 
 **RPyC** (pronounced as *are-pie-see*), or *Remote Python Call*, is a **transparent**
 `python <http://www.python.org>`_ library for **symmetrical**
