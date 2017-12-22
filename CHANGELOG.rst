@@ -60,7 +60,8 @@ Date: (unknown)
 
 * most protocol handlers (``Connection._handle_XXX``) now directly get the
   object rather than its ID as first argument. This makes overriding
-  individual handlers feel much more high-level.
+  individual handlers feel much more high-level. And by the way it turns out
+  that this fixes two long-standing issues (#137, #153)
 
 * fix bug with proxying context managers (#228)
 
