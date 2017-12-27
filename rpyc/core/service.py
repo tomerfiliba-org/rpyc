@@ -171,12 +171,6 @@ class SlaveService(Slave, Service):
         ))
         super(SlaveService, self).on_connect(conn)
 
-    exposed_namespace = property(lambda self: self.namespace)
-    exposed_execute   = Slave.execute
-    exposed_eval      = Slave.eval
-    exposed_getmodule = Slave.getmodule
-    exposed_getconn   = Slave.getconn
-
 class FakeSlaveService(VoidService):
     """VoidService that can be used for connecting to peers that operate a
     :class:`MasterService`, :class:`ClassicService`, or the old
