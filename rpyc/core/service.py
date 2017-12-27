@@ -130,17 +130,34 @@ class ModuleNamespace(object):
     def __getattr__(self, name):
         return self[name]
 
-class SlaveService(Service):
+class Slave(object):
+    __slots__ = ["_conn", "namespace"]
+    def __init__(self):
+        self._conn = None
+        self.namespace = {}
+    def execute(self, text):
+        """execute arbitrary code (using ``exec``)"""
+        execute(text, self.namespace)
+    def eval(self, text):
+        """evaluate arbitrary code (using ``eval``)"""
+        return eval(text, self.namespace)
+    def getmodule(self, name):
+        """imports an arbitrary module"""
+        return __import__(name, None, None, "*")
+    def getconn(self):
+        """returns the local connection instance to the other side"""
+        return self._conn
+
+class SlaveService(Slave, Service):
     """The SlaveService allows the other side to perform arbitrary imports and
     execution arbitrary code on the server. This is provided for compatibility
     with the classic RPyC (2.6) modus operandi.
 
     This service is very useful in local, secure networks, but it exposes
     a **major security risk** otherwise."""
-    __slots__ = ["_conn", "exposed_namespace"]
+    __slots__ = ()
 
     def on_connect(self, conn):
-        self.exposed_namespace = {}
         self._conn = conn
         self._conn._config.update(dict(
             allow_all_attrs = True,
@@ -153,19 +170,6 @@ class SlaveService(Service):
             instantiate_oldstyle_exceptions = True,
         ))
         super(SlaveService, self).on_connect(conn)
-
-    def exposed_execute(self, text):
-        """execute arbitrary code (using ``exec``)"""
-        execute(text, self.exposed_namespace)
-    def exposed_eval(self, text):
-        """evaluate arbitrary code (using ``eval``)"""
-        return eval(text, self.exposed_namespace)
-    def exposed_getmodule(self, name):
-        """imports an arbitrary module"""
-        return __import__(name, None, None, "*")
-    def exposed_getconn(self):
-        """returns the local connection instance to the other side"""
-        return self._conn
 
 class FakeSlaveService(VoidService):
     """VoidService that can be used for connecting to peers that operate a
@@ -187,16 +191,18 @@ class MasterService(Service):
 
     def on_connect(self, conn):
         super(MasterService, self).on_connect(conn)
-        # shortcuts
-        conn.modules = ModuleNamespace(conn.root.getmodule)
-        conn.eval = conn.root.eval
-        conn.execute = conn.root.execute
-        conn.namespace = conn.root.namespace
-        if is_py3k:
-            conn.builtin = conn.modules.builtins
-        else:
-            conn.builtin = conn.modules.__builtin__
-        conn.builtins = conn.builtin
+        self._install(conn, conn.root)
+
+    @staticmethod
+    def _install(conn, slave):
+        modules = ModuleNamespace(slave.getmodule)
+        builtin = modules.builtins if is_py3k else modules.__builtin__
+        conn.modules = modules
+        conn.eval = slave.eval
+        conn.execute = slave.execute
+        conn.namespace = slave.namespace
+        conn.builtin = builtin
+        conn.builtins = builtin
 
 class ClassicService(MasterService, SlaveService):
     """Full duplex master/slave service, i.e. both parties have full control
