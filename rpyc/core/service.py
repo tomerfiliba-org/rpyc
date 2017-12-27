@@ -165,6 +165,7 @@ class SlaveService(Slave, Service):
             allow_getattr = True,
             allow_setattr = True,
             allow_delattr = True,
+            allow_exposed_attrs = False,
             import_custom_exceptions = True,
             instantiate_custom_exceptions = True,
             instantiate_oldstyle_exceptions = True,
