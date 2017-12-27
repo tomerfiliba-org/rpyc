@@ -130,17 +130,34 @@ class ModuleNamespace(object):
     def __getattr__(self, name):
         return self[name]
 
-class SlaveService(Service):
+class Slave(object):
+    __slots__ = ["_conn", "namespace"]
+    def __init__(self):
+        self._conn = None
+        self.namespace = {}
+    def execute(self, text):
+        """execute arbitrary code (using ``exec``)"""
+        execute(text, self.namespace)
+    def eval(self, text):
+        """evaluate arbitrary code (using ``eval``)"""
+        return eval(text, self.namespace)
+    def getmodule(self, name):
+        """imports an arbitrary module"""
+        return __import__(name, None, None, "*")
+    def getconn(self):
+        """returns the local connection instance to the other side"""
+        return self._conn
+
+class SlaveService(Slave, Service):
     """The SlaveService allows the other side to perform arbitrary imports and
     execution arbitrary code on the server. This is provided for compatibility
     with the classic RPyC (2.6) modus operandi.
 
     This service is very useful in local, secure networks, but it exposes
     a **major security risk** otherwise."""
-    __slots__ = ["_conn", "exposed_namespace"]
+    __slots__ = ()
 
     def on_connect(self, conn):
-        self.exposed_namespace = {}
         self._conn = conn
         self._conn._config.update(dict(
             allow_all_attrs = True,
@@ -154,24 +171,11 @@ class SlaveService(Service):
         ))
         super(SlaveService, self).on_connect(conn)
 
-    def exposed_execute(self, text):
-        """execute arbitrary code (using ``exec``)"""
-        execute(text, self.exposed_namespace)
-    def exposed_eval(self, text):
-        """evaluate arbitrary code (using ``eval``)"""
-        return eval(text, self.exposed_namespace)
-    def exposed_getmodule(self, name):
-        """imports an arbitrary module"""
-        return __import__(name, None, None, "*")
-    def exposed_getconn(self):
-        """returns the local connection instance to the other side"""
-        return self._conn
-
-    namespace = property(lambda self: self.exposed_namespace)
-    execute   = exposed_execute
-    eval      = exposed_eval
-    getmodule = exposed_getmodule
-    getconn   = exposed_getconn
+    exposed_namespace = property(lambda self: self.namespace)
+    exposed_execute   = Slave.execute
+    exposed_eval      = Slave.eval
+    exposed_getmodule = Slave.getmodule
+    exposed_getconn   = Slave.getconn
 
 class FakeSlaveService(VoidService):
     """VoidService that can be used for connecting to peers that operate a
