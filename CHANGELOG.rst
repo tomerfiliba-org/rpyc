@@ -21,9 +21,7 @@ Date: (unknown)
   this case, do any of the following:
 
   * use ``ClassicService`` (acts exactly like the old ``SlaveService``)
-
   * use ``SlaveService`` with a ``config`` that allows attribute access etc
-
   * use ``rpyc.utils.deliver`` to feed copies rather than netrefs to
     the slave
 
@@ -41,7 +39,16 @@ Date: (unknown)
 * ``bin/rpyc_classic.py`` will bind to ``127.0.0.1`` instead of ``0.0.0.0`` by
   default
 
+* ``SlaveService`` no longer serves exposed attributes (i.e., it now uses
+  ``allow_exposed_attrs=False``)
+
+* Exposed attributes no longer hide plain attributes if one otherwise has the
+  required permissions to access the plain attribute. (#165)
+
 **More changes:**
+
+* fix problem with MongoDB, or more generally any remote objects that have a
+  *catch-all* ``__getattr__`` (#165)
 
 * fix bug when copying remote numpy arrays (#236)
 
