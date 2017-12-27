@@ -80,6 +80,7 @@ Date: 07.08.2017
 * Support unix domain sockets (#100,#208)
 * Use first accessible server in ``connect_by_service`` (#220)
 * Fix deadlock problem with logging (#207,#212)
+* Fix timeout problem for long commands (#169)
 
 
 3.4.3
