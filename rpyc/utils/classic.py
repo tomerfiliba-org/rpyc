@@ -3,7 +3,7 @@ import sys
 import os
 import inspect
 from rpyc.lib.compat import pickle, execute, is_py3k
-from rpyc.core.service import ClassicService
+from rpyc.core.service import ClassicService, Slave
 from rpyc.utils import factory
 from rpyc.core.service import ModuleNamespace
 from contextlib import contextmanager
@@ -341,26 +341,10 @@ def interact(conn, namespace = None):
 
 class MockClassicConnection(object):
     """Mock classic RPyC connection object. Useful when you want the same code to run remotely or locally.
-
     """
     def __init__(self):
-        self._conn = None
-        self.namespace = {}
-        self.modules = ModuleNamespace(self.getmodule)
-        if is_py3k:
-            self.builtin = self.modules.builtins
-        else:
-            self.builtin = self.modules.__builtin__
-        self.builtins = self.builtin
-
-    def execute(self, text):
-        execute(text, self.namespace)
-    def eval(self, text):
-        return eval(text, self.namespace)
-    def getmodule(self, name):
-        return __import__(name, None, None, "*")
-    def getconn(self):
-        return None
+        self.root = Slave()
+        ClassicService._install(self, self.root)
 
 def teleport_function(conn, func):
     """
