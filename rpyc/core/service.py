@@ -167,6 +167,12 @@ class SlaveService(Service):
         """returns the local connection instance to the other side"""
         return self._conn
 
+    namespace = property(lambda self: self.exposed_namespace)
+    execute   = exposed_execute
+    eval      = exposed_eval
+    getmodule = exposed_getmodule
+    getconn   = exposed_getconn
+
 class FakeSlaveService(VoidService):
     """VoidService that can be used for connecting to peers that operate a
     :class:`MasterService`, :class:`ClassicService`, or the old
