@@ -339,17 +339,12 @@ def interact(conn, namespace = None):
             code.interact(local = dict(ns))""")
         conn.namespace["_rinteract"](namespace)
 
-class MockClassicConnection(Slave):
+class MockClassicConnection(object):
     """Mock classic RPyC connection object. Useful when you want the same code to run remotely or locally.
     """
     def __init__(self):
-        super().__init__()
-        self.modules = ModuleNamespace(self.getmodule)
-        if is_py3k:
-            self.builtin = self.modules.builtins
-        else:
-            self.builtin = self.modules.__builtin__
-        self.builtins = self.builtin
+        self.root = Slave()
+        ClassicService._install(self, self.root)
 
 def teleport_function(conn, func):
     """

@@ -197,16 +197,18 @@ class MasterService(Service):
 
     def on_connect(self, conn):
         super(MasterService, self).on_connect(conn)
-        # shortcuts
-        conn.modules = ModuleNamespace(conn.root.getmodule)
-        conn.eval = conn.root.eval
-        conn.execute = conn.root.execute
-        conn.namespace = conn.root.namespace
-        if is_py3k:
-            conn.builtin = conn.modules.builtins
-        else:
-            conn.builtin = conn.modules.__builtin__
-        conn.builtins = conn.builtin
+        self._install(conn, conn.root)
+
+    @staticmethod
+    def _install(conn, slave):
+        modules = ModuleNamespace(slave.getmodule)
+        builtin = modules.builtins if is_py3k else modules.__builtin__
+        conn.modules = modules
+        conn.eval = slave.eval
+        conn.execute = slave.execute
+        conn.namespace = slave.namespace
+        conn.builtin = builtin
+        conn.builtins = builtin
 
 class ClassicService(MasterService, SlaveService):
     """Full duplex master/slave service, i.e. both parties have full control
