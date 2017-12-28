@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import with_statement
 import daemon
-import lockfile
+from lockfile.pidlockfile import PIDLockFile
 import sys
 import signal
 import os
@@ -54,7 +54,8 @@ def stop(*args):
 
 
 if __name__ == "__main__":
+    pid_file = os.path.join(cur_dir, 'rpycd.pid')
     with daemon.DaemonContext(
-            pidfile = lockfile.FileLock('rpycd.pid'),
+            pidfile = PIDLockFile(pid_file),
             signal_map = {signal.SIGTERM: stop, signal.SIGHUP: reload}):
         start()
