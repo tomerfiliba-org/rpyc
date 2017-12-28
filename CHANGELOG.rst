@@ -1,8 +1,13 @@
-3.5.0
+4.0.0
 -----
 Date: (unknown)
 
-**NOTE: this release contains backward incompatible changes:**
+This release brings a few minor backward incompatibilities, so be sure to read
+on before upgrading. However, fear not: the ones that are most likely relevant
+to you have a relatively simple migration path.
+
+Backward Incompatibilities
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Changed signature of ``Service.on_connect`` and ``on_disconnect``, adding
   the connection as argument.
@@ -10,26 +15,23 @@ Date: (unknown)
 * Changed signature of ``Service.__init__``, removing the connection argument
 
 * no longer store connection as ``self._conn``. (allows services that serve
-  multiple clients using the same service object, see #198).
+  multiple clients using the same service object, see `#198`_).
 
 * ``SlaveService`` is now split into two asymetric classes: ``SlaveService``
   and ``MasterService``. The slave exposes functionality to the master but can
-  not anymore access remote objects on the master. (#232,#248)
-
-  Note: if you were previously using ``SlaveService``, you may experience
-  problems when feeding the slave with netrefs to objects on the master. In
-  this case, do any of the following:
+  not anymore access remote objects on the master (`#232`_, `#248`_).
+  If you were previously using ``SlaveService``, you may experience problems
+  when feeding the slave with netrefs to objects on the master. In this case, do
+  any of the following:
 
   * use ``ClassicService`` (acts exactly like the old ``SlaveService``)
-
   * use ``SlaveService`` with a ``config`` that allows attribute access etc
-
   * use ``rpyc.utils.deliver`` to feed copies rather than netrefs to
     the slave
 
 * ``RegistryServer.on_service_removed`` is once again called whenever a service
-  instance is removed, making it symmetric to ``on_service_added`` (#238)
-  This reverts PR #173 on issue #172.
+  instance is removed, making it symmetric to ``on_service_added`` (`#238`_)
+  This reverts PR `#173`_ on issue `#172`_.
 
 * Removed module ``rpyc.experimental.splitbrain``. It's too confusing and
   undocumented for me and I won't be developing it, so better remove it
@@ -41,55 +43,97 @@ Date: (unknown)
 * ``bin/rpyc_classic.py`` will bind to ``127.0.0.1`` instead of ``0.0.0.0`` by
   default
 
-**More changes:**
+* ``SlaveService`` no longer serves exposed attributes (i.e., it now uses
+  ``allow_exposed_attrs=False``)
 
-* fix bug when copying remote numpy arrays (#236)
+* Exposed attributes no longer hide plain attributes if one otherwise has the
+  required permissions to access the plain attribute. (`#165`_)
 
-* added ``rpyc.utils.helpers.classpartial`` to bind arguments to services (#244)
+.. _#165: https://github.com/tomerfiliba/rpyc/issues/165
+.. _#172: https://github.com/tomerfiliba/rpyc/issues/172
+.. _#173: https://github.com/tomerfiliba/rpyc/issues/173
+.. _#198: https://github.com/tomerfiliba/rpyc/issues/198
+.. _#232: https://github.com/tomerfiliba/rpyc/issues/232
+.. _#238: https://github.com/tomerfiliba/rpyc/issues/238
+.. _#248: https://github.com/tomerfiliba/rpyc/issues/248
+
+What else is new
+^^^^^^^^^^^^^^^^
+
+* fix problem with MongoDB, or more generally any remote objects that have a
+  *catch-all* ``__getattr__`` (`#165`_)
+
+* fix bug when copying remote numpy arrays (`#236`_)
+
+* added ``rpyc.utils.helpers.classpartial`` to bind arguments to services (`#244`_)
 
 * can now pass services optionally as instance or class (could only pass as
-  class, #244)
+  class, `#244`_)
 
 * The service is now charged with setting up the connection, doing so in
-  ``Service.connect``. This allows using custom protocols by e.g. subclassing
-  ``Connection``.  More discussions and related features in #239-#247.
+  ``Service._connect``. This allows using custom protocols by e.g. subclassing
+  ``Connection``.  More discussions and related features in `#239`_-`#247`_.
 
 * service can now easily override protocol handlers, by updating
-  ``conn._HANDLERS`` in ``connect`` or ``on_connect``. For example:
+  ``conn._HANDLERS`` in ``_connect`` or ``on_connect``. For example:
   ``conn._HANDLERS[HANDLE_GETATTR] = self._handle_getattr``.
 
 * most protocol handlers (``Connection._handle_XXX``) now directly get the
   object rather than its ID as first argument. This makes overriding
   individual handlers feel much more high-level. And by the way it turns out
-  that this fixes two long-standing issues (#137, #153)
+  that this fixes two long-standing issues (`#137`_, `#153`_)
 
-* fix bug with proxying context managers (#228)
+* fix bug with proxying context managers (`#228`_)
 
 * expose server classes from ``rpyc`` top level module
 
 * fix logger issue on jython
 
+.. _#137: https://github.com/tomerfiliba/rpyc/issues/137
+.. _#153: https://github.com/tomerfiliba/rpyc/issues/153
+.. _#165: https://github.com/tomerfiliba/rpyc/issues/165
+.. _#228: https://github.com/tomerfiliba/rpyc/issues/228
+.. _#236: https://github.com/tomerfiliba/rpyc/issues/236
+.. _#239: https://github.com/tomerfiliba/rpyc/issues/239
+.. _#244: https://github.com/tomerfiliba/rpyc/issues/244
+.. _#247: https://github.com/tomerfiliba/rpyc/issues/247
 
 3.4.4
 -----
 Date: 07.08.2017
 
-* Fix refcount leakage when unboxing from cache (#196)
+* Fix refcount leakage when unboxing from cache (`#196`_)
 * Fix TypeError when dispatching exceptions on py2 (unicode)
-* Respect ``rpyc_protocol_config`` for default Service getattr (#202)
-* Support unix domain sockets (#100,#208)
-* Use first accessible server in ``connect_by_service`` (#220)
-* Fix deadlock problem with logging (#207,#212)
-* Fix timeout problem for long commands (#169)
+* Respect ``rpyc_protocol_config`` for default Service getattr (`#202`_)
+* Support unix domain sockets (`#100`_, `#208`_)
+* Use first accessible server in ``connect_by_service`` (`#220`_)
+* Fix deadlock problem with logging (`#207`_, `#212`_)
+* Fix timeout problem for long commands (`#169`_)
 
+.. _#100: https://github.com/tomerfiliba/rpyc/issues/100
+.. _#169: https://github.com/tomerfiliba/rpyc/issues/169
+.. _#196: https://github.com/tomerfiliba/rpyc/issues/196
+.. _#202: https://github.com/tomerfiliba/rpyc/issues/202
+.. _#207: https://github.com/tomerfiliba/rpyc/issues/207
+.. _#208: https://github.com/tomerfiliba/rpyc/issues/208
+.. _#212: https://github.com/tomerfiliba/rpyc/issues/212
+.. _#220: https://github.com/tomerfiliba/rpyc/issues/220
 
 3.4.3
 -----
 Date: 26.07.2017
 
-* Add missing endpoints config in ThreadPoolServer (#222)
-* Fix jython support (#156,#171)
-* Improve documentation (#158,#185,#189,#198 and more)
+* Add missing endpoints config in ThreadPoolServer (`#222`_)
+* Fix jython support (`#156`_, `#171`_)
+* Improve documentation (`#158`_, `#185`_, `#189`_, `#198`_ and more)
+
+.. _#156: https://github.com/tomerfiliba/rpyc/issues/156
+.. _#158: https://github.com/tomerfiliba/rpyc/issues/158
+.. _#171: https://github.com/tomerfiliba/rpyc/issues/171
+.. _#185: https://github.com/tomerfiliba/rpyc/issues/185
+.. _#189: https://github.com/tomerfiliba/rpyc/issues/189
+.. _#198: https://github.com/tomerfiliba/rpyc/issues/198
+.. _#222: https://github.com/tomerfiliba/rpyc/issues/222
 
 3.4.2
 -----
@@ -101,10 +145,15 @@ Date: 14.06.2017
 -----
 Date: 09.06.2017
 
-* Fix issue high-cpu polling (#191,#218)
-* Fix filename argument in logging (#197)
-* Improved log messages (#191,#204)
+* Fix issue high-cpu polling (`#191`_, `#218`_)
+* Fix filename argument in logging (`#197`_)
+* Improved log messages (`#191`_, `#204`_)
 * Drop support for python 3.2 and py 2.5
+
+.. _#191: https://github.com/tomerfiliba/rpyc/issues/191
+.. _#197: https://github.com/tomerfiliba/rpyc/issues/197
+.. _#204: https://github.com/tomerfiliba/rpyc/issues/204
+.. _#218: https://github.com/tomerfiliba/rpyc/issues/218
 
 3.4.0
 -----
@@ -112,9 +161,25 @@ Date: 29.05.2017
 
 Please excuse the briefity for this versions changelist.
 
-* Add keepalive interface [#151]
+* Add keepalive interface [`#151`_]
 
-* Various fixes: #136, #140, #143, #147, #149, #151, #159, #160, #166, #173, #176, #179, #174, #182, #183 and others.
+* Various fixes: `#136`_, `#140`_, `#143`_, `#147`_, `#149`_, `#151`_, `#159`_, `#160`_, `#166`_, `#173`_, `#176`_, `#179`_, `#174`_, `#182`_, `#183`_ and others.
+
+.. _#136: https://github.com/tomerfiliba/rpyc/issues/136
+.. _#140: https://github.com/tomerfiliba/rpyc/issues/140
+.. _#143: https://github.com/tomerfiliba/rpyc/issues/143
+.. _#147: https://github.com/tomerfiliba/rpyc/issues/147
+.. _#149: https://github.com/tomerfiliba/rpyc/issues/149
+.. _#151: https://github.com/tomerfiliba/rpyc/issues/151
+.. _#159: https://github.com/tomerfiliba/rpyc/issues/159
+.. _#160: https://github.com/tomerfiliba/rpyc/issues/160
+.. _#166: https://github.com/tomerfiliba/rpyc/issues/166
+.. _#173: https://github.com/tomerfiliba/rpyc/issues/173
+.. _#174: https://github.com/tomerfiliba/rpyc/issues/174
+.. _#176: https://github.com/tomerfiliba/rpyc/issues/176
+.. _#179: https://github.com/tomerfiliba/rpyc/issues/179
+.. _#182: https://github.com/tomerfiliba/rpyc/issues/182
+.. _#183: https://github.com/tomerfiliba/rpyc/issues/183
 
 3.3.0
 -----
@@ -154,57 +219,70 @@ Please excuse the briefity for this versions changelist.
 
 3.2.3
 -----
-* Fix (`issue #76 <https://github.com/tomerfiliba/rpyc/issues/76>`_) for real this time
+* Fix (issue `#76`_) for real this time
 
-* Fix issue with ``BgServingThread`` (`#89 <https://github.com/tomerfiliba/rpyc/issues/89>`_)
+* Fix issue with ``BgServingThread`` (`#89`_)
 
-* Fix issue with ``ThreadPoolServer`` (`#91 <https://github.com/tomerfiliba/rpyc/issues/91>`_)
+* Fix issue with ``ThreadPoolServer`` (`#91`_)
 
 * Remove RPyC's ``excepthook`` in favor of chaining the exception's remote tracebacks in the
   exception class' ``__str__`` method. This solves numerous issues with logging and debugging.
 
 * Add ``OneShotServer``
 
-* Add `UNIX domain sockets <https://github.com/tomerfiliba/rpyc/pull/100>`_
+* Add UNIX domain sockets (`#100`_)
+
+.. _#76: https://github.com/tomerfiliba/rpyc/issues/76
+.. _#89: https://github.com/tomerfiliba/rpyc/issues/89
+.. _#91: https://github.com/tomerfiliba/rpyc/issues/91
+.. _#100: https://github.com/tomerfiliba/rpyc/issues/100
 
 3.2.2
 -----
-* Windows: make SSH tunnels windowless (`#68 <https://github.com/tomerfiliba/rpyc/issues/68>`_)
+* Windows: make SSH tunnels windowless (`#68`_)
 
-* Fixes a compatibility issue with IronPython on Mono
-  (`#72 <https://github.com/tomerfiliba/rpyc/issues/72>`_)
+* Fixes a compatibility issue with IronPython on Mono (`#72`_)
 
-* Fixes an issue with introspection when an ``AttributeError`` is expected
-  (`#71 <https://github.com/tomerfiliba/rpyc/issues/71>`_)
+* Fixes an issue with introspection when an ``AttributeError`` is expected (`#71`_)
 
-* The server now logs all exceptions (`#73 <https://github.com/tomerfiliba/rpyc/issues/73>`_)
+* The server now logs all exceptions (`#73`_)
 
-* Forking server: call ``siginterrupt(False)`` in forked child
-  (`#76 <https://github.com/tomerfiliba/rpyc/issues/76>`_)
+* Forking server: call ``siginterrupt(False)`` in forked child (`#76`_)
 
 * Shutting down the old wikidot site
 
 * Adding `Travis CI <http://travis-ci.org/#!/tomerfiliba/rpyc>`_ integration
 
+.. _#68: https://github.com/tomerfiliba/rpyc/issues/68
+.. _#71: https://github.com/tomerfiliba/rpyc/issues/71
+.. _#72: https://github.com/tomerfiliba/rpyc/issues/72
+.. _#73: https://github.com/tomerfiliba/rpyc/issues/73
+.. _#76: https://github.com/tomerfiliba/rpyc/issues/76
+
 3.2.1
 -----
-* Adding missing import (`#52 <https://github.com/tomerfiliba/rpyc/issues/52>`_)
+* Adding missing import (`#52`_)
 
-* Fixing site documentation issue (`#54 <https://github.com/tomerfiliba/rpyc/issues/54>`_)
+* Fixing site documentation issue (`#54`_)
 
-* Fixing Python 3 incompatibilities (`#58 <https://github.com/tomerfiliba/rpyc/issues/58>`_,
-  `#59 <https://github.com/tomerfiliba/rpyc/issues/59>`_,
-  `#60 <https://github.com/tomerfiliba/rpyc/issues/60>`_,
-  `#61 <https://github.com/tomerfiliba/rpyc/issues/61>`_,
-  `#66 <https://github.com/tomerfiliba/rpyc/issues/66>`_)
+* Fixing Python 3 incompatibilities (`#58`_, `#59`_, `#60`_, `#61`_, `#66`_)
 
-* Fixing ``slice`` issue (`#62 <https://github.com/tomerfiliba/rpyc/issues/62>`_)
+* Fixing ``slice`` issue (`#62`_)
 
 * Added the ``endpoints`` parameter to the config dict of connection (only on the server side)
 
+.. _#52: https://github.com/tomerfiliba/rpyc/issues/52
+.. _#54: https://github.com/tomerfiliba/rpyc/issues/54
+.. _#58: https://github.com/tomerfiliba/rpyc/issues/58
+.. _#59: https://github.com/tomerfiliba/rpyc/issues/59
+.. _#60: https://github.com/tomerfiliba/rpyc/issues/60
+.. _#61: https://github.com/tomerfiliba/rpyc/issues/61
+.. _#62: https://github.com/tomerfiliba/rpyc/issues/62
+.. _#66: https://github.com/tomerfiliba/rpyc/issues/66
+
 3.2.0
 -----
-* Added support for IPv6 (`#28 <https://github.com/tomerfiliba/rpyc/issues/28>`_)
+* Added support for IPv6 (`#28`_)
 
 * Added SSH tunneling support (``ssh_connect``)
 
@@ -217,16 +295,11 @@ Please excuse the briefity for this versions changelist.
 * Fixed some minor (harmless) races that caused tracebacks occasionally when
   server-threads terminated
 
-* Fixes issues `#8 <https://github.com/tomerfiliba/rpyc/issues/8>`_,
-  `#41 <https://github.com/tomerfiliba/rpyc/issues/41>`_,
-  `#42 <https://github.com/tomerfiliba/rpyc/issues/42>`_,
-  `#43 <https://github.com/tomerfiliba/rpyc/issues/43>`_,
-  `#46 <https://github.com/tomerfiliba/rpyc/issues/46>`_, and
-  `#49 <https://github.com/tomerfiliba/rpyc/issues/49>`_.
+* Fixes issues `#8`_, `#41`_, `#42`_, `#43`_, `#46`_, and `#49`_.
 
-* Converted all ``CRLF`` to ``LF`` (`#40 <https://github.com/tomerfiliba/rpyc/issues/40>`_)
+* Converted all ``CRLF`` to ``LF`` (`#40`_)
 
-* Dropped TLSlite integration (`#45 <https://github.com/tomerfiliba/rpyc/issues/45>`_).
+* Dropped TLSlite integration (`#45`_).
   We've been dragging this corpse for too long.
 
 * **New documentation** (both the website and docstrings) written in **Sphinx**
@@ -239,6 +312,16 @@ Please excuse the briefity for this versions changelist.
     ``make upload``
 
 * **Python 3.0-3.2** support
+
+.. _#8: https://github.com/tomerfiliba/rpyc/issues/8
+.. _#28: https://github.com/tomerfiliba/rpyc/issues/28
+.. _#40: https://github.com/tomerfiliba/rpyc/issues/40
+.. _#41: https://github.com/tomerfiliba/rpyc/issues/41
+.. _#42: https://github.com/tomerfiliba/rpyc/issues/42
+.. _#43: https://github.com/tomerfiliba/rpyc/issues/43
+.. _#45: https://github.com/tomerfiliba/rpyc/issues/45
+.. _#46: https://github.com/tomerfiliba/rpyc/issues/46
+.. _#49: https://github.com/tomerfiliba/rpyc/issues/49
 
 3.1.0
 ------
@@ -256,15 +339,12 @@ What's New
 
 * Moves to more standard facilities (``logging``, ``nosetests``)
 
-* Solves a major performance issue with the ``BgServingThread`` (`#32 <https://github.com/tomerfiliba/rpyc/issues/32>`_),
+* Solves a major performance issue with the ``BgServingThread`` (`#32`_),
   by removing the contention between the two threads that share the connection
 
-* Fixes lots of issues concerning the ForkingServer (`#3 <http://github.com/tomerfiliba/rpyc/issues/3>`_,
-  `#7 <http://github.com/tomerfiliba/rpyc/issues/7>`_, and `#15 <http://github.com/tomerfiliba/rpyc/issues/15>`_)
+* Fixes lots of issues concerning the ForkingServer (`#3`_, `#7`_, and `#15`_)
 
-* Many small bug fixes (`#16 <http://github.com/tomerfiliba/rpyc/issues/16>`_,
-  `#13 <http://github.com/tomerfiliba/rpyc/issues/13>`_,
-  `#4 <http://github.com/tomerfiliba/rpyc/issues/4>`_, etc.)
+* Many small bug fixes (`#16`_, `#13`_, `#4`_, etc.)
 
 * Integrates with the built-in ``ssl`` module for SSL support
 
@@ -272,6 +352,14 @@ What's New
     for more info)
 
 * Fixes typos, running pylint, etc.
+
+.. _#3: https://github.com/tomerfiliba/rpyc/issues/3
+.. _#4: https://github.com/tomerfiliba/rpyc/issues/4
+.. _#7: https://github.com/tomerfiliba/rpyc/issues/7
+.. _#13: https://github.com/tomerfiliba/rpyc/issues/13
+.. _#15: https://github.com/tomerfiliba/rpyc/issues/15
+.. _#16: https://github.com/tomerfiliba/rpyc/issues/16
+.. _#32: https://github.com/tomerfiliba/rpyc/issues/32
 
 Breakage from 3.0.7
 ^^^^^^^^^^^^^^^^^^^
