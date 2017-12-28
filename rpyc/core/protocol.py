@@ -560,15 +560,18 @@ class Connection(object):
         config = self._config
         if not config[perm]:
             raise AttributeError("cannot access %r" % (name,))
-        if config["allow_exposed_attrs"]:
-            prefix = config["exposed_prefix"]
-            name2 = name if name.startswith(prefix) else prefix+name
-            if hasattr(obj, name2):
-                return name2
-        if  (self._config["allow_all_attrs"] or
-             self._config["allow_safe_attrs"] and name in self._config["safe_attrs"] or
-             self._config["allow_public_attrs"] and not name.startswith("_")):
+        prefix = config["allow_exposed_attrs"] and config["exposed_prefix"]
+        plain = (config["allow_all_attrs"] or
+                 config["allow_exposed_attrs"] and name.startswith(prefix) or
+                 config["allow_safe_attrs"] and name in config["safe_attrs"] or
+                 config["allow_public_attrs"] and not name.startswith("_"))
+        has_exposed = prefix and hasattr(obj, prefix+name)
+        if plain and (not has_exposed or hasattr(obj, name)):
             return name
+        if has_exposed:
+            return prefix+name
+        if plain:
+            return name         # chance for better traceback
         raise AttributeError("cannot access %r" % (name,))
 
     def _access_attr(self, obj, name, args, overrider, param, default):
