@@ -35,7 +35,9 @@ def start():
     else:
         raise ValueError("Invalid mode %r" % (mode,))
 
-    setup_logger(conf.getboolean("rpycd", "quiet"), conf.get("rpycd", "logfile"))
+    quiet = conf.getboolean("rpycd", "quiet")
+    logfile = os.path.join(cur_dir, conf.get("rpycd", "logfile"))
+    setup_logger(quiet, logfile)
 
     server = factory(SlaveService, hostname = conf.get("rpycd", "host"),
         port = conf.getint("rpycd", "port"), reuse_addr = True)
@@ -53,7 +55,6 @@ def stop(*args):
 
 if __name__ == "__main__":
     with daemon.DaemonContext(
-            working_directory = cur_dir,
             pidfile = lockfile.FileLock('rpycd.pid'),
             signal_map = {signal.SIGTERM: stop, signal.SIGHUP: reload}):
         start()
