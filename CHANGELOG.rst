@@ -60,6 +60,9 @@ Backward Incompatibilities
 What else is new
 ^^^^^^^^^^^^^^^^
 
+* fix several bugs in ``bin/rpycd.py`` that crashed this script on startup
+  (`#231`_)
+
 * fix problem with MongoDB, or more generally any remote objects that have a
   *catch-all* ``__getattr__`` (`#165`_)
 
@@ -93,6 +96,7 @@ What else is new
 .. _#153: https://github.com/tomerfiliba/rpyc/issues/153
 .. _#165: https://github.com/tomerfiliba/rpyc/issues/165
 .. _#228: https://github.com/tomerfiliba/rpyc/issues/228
+.. _#231: https://github.com/tomerfiliba/rpyc/issues/231
 .. _#236: https://github.com/tomerfiliba/rpyc/issues/236
 .. _#239: https://github.com/tomerfiliba/rpyc/issues/239
 .. _#244: https://github.com/tomerfiliba/rpyc/issues/244
