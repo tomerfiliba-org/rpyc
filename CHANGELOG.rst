@@ -1,8 +1,13 @@
-3.5.0
+4.0.0
 -----
 Date: (unknown)
 
-**NOTE: this release contains backward incompatible changes:**
+This release brings a few minor backward incompatibilities, so be sure to read
+on before upgrading. However, fear not: the ones that are most likely relevant
+to you have a relatively simple migration path.
+
+Backward Incompatibilities
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * Changed signature of ``Service.on_connect`` and ``on_disconnect``, adding
   the connection as argument.
@@ -14,11 +19,10 @@ Date: (unknown)
 
 * ``SlaveService`` is now split into two asymetric classes: ``SlaveService``
   and ``MasterService``. The slave exposes functionality to the master but can
-  not anymore access remote objects on the master. (#232,#248)
-
-  Note: if you were previously using ``SlaveService``, you may experience
-  problems when feeding the slave with netrefs to objects on the master. In
-  this case, do any of the following:
+  not anymore access remote objects on the master (#232,#248).
+  If you were previously using ``SlaveService``, you may experience problems
+  when feeding the slave with netrefs to objects on the master. In this case, do
+  any of the following:
 
   * use ``ClassicService`` (acts exactly like the old ``SlaveService``)
   * use ``SlaveService`` with a ``config`` that allows attribute access etc
@@ -45,7 +49,9 @@ Date: (unknown)
 * Exposed attributes no longer hide plain attributes if one otherwise has the
   required permissions to access the plain attribute. (#165)
 
-**More changes:**
+
+What else is new
+^^^^^^^^^^^^^^^^
 
 * fix problem with MongoDB, or more generally any remote objects that have a
   *catch-all* ``__getattr__`` (#165)
@@ -58,11 +64,11 @@ Date: (unknown)
   class, #244)
 
 * The service is now charged with setting up the connection, doing so in
-  ``Service.connect``. This allows using custom protocols by e.g. subclassing
+  ``Service._connect``. This allows using custom protocols by e.g. subclassing
   ``Connection``.  More discussions and related features in #239-#247.
 
 * service can now easily override protocol handlers, by updating
-  ``conn._HANDLERS`` in ``connect`` or ``on_connect``. For example:
+  ``conn._HANDLERS`` in ``_connect`` or ``on_connect``. For example:
   ``conn._HANDLERS[HANDLE_GETATTR] = self._handle_getattr``.
 
 * most protocol handlers (``Connection._handle_XXX``) now directly get the
