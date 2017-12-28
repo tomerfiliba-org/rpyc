@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# encoding: utf-8
 import sys
 import os
 
@@ -18,7 +19,8 @@ setup(name = "rpyc",
     description = "Remote Python Call (RPyC), a transparent and symmetric RPC library",
     author = "Tomer Filiba",
     author_email = "tomerfiliba@gmail.com",
-    maintainer_email = "rpyc@googlegroups.com",
+    maintainer = "Thomas Gläßle",
+    maintainer_email = "thomas@coldfix.eu",
     license = "MIT",
     url = "http://rpyc.readthedocs.org",
     packages = [
