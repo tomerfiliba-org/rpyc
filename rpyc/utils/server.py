@@ -298,9 +298,7 @@ class ThreadedServer(Server):
     Parameters: see :class:`Server`
     """
     def _accept_method(self, sock):
-        t = threading.Thread(target = self._authenticate_and_serve_client, args = (sock,))
-        t.setDaemon(True)
-        t.start()
+        spawn(self._authenticate_and_serve_client, sock)
 
 
 class ThreadPoolServer(Server):
@@ -338,20 +336,16 @@ class ThreadPoolServer(Server):
         # setup the thread pool for handling requests
         self.workers = []
         for i in range(nbthreads):
-            t = threading.Thread(target = self._serve_clients)
+            t = spawn(self._serve_clients)
             t.setName('Worker%i' % i)
-            t.daemon = True
-            t.start()
             self.workers.append(t)
         # a polling object to be used be the polling thread
         self.poll_object = poll()
         # a dictionary fd -> connection
         self.fd_to_conn = {}
         # setup a thread for polling inactive connections
-        self.polling_thread = threading.Thread(target = self._poll_inactive_clients)
+        self.polling_thread = spawn(self._poll_inactive_clients)
         self.polling_thread.setName('PollingThread')
-        self.polling_thread.setDaemon(True)
-        self.polling_thread.start()
 
     def close(self):
         '''closes a ThreadPoolServer. In particular, joins the thread pool.'''
