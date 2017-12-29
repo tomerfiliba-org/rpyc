@@ -178,15 +178,13 @@ def upload(conn, localpath, remotepath, filter = None, ignore_invalid = False, c
             raise ValueError("cannot upload %r" % (localpath,))
 
 def upload_file(conn, localpath, remotepath, chunk_size = 16000):
-    lf = open(localpath, "rb")
-    rf = conn.builtin.open(remotepath, "wb")
-    while True:
-        buf = lf.read(chunk_size)
-        if not buf:
-            break
-        rf.write(buf)
-    lf.close()
-    rf.close()
+    with open(localpath, "rb") as lf:
+        with conn.builtin.open(remotepath, "wb") as rf:
+            while True:
+                buf = lf.read(chunk_size)
+                if not buf:
+                    break
+                rf.write(buf)
 
 def upload_dir(conn, localpath, remotepath, filter = None, chunk_size = 16000):
     if not conn.modules.os.path.isdir(remotepath):
@@ -216,15 +214,13 @@ def download(conn, remotepath, localpath, filter = None, ignore_invalid = False,
             raise ValueError("cannot download %r" % (remotepath,))
 
 def download_file(conn, remotepath, localpath, chunk_size = 16000):
-    rf = conn.builtin.open(remotepath, "rb")
-    lf = open(localpath, "wb")
-    while True:
-        buf = rf.read(chunk_size)
-        if not buf:
-            break
-        lf.write(buf)
-    lf.close()
-    rf.close()
+    with conn.builtin.open(remotepath, "rb") as rf:
+        with open(localpath, "wb") as lf:
+            while True:
+                buf = rf.read(chunk_size)
+                if not buf:
+                    break
+                lf.write(buf)
 
 def download_dir(conn, remotepath, localpath, filter = None, chunk_size = 16000):
     if not os.path.isdir(localpath):
