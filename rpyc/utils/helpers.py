@@ -9,6 +9,15 @@ from rpyc.core.consts import HANDLE_BUFFITER, HANDLE_CALL
 from rpyc.core.netref import syncreq, asyncreq
 
 
+def spawn(*args, **kwargs):
+    """Start and return daemon thread. ``spawn(func, *args, **kwargs)``."""
+    func, args = args[0], args[1:]
+    thread = threading.Thread(target=func, args=args, kwargs=kwargs)
+    thread.daemon = True
+    thread.start()
+    return thread
+
+
 def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
     """Buffered iterator - reads the remote iterator in chunks starting with
     *chunk*, multiplying the chunk size by *factor* every time, as an
@@ -196,11 +205,9 @@ class BgServingThread(object):
 
     def __init__(self, conn, callback=None):
         self._conn = conn
-        self._thread = threading.Thread(target = self._bg_server)
-        self._thread.setDaemon(True)
         self._active = True
         self._callback = callback
-        self._thread.start()
+        self._thread = spawn(self._bg_server)
     def __del__(self):
         if self._active:
             self.stop()

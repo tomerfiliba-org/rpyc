@@ -27,7 +27,6 @@ import sys
 import os
 import atexit
 import shutil
-from threading import Thread
 
 here = os.path.dirname(__file__)
 os.chdir(here)

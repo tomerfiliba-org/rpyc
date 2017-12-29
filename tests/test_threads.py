@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import threading
 import time
 import unittest
 import rpyc
@@ -10,9 +9,7 @@ class MyService(rpyc.Service):
             self.callback = rpyc.async(callback)
             self.interval = interval
             self.active = True
-            self.thread = threading.Thread(target=self.work)
-            self.thread.setDaemon(True)
-            self.thread.start()
+            self.thread = rpyc.spawn(self.work)
 
         def exposed_stop(self):
             self.active = False

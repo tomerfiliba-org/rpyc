@@ -13,6 +13,7 @@ try:
 except ImportError:
     import queue as Queue
 from rpyc.core import SocketStream, Channel
+from rpyc.utils.helpers import spawn
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
 from rpyc.lib import safe_import
@@ -246,9 +247,7 @@ class Server(object):
         self.logger.info("server started on [%s]:%s", self.host, self.port)
         self.active = True
         if self.auto_register:
-            t = threading.Thread(target = self._bg_register)
-            t.setDaemon(True)
-            t.start()
+            spawn(self._bg_register)
         try:
             while self.active:
                 self.accept()
@@ -260,7 +259,6 @@ class Server(object):
         finally:
             self.logger.info("server has terminated")
             self.close()
-
 
 class OneShotServer(Server):
     """
