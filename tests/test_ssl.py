@@ -1,6 +1,5 @@
 import rpyc
 import os
-import threading
 import unittest
 import time
 from rpyc.utils.authenticators import SSLAuthenticator
@@ -31,9 +30,7 @@ class Test_SSL(unittest.TestCase):
         self.server = ThreadedServer(SlaveService, port = 18812,
             auto_register=False, authenticator = authenticator)
         self.server.logger.quiet = False
-        t = threading.Thread(target=self.server.start)
-        t.start()
-        time.sleep(1)
+        self.server._start_in_thread()
 
     def tearDown(self):
         self.server.close()

@@ -18,6 +18,7 @@ except ImportError:
 
 from rpyc import Channel, SocketStream, TunneledSocketStream, PipeStream, VoidService
 from rpyc.utils.registry import UDPRegistryClient
+from rpyc.utils.helpers import spawn
 from rpyc.lib import safe_import
 ssl = safe_import("ssl")
 
@@ -270,9 +271,7 @@ def connect_thread(service=VoidService, config={}, remote_service=VoidService, r
         except KeyboardInterrupt:
             interrupt_main()
 
-    t = threading.Thread(target=server)
-    t.setDaemon(True)
-    t.start()
+    spawn(server)
     host, port = listener.getsockname()
     return connect(host, port, service=service, config=config)
 

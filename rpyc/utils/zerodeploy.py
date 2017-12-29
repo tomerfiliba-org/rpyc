@@ -27,7 +27,6 @@ import sys
 import os
 import atexit
 import shutil
-from threading import Thread
 
 here = os.path.dirname(__file__)
 os.chdir(here)
@@ -52,9 +51,7 @@ logger = None
 $EXTRA_SETUP$
 
 t = ServerCls(SlaveService, hostname = "localhost", port = 0, reuse_addr = True, logger = logger)
-thd = Thread(target = t.start)
-thd.setDaemon(True)
-thd.start()
+thd = t._start_in_thread()
 
 sys.stdout.write("%s\n" % (t.port,))
 sys.stdout.flush()
