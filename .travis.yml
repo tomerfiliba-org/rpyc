@@ -4,19 +4,27 @@ dist: trusty
 
 # See: https://docs.travis-ci.com/user/languages/python/
 python:
-    - "2.6"
-    - "2.7"
     - "3.3"
     - "3.4"
     - "3.5"
     - "3.6"
-    - "3.7-dev"
-    - "nightly"
+
+matrix:
+  include:
+    - python: "2.6"
+      env:    SKIP_GEVENT=true
+    - python: "2.7"
+      env:    SKIP_GEVENT=true
+    - python: "3.7-dev"
+      env:    SKIP_GEVENT=true
+    - python: "nightly"
+      env:    SKIP_GEVENT=true
 
 install:
     - pip install -e git+git://github.com/tomerfiliba/plumbum.git#egg=plumbum
 
 before_script:
+    - "[[ -n $SKIP_GEVENT ]] || pip install gevent"
     - "pip install paramiko || true"
     - "echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config"
     - "echo StrictHostKeyChecking no >> ~/.ssh/config"
@@ -28,7 +36,9 @@ before_script:
     - "cd tests"
 
 script:
-    - nosetests -vv -I test_deploy
+    - nosetests -vv -I test_deploy -I test_gevent_server
+    # need to run in its own python interpreter (`monkey.patch_all()`):
+    - "[[ -n $SKIP_GEVENT ]] || python test_gevent_server.py"
     # it currently fails on all but the native python versions on travis:
     - python test_deploy.py || true
 
