@@ -1,6 +1,5 @@
 import rpyc
 import time
-import threading
 import sys
 import os
 import unittest
@@ -19,10 +18,7 @@ class Test_Ssh(unittest.TestCase):
             # assume "ssh localhost" is configured to run without asking for password
             self.server = ThreadedServer(SlaveService, hostname = "localhost",
                 ipv6 = False, port = 18888, auto_register=False)
-            t = threading.Thread(target=self.server.start)
-            t.setDaemon(True)
-            t.start()
-            time.sleep(0.5)
+            self.server._start_in_thread()
             self.remote_machine = SshMachine("localhost")
 
     def tearDown(self):

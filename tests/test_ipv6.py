@@ -1,5 +1,4 @@
 import rpyc
-import threading
 import socket
 import unittest
 import time
@@ -16,9 +15,7 @@ class Test_IPv6(unittest.TestCase):
     def setUp(self):
         self.server = ThreadedServer(SlaveService, port = 0, ipv6 = True)
         self.server.logger.quiet = True
-        self.thd = threading.Thread(target = self.server.start)
-        self.thd.start()
-        time.sleep(1)
+        self.thd = self.server._start_in_thread()
 
     def tearDown(self):
         self.server.close()
