@@ -8,6 +8,7 @@ import time
 import threading
 import errno
 import logging
+from contextlib import closing
 try:
     import Queue
 except ImportError:
@@ -81,8 +82,8 @@ class Server(object):
 
             if reuse_addr and sys.platform != "win32":
                 # warning: reuseaddr is not what you'd expect on windows!
-                # it allows you to bind an already bound port, resulting in "unexpected behavior"
-                # (quoting MSDN)
+                # it allows you to bind an already bound port, resulting in
+                # "unexpected behavior" (quoting MSDN)
                 self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
             self.listener.bind((hostname, port))
@@ -285,10 +286,8 @@ class OneShotServer(Server):
     Parameters: see :class:`Server`
     """
     def _accept_method(self, sock):
-        try:
+        with closing(sock):
             self._authenticate_and_serve_client(sock)
-        finally:
-            self.close()
 
 class ThreadedServer(Server):
     """
