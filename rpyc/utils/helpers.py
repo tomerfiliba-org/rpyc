@@ -18,6 +18,25 @@ def spawn(*args, **kwargs):
     return thread
 
 
+def spawn_waitready(init, main):
+    """
+    Start a thread that runs ``init`` and then ``main``. Wait for ``init`` to
+    be finished before returning.
+
+    Returns a tuple ``(thread, init_result)``.
+    """
+    event = threading.Event()
+    stack = [event]     # used to exchange arguments with thread, so `event`
+                        # can be deleted when it has fulfilled its purpose.
+    def start():
+        stack.append(init())
+        stack.pop(0).set()
+        return main()
+    thread = spawn(start)
+    event.wait()
+    return thread, stack.pop()
+
+
 def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
     """Buffered iterator - reads the remote iterator in chunks starting with
     *chunk*, multiplying the chunk size by *factor* every time, as an

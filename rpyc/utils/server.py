@@ -13,7 +13,7 @@ try:
 except ImportError:
     import queue as Queue
 from rpyc.core import SocketStream, Channel
-from rpyc.utils.helpers import spawn
+from rpyc.utils.helpers import spawn, spawn_waitready
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
 from rpyc.lib import safe_import
@@ -235,8 +235,9 @@ class Server(object):
             if not self._closed:
                 self.logger.info("background auto-register thread finished")
 
-    def start(self):
-        """Starts the server (blocking). Use :meth:`close` to stop"""
+    def _listen(self):
+        if self.active:
+            return
         self.listener.listen(self.backlog)
         # On Jython, if binding to port 0, we can get the correct port only
         # once `listen()` was called, see #156:
@@ -246,8 +247,16 @@ class Server(object):
             self.port = self.listener.getsockname()[1]
         self.logger.info("server started on [%s]:%s", self.host, self.port)
         self.active = True
+
+    def _register(self):
         if self.auto_register:
+            self.auto_register = False
             spawn(self._bg_register)
+
+    def start(self):
+        """Starts the server (blocking). Use :meth:`close` to stop"""
+        self._listen()
+        self._register()
         try:
             while self.active:
                 self.accept()
@@ -259,6 +268,15 @@ class Server(object):
         finally:
             self.logger.info("server has terminated")
             self.close()
+
+    def _start_in_thread(self):
+        """
+        Start the server in a thread, returns when when server is listening and
+        ready to accept incoming connections.
+
+        Used for testing, API could change anytime! Do not use!"""
+        return spawn_waitready(self._listen, self.start)[0]
+
 
 class OneShotServer(Server):
     """
