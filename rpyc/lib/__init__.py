@@ -40,3 +40,14 @@ def setup_logger(quiet = False, logfile = None):
         opts['filename'] = logfile
     logging.basicConfig(**opts)
 
+
+class hybridmethod(object):
+    """Decorator for hybrid instance/class methods that will act like a normal
+    method if accessed via an instance, but act like classmethod if accessed
+    via the class."""
+    def __init__(self, func):
+        self.func = func
+    def __get__(self, obj, cls):
+        return self.func.__get__(cls if obj is None else obj, obj)
+    def __set__(self, obj, val):
+        raise AttributeError("Cannot overwrite method")
