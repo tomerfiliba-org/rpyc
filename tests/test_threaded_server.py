@@ -4,7 +4,6 @@ import time
 import tempfile
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
-import threading
 import unittest
 
 
@@ -13,10 +12,7 @@ class Test_ThreadedServer(unittest.TestCase):
     def setUp(self):
         self.server = ThreadedServer(SlaveService, port=18878, auto_register=False)
         self.server.logger.quiet = False
-        t = threading.Thread(target=self.server.start)
-        t.setDaemon(True)
-        t.start()
-        time.sleep(0.5)
+        self.server._start_in_thread()
 
     def tearDown(self):
         self.server.close()
@@ -36,10 +32,7 @@ class Test_ThreadedServerOverUnixSocket(unittest.TestCase):
         self.socket_path = tempfile.mktemp()
         self.server = ThreadedServer(SlaveService, socket_path=self.socket_path, auto_register=False)
         self.server.logger.quiet = False
-        t = threading.Thread(target=self.server.start)
-        t.setDaemon(True)
-        t.start()
-        time.sleep(0.5)
+        self.server._start_in_thread()
 
     def tearDown(self):
         self.server.close()

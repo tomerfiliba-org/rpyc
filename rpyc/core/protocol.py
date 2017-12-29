@@ -8,7 +8,8 @@ import socket
 import time
 import gc
 
-from threading import Lock, RLock, Event, Thread
+from threading import Lock, RLock, Event
+import rpyc
 from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
@@ -468,11 +469,8 @@ class Connection(object):
         """Serves all requests and replies for as long as the connection is
         alive."""
         try:
-            for _ in range(thread_count):
-                thread = Thread(target=_thread_target)
-                thread.daemon = True
-                thread.start()
-                threads.append(thread)
+            threads = [rpyc.spawn(_thread_target)
+                       for _ in range(thread_count)]
 
             for thread in threads:
                 thread.join()
