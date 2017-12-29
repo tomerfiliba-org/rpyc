@@ -19,6 +19,7 @@ from rpyc.utils.authenticators import AuthenticationError
 from rpyc.lib import safe_import
 from rpyc.lib.compat import poll, get_exc_errno
 signal = safe_import("signal")
+gevent = safe_import("gevent")
 
 
 
@@ -564,3 +565,15 @@ class ForkingServer(Server):
             # parent
             sock.close()
 
+
+class GeventServer(Server):
+
+    """gevent based Server. Requires using ``gevent.monkey.patch_all()``."""
+
+    def _register(self):
+        if self.auto_register:
+            self.auto_register = False
+            gevent.spawn(self._bg_register)
+
+    def _accept_method(self, sock):
+        gevent.spawn(self._authenticate_and_serve_client, sock)
