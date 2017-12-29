@@ -71,6 +71,10 @@ class Stream(object):
         :param data: a string of binary data
         """
         raise NotImplementedError()
+    def __enter__(self):
+        return self
+    def __exit__(self, *exc_info):
+        self.close()
 
 
 class ClosedFile(object):
