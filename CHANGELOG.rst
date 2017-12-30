@@ -60,6 +60,10 @@ Backward Incompatibilities
 What else is new
 ^^^^^^^^^^^^^^^^
 
+* add gevent_ Server. For now, this requires using ``gevent.monkey.patch_all()``
+  before importing for rpyc. Client connections can already be made without
+  further changes to rpyc, just using gevent's monkey patching. (`#146`_)
+
 * fix several bugs in ``bin/rpycd.py`` that crashed this script on startup
   (`#231`_)
 
@@ -93,6 +97,7 @@ What else is new
 * fix logger issue on jython
 
 .. _#137: https://github.com/tomerfiliba/rpyc/issues/137
+.. _#146: https://github.com/tomerfiliba/rpyc/issues/146
 .. _#153: https://github.com/tomerfiliba/rpyc/issues/153
 .. _#165: https://github.com/tomerfiliba/rpyc/issues/165
 .. _#228: https://github.com/tomerfiliba/rpyc/issues/228
