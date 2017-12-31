@@ -144,9 +144,8 @@ class Connection(object):
         self._seqcounter = itertools.count()
         self._recvlock = Lock()
         self._sendlock = Lock()
-        self._sync_replies = {}
         self._recv_event = Condition()
-        self._async_callbacks = {}
+        self._request_callbacks = {}
         self._local_objects = RefCountingColl()
         self._last_traceback = None
         self._proxy_cache = WeakValueDict()
@@ -175,8 +174,7 @@ class Connection(object):
         self._closed = True
         self._channel.close()
         self._local_root.on_disconnect(self)
-        self._sync_replies.clear()
-        self._async_callbacks.clear()
+        self._request_callbacks.clear()
         self._local_objects.clear()
         self._proxy_cache.clear()
         self._netref_classes_cache.clear()
@@ -357,10 +355,7 @@ class Connection(object):
 
     def _dispatch_reply(self, seq, raw):
         obj = self._unbox(raw)
-        if seq in self._async_callbacks:
-            self._async_callbacks.pop(seq)(False, obj)
-        else:
-            self._sync_replies[seq] = (False, obj)
+        self._request_callbacks.pop(seq)(False, obj)
 
     def _unbox_exception(self, raw):
         return vinegar.load(raw,
@@ -370,10 +365,7 @@ class Connection(object):
 
     def _dispatch_exception(self, seq, raw):
         obj = self._unbox_exception(raw)
-        if seq in self._async_callbacks:
-            self._async_callbacks.pop(seq)(True, obj)
-        else:
-            self._sync_replies[seq] = (True, obj)
+        self._request_callbacks.pop(seq)(True, obj)
 
     #
     # serving
@@ -488,31 +480,16 @@ class Connection(object):
         :raises: any exception that the requets may be generated
         :returns: the result of the request
         """
-        seq = self._get_seq_id()
-        self._send_request(seq, handler, args)
-
-        timeout = Timeout(self._config["sync_request_timeout"])
-        while seq not in self._sync_replies:
-            self.serve(timeout, True)
-            if seq in self._sync_replies:
-                break
-            if timeout.expired():
-                raise TimeoutError()
-
-        isexc, obj = self._sync_replies.pop(seq)
-        if isexc:
-            raise obj
-        else:
-            return obj
+        timeout = self._config["sync_request_timeout"]
+        return self.async_request(handler, *args, timeout=timeout).value
 
     def _async_request(self, handler, args = (), callback = (lambda a, b: None)):
         seq = self._get_seq_id()
-        self._async_callbacks[seq] = callback
+        self._request_callbacks[seq] = callback
         try:
             self._send_request(seq, handler, args)
         except:
-            if seq in self._async_callbacks:
-                del self._async_callbacks[seq]
+            self._request_callbacks.pop(seq, None)
             raise
 
     def async_request(self, handler, *args, **kwargs):
