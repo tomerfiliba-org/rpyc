@@ -13,10 +13,9 @@ try:
 except ImportError:
     import queue as Queue
 from rpyc.core import SocketStream, Channel
-from rpyc.utils.helpers import spawn, spawn_waitready
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
-from rpyc.lib import safe_import
+from rpyc.lib import safe_import, spawn, spawn_waitready
 from rpyc.lib.compat import poll, get_exc_errno
 signal = safe_import("signal")
 gevent = safe_import("gevent")

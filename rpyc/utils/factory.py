@@ -18,8 +18,7 @@ except ImportError:
 
 from rpyc import Channel, SocketStream, TunneledSocketStream, PipeStream, VoidService
 from rpyc.utils.registry import UDPRegistryClient
-from rpyc.utils.helpers import spawn
-from rpyc.lib import safe_import
+from rpyc.lib import safe_import, spawn
 ssl = safe_import("ssl")
 
 

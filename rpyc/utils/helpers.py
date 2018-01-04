@@ -2,39 +2,11 @@
 Helpers and wrappers for common RPyC tasks
 """
 import time
-import threading
+from rpyc.lib import spawn
 from rpyc.lib.colls import WeakValueDict
 from rpyc.lib.compat import callable
 from rpyc.core.consts import HANDLE_BUFFITER, HANDLE_CALL
 from rpyc.core.netref import syncreq, asyncreq
-
-
-def spawn(*args, **kwargs):
-    """Start and return daemon thread. ``spawn(func, *args, **kwargs)``."""
-    func, args = args[0], args[1:]
-    thread = threading.Thread(target=func, args=args, kwargs=kwargs)
-    thread.daemon = True
-    thread.start()
-    return thread
-
-
-def spawn_waitready(init, main):
-    """
-    Start a thread that runs ``init`` and then ``main``. Wait for ``init`` to
-    be finished before returning.
-
-    Returns a tuple ``(thread, init_result)``.
-    """
-    event = threading.Event()
-    stack = [event]     # used to exchange arguments with thread, so `event`
-                        # can be deleted when it has fulfilled its purpose.
-    def start():
-        stack.append(init())
-        stack.pop(0).set()
-        return main()
-    thread = spawn(start)
-    event.wait()
-    return thread, stack.pop()
 
 
 def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
