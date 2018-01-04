@@ -16,7 +16,9 @@ except ImportError:
         from java.lang import System
         interrupt_main = System.exit
 
-from rpyc import Channel, SocketStream, TunneledSocketStream, PipeStream, VoidService
+from rpyc.core.channel import Channel
+from rpyc.core.stream import SocketStream, TunneledSocketStream, PipeStream
+from rpyc.core.service import VoidService
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.lib import safe_import, spawn
 ssl = safe_import("ssl")
