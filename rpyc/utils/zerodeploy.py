@@ -132,10 +132,7 @@ class DeployedServer(object):
             # Paramiko: use connect_sock() instead of tunnels
             self.local_port = None
         else:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.bind(("localhost", 0))
-            self.local_port = s.getsockname()[1]
-            s.close()
+            self.local_port = rpyc.utils.factory._get_free_port()
             self.tun = remote_machine.tunnel(self.local_port, self.remote_port)
 
     def __del__(self):
