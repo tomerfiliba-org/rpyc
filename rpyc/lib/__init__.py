@@ -3,6 +3,7 @@ A library of various helpers functions and classes
 """
 import sys
 import logging
+import threading
 
 
 class MissingModule(object):
@@ -51,3 +52,31 @@ class hybridmethod(object):
         return self.func.__get__(cls if obj is None else obj, obj)
     def __set__(self, obj, val):
         raise AttributeError("Cannot overwrite method")
+
+
+def spawn(*args, **kwargs):
+    """Start and return daemon thread. ``spawn(func, *args, **kwargs)``."""
+    func, args = args[0], args[1:]
+    thread = threading.Thread(target=func, args=args, kwargs=kwargs)
+    thread.daemon = True
+    thread.start()
+    return thread
+
+
+def spawn_waitready(init, main):
+    """
+    Start a thread that runs ``init`` and then ``main``. Wait for ``init`` to
+    be finished before returning.
+
+    Returns a tuple ``(thread, init_result)``.
+    """
+    event = threading.Event()
+    stack = [event]     # used to exchange arguments with thread, so `event`
+                        # can be deleted when it has fulfilled its purpose.
+    def start():
+        stack.append(init())
+        stack.pop(0).set()
+        return main()
+    thread = spawn(start)
+    event.wait()
+    return thread, stack.pop()
