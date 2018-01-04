@@ -5,11 +5,12 @@ Requires [plumbum](http://plumbum.readthedocs.org/)
 """
 from __future__ import with_statement
 import sys
-import rpyc
 import socket
 from rpyc.lib.compat import BYTES_LITERAL
 from rpyc.core.service import VoidService
 from rpyc.core.stream import SocketStream
+import rpyc.utils.factory
+import rpyc.utils.classic
 try:
     from plumbum import local, ProcessExecutionError, CommandNotFound
     from plumbum.path import copy
@@ -45,7 +46,7 @@ except Exception:
 
 sys.path.insert(0, here)
 from $MODULE$ import $SERVER$ as ServerCls
-from rpyc import SlaveService
+from rpyc.core.service import SlaveService
 
 logger = None
 $EXTRA_SETUP$
@@ -172,13 +173,13 @@ class DeployedServer(object):
     def connect(self, service = VoidService, config = {}):
         """Same as :func:`~rpyc.utils.factory.connect`, but with the ``host`` and ``port``
         parameters fixed"""
-        return rpyc.connect_stream(
+        return rpyc.utils.factory.connect_stream(
             SocketStream(self._connect_sock()), service=service, config=config)
 
     def classic_connect(self):
         """Same as :func:`classic.connect <rpyc.utils.classic.connect>`, but with the ``host`` and
         ``port`` parameters fixed"""
-        return rpyc.classic.connect_stream(
+        return rpyc.utils.classic.connect_stream(
             SocketStream(self._connect_sock()), service=service, config=config)
 
 
@@ -216,6 +217,3 @@ class MultiServerDeployment(object):
     def classic_connect_all(self):
         """connects to all deployed servers using classic_connect; returns a list of connections (order guaranteed)"""
         return [s.classic_connect() for s in self.servers]
-
-
-
