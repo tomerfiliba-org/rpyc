@@ -165,25 +165,24 @@ class DeployedServer(object):
                 pass
             self._tmpdir_ctx = None
 
+    def _connect_sock(self):
+        if self.local_port is None:
+            # ParamikoMachine
+            return self.remote_machine.connect_sock(self.remote_port)
+        else:
+            return SocketStream._connect("localhost", self.local_port)
+
     def connect(self, service = VoidService, config = {}):
         """Same as :func:`~rpyc.utils.factory.connect`, but with the ``host`` and ``port``
         parameters fixed"""
-        if self.local_port is None:
-            # ParamikoMachine
-            stream = SocketStream(self.remote_machine.connect_sock(self.remote_port))
-            return rpyc.connect_stream(stream, service = service, config = config)
-        else:
-            return rpyc.connect("localhost", self.local_port, service = service, config = config)
+        return rpyc.connect_stream(
+            SocketStream(self._connect_sock()), service=service, config=config)
 
     def classic_connect(self):
         """Same as :func:`classic.connect <rpyc.utils.classic.connect>`, but with the ``host`` and
         ``port`` parameters fixed"""
-        if self.local_port is None:
-            # ParamikoMachine
-            stream = SocketStream(self.remote_machine.connect_sock(self.remote_port))
-            return rpyc.classic.connect_stream(stream)
-        else:
-            return rpyc.classic.connect("localhost", self.local_port)
+        return rpyc.classic.connect_stream(
+            SocketStream(self._connect_sock()), service=service, config=config)
 
 
 class MultiServerDeployment(object):
