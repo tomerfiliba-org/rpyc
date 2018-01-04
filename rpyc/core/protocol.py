@@ -9,7 +9,7 @@ import time
 import gc
 
 from threading import Lock, RLock, Event
-import rpyc
+from rpyc.lib import spawn
 from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
@@ -454,6 +454,8 @@ class Connection(object):
             self.close()
 
     def serve_threaded(self, thread_count=10):
+        """Serves all requests and replies for as long as the connection is
+        alive."""
         def _thread_target():
             try:
                 while True:
@@ -464,12 +466,8 @@ class Connection(object):
             except EOFError:
                 pass
 
-        threads = []
-
-        """Serves all requests and replies for as long as the connection is
-        alive."""
         try:
-            threads = [rpyc.spawn(_thread_target)
+            threads = [spawn(_thread_target)
                        for _ in range(thread_count)]
 
             for thread in threads:
