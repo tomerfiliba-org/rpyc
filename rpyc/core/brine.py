@@ -122,53 +122,31 @@ def _dump_float(obj, stream):
 def _dump_complex(obj, stream):
     stream.append(TAG_COMPLEX + C16.pack(obj.real, obj.imag))
 
-if is_py3k:
-    @register(_dump_registry, bytes)
-    def _dump_bytes(obj, stream):
-        l = len(obj)
-        if l == 0:
-            stream.append(TAG_EMPTY_STR)
-        elif l == 1:
-            stream.append(TAG_STR1 + obj)
-        elif l == 2:
-            stream.append(TAG_STR2 + obj)
-        elif l == 3:
-            stream.append(TAG_STR3 + obj)
-        elif l == 4:
-            stream.append(TAG_STR4 + obj)
-        elif l < 256:
-            stream.append(TAG_STR_L1 + I1.pack(l) + obj)
-        else:
-            stream.append(TAG_STR_L4 + I4.pack(l) + obj)
+@register(_dump_registry, bytes)
+def _dump_bytes(obj, stream):
+    l = len(obj)
+    if l == 0:
+        stream.append(TAG_EMPTY_STR)
+    elif l == 1:
+        stream.append(TAG_STR1 + obj)
+    elif l == 2:
+        stream.append(TAG_STR2 + obj)
+    elif l == 3:
+        stream.append(TAG_STR3 + obj)
+    elif l == 4:
+        stream.append(TAG_STR4 + obj)
+    elif l < 256:
+        stream.append(TAG_STR_L1 + I1.pack(l) + obj)
+    else:
+        stream.append(TAG_STR_L4 + I4.pack(l) + obj)
 
-    @register(_dump_registry, str)
-    def _dump_str(obj, stream):
-        stream.append(TAG_UNICODE)
-        _dump_bytes(obj.encode("utf8"), stream)
-else:
-    @register(_dump_registry, str)
-    def _dump_str(obj, stream):
-        l = len(obj)
-        if l == 0:
-            stream.append(TAG_EMPTY_STR)
-        elif l == 1:
-            stream.append(TAG_STR1 + obj)
-        elif l == 2:
-            stream.append(TAG_STR2 + obj)
-        elif l == 3:
-            stream.append(TAG_STR3 + obj)
-        elif l == 4:
-            stream.append(TAG_STR4 + obj)
-        elif l < 256:
-            stream.append(TAG_STR_L1 + I1.pack(l) + obj)
-        else:
-            stream.append(TAG_STR_L4 + I4.pack(l) + obj)
+@register(_dump_registry, type(u""))
+def _dump_str(obj, stream):
+    stream.append(TAG_UNICODE)
+    _dump_bytes(obj.encode("utf8"), stream)
 
-    @register(_dump_registry, unicode)
-    def _dump_unicode(obj, stream):
-        stream.append(TAG_UNICODE)
-        _dump_str(obj.encode("utf8"), stream)
 
+if not is_py3k:
     @register(_dump_registry, long)
     def _dump_long(obj, stream):
         stream.append(TAG_LONG)
@@ -223,14 +201,9 @@ def _load_false(stream):
 def _load_empty_tuple(stream):
     return ()
 
-if is_py3k:
-    @register(_load_registry, TAG_EMPTY_STR)
-    def _load_empty_str(stream):
-        return BYTES_LITERAL("")
-else:
-    @register(_load_registry, TAG_EMPTY_STR)
-    def _load_empty_str(stream):
-        return ""
+@register(_load_registry, TAG_EMPTY_STR)
+def _load_empty_str(stream):
+    return b""
 
 if is_py3k:
     @register(_load_registry, TAG_LONG)
@@ -356,7 +329,7 @@ if is_py3k:
     simple_types = frozenset([type(None), int, bool, float, bytes, str, complex,
         type(NotImplemented), type(Ellipsis)])
 else:
-    simple_types = frozenset([type(None), int, long, bool, float, str, unicode, complex,
+    simple_types = frozenset([type(None), int, long, bool, float, bytes, unicode, complex,
         type(NotImplemented), type(Ellipsis)])
 
 def dumpable(obj):
@@ -377,4 +350,3 @@ def dumpable(obj):
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
-
