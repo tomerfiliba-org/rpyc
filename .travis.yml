@@ -21,18 +21,17 @@ matrix:
       env:    SKIP_GEVENT=true
 
 install:
-    - pip install -e git+git://github.com/tomerfiliba/plumbum.git#egg=plumbum
-
-before_script:
+    - python setup.py install
     - "[[ -n $SKIP_GEVENT ]] || pip install gevent"
     - "pip install paramiko || true"
+
+before_script:
     - "echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config"
     - "echo StrictHostKeyChecking no >> ~/.ssh/config"
     - "ssh-keygen -q -f ~/.ssh/id_rsa -N ''"
     - "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys"
     - "uname -a"
     - "hostname"
-    - "python setup.py install"
     - "cd tests"
 
 script:
