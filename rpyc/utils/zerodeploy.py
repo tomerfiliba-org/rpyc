@@ -180,7 +180,7 @@ class DeployedServer(object):
         """Same as :func:`classic.connect <rpyc.utils.classic.connect>`, but with the ``host`` and
         ``port`` parameters fixed"""
         return rpyc.utils.classic.connect_stream(
-            SocketStream(self._connect_sock()), service=service, config=config)
+            SocketStream(self._connect_sock()))
 
 
 class MultiServerDeployment(object):
