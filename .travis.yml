@@ -11,14 +11,10 @@ python:
 
 matrix:
   include:
-    - python: "2.6"
-      env:    SKIP_GEVENT=true
-    - python: "2.7"
-      env:    SKIP_GEVENT=true
-    - python: "3.7-dev"
-      env:    SKIP_GEVENT=true
-    - python: "nightly"
-      env:    SKIP_GEVENT=true
+    - {python: "2.6",      env: SKIP_GEVENT=true}
+    - {python: "2.7",      env: SKIP_GEVENT=true}
+    - {python: "3.7-dev",  env: SKIP_GEVENT=true}
+    - {python: "nightly",  env: SKIP_GEVENT=true}
 
 install:
     - python setup.py install
