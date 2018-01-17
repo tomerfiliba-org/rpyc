@@ -3,23 +3,22 @@ language: python
 dist: trusty
 
 # See: https://docs.travis-ci.com/user/languages/python/
-python:
-    - "3.3"
-    - "3.4"
-    - "3.5"
-    - "3.6"
-
+# and: https://docs.travis-ci.com/user/customizing-the-build/
 matrix:
   include:
-    - {python: "2.6",      env: SKIP_GEVENT=true}
-    - {python: "2.7",      env: SKIP_GEVENT=true}
-    - {python: "3.7-dev",  env: SKIP_GEVENT=true}
-    - {python: "nightly",  env: SKIP_GEVENT=true}
+    - {python: "2.6",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
+    - {python: "2.7",      env: SKIP_GEVENT=true                    }
+    - {python: "3.3",      env:                     SKIP_DEPLOY=true}
+    - {python: "3.4",      env:                                     }
+    - {python: "3.5",      env:                     SKIP_DEPLOY=true}
+    - {python: "3.6",      env:                     SKIP_DEPLOY=true}
+    - {python: "3.7-dev",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
+    - {python: "nightly",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
 
 install:
     - python setup.py install
     - "[[ -n $SKIP_GEVENT ]] || pip install gevent"
-    - "pip install paramiko || true"
+    - "[[ -n $SKIP_DEPLOY ]] || pip install paramiko"
 
 before_script:
     - "echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config"
@@ -35,7 +34,7 @@ script:
     # need to run in its own python interpreter (`monkey.patch_all()`):
     - "[[ -n $SKIP_GEVENT ]] || python test_gevent_server.py"
     # it currently fails on all but the native python versions on travis:
-    - python test_deploy.py || true
+    - "[[ -n $SKIP_DEPLOY ]] || python test_deploy.py"
 
 notifications:
     email:
