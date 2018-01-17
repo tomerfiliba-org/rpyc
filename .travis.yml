@@ -17,8 +17,8 @@ matrix:
 
 install:
     - python setup.py install
-    - "[[ -n $SKIP_GEVENT ]] || pip install gevent"
-    - "[[ -n $SKIP_DEPLOY ]] || pip install paramiko"
+    - "pip install gevent   || [[ -n $SKIP_GEVENT ]]"
+    - "pip install paramiko || [[ -n $SKIP_DEPLOY ]]"
 
 before_script:
     - "echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config"
@@ -32,9 +32,9 @@ before_script:
 script:
     - nosetests -vv -I test_deploy -I test_gevent_server
     # need to run in its own python interpreter (`monkey.patch_all()`):
-    - "[[ -n $SKIP_GEVENT ]] || python test_gevent_server.py"
+    - "python test_gevent_server.py || [[ -n $SKIP_GEVENT ]]"
     # it currently fails on all but the native python versions on travis:
-    - "[[ -n $SKIP_DEPLOY ]] || python test_deploy.py"
+    - "python test_deploy.py        || [[ -n $SKIP_DEPLOY ]]"
 
 notifications:
     email:
