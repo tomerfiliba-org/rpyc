@@ -3,7 +3,6 @@ The RPyC protocol
 """
 import sys
 import weakref
-import itertools
 import socket
 import time
 import gc
@@ -14,6 +13,7 @@ from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async import AsyncResult
+import rpyc.utils.mp
 
 class PingError(Exception):
     """The exception raised should :func:`Connection.ping` fail"""
@@ -120,7 +120,7 @@ Parameter                                Default value     Description
 """
 
 
-_connection_id_generator = itertools.count(1)
+_connection_id_generator = rpyc.utils.mp.count(1)
 
 
 class Connection(object):
@@ -141,7 +141,7 @@ class Connection(object):
 
         self._HANDLERS = self._request_handlers()
         self._channel = channel
-        self._seqcounter = itertools.count()
+        self._seqcounter = rpyc.utils.mp.count()
         self._recvlock = Lock()
         self._sendlock = Lock()
         self._sync_replies = {}
