@@ -3,44 +3,38 @@ language: python
 dist: trusty
 
 # See: https://docs.travis-ci.com/user/languages/python/
-python:
-    - "3.3"
-    - "3.4"
-    - "3.5"
-    - "3.6"
-
+# and: https://docs.travis-ci.com/user/customizing-the-build/
 matrix:
   include:
-    - python: "2.6"
-      env:    SKIP_GEVENT=true
-    - python: "2.7"
-      env:    SKIP_GEVENT=true
-    - python: "3.7-dev"
-      env:    SKIP_GEVENT=true
-    - python: "nightly"
-      env:    SKIP_GEVENT=true
+    - {python: "2.6",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
+    - {python: "2.7",      env: SKIP_GEVENT=true                    }
+    - {python: "3.3",      env:                     SKIP_DEPLOY=true}
+    - {python: "3.4",      env:                                     }
+    - {python: "3.5",      env:                     SKIP_DEPLOY=true}
+    - {python: "3.6",      env:                     SKIP_DEPLOY=true}
+    - {python: "3.7-dev",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
+    - {python: "nightly",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
 
 install:
-    - pip install -e git+git://github.com/tomerfiliba/plumbum.git#egg=plumbum
+    - python setup.py install
+    - "pip install gevent   || [[ -n $SKIP_GEVENT ]]"
+    - "pip install paramiko || [[ -n $SKIP_DEPLOY ]]"
 
 before_script:
-    - "[[ -n $SKIP_GEVENT ]] || pip install gevent"
-    - "pip install paramiko || true"
     - "echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config"
     - "echo StrictHostKeyChecking no >> ~/.ssh/config"
     - "ssh-keygen -q -f ~/.ssh/id_rsa -N ''"
     - "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys"
     - "uname -a"
     - "hostname"
-    - "python setup.py install"
     - "cd tests"
 
 script:
     - nosetests -vv -I test_deploy -I test_gevent_server
     # need to run in its own python interpreter (`monkey.patch_all()`):
-    - "[[ -n $SKIP_GEVENT ]] || python test_gevent_server.py"
+    - "python test_gevent_server.py || [[ -n $SKIP_GEVENT ]]"
     # it currently fails on all but the native python versions on travis:
-    - python test_deploy.py || true
+    - "python test_deploy.py        || [[ -n $SKIP_DEPLOY ]]"
 
 notifications:
     email:
