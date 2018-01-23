@@ -288,7 +288,9 @@ def deliver(conn, localobj):
 
     :returns: a proxy to the remote object
     """
-    return conn.modules["rpyc.lib.compat"].pickle.loads(pickle.dumps(localobj))
+    # bytes-cast needed for IronPython-to-CPython communication, see #251:
+    return conn.modules["rpyc.lib.compat"].pickle.loads(
+        bytes(pickle.dumps(localobj)))
 
 @contextmanager
 def redirected_stdio(conn):
