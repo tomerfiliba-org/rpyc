@@ -143,6 +143,8 @@ def async_(proxy):
     return caller
 
 async_.__doc__ = _Async.__doc__
+globals()['async'] = async_         # backward compatibility alias
+
 
 class timed(object):
     """Creates a timed asynchronous proxy. Invoking the timed proxy will
