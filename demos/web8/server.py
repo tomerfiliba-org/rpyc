@@ -52,7 +52,7 @@ class Web8Service(rpyc.Service):
 
         def bg_timer_thread():
             while active[0]:
-                rpyc.async(lbl3.set_text)("Server time is: %s" % (time.ctime(),))
+                rpyc.async_(lbl3.set_text)("Server time is: %s" % (time.ctime(),))
                 time.sleep(1)
 
         bg_thread = [None]

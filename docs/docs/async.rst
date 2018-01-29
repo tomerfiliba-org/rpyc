@@ -13,18 +13,18 @@ for its completion. However, since the synchronous modus-operandi is the most co
 the library exposes a synchronous interface, and you'll need to explicitly enable
 asynchronous behavior.
 
-async()
--------
-The wrapper :func:`~rpyc.utils.helpers.async` takes any *callable*
+async_()
+--------
+The wrapper :func:`~rpyc.utils.helpers.async_` takes any *callable*
 :ref:`netref <api-netref>` and returns an asynchronous-wrapper around that netref.
 When invoked, this wrapper object dispatches the request and immediately returns an
-:class:`~rpyc.core.async.AsyncResult`, instead of waiting for the response.
+:class:`~rpyc.core.async_.AsyncResult`, instead of waiting for the response.
 
 Usage
 ^^^^^
 Create an async wrapper around the server's ``time.sleep`` function ::
 
-    async_sleep = rpyc.async(conn.modules.time.sleep)
+    async_sleep = rpyc.async_(conn.modules.time.sleep)
 
 And invoke it like any other function, but instead of blocking, it will immediately
 return an ``AsyncResult`` ::
@@ -32,8 +32,8 @@ return an ``AsyncResult`` ::
     res = async_sleep(5)
 
 Which means your client can continue working normally, while the server
-performs the request. There are several pitfalls using :func:`async
-<pyc.utils.helpers.async>`, be sure to read the Notes_ section!
+performs the request. There are several pitfalls using :func:`async_
+<pyc.utils.helpers.async_>`, be sure to read the Notes_ section!
 
 You can test for completion using ``res.ready``, wait for completion using ``res.wait()``,
 and get the result using ``res.value``. You may set a timeout for the result using
@@ -46,11 +46,11 @@ The returns async proxies are cached by a `weak-reference <http://docs.python.or
 Therefore, you must hold a strong reference to the returned proxy. Particularly, this means
 that instead of doing ::
 
-    res = async(conn.root.myfunc)(1,2,3)
+    res = async_(conn.root.myfunc)(1,2,3)
 
 Use ::
 
-    myfunc_async = async(conn.root.myfunc)
+    myfunc_async = async_(conn.root.myfunc)
     res = myfunc_async(1,2,3)
 
 Furthermore, async requests provide **no guarantee on execution order**. In
@@ -63,9 +63,9 @@ timed()
 :class:`~rpyc.utils.helpers.timed` allows you to set a timeout for a synchronous invocation.
 When a ``timed`` function is invoked, you'll synchronously wait for the result, but no longer
 than the specified timeout. Should the invocation take longer, a
-:class:`~rpyc.core.async.AsyncResultTimeout` will be raised.
+:class:`~rpyc.core.async_.AsyncResultTimeout` will be raised.
 
-Under the hood, ``timed`` is actually implemented with ``async``: it begins dispatches the
+Under the hood, ``timed`` is actually implemented with ``async_``: it begins dispatches the
 operation, sets a timeout on the ``AsyncResult``, and waits for the response.
 
 Example

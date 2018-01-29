@@ -6,7 +6,7 @@ import rpyc
 class MyService(rpyc.Service):
     class exposed_Invoker(object):
         def __init__(self, callback, interval):
-            self.callback = rpyc.async(callback)
+            self.callback = rpyc.async_(callback)
             self.interval = interval
             self.active = True
             self.thread = rpyc.spawn(self.work)

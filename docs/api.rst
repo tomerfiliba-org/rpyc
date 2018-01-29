@@ -81,7 +81,7 @@ Client-Side
 
 * :ref:`api-classic` - *Classic-mode* factories and utilities
 
-* :ref:`api-helpers` - Various helpers (``timed``, ``async``, ``buffiter``, ``BgServingThread``,
+* :ref:`api-helpers` - Various helpers (``timed``, ``async_``, ``buffiter``, ``BgServingThread``,
   etc.)
 
 Misc
