@@ -13,7 +13,7 @@ from rpyc.lib import spawn
 from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
-from rpyc.core.async import AsyncResult
+from rpyc.core.async_ import AsyncResult
 
 class PingError(Exception):
     """The exception raised should :func:`Connection.ping` fail"""
@@ -530,7 +530,7 @@ class Connection(object):
     def async_request(self, handler, *args, **kwargs):
         """Send an asynchronous request (does not wait for it to finish)
 
-        :returns: an :class:`rpyc.core.async.AsyncResult` object, which will
+        :returns: an :class:`rpyc.core.async_.AsyncResult` object, which will
                   eventually hold the result (or exception)
         """
         timeout = kwargs.pop("timeout", None)

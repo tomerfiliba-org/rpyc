@@ -86,7 +86,7 @@ def asyncreq(proxy, handler, *args):
                     ``rpyc.protocol.consts``)
     :param args: arguments to the handler
 
-    :returns: an :class:`~rpyc.core.async.AsyncResult` representing
+    :returns: an :class:`~rpyc.core.async_.AsyncResult` representing
               the operation
     """
     conn = object.__getattribute__(proxy, "____conn__")()
