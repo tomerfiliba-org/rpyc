@@ -12,5 +12,5 @@ Netref
 Async
 =====
 
-.. automodule:: rpyc.core.async
+.. automodule:: rpyc.core.async_
    :members:

@@ -95,14 +95,14 @@ class _Async(object):
     def __call__(self, *args, **kwargs):
         return asyncreq(self.proxy, HANDLE_CALL, args, tuple(kwargs.items()))
     def __repr__(self):
-        return "async(%r)" % (self.proxy,)
+        return "async_(%r)" % (self.proxy,)
 
 _async_proxies_cache = WeakValueDict()
-def async(proxy):
+def async_(proxy):
     """
     Returns an asynchronous "version" of the given proxy. Invoking the returned
     proxy will not block; instead it will return an
-    :class:`rpyc.core.async.AsyncResult` object that you can test for completion
+    :class:`rpyc.core.async_.AsyncResult` object that you can test for completion
 
     :param proxy: any **callable** RPyC proxy
 
@@ -110,7 +110,7 @@ def async(proxy):
 
     Example::
 
-        async_sleep = rpyc.async(conn.modules.time.sleep)
+        async_sleep = rpyc.async_(conn.modules.time.sleep)
         res = async_sleep(5)
 
     .. _async_note:
@@ -119,11 +119,11 @@ def async(proxy):
        In order to avoid overloading the GC, the returned asynchronous wrapper is
        cached as a weak reference. Therefore, do not use::
 
-           rpyc.async(foo)(5)
+           rpyc.async_(foo)(5)
 
        Always store the returned asynchronous wrapper in a variable, e.g. ::
 
-           a_foo = rpyc.async(foo)
+           a_foo = rpyc.async_(foo)
            a_foo(5)
 
     .. note::
@@ -142,11 +142,11 @@ def async(proxy):
     _async_proxies_cache[id(caller)] = _async_proxies_cache[pid] = caller
     return caller
 
-async.__doc__ = _Async.__doc__
+async_.__doc__ = _Async.__doc__
 
 class timed(object):
     """Creates a timed asynchronous proxy. Invoking the timed proxy will
-    run in the background and will raise an :class:`rpyc.core.async.AsyncResultTimeout`
+    run in the background and will raise an :class:`rpyc.core.async_.AsyncResultTimeout`
     exception if the computation does not terminate within the given time frame
 
     :param proxy: any **callable** RPyC proxy
@@ -163,7 +163,7 @@ class timed(object):
 
     __slots__ = ("__weakref__", "proxy", "timeout")
     def __init__(self, proxy, timeout):
-        self.proxy = async(proxy)
+        self.proxy = async_(proxy)
         self.timeout = timeout
     def __call__(self, *args, **kwargs):
         res = self.proxy(*args, **kwargs)

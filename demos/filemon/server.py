@@ -9,7 +9,7 @@ class FileMonitorService(rpyc.Service):
             self.filename = filename
             self.interval = interval
             self.last_stat = None
-            self.callback = rpyc.async(callback)   # make the callback async
+            self.callback = rpyc.async_(callback)   # make the callback async
             self.active = True
             self.thread = Thread(target = self.work)
             self.thread.start()

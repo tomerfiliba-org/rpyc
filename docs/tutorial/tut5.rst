@@ -17,7 +17,7 @@ that will **eventually** hold the result.
 Note that there is no guarantee on execution order for async requests!
 
 In order to turn the invocation of a remote function (or any callable object) asynchronous,
-all you have to do is wrap it with :func:`async <rpyc.utils.helpers.async>`, which creates a
+all you have to do is wrap it with :func:`async_ <rpyc.utils.helpers.async_>`, which creates a
 wrapper function that will return an ``AsyncResult`` instead of blocking. ``AsyncResult``
 objects have several properties and methods that
 
@@ -50,10 +50,10 @@ it's really not that scary::
     <built-in function sleep>
     >>> c.modules.time.sleep(2) # i block for two seconds, until the call returns
 
-     # wrap the remote function with async(), which turns the invocation asynchronous
-    >>> asleep = rpyc.async(c.modules.time.sleep)
+     # wrap the remote function with async_(), which turns the invocation asynchronous
+    >>> asleep = rpyc.async_(c.modules.time.sleep)
     >>> asleep
-    async(<built-in function sleep>)
+    async_(<built-in function sleep>)
 
     # invoking async functions yields an AsyncResult rather than a value
     >>> res = asleep(15)
@@ -74,7 +74,7 @@ it's really not that scary::
 
 And here's a more interesting snippet::
 
-    >>> aint = rpyc.async(c.modules.__builtin__.int)  # async wrapper for the remote type int
+    >>> aint = rpyc.async_(c.modules.__builtin__.int)  # async wrapper for the remote type int
 
     # a valid call
     >>> x = aint("8")
@@ -98,7 +98,7 @@ And here's a more interesting snippet::
     >>> x.value #
     Traceback (most recent call last):
     ...
-      File "/home/tomer/workspace/rpyc/core/async.py", line 102, in value
+      File "/home/tomer/workspace/rpyc/core/async_.py", line 102, in value
         raise self._obj
     ValueError: invalid literal for int() with base 10: 'this is not a valid number'
     >>>
@@ -107,7 +107,7 @@ And here's a more interesting snippet::
 
 Events
 ------
-Combining ``async`` and callbacks yields a rather interesting result: *async callbacks*,
+Combining ``async_`` and callbacks yields a rather interesting result: *async callbacks*,
 also known as **events**. Generally speaking, events are sent by an "event producer" to
 notify an "event consumer" of relevant changes, and this flow is normally one-way
 (from producer to consumer). In other words, in RPC terms, events can be implemented as
@@ -127,7 +127,7 @@ consider the following ``FileMonitor`` example -- it monitors monitors a file
                 self.filename = filename
                 self.interval = interval
                 self.last_stat = None
-                self.callback = rpyc.async(callback)   # create an async callback
+                self.callback = rpyc.async_(callback)   # create an async callback
                 self.active = True
                 self.thread = Thread(target = self.work)
                 self.thread.start()

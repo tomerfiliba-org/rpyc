@@ -5,8 +5,8 @@ import rpyc
 class TestAsync(unittest.TestCase):
     def setUp(self):
         self.conn = rpyc.classic.connect_thread()
-        self.a_sleep = rpyc.async(self.conn.modules.time.sleep)
-        self.a_int = rpyc.async(self.conn.builtin.int)
+        self.a_sleep = rpyc.async_(self.conn.modules.time.sleep)
+        self.a_int = rpyc.async_(self.conn.builtin.int)
 
     def tearDown(self):
         self.conn.close()
