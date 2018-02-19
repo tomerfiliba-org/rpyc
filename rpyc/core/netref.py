@@ -148,6 +148,11 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
                 return self.__dir__()
             elif name in _deleted_netref_attrs:
                 raise AttributeError()
+            elif name == "__array__":  # Speedup array copy if the remote is an array
+                if hasattr(self, '__array__'):
+                    return object.__getattribute__(self, "__array__")
+                else:
+                    raise AttributeError()
             else:
                 return object.__getattribute__(self, name)
         elif name == "__call__":                          # IronPython issue #10
@@ -188,7 +193,8 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
 
     # This is not strictly necessary, but a performance optimization:
     # Note that protocol=-1 will only work between python interpreters of the
-    # same version:
+    # same version.
+    # This method should only be called if the remote object implements __array__.
     def __array__(self):
         return pickle.loads(syncreq(self, consts.HANDLE_PICKLE, -1))
 
