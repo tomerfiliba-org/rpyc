@@ -661,7 +661,7 @@ class Connection(object):
     def _handle_pickle(self, obj, proto):
         if not self._config["allow_pickle"]:
             raise ValueError("pickling is disabled")
-        return pickle.dumps(obj, proto)
+        return bytes(pickle.dumps(obj, proto))
     def _handle_buffiter(self, obj, count):
         return tuple(itertools.islice(obj, count))
     def _handle_oldslicing(self, obj, attempt, fallback, start, stop, args):
