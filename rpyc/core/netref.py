@@ -21,7 +21,6 @@ _local_netref_attrs = frozenset([
     '__init__', '__metaclass__', '__module__', '__new__', '__reduce__',
     '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__',
     '__weakref__', '__dict__', '__members__', '__methods__', '__exit__',
-    '__array__',
 ]) | _deleted_netref_attrs
 """the set of attributes that are local to the netref object"""
 
@@ -152,6 +151,8 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
                 return object.__getattribute__(self, name)
         elif name == "__call__":                          # IronPython issue #10
             return object.__getattribute__(self, "__call__")
+        elif name == "__array__":
+            return object.__getattribute__(self, "__array__")
         else:
             return syncreq(self, consts.HANDLE_GETATTR, name)
     def __getattr__(self, name):
@@ -186,12 +187,6 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     def __reduce_ex__(self, proto):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
 
-    # This is not strictly necessary, but a performance optimization:
-    # Note that protocol=-1 will only work between python interpreters of the
-    # same version:
-    def __array__(self):
-        return pickle.loads(syncreq(self, consts.HANDLE_PICKLE, -1))
-
 
 def _make_method(name, doc):
     """creates a method with the given name and docstring that invokes
@@ -214,6 +209,13 @@ def _make_method(name, doc):
         method.__name__ = name
         method.__doc__ = doc
         return method
+    elif name == "__array__":
+        def __array__(self):
+            # Note that protocol=-1 will only work between python
+            # interpreters of the same version.
+            return pickle.loads(syncreq(self, consts.HANDLE_PICKLE, -1))
+        __array__.__doc__ = doc
+        return __array__
     else:
         def method(_self, *args, **kwargs):
             kwargs = tuple(kwargs.items())
