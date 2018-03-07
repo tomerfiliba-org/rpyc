@@ -71,9 +71,7 @@ def syncreq(proxy, handler, *args):
     :raises: any exception raised by the operation will be raised
     :returns: the result of the operation
     """
-    conn = object.__getattribute__(proxy, "____conn__")()
-    if not conn:
-        raise ReferenceError('weakly-referenced object no longer exists')
+    conn = object.__getattribute__(proxy, "____conn__")
     return conn.sync_request(handler, proxy, *args)
 
 def asyncreq(proxy, handler, *args):
@@ -88,9 +86,7 @@ def asyncreq(proxy, handler, *args):
     :returns: an :class:`~rpyc.core.async_.AsyncResult` representing
               the operation
     """
-    conn = object.__getattribute__(proxy, "____conn__")()
-    if not conn:
-        raise ReferenceError('weakly-referenced object no longer exists')
+    conn = object.__getattribute__(proxy, "____conn__")
     return conn.async_request(handler, proxy, *args)
 
 class NetrefMetaclass(type):
