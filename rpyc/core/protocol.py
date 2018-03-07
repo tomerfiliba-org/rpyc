@@ -2,7 +2,6 @@
 The RPyC protocol
 """
 import sys
-import weakref
 import itertools
 import socket
 import time
@@ -283,7 +282,7 @@ class Connection(object):
             return consts.LABEL_VALUE, obj
         if type(obj) is tuple:
             return consts.LABEL_TUPLE, tuple(self._box(item) for item in obj)
-        elif isinstance(obj, netref.BaseNetref) and obj.____conn__() is self:
+        elif isinstance(obj, netref.BaseNetref) and obj.____conn__ is self:
             return consts.LABEL_LOCAL_REF, obj.____oid__
         else:
             self._local_objects.add(obj)
@@ -330,7 +329,7 @@ class Connection(object):
             info = self.sync_request(consts.HANDLE_INSPECT, oid)
             cls = netref.class_factory(clsname, modname, info)
             self._netref_classes_cache[typeinfo] = cls
-        return cls(weakref.ref(self), oid)
+        return cls(self, oid)
 
     #
     # dispatching
@@ -536,7 +535,7 @@ class Connection(object):
         timeout = kwargs.pop("timeout", None)
         if kwargs:
             raise TypeError("got unexpected keyword argument(s) %s" % (list(kwargs.keys()),))
-        res = AsyncResult(weakref.proxy(self))
+        res = AsyncResult(self)
         self._async_request(handler, args, res)
         if timeout is not None:
             res.set_expiry(timeout)
