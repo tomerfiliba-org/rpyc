@@ -112,7 +112,7 @@ also known as **events**. Generally speaking, events are sent by an "event produ
 notify an "event consumer" of relevant changes, and this flow is normally one-way
 (from producer to consumer). In other words, in RPC terms, events can be implemented as
 async callbacks, where the return value is ignored. To better illustrate the situation,
-consider the following ``FileMonitor`` example -- it monitors monitors a file
+consider the following ``FileMonitor`` example -- it monitors a file
 (using :func:`os.stat`) for changes, and notifies the client when a change occurs
 (with the old and new ``stat`` results). ::
 
