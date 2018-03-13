@@ -20,7 +20,7 @@ has the following boilerplate::
     class MyService(rpyc.Service):
         def on_connect(self, conn):
             # code that runs when a connection is created
-            # (to init the serivce, if needed)
+            # (to init the service, if needed)
             pass
 
         def on_disconnect(self, conn):
