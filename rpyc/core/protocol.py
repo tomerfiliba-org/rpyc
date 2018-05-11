@@ -221,6 +221,7 @@ class Connection(object):
         :param timeout: the maximal time to wait for echo
 
         :raises: :class:`PingError` if the echoed data does not match
+        :raises: :class:`EOFError` if the remote host closes the connection
         """
         if data is None:
             data = "abcdefghijklmnopqrstuvwxyz" * 20
