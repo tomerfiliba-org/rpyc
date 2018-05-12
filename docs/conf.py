@@ -96,7 +96,8 @@ autodoc_member_order = "bysource"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #html_theme = 'agogo'
-html_theme = 'haiku'
+#html_theme = 'haiku'
+html_theme = "sphinx_rtd_theme"
 #html_theme_path = ["_themes"]
 
 
