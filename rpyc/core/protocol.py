@@ -407,31 +407,30 @@ class Connection(object):
             raise ValueError("invalid message type: %r" % (msg,))
 
     def sync_recv_and_dispatch(self, timeout, wait_for_lock):
-        # lock or wait for signal
         timeout = Timeout(timeout)
-        if self._sync_lock.acquire(False):
-            try:
-                self._sync_event.clear()
-                data = self._recv(timeout, wait_for_lock=wait_for_lock)
-                if not data:
-                    return False
-
-                msg, seq, args = brine.load(data)
-                # Have to enqueue to _sync_replies before releasing _recvlock to
-                # avoid race conditions with other threads
-                sync_reply = (msg in (consts.MSG_REPLY, consts.MSG_EXCEPTION) and
-                              seq not in self._async_callbacks)
-                if sync_reply:
-                    self._dispatch(msg, seq, args)
-                    return True
-
-            finally:
-                self._sync_lock.release()
-                self._sync_event.set()
-            self._dispatch(msg, seq, args)
-            return True
-        else:
+        if not self._sync_lock.acquire(False):
             return self._sync_event.wait(timeout.timeleft())
+
+        try:
+            self._sync_event.clear()
+            data = self._recv(timeout, wait_for_lock=wait_for_lock)
+            if not data:
+                return False
+
+            msg, seq, args = brine.load(data)
+            # Have to enqueue to _sync_replies before releasing _recvlock to
+            # avoid race conditions with other threads
+            sync_reply = (msg in (consts.MSG_REPLY, consts.MSG_EXCEPTION) and
+                          seq not in self._async_callbacks)
+            if sync_reply:
+                self._dispatch(msg, seq, args)
+                return True
+
+        finally:
+            self._sync_lock.release()
+            self._sync_event.set()
+        self._dispatch(msg, seq, args)
+        return True
 
     def poll(self, timeout = 0):
         """Serves a single transaction, should one arrives in the given
