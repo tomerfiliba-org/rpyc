@@ -121,8 +121,6 @@ Contents
    :maxdepth: 1
 
    install
-   license
-   changelog
 
 .. toctree::
    :maxdepth: 2
@@ -133,4 +131,14 @@ Contents
    :maxdepth: 2
 
    docs
+
+.. toctree::
+   :maxdepth: 2
+
    api
+
+.. toctree::
+   :maxdepth: 1
+
+   license
+   changelog
