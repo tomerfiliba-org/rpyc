@@ -5,9 +5,8 @@ consistent view of a *duplex byte stream*.
 import sys
 import os
 import socket
-import time
 import errno
-from rpyc.lib import safe_import
+from rpyc.lib import safe_import, Timeout
 from rpyc.lib.compat import poll, select_error, BYTES_LITERAL, get_exc_errno, maxint
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
@@ -35,12 +34,13 @@ class Stream(object):
     def poll(self, timeout):
         """indicates whether the stream has data to read (within *timeout*
         seconds)"""
+        timeout = Timeout(timeout)
         try:
             p = poll()   # from lib.compat, it may be a select object on non-Unix platforms
             p.register(self.fileno(), "r")
             while True:
                 try:
-                    rl = p.poll(timeout)
+                    rl = p.poll(timeout.timeleft())
                 except select_error:
                     ex = sys.exc_info()[1]
                     if ex.args[0] == errno.EINTR:
@@ -395,22 +395,19 @@ class Win32PipeStream(Stream):
 
     def poll(self, timeout, interval = 0.1):
         """a poor man's version of select()"""
-        if timeout is None:
-            timeout = maxint
-        length = 0
-        tmax = time.time() + timeout
+        timeout = Timeout(timeout)
         try:
-            while length == 0:
-                length = win32pipe.PeekNamedPipe(self.incoming, 0)[1]
-                if time.time() >= tmax:
-                    break
-                time.sleep(interval)
+            while True:
+                if win32pipe.PeekNamedPipe(self.incoming, 0)[1] != 0:
+                    return True
+                if timeout.expired():
+                    return False
+                timeout.sleep(interval)
         except TypeError:
             ex = sys.exc_info()[1]
             if not self.closed:
                 raise
             raise EOFError(ex)
-        return length != 0
 
 
 class NamedPipeStream(Win32PipeStream):

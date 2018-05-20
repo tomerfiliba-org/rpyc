@@ -8,9 +8,10 @@ import socket
 import time
 import gc
 
-from threading import Lock, RLock, Event
-from rpyc.lib import spawn
-from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error
+from threading import Lock, Condition
+from rpyc.lib import spawn, Timeout
+from rpyc.lib.compat import (pickle, next, is_py3k, maxint, select_error,
+                             acquire_lock, TimeoutError)
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async_ import AsyncResult
@@ -145,8 +146,7 @@ class Connection(object):
         self._recvlock = Lock()
         self._sendlock = Lock()
         self._sync_replies = {}
-        self._sync_lock = RLock()
-        self._sync_event = Event()
+        self._recv_event = Condition()
         self._async_callbacks = {}
         self._local_objects = RefCountingColl()
         self._last_traceback = None
@@ -379,20 +379,6 @@ class Connection(object):
     #
     # serving
     #
-    def _recv(self, timeout, wait_for_lock):
-        if not self._recvlock.acquire(wait_for_lock):
-            return None
-        try:
-            if self._channel.poll(timeout):
-                data = self._channel.recv()
-            else:
-                data = None
-        except EOFError:
-            self.close()
-            raise
-        finally:
-            self._recvlock.release()
-        return data
 
     def _dispatch(self, data):
         msg, seq, args = brine.load(data)
@@ -406,20 +392,24 @@ class Connection(object):
             raise ValueError("invalid message type: %r" % (msg,))
 
     def sync_recv_and_dispatch(self, timeout, wait_for_lock):
-        # lock or wait for signal
-        if self._sync_lock.acquire(False):
-            try:
-                self._sync_event.clear()
-                data = self._recv(timeout, wait_for_lock=wait_for_lock)
-                if not data:
-                    return False
-                self._dispatch(data)
-                return True
-            finally:
-                self._sync_lock.release()
-                self._sync_event.set()
-        else:
-            return self._sync_event.wait(timeout)
+        timeout = Timeout(timeout)
+        with self._recv_event:
+            if not self._recvlock.acquire(False):
+                return (wait_for_lock and
+                        self._recv_event.wait(timeout.timeleft()))
+        try:
+            data = self._channel.poll(timeout) and self._channel.recv()
+            if not data:
+                return False
+        except EOFError:
+            self.close()
+            raise
+        finally:
+            self._recvlock.release()
+            with self._recv_event:
+                self._recv_event.notify_all()
+        self._dispatch(data)
+        return True
 
     def poll(self, timeout = 0):
         """Serves a single transaction, should one arrives in the given
@@ -482,16 +472,13 @@ class Connection(object):
         :returns: ``True`` if at least a single transaction was served, ``False`` otherwise
         """
         at_least_once = False
-        t0 = time.time()
-        duration = timeout
+        timeout = Timeout(timeout)
         try:
             while True:
-                if self.poll(duration):
+                if self.poll(timeout):
                     at_least_once = True
-                if timeout is not None:
-                    duration = t0 + timeout - time.time()
-                    if duration < 0:
-                        break
+                if timeout.expired():
+                    break
         except EOFError:
             pass
         return at_least_once
@@ -508,9 +495,12 @@ class Connection(object):
         seq = self._get_seq_id()
         self._send_request(seq, handler, args)
 
-        timeout = self._config["sync_request_timeout"]
+        timeout = Timeout(self._config["sync_request_timeout"])
         while seq not in self._sync_replies:
-            if not self.sync_recv_and_dispatch(timeout, True):
+            self.sync_recv_and_dispatch(timeout, True)
+            if seq in self._sync_replies:
+                break
+            if timeout.expired():
                 raise TimeoutError()
 
         isexc, obj = self._sync_replies.pop(seq)
