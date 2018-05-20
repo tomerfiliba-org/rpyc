@@ -1,4 +1,5 @@
 import time
+from rpyc.lib import Timeout
 
 
 class AsyncResultTimeout(Exception):
@@ -17,7 +18,7 @@ class AsyncResult(object):
         self._is_exc = None
         self._obj = None
         self._callbacks = []
-        self._ttl = None
+        self._ttl = Timeout(None)
     def __repr__(self):
         if self._is_ready:
             state = "ready"
@@ -45,16 +46,15 @@ class AsyncResult(object):
         an :class:`AsyncResultTimeout` exception is raised"""
         if self._is_ready:
             return
-        if self._ttl is None:
+        if not self._ttl.finite:
             while not self._is_ready:
                 self._conn.serve()
         else:
             while True:
-                timeout = self._ttl - time.time()
-                self._conn.poll(timeout = max(timeout, 0))
+                self._conn.poll(self._ttl)
                 if self._is_ready:
                     break
-                if timeout <= 0:
+                if self._ttl.expired():
                     raise AsyncResultTimeout("result expired")
 
     def add_callback(self, func):
@@ -75,32 +75,25 @@ class AsyncResult(object):
 
         :param timeout: the expiry time in seconds or ``None``
         """
-        if timeout is None:
-            self._ttl = None
-        else:
-            self._ttl = time.time() + timeout
+        self._ttl = Timeout(timeout)
 
     @property
     def ready(self):
         """Indicates whether the result has arrived"""
-        if self.expired:
+        if self._is_ready:
+            return True
+        if self._ttl.expired():
             return False
-        if not self._is_ready:
-            self._conn.poll_all()
+        self._conn.poll_all()
         return self._is_ready
     @property
     def error(self):
         """Indicates whether the returned result is an exception"""
-        if self.ready:
-            return self._is_exc
-        return False
+        return self.ready and self._is_exc
     @property
     def expired(self):
         """Indicates whether the AsyncResult has expired"""
-        if self._is_ready or self._ttl is None:
-            return False
-        else:
-            return time.time() > self._ttl
+        return not self._is_ready and self._ttl.expired()
 
     @property
     def value(self):
