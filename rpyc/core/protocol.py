@@ -511,7 +511,8 @@ class Connection(object):
 
         timeout = self._config["sync_request_timeout"]
         while seq not in self._sync_replies:
-            if not self.sync_recv_and_dispatch(timeout, True):
+            if (not self.sync_recv_and_dispatch(timeout, True)
+                    and seq not in self._sync_replies):
                 raise TimeoutError()
 
         isexc, obj = self._sync_replies.pop(seq)
