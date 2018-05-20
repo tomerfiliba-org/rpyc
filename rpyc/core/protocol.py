@@ -8,7 +8,7 @@ import socket
 import time
 import gc
 
-from threading import Lock, RLock, Event
+from threading import Lock, RLock, Condition
 from rpyc.lib import spawn, Timeout
 from rpyc.lib.compat import (pickle, next, is_py3k, maxint, select_error,
                              acquire_lock, TimeoutError)
@@ -147,7 +147,7 @@ class Connection(object):
         self._sendlock = Lock()
         self._sync_replies = {}
         self._sync_lock = RLock()
-        self._sync_event = Event()
+        self._recv_event = Condition()
         self._async_callbacks = {}
         self._local_objects = RefCountingColl()
         self._last_traceback = None
@@ -408,11 +408,11 @@ class Connection(object):
 
     def sync_recv_and_dispatch(self, timeout, wait_for_lock):
         timeout = Timeout(timeout)
-        if not self._sync_lock.acquire(False):
-            return self._sync_event.wait(timeout.timeleft())
+        with self._recv_event:
+            if not self._sync_lock.acquire(False):
+                return self._recv_event.wait(timeout.timeleft())
 
         try:
-            self._sync_event.clear()
             data = self._recv(timeout, wait_for_lock=wait_for_lock)
             if not data:
                 return False
@@ -428,7 +428,8 @@ class Connection(object):
 
         finally:
             self._sync_lock.release()
-            self._sync_event.set()
+            with self._recv_event:
+                self._recv_event.notify_all()
         self._dispatch(msg, seq, args)
         return True
 
