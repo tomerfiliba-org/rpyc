@@ -2,15 +2,6 @@
 
     <div style="float:right; margin:1em 0em 1em 1em; padding: 1em 2em 1em 2em; background-color: #efefef;
         border-radius: 5px; border-width: thin; border-style: dotted; border-color: #0C3762;">
-    <strong>Quick Links</strong><br/>
-    <ul>
-    <li><a href="#getting-started" title="Jump to download">Download</a></li>
-    <li><a href="tutorial.html" title="Tutorial">Tutorial</a></li>
-    <li><a href="docs.html" title="User guide">User Guide</a></li>
-    <li><a href="api.html" title="API reference">API Reference</a></li>
-    <li><a href="#contents" title="Jump to Table of Contents">ToC</a></li>
-    </ul>
-    <hr/>
     <a href="http://tomerfiliba.com" target="_blank">
     <img style="display: block; margin-left: auto; margin-right: auto" alt="Tomer Filiba"
     src="_static/fish-text-black.png" title="Tomer's Blog"/>
