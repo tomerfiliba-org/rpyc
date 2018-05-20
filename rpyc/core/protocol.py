@@ -410,7 +410,7 @@ class Connection(object):
         if self._sync_lock.acquire(False):
             try:
                 self._sync_event.clear()
-                data = self._recv(timeout, wait_for_lock = False)
+                data = self._recv(timeout, wait_for_lock=wait_for_lock)
                 if not data:
                     return False
                 self._dispatch(data)
