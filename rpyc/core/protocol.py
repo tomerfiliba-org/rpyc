@@ -419,7 +419,7 @@ class Connection(object):
                 self._sync_lock.release()
                 self._sync_event.set()
         else:
-            self._sync_event.wait()
+            return self._sync_event.wait(timeout)
 
     def poll(self, timeout = 0):
         """Serves a single transaction, should one arrives in the given
@@ -510,7 +510,8 @@ class Connection(object):
 
         timeout = self._config["sync_request_timeout"]
         while seq not in self._sync_replies:
-            self.sync_recv_and_dispatch(timeout, True)
+            if not self.sync_recv_and_dispatch(timeout, True):
+                raise TimeoutError()
 
         isexc, obj = self._sync_replies.pop(seq)
         if isexc:
