@@ -80,17 +80,16 @@ class AsyncResult(object):
     @property
     def ready(self):
         """Indicates whether the result has arrived"""
-        if self.expired:
+        if self._is_ready:
+            return True
+        if self._ttl.expired():
             return False
-        if not self._is_ready:
-            self._conn.poll_all()
+        self._conn.poll_all()
         return self._is_ready
     @property
     def error(self):
         """Indicates whether the returned result is an exception"""
-        if self.ready:
-            return self._is_exc
-        return False
+        return self.ready and self._is_exc
     @property
     def expired(self):
         """Indicates whether the AsyncResult has expired"""
