@@ -9,9 +9,9 @@ import time
 import gc
 
 from threading import Lock, RLock, Event
-from rpyc.lib import spawn
+from rpyc.lib import spawn, Timeout
 from rpyc.lib.compat import (pickle, next, is_py3k, maxint, select_error,
-                             TimeoutError)
+                             acquire_lock, TimeoutError)
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async_ import AsyncResult
@@ -381,7 +381,8 @@ class Connection(object):
     # serving
     #
     def _recv(self, timeout, wait_for_lock):
-        if not self._recvlock.acquire(wait_for_lock):
+        timeout = Timeout(timeout)
+        if not acquire_lock(self._recvlock, wait_for_lock, timeout):
             return None
         try:
             if self._channel.poll(timeout):
@@ -408,6 +409,7 @@ class Connection(object):
 
     def sync_recv_and_dispatch(self, timeout, wait_for_lock):
         # lock or wait for signal
+        timeout = Timeout(timeout)
         if self._sync_lock.acquire(False):
             try:
                 self._sync_event.clear()
@@ -420,7 +422,7 @@ class Connection(object):
                 self._sync_lock.release()
                 self._sync_event.set()
         else:
-            return self._sync_event.wait(timeout)
+            return self._sync_event.wait(timeout.timeleft())
 
     def poll(self, timeout = 0):
         """Serves a single transaction, should one arrives in the given
@@ -483,16 +485,13 @@ class Connection(object):
         :returns: ``True`` if at least a single transaction was served, ``False`` otherwise
         """
         at_least_once = False
-        t0 = time.time()
-        duration = timeout
+        timeout = Timeout(timeout)
         try:
             while True:
-                if self.poll(duration):
+                if self.poll(timeout):
                     at_least_once = True
-                if timeout is not None:
-                    duration = t0 + timeout - time.time()
-                    if duration < 0:
-                        break
+                if timeout.expired():
+                    break
         except EOFError:
             pass
         return at_least_once
@@ -509,10 +508,12 @@ class Connection(object):
         seq = self._get_seq_id()
         self._send_request(seq, handler, args)
 
-        timeout = self._config["sync_request_timeout"]
+        timeout = Timeout(self._config["sync_request_timeout"])
         while seq not in self._sync_replies:
-            if (not self.sync_recv_and_dispatch(timeout, True)
-                    and seq not in self._sync_replies):
+            self.sync_recv_and_dispatch(timeout, True)
+            if seq in self._sync_replies:
+                break
+            if timeout.expired():
                 raise TimeoutError()
 
         isexc, obj = self._sync_replies.pop(seq)

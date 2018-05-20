@@ -162,3 +162,12 @@ if sys.version_info >= (3, 3):
 else:
     class TimeoutError(Exception):
         pass
+
+if sys.version_info >= (3, 2):
+    def acquire_lock(lock, blocking, timeout):
+        if blocking and timeout.finite:
+            return lock.acquire(blocking, timeout.timeleft())
+        return lock.acquire(blocking)
+else:
+    def acquire_lock(lock, blocking, timeout):
+        return lock.acquire(blocking)
