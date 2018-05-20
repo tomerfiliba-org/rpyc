@@ -397,20 +397,19 @@ class Win32PipeStream(Stream):
         """a poor man's version of select()"""
         if timeout is None:
             timeout = maxint
-        length = 0
         tmax = time.time() + timeout
         try:
-            while length == 0:
-                length = win32pipe.PeekNamedPipe(self.incoming, 0)[1]
+            while True:
+                if win32pipe.PeekNamedPipe(self.incoming, 0)[1] != 0:
+                    return True
                 if time.time() >= tmax:
-                    break
+                    return False
                 time.sleep(interval)
         except TypeError:
             ex = sys.exc_info()[1]
             if not self.closed:
                 raise
             raise EOFError(ex)
-        return length != 0
 
 
 class NamedPipeStream(Win32PipeStream):
