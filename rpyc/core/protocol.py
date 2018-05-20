@@ -8,7 +8,7 @@ import socket
 import time
 import gc
 
-from threading import Lock, RLock, Condition
+from threading import Lock, Condition
 from rpyc.lib import spawn, Timeout
 from rpyc.lib.compat import (pickle, next, is_py3k, maxint, select_error,
                              acquire_lock, TimeoutError)
@@ -146,7 +146,6 @@ class Connection(object):
         self._recvlock = Lock()
         self._sendlock = Lock()
         self._sync_replies = {}
-        self._sync_lock = RLock()
         self._recv_event = Condition()
         self._async_callbacks = {}
         self._local_objects = RefCountingColl()
@@ -380,23 +379,9 @@ class Connection(object):
     #
     # serving
     #
-    def _recv(self, timeout, wait_for_lock):
-        timeout = Timeout(timeout)
-        if not acquire_lock(self._recvlock, wait_for_lock, timeout):
-            return None
-        try:
-            if self._channel.poll(timeout):
-                data = self._channel.recv()
-            else:
-                data = None
-        except EOFError:
-            self.close()
-            raise
-        finally:
-            self._recvlock.release()
-        return data
 
-    def _dispatch(self, msg, seq, args):
+    def _dispatch(self, data):
+        msg, seq, args = brine.load(data)
         if msg == consts.MSG_REQUEST:
             self._dispatch_request(seq, args)
         elif msg == consts.MSG_REPLY:
@@ -409,28 +394,21 @@ class Connection(object):
     def sync_recv_and_dispatch(self, timeout, wait_for_lock):
         timeout = Timeout(timeout)
         with self._recv_event:
-            if not self._sync_lock.acquire(False):
-                return self._recv_event.wait(timeout.timeleft())
-
+            if not self._recvlock.acquire(False):
+                return (wait_for_lock and
+                        self._recv_event.wait(timeout.timeleft()))
         try:
-            data = self._recv(timeout, wait_for_lock=wait_for_lock)
+            data = self._channel.poll(timeout) and self._channel.recv()
             if not data:
                 return False
-
-            msg, seq, args = brine.load(data)
-            # Have to enqueue to _sync_replies before releasing _recvlock to
-            # avoid race conditions with other threads
-            sync_reply = (msg in (consts.MSG_REPLY, consts.MSG_EXCEPTION) and
-                          seq not in self._async_callbacks)
-            if sync_reply:
-                self._dispatch(msg, seq, args)
-                return True
-
+        except EOFError:
+            self.close()
+            raise
         finally:
-            self._sync_lock.release()
+            self._recvlock.release()
             with self._recv_event:
                 self._recv_event.notify_all()
-        self._dispatch(msg, seq, args)
+        self._dispatch(data)
         return True
 
     def poll(self, timeout = 0):
