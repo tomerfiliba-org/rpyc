@@ -144,9 +144,8 @@ class Connection(object):
         self._seqcounter = itertools.count()
         self._recvlock = Lock()
         self._sendlock = Lock()
-        self._sync_replies = {}
         self._recv_event = Condition()
-        self._async_callbacks = {}
+        self._request_callbacks = {}
         self._local_objects = RefCountingColl()
         self._last_traceback = None
         self._proxy_cache = WeakValueDict()
@@ -175,8 +174,7 @@ class Connection(object):
         self._closed = True
         self._channel.close()
         self._local_root.on_disconnect(self)
-        self._sync_replies.clear()
-        self._async_callbacks.clear()
+        self._request_callbacks.clear()
         self._local_objects.clear()
         self._proxy_cache.clear()
         self._netref_classes_cache.clear()
@@ -262,17 +260,6 @@ class Connection(object):
             finally:
                 self._sendlock.release()
 
-    def _send_request(self, seq, handler, args):
-        self._send(consts.MSG_REQUEST, seq, (handler, self._box(args)))
-
-    def _send_reply(self, seq, obj):
-        self._send(consts.MSG_REPLY, seq, self._box(obj))
-
-    def _send_exception(self, seq, exctype, excval, exctb):
-        exc = vinegar.dump(exctype, excval, exctb,
-            include_local_traceback = self._config["include_local_traceback"])
-        self._send(consts.MSG_EXCEPTION, seq, exc)
-
     #
     # boxing
     #
@@ -351,29 +338,19 @@ class Connection(object):
                 raise
             if t is KeyboardInterrupt and self._config["propagate_KeyboardInterrupt_locally"]:
                 raise
-            self._send_exception(seq, t, v, tb)
+            self._send(consts.MSG_EXCEPTION, seq, self._box_exc(t, v, tb))
         else:
-            self._send_reply(seq, res)
+            self._send(consts.MSG_REPLY, seq, self._box(res))
 
-    def _dispatch_reply(self, seq, raw):
-        obj = self._unbox(raw)
-        if seq in self._async_callbacks:
-            self._async_callbacks.pop(seq)(False, obj)
-        else:
-            self._sync_replies[seq] = (False, obj)
+    def _box_exc(self, typ, val, tb):
+        return vinegar.dump(typ, val, tb, include_local_traceback=
+                            self._config["include_local_traceback"])
 
-    def _unbox_exception(self, raw):
+    def _unbox_exc(self, raw):
         return vinegar.load(raw,
             import_custom_exceptions = self._config["import_custom_exceptions"],
             instantiate_custom_exceptions = self._config["instantiate_custom_exceptions"],
             instantiate_oldstyle_exceptions = self._config["instantiate_oldstyle_exceptions"])
-
-    def _dispatch_exception(self, seq, raw):
-        obj = self._unbox_exception(raw)
-        if seq in self._async_callbacks:
-            self._async_callbacks.pop(seq)(True, obj)
-        else:
-            self._sync_replies[seq] = (True, obj)
 
     #
     # serving
@@ -384,13 +361,23 @@ class Connection(object):
         if msg == consts.MSG_REQUEST:
             self._dispatch_request(seq, args)
         elif msg == consts.MSG_REPLY:
-            self._dispatch_reply(seq, args)
+            obj = self._unbox(args)
+            self._request_callbacks.pop(seq)(False, obj)
         elif msg == consts.MSG_EXCEPTION:
-            self._dispatch_exception(seq, args)
+            obj = self._unbox_exc(args)
+            self._request_callbacks.pop(seq)(True, obj)
         else:
             raise ValueError("invalid message type: %r" % (msg,))
 
-    def sync_recv_and_dispatch(self, timeout, wait_for_lock):
+    def serve(self, timeout=1, wait_for_lock=True):
+        """Serves a single request or reply that arrives within the given
+        time frame (default is 1 sec). Note that the dispatching of a request
+        might trigger multiple (nested) requests, thus this function may be
+        reentrant.
+
+        :returns: ``True`` if a request or reply were received, ``False``
+                  otherwise.
+        """
         timeout = Timeout(timeout)
         with self._recv_event:
             if not self._recvlock.acquire(False):
@@ -416,18 +403,7 @@ class Connection(object):
         requests, which are all part of a single transaction.
 
         :returns: ``True`` if a transaction was served, ``False`` otherwise"""
-        return self.sync_recv_and_dispatch(timeout, wait_for_lock=False)
-
-    def serve(self, timeout = 1):
-        """Serves a single request or reply that arrives within the given
-        time frame (default is 1 sec). Note that the dispatching of a request
-        might trigger multiple (nested) requests, thus this function may be
-        reentrant.
-
-        :returns: ``True`` if a request or reply were received, ``False``
-                  otherwise.
-        """
-        return self.sync_recv_and_dispatch(timeout, wait_for_lock=True)
+        return self.serve(timeout, False)
 
     def serve_all(self):
         """Serves all requests and replies for as long as the connection is
@@ -491,31 +467,16 @@ class Connection(object):
         :raises: any exception that the requets may be generated
         :returns: the result of the request
         """
-        seq = self._get_seq_id()
-        self._send_request(seq, handler, args)
-
-        timeout = Timeout(self._config["sync_request_timeout"])
-        while seq not in self._sync_replies:
-            self.sync_recv_and_dispatch(timeout, True)
-            if seq in self._sync_replies:
-                break
-            if timeout.expired():
-                raise TimeoutError()
-
-        isexc, obj = self._sync_replies.pop(seq)
-        if isexc:
-            raise obj
-        else:
-            return obj
+        timeout = self._config["sync_request_timeout"]
+        return self.async_request(handler, *args, timeout=timeout).value
 
     def _async_request(self, handler, args = (), callback = (lambda a, b: None)):
         seq = self._get_seq_id()
-        self._async_callbacks[seq] = callback
+        self._request_callbacks[seq] = callback
         try:
-            self._send_request(seq, handler, args)
+            self._send(consts.MSG_REQUEST, seq, (handler, self._box(args)))
         except:
-            if seq in self._async_callbacks:
-                del self._async_callbacks[seq]
+            self._request_callbacks.pop(seq, None)
             raise
 
     def async_request(self, handler, *args, **kwargs):
