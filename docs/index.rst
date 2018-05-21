@@ -7,10 +7,6 @@
     src="_static/fish-text-black.png" title="Tomer's Blog"/>
     <span style="color:transparent;position: absolute;font-size:5px;width: 0px;height: 0px;">Tomer Filiba</span></a>
     <br/>
-    <a href="http://github.com/tomerfiliba/rpyc" target="_blank">
-    <img style="display: block; margin-left: auto; margin-right: auto; opacity: 0.7; width: 70px;"
-    src="_static/github-logo.png" title="Github Repo"/></a>
-    <br/>
     <a href="http://travis-ci.org/tomerfiliba/rpyc" target="_blank">
     <img src="https://travis-ci.org/tomerfiliba/rpyc.png?branch=master"
     style="display: block; margin-left: auto; margin-right: auto;" title="Travis CI status"></a>
