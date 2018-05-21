@@ -260,17 +260,6 @@ class Connection(object):
             finally:
                 self._sendlock.release()
 
-    def _send_request(self, seq, handler, args):
-        self._send(consts.MSG_REQUEST, seq, (handler, self._box(args)))
-
-    def _send_reply(self, seq, obj):
-        self._send(consts.MSG_REPLY, seq, self._box(obj))
-
-    def _send_exception(self, seq, exctype, excval, exctb):
-        exc = vinegar.dump(exctype, excval, exctb,
-            include_local_traceback = self._config["include_local_traceback"])
-        self._send(consts.MSG_EXCEPTION, seq, exc)
-
     #
     # boxing
     #
@@ -349,23 +338,19 @@ class Connection(object):
                 raise
             if t is KeyboardInterrupt and self._config["propagate_KeyboardInterrupt_locally"]:
                 raise
-            self._send_exception(seq, t, v, tb)
+            self._send(consts.MSG_EXCEPTION, seq, self._box_exc(t, v, tb))
         else:
-            self._send_reply(seq, res)
+            self._send(consts.MSG_REPLY, seq, self._box(res))
 
-    def _dispatch_reply(self, seq, raw):
-        obj = self._unbox(raw)
-        self._request_callbacks.pop(seq)(False, obj)
+    def _box_exc(self, typ, val, tb):
+        return vinegar.dump(typ, val, tb, include_local_traceback=
+                            self._config["include_local_traceback"])
 
-    def _unbox_exception(self, raw):
+    def _unbox_exc(self, raw):
         return vinegar.load(raw,
             import_custom_exceptions = self._config["import_custom_exceptions"],
             instantiate_custom_exceptions = self._config["instantiate_custom_exceptions"],
             instantiate_oldstyle_exceptions = self._config["instantiate_oldstyle_exceptions"])
-
-    def _dispatch_exception(self, seq, raw):
-        obj = self._unbox_exception(raw)
-        self._request_callbacks.pop(seq)(True, obj)
 
     #
     # serving
@@ -376,9 +361,11 @@ class Connection(object):
         if msg == consts.MSG_REQUEST:
             self._dispatch_request(seq, args)
         elif msg == consts.MSG_REPLY:
-            self._dispatch_reply(seq, args)
+            obj = self._unbox(args)
+            self._request_callbacks.pop(seq)(False, obj)
         elif msg == consts.MSG_EXCEPTION:
-            self._dispatch_exception(seq, args)
+            obj = self._unbox_exc(args)
+            self._request_callbacks.pop(seq)(True, obj)
         else:
             raise ValueError("invalid message type: %r" % (msg,))
 
@@ -487,7 +474,7 @@ class Connection(object):
         seq = self._get_seq_id()
         self._request_callbacks[seq] = callback
         try:
-            self._send_request(seq, handler, args)
+            self._send(consts.MSG_REQUEST, seq, (handler, self._box(args)))
         except:
             self._request_callbacks.pop(seq, None)
             raise
