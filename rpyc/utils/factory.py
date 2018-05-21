@@ -4,6 +4,7 @@ cases)
 """
 from __future__ import with_statement
 import socket
+from contextlib import closing
 
 import threading
 try:
@@ -154,10 +155,9 @@ def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
 def _get_free_port():
     """attempts to find a free port"""
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(("localhost", 0))
-    _, port = s.getsockname()
-    s.close()
-    return port
+    with closing(s):
+        s.bind(("localhost", 0))
+        return s.getsockname()[1]
 
 _ssh_connect_lock = threading.Lock()
 
@@ -263,8 +263,8 @@ def connect_thread(service=VoidService, config={}, remote_service=VoidService, r
     listener.listen(1)
 
     def server(listener=listener):
-        client = listener.accept()[0]
-        listener.close()
+        with closing(listener):
+            client = listener.accept()[0]
         conn = connect_stream(SocketStream(client), service=remote_service,
                               config=remote_config)
         try:
@@ -297,8 +297,8 @@ def connect_multiprocess(service=VoidService, config={}, remote_service=VoidServ
     listener.listen(1)
 
     def server(listener=listener, args=args):
-        client = listener.accept()[0]
-        listener.close()
+        with closing(listener):
+            client = listener.accept()[0]
         conn = connect_stream(SocketStream(client), service=remote_service, config=remote_config)
         try:
             for k in args:
