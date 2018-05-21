@@ -1,10 +1,7 @@
 import time
 from rpyc.lib import Timeout
+from rpyc.lib.compat import TimeoutError as AsyncResultTimeout
 
-
-class AsyncResultTimeout(Exception):
-    """an exception that represents an :class:`AsyncResult` that has timed out"""
-    pass
 
 class AsyncResult(object):
     """*AsyncResult* represents a computation that occurs in the background and
