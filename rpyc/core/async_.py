@@ -1,10 +1,7 @@
 import time
 from rpyc.lib import Timeout
+from rpyc.lib.compat import TimeoutError as AsyncResultTimeout
 
-
-class AsyncResultTimeout(Exception):
-    """an exception that represents an :class:`AsyncResult` that has timed out"""
-    pass
 
 class AsyncResult(object):
     """*AsyncResult* represents a computation that occurs in the background and
@@ -44,18 +41,10 @@ class AsyncResult(object):
         """Waits for the result to arrive. If the AsyncResult object has an
         expiry set, and the result did not arrive within that timeout,
         an :class:`AsyncResultTimeout` exception is raised"""
-        if self._is_ready:
-            return
-        if not self._ttl.finite:
-            while not self._is_ready:
-                self._conn.serve()
-        else:
-            while True:
-                self._conn.poll(self._ttl)
-                if self._is_ready:
-                    break
-                if self._ttl.expired():
-                    raise AsyncResultTimeout("result expired")
+        while not self._is_ready and not self._ttl.expired():
+            self._conn.serve(self._ttl)
+        if not self._is_ready:
+            raise AsyncResultTimeout("result expired")
 
     def add_callback(self, func):
         """Adds a callback to be invoked when the result arrives. The callback
@@ -108,4 +97,3 @@ class AsyncResult(object):
             raise self._obj
         else:
             return self._obj
-
