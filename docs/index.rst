@@ -1,20 +1,13 @@
 .. raw:: html
 
-    <div style="float:right; margin:1em 0em 1em 1em; padding: 1em 2em 1em 2em; background-color: #efefef;
-        border-radius: 5px; border-width: thin; border-style: dotted; border-color: #0C3762;">
+    <div style="float:right; margin:1em 0em 1em 1em; padding: 0em 1em 1em 1em;">
     <a href="http://tomerfiliba.com" target="_blank">
     <img style="display: block; margin-left: auto; margin-right: auto" alt="Tomer Filiba"
     src="_static/fish-text-black.png" title="Tomer's Blog"/>
     <span style="color:transparent;position: absolute;font-size:5px;width: 0px;height: 0px;">Tomer Filiba</span></a>
     <br/>
-    <a href="http://github.com/tomerfiliba/rpyc" target="_blank">
-    <img style="display: block; margin-left: auto; margin-right: auto; opacity: 0.7; width: 70px;"
-    src="_static/github-logo.png" title="Github Repo"/></a>
-    <br/>
-    <a href="http://travis-ci.org/tomerfiliba/rpyc" target="_blank">
-    <img src="https://travis-ci.org/tomerfiliba/rpyc.png?branch=master"
-    style="display: block; margin-left: auto; margin-right: auto;" title="Travis CI status"></a>
     </div>
+
 
 RPyC - Transparent, Symmetric Distributed Computing
 ====================================================
