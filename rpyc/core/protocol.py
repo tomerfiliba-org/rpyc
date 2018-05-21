@@ -390,7 +390,15 @@ class Connection(object):
         else:
             raise ValueError("invalid message type: %r" % (msg,))
 
-    def sync_recv_and_dispatch(self, timeout, wait_for_lock):
+    def serve(self, timeout=1, wait_for_lock=True):
+        """Serves a single request or reply that arrives within the given
+        time frame (default is 1 sec). Note that the dispatching of a request
+        might trigger multiple (nested) requests, thus this function may be
+        reentrant.
+
+        :returns: ``True`` if a request or reply were received, ``False``
+                  otherwise.
+        """
         timeout = Timeout(timeout)
         with self._recv_event:
             if not self._recvlock.acquire(False):
@@ -416,18 +424,7 @@ class Connection(object):
         requests, which are all part of a single transaction.
 
         :returns: ``True`` if a transaction was served, ``False`` otherwise"""
-        return self.sync_recv_and_dispatch(timeout, wait_for_lock=False)
-
-    def serve(self, timeout = 1):
-        """Serves a single request or reply that arrives within the given
-        time frame (default is 1 sec). Note that the dispatching of a request
-        might trigger multiple (nested) requests, thus this function may be
-        reentrant.
-
-        :returns: ``True`` if a request or reply were received, ``False``
-                  otherwise.
-        """
-        return self.sync_recv_and_dispatch(timeout, wait_for_lock=True)
+        return self.serve(timeout, False)
 
     def serve_all(self):
         """Serves all requests and replies for as long as the connection is
@@ -496,7 +493,7 @@ class Connection(object):
 
         timeout = Timeout(self._config["sync_request_timeout"])
         while seq not in self._sync_replies:
-            self.sync_recv_and_dispatch(timeout, True)
+            self.serve(timeout, True)
             if seq in self._sync_replies:
                 break
             if timeout.expired():
