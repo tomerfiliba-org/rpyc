@@ -107,6 +107,8 @@ What else is new
 .. _#244: https://github.com/tomerfiliba/rpyc/issues/244
 .. _#247: https://github.com/tomerfiliba/rpyc/issues/247
 
+.. _gevent: http://www.gevent.org/
+
 3.4.4
 -----
 Date: 07.08.2017
