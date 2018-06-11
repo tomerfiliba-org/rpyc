@@ -98,7 +98,5 @@ them:
 * `PyWin32 <http://sourceforge.net/projects/pywin32/files/pywin32/>`_ - Required
   for ``PipeStream`` on Windows
 
-* SSH client - Required for :ref:`RPyC-over-SSH <ssh-tunneling>` (``ssh_connect``)
-
 * `zlib for IronPython <https://bitbucket.org/jdhardy/ironpythonzlib>`_ - Required
   for IronPython prior to v2.7
