@@ -125,7 +125,7 @@ def _import_codetup(codetup):
         return CodeType(argcnt, nloc, stk, flg, codestr, tuple(consts2), names, varnames, filename, name,
             firstlineno, lnotab, freevars, cellvars)
 
-def import_function(functup, globals=None):
+def import_function(functup, globals=None, def_=True):
     name, modname, defaults, codetup = functup
     if globals is None:
         try:
@@ -139,4 +139,7 @@ def import_function(functup, globals=None):
         globals = obtain(globals)
     globals.setdefault('__builtins__', __builtins__)
     codeobj = _import_codetup(codetup)
-    return FunctionType(codeobj, globals, name, defaults)
+    funcobj = FunctionType(codeobj, globals, name, defaults)
+    if def_:
+        globals[name] = funcobj
+    return funcobj

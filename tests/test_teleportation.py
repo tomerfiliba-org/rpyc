@@ -24,6 +24,13 @@ def h(a):
     return a * os.getpid()
 
 
+def foo():
+    return bar()+1
+
+def bar():
+    return 42
+
+
 class TeleportationTest(unittest.TestCase):
     def setUp(self):
         server_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bin", "rpyc_classic.py")
@@ -59,6 +66,12 @@ class TeleportationTest(unittest.TestCase):
         the_globals = self.conn.builtins.dict({'THE_ANSWER': 43})
         teleported2 = teleport_function(self.conn, the_answer, the_globals)
         self.assertEqual(teleported2(), 43)
+
+    def test_def(self):
+        foo_ = teleport_function(self.conn, foo)
+        bar_ = teleport_function(self.conn, bar)
+        self.assertEqual(foo_(), 43)
+        self.assertEqual(bar_(), 42)
 
 
 if __name__ == "__main__":
