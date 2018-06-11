@@ -48,6 +48,18 @@ class TeleportationTest(unittest.TestCase):
         h2 = teleport_function(self.conn, h)
         self.assertNotEqual(h(7), h2(7))
 
+    def test_globals(self):
+        def the_answer():
+            return THE_ANSWER
+
+        teleported = teleport_function(self.conn, the_answer)
+        self.conn.namespace['THE_ANSWER'] = 42
+        self.assertEqual(teleported(), 42)
+
+        the_globals = self.conn.builtins.dict({'THE_ANSWER': 43})
+        teleported2 = teleport_function(self.conn, the_answer, the_globals)
+        self.assertEqual(teleported2(), 43)
+
 
 if __name__ == "__main__":
     unittest.main()
