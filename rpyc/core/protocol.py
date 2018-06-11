@@ -10,7 +10,7 @@ import gc
 from threading import Lock, Condition
 from rpyc.lib import spawn, Timeout
 from rpyc.lib.compat import (pickle, next, is_py3k, maxint, select_error,
-                             acquire_lock, TimeoutError)
+                             acquire_lock)
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async_ import AsyncResult
