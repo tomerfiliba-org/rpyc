@@ -361,6 +361,8 @@ def teleport_function(conn, func, globals=None):
     :param conn: the RPyC connection
     :param func: the function object to be delivered to the other party
     """
+    if globals is None:
+        globals = conn.namespace
     from rpyc.utils.teleportation import export_function
     exported = export_function(func)
     return conn.modules["rpyc.utils.teleportation"].import_function(exported, globals)
