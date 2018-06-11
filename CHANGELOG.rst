@@ -1,6 +1,6 @@
 4.0.0
 -----
-Date: (unknown)
+Date: 11.06.2018
 
 This release brings a few minor backward incompatibilities, so be sure to read
 on before upgrading. However, fear not: the ones that are most likely relevant
@@ -8,6 +8,11 @@ to you have a relatively simple migration path.
 
 Backward Incompatibilities
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* ``classic.teleport_function`` now executes the function in the connection's
+  namespace by default. To get the old behaviour, use
+  ``teleport_function(conn, func, conn.modules[func.__module__].__dict__)``
+  instead.
 
 * Changed signature of ``Service.on_connect`` and ``on_disconnect``, adding
   the connection as argument.
@@ -60,9 +65,42 @@ Backward Incompatibilities
 What else is new
 ^^^^^^^^^^^^^^^^
 
+* teleported functions will now be defined by default in the globals dict
+
+* Can now explicitly specify globals for teleported functions
+
+* Can now use streams as context manager
+
+* keep a hard reference to connection in netrefs, may fix some ``EOFError``
+  issues, in particular on Jython related (`#237`_)
+
+* handle synchronous and asynchronous requests uniformly
+
+* fix deadlock with connections talking to each other multithreadedly (`#270`_)
+
+* handle timeouts cumulatively
+
+* fix possible performance bug in ``Win32PipeStream.poll`` (oversleeping)
+
+* use readthedocs theme for documentation (`#269`_)
+
+* actually time out sync requests (`#264`_)
+
+* clarify documentation concerning exceptions in ``Connection.ping`` (`#265`_)
+
+* fix ``__hash__`` for netrefs (`#267`_, `#268`_)
+
+* rename ``async`` module to ``async_`` for py37 compatibility (`#253`_)
+
+* fix ``deliver()`` from IronPython to CPython2 (`#251`_)
+
+* fix brine string handling in py2 IronPython (`#251`_)
+
 * add gevent_ Server. For now, this requires using ``gevent.monkey.patch_all()``
   before importing for rpyc. Client connections can already be made without
   further changes to rpyc, just using gevent's monkey patching. (`#146`_)
+
+* add function ``rpyc.lib.spawn`` to spawn daemon threads
 
 * fix several bugs in ``bin/rpycd.py`` that crashed this script on startup
   (`#231`_)
@@ -103,9 +141,18 @@ What else is new
 .. _#228: https://github.com/tomerfiliba/rpyc/issues/228
 .. _#231: https://github.com/tomerfiliba/rpyc/issues/231
 .. _#236: https://github.com/tomerfiliba/rpyc/issues/236
+.. _#237: https://github.com/tomerfiliba/rpyc/issues/237
 .. _#239: https://github.com/tomerfiliba/rpyc/issues/239
 .. _#244: https://github.com/tomerfiliba/rpyc/issues/244
 .. _#247: https://github.com/tomerfiliba/rpyc/issues/247
+.. _#251: https://github.com/tomerfiliba/rpyc/issues/251
+.. _#253: https://github.com/tomerfiliba/rpyc/issues/253
+.. _#264: https://github.com/tomerfiliba/rpyc/issues/264
+.. _#265: https://github.com/tomerfiliba/rpyc/issues/265
+.. _#267: https://github.com/tomerfiliba/rpyc/issues/267
+.. _#268: https://github.com/tomerfiliba/rpyc/issues/268
+.. _#269: https://github.com/tomerfiliba/rpyc/issues/269
+.. _#270: https://github.com/tomerfiliba/rpyc/issues/270
 
 .. _gevent: http://www.gevent.org/
 
