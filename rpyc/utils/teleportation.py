@@ -73,11 +73,6 @@ def _export_codeobj(cobj):
         else:
             raise TypeError("Cannot export a function with non-brinable constants: %r" % (const,))
 
-    for op, arg in decode_codeobj(cobj):
-        if op in ("LOAD_GLOBAL", "STORE_GLOBAL", "DELETE_GLOBAL"):
-            if arg not in __builtin__.__dict__:
-                raise TypeError("Cannot export a function with non-builtin globals: %r" % (arg,))
-
     if is_py3k:
         exported = (cobj.co_argcount, cobj.co_kwonlyargcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
             cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
@@ -129,13 +124,14 @@ def _import_codetup(codetup):
         return CodeType(argcnt, nloc, stk, flg, codestr, tuple(consts2), names, varnames, filename, name,
             firstlineno, lnotab, freevars, cellvars)
 
-def import_function(functup):
+def import_function(functup, globals=None):
     name, modname, defaults, codetup = functup
-    try:
-        mod = __import__(modname, None, None, "*")
-    except ImportError:
-        mod = __import__("__main__", None, None, "*")
+    if globals is None:
+        try:
+            mod = __import__(modname, None, None, "*")
+        except ImportError:
+            mod = __import__("__main__", None, None, "*")
+        globals = mod.__dict__
+    globals.setdefault('__builtins__', __builtins__)
     codeobj = _import_codetup(codetup)
-    return FunctionType(codeobj, mod.__dict__, name, defaults)
-
-
+    return FunctionType(codeobj, globals, name, defaults)
