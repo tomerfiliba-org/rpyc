@@ -24,6 +24,13 @@ def h(a):
     return a * os.getpid()
 
 
+def foo():
+    return bar()+1
+
+def bar():
+    return 42
+
+
 class TeleportationTest(unittest.TestCase):
     def setUp(self):
         server_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bin", "rpyc_classic.py")
@@ -45,13 +52,26 @@ class TeleportationTest(unittest.TestCase):
         f2 = import_function(exp)
         self.assertEqual(f(6)(7), f2(6)(7))
 
-        # HACK: needed so the other side could import us (for globals)
-        mod = self.conn.modules.types.ModuleType(__name__)
-        self.conn.modules.sys.modules[__name__] = mod
-        mod.__builtins__ = self.conn.builtins
-
         h2 = teleport_function(self.conn, h)
         self.assertNotEqual(h(7), h2(7))
+
+    def test_globals(self):
+        def the_answer():
+            return THE_ANSWER
+
+        teleported = teleport_function(self.conn, the_answer)
+        self.conn.namespace['THE_ANSWER'] = 42
+        self.assertEqual(teleported(), 42)
+
+        the_globals = self.conn.builtins.dict({'THE_ANSWER': 43})
+        teleported2 = teleport_function(self.conn, the_answer, the_globals)
+        self.assertEqual(teleported2(), 43)
+
+    def test_def(self):
+        foo_ = teleport_function(self.conn, foo)
+        bar_ = teleport_function(self.conn, bar)
+        self.assertEqual(foo_(), 43)
+        self.assertEqual(bar_(), 42)
 
 
 if __name__ == "__main__":
