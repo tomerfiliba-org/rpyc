@@ -7,6 +7,7 @@ except ImportError:
 from rpyc.lib.compat import is_py3k
 from types import CodeType, FunctionType
 from rpyc.core import brine
+from rpyc.core import netref
 
 CODEOBJ_MAGIC = "MAg1c J0hNNzo0hn ZqhuBP17LQk8"
 
@@ -132,6 +133,10 @@ def import_function(functup, globals=None):
         except ImportError:
             mod = __import__("__main__", None, None, "*")
         globals = mod.__dict__
+    # function globals must be real dicts, sadly:
+    if isinstance(globals, netref.BaseNetref):
+        from rpyc.utils.classic import obtain
+        globals = obtain(globals)
     globals.setdefault('__builtins__', __builtins__)
     codeobj = _import_codetup(codetup)
     return FunctionType(codeobj, globals, name, defaults)
