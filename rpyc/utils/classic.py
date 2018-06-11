@@ -344,7 +344,7 @@ class MockClassicConnection(object):
         self.root = Slave()
         ClassicService._install(self, self.root)
 
-def teleport_function(conn, func):
+def teleport_function(conn, func, globals=None):
     """
     "Teleports" a function (including nested functions/closures) over the RPyC connection.
     The function is passed in bytecode form and reconstructed on the other side.
@@ -363,8 +363,4 @@ def teleport_function(conn, func):
     """
     from rpyc.utils.teleportation import export_function
     exported = export_function(func)
-    return conn.modules["rpyc.utils.teleportation"].import_function(exported)
-
-
-
-
+    return conn.modules["rpyc.utils.teleportation"].import_function(exported, globals)
