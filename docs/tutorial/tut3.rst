@@ -38,7 +38,7 @@ has the following boilerplate::
 
 .. note::
     The ``conn`` argument for ``on_connect`` and ``on_disconnect`` are added
-    in rpyc 3.5. This is backwards incompatible with previous versions where
+    in rpyc 4.0. This is backwards incompatible with previous versions where
     instead the service constructor is called with a connection parameter and
     stores it into ``self._conn``.
 
@@ -116,7 +116,7 @@ instance as their shared root object, e.g.::
 Note the subtle difference (parentheses!) to the example above.
 
 .. note::
-    Passing instances is supported starting with rpyc 3.5. In earlier
+    Passing instances is supported starting with rpyc 4.0. In earlier
     versions, you can only pass a class of which every connection will receive
     a separate instance.
 
@@ -135,7 +135,7 @@ separating the root objects for each connection. In this case, use
         t = ThreadedServer(service, port=18861)
 
 .. note::
-    classpartial is added in version 3.5.
+    classpartial is added in version 4.0.
 
 
 But Wait, There's More!
