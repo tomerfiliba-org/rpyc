@@ -85,6 +85,23 @@ Meanwhile, the question is not exposed:
     AttributeError: cannot access 'get_question'
 
 
+Access policy
+-------------
+By default methods and attributes are only visible if they start with the
+``exposed_`` prefix. This also means that attributes of builtin objects such
+as lists or dicts are not accessible by default. If needed, you can configure
+this by passing appropriate options when creating the server. For example::
+
+    from rpyc.utils.server import ThreadedServer
+    server = ThreadedServer(MyService, port=18861, protocol_config={
+        'allow_public_attrs': True,
+    })
+    server.start()
+
+For a description of all available settings see the
+:data:`~rpyc.core.protocol.DEFAULT_CONFIG`.
+
+
 Shared service instance
 -----------------------
 Note that we have here passed the *class* ``MyService`` to the server with the
