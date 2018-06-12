@@ -29,8 +29,8 @@ class ClassicServer(cli.Application):
     port = cli.SwitchAttr(["-p", "--port"], cli.Range(0, 65535), default = None,
         help="The TCP listener port (default = %s, default for SSL = %s)" %
             (DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT), group = "Socket Options")
-    host = cli.SwitchAttr(["--host"], str, default = "127.0.0.1", help = "The host to bind to. "
-        "The default is INADDR_ANY", group = "Socket Options")
+    host = cli.SwitchAttr(["--host"], str, default = "", help = "The host to bind to. "
+        "The default is localhost", group = "Socket Options")
     ipv6 = cli.Flag(["--ipv6"], help = "Enable IPv6", group = "Socket Options")
 
     logfile = cli.SwitchAttr("--logfile", str, default = None, help="Specify the log file to use; "
@@ -60,6 +60,9 @@ class ClassicServer(cli.Application):
         "for TCP, a value is required", group = "Registry")
 
     def main(self):
+        if not self.host:
+            self.host = "::1" if self.ipv6 else "127.0.0.1"
+
         if self.registry_type == "UDP":
             if self.registry_host is None:
                 self.registry_host = "255.255.255.255"
