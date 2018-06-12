@@ -1,3 +1,12 @@
+4.0.1
+-----
+Date: 12.06.2018
+
+- fix ValueError during install due to absolute PATH in SOURCES.txt (`#276`_)
+
+.. _#276: https://github.com/tomerfiliba/rpyc/issues/276
+
+
 4.0.0
 -----
 Date: 11.06.2018
