@@ -20,7 +20,7 @@ _local_netref_attrs = frozenset([
     '__dir__', '__doc__', '__getattr__', '__getattribute__', '__methods__',
     '__init__', '__metaclass__', '__module__', '__new__', '__reduce__',
     '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__',
-    '__weakref__', '__dict__', '__members__',  '__exit__',
+    '__weakref__', '__dict__', '__members__',  '__exit__', '__hash__',
 ]) | _deleted_netref_attrs
 """the set of attributes that are local to the netref object"""
 
