@@ -317,9 +317,9 @@ class ThreadPoolServer(Server):
     def __init__(self, *args, **kwargs):
         '''Initializes a ThreadPoolServer. In particular, instantiate the thread pool.'''
         # get the number of threads in the pool
-        nbthreads = 20
+        self.nbthreads = 20
         if 'nbThreads' in kwargs:
-            nbthreads = kwargs['nbThreads']
+            self.nbthreads = kwargs['nbThreads']
             del kwargs['nbThreads']
         # get the request batch size
         self.request_batch_size = 10
@@ -330,18 +330,21 @@ class ThreadPoolServer(Server):
         Server.__init__(self, *args, **kwargs)
         # a queue of connections having something to process
         self._active_connection_queue = Queue.Queue()
-        # declare the pool as already active
-        self.active = True
+        # a dictionary fd -> connection
+        self.fd_to_conn = {}
+        # a polling object to be used be the polling thread
+        self.poll_object = poll()
+
+    def _listen(self):
+        if self.active:
+            return
+        super(ThreadPoolServer, self)._listen()
         # setup the thread pool for handling requests
         self.workers = []
-        for i in range(nbthreads):
+        for i in range(self.nbthreads):
             t = spawn(self._serve_clients)
             t.setName('Worker%i' % i)
             self.workers.append(t)
-        # a polling object to be used be the polling thread
-        self.poll_object = poll()
-        # a dictionary fd -> connection
-        self.fd_to_conn = {}
         # setup a thread for polling inactive connections
         self.polling_thread = spawn(self._poll_inactive_clients)
         self.polling_thread.setName('PollingThread')
