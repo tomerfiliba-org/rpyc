@@ -2,7 +2,7 @@ import os
 import rpyc
 import time
 import tempfile
-from rpyc.utils.server import ThreadedServer
+from rpyc.utils.server import ThreadedServer, ThreadPoolServer
 from rpyc import SlaveService
 import unittest
 
@@ -46,6 +46,15 @@ class Test_ThreadedServerOverUnixSocket(unittest.TestCase):
         self.assertEqual(c.namespace["x"], 5)
         self.assertEqual(c.eval("1+x"), 6)
         c.close()
+
+
+class Test_ThreadPoolServer(Test_ThreadedServer):
+
+    def setUp(self):
+        self.server = ThreadPoolServer(SlaveService, port=18878, auto_register=False)
+        self.server.logger.quiet = False
+        self.server._start_in_thread()
+
 
 if __name__ == "__main__":
     unittest.main()
