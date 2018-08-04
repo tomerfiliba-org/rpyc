@@ -317,31 +317,27 @@ class ThreadPoolServer(Server):
     def __init__(self, *args, **kwargs):
         '''Initializes a ThreadPoolServer. In particular, instantiate the thread pool.'''
         # get the number of threads in the pool
-        nbthreads = 20
-        if 'nbThreads' in kwargs:
-            nbthreads = kwargs['nbThreads']
-            del kwargs['nbThreads']
-        # get the request batch size
-        self.request_batch_size = 10
-        if 'requestBatchSize' in kwargs:
-            self.request_batch_size = kwargs['requestBatchSize']
-            del kwargs['requestBatchSize']
+        self.nbthreads = kwargs.pop('nbThreads', 20)
+        self.request_batch_size = kwargs.pop('requestBatchSize', 10)
         # init the parent
         Server.__init__(self, *args, **kwargs)
         # a queue of connections having something to process
         self._active_connection_queue = Queue.Queue()
-        # declare the pool as already active
-        self.active = True
+        # a dictionary fd -> connection
+        self.fd_to_conn = {}
+        # a polling object to be used be the polling thread
+        self.poll_object = poll()
+
+    def _listen(self):
+        if self.active:
+            return
+        super(ThreadPoolServer, self)._listen()
         # setup the thread pool for handling requests
         self.workers = []
-        for i in range(nbthreads):
+        for i in range(self.nbthreads):
             t = spawn(self._serve_clients)
             t.setName('Worker%i' % i)
             self.workers.append(t)
-        # a polling object to be used be the polling thread
-        self.poll_object = poll()
-        # a dictionary fd -> connection
-        self.fd_to_conn = {}
         # setup a thread for polling inactive connections
         self.polling_thread = spawn(self._poll_inactive_clients)
         self.polling_thread.setName('PollingThread')
@@ -473,11 +469,7 @@ class ThreadPoolServer(Server):
         # authenticate
         if self.authenticator:
             h, p = sock.getpeername()
-            try:
-                sock, credentials = self.authenticator(sock)
-            except AuthenticationError:
-                self.logger.warning("%s:%s failed to authenticate, rejecting connection", h, p)
-                return None
+            sock, credentials = self.authenticator(sock)
         else:
             credentials = None
         # build a connection
@@ -493,16 +485,12 @@ class ThreadPoolServer(Server):
             # authenticate and build connection object
             conn = self._authenticate_and_build_connection(sock)
             # put the connection in the active queue
-            if conn:
-                h, p = sock.getpeername()
-                fd = conn.fileno()
-                self.logger.debug("Created connection to %s:%d with fd %d", h, p, fd)
-                self.fd_to_conn[fd] = conn
-                self._add_inactive_connection(fd)
-                self.clients.clear()
-            else:
-                self.logger.warning("Failed to authenticate and build connection, closing %s:%d", h, p)
-                sock.close()
+            h, p = sock.getpeername()
+            fd = conn.fileno()
+            self.logger.debug("Created connection to %s:%d with fd %d", h, p, fd)
+            self.fd_to_conn[fd] = conn
+            self._add_inactive_connection(fd)
+            self.clients.clear()
         except Exception:
             h, p = sock.getpeername()
             self.logger.exception("Failed to serve client for %s:%d, caught exception", h, p)
