@@ -1,3 +1,11 @@
+4.0.2
+-----
+Date: 04.08.2018
+
+- fix default hostname for ipv6 in rpyc_classic.py (#277)
+- fix ThreadPoolServer not working (#283)
+
+
 4.0.1
 -----
 Date: 12.06.2018
