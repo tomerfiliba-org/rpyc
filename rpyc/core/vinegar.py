@@ -155,7 +155,10 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
 
     exc.args = args
     for name, attrval in attrs:
-        setattr(exc, name, attrval)
+        try:
+            setattr(exc, name, attrval)
+        except AttributeError:      # handle immutable attrs (@property)
+            pass
     exc._remote_tb = tbtext
     return exc
 
