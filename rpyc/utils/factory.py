@@ -257,8 +257,8 @@ def connect_thread(service=VoidService, config={}, remote_service=VoidService, r
 
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict
-    :param server_service: the remote service to expose (of the server; defaults to Void)
-    :param server_config: remote configuration dict (of the server)
+    :param remote_service: the remote service to expose (of the server; defaults to Void)
+    :param remote_config: remote configuration dict (of the server)
     """
     listener = socket.socket()
     listener.bind(("localhost", 0))
@@ -286,8 +286,8 @@ def connect_multiprocess(service=VoidService, config={}, remote_service=VoidServ
 
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict
-    :param server_service: the remote service to expose (of the server; defaults to Void)
-    :param server_config: remote configuration dict (of the server)
+    :param remote_service: the remote service to expose (of the server; defaults to Void)
+    :param remote_config: remote configuration dict (of the server)
     :param args: dict of local vars to pass to new connection, form {'name':var}
 
     Contributed by *@tvanzyl*
