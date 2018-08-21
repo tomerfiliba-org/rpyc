@@ -86,7 +86,8 @@ def connect(host, port, service=VoidService, config={}, ipv6=False, keepalive=Fa
     :param port: the TCP port to use
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict
-    :param ipv6: whether to use IPv6 or not
+    :param ipv6: whether to create an IPv6 socket (defaults to ``False``)
+    :param keepalive: whether to set TCP keepalive on the socket (defaults to ``False``)
 
     :returns: an RPyC connection
     """
@@ -117,7 +118,8 @@ def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
     :param port: the TCP port to use
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict
-    :param ipv6: whether to create an IPv6 socket or an IPv4 one
+    :param ipv6: whether to create an IPv6 socket or an IPv4 one(defaults to ``False``)
+    :param keepalive: whether to set TCP keepalive on the socket (defaults to ``False``)
 
     The following arguments are passed directly to
     `ssl.wrap_socket <http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket>`_:
@@ -255,8 +257,8 @@ def connect_thread(service=VoidService, config={}, remote_service=VoidService, r
 
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict
-    :param server_service: the remote service to expose (of the server; defaults to Void)
-    :param server_config: remote configuration dict (of the server)
+    :param remote_service: the remote service to expose (of the server; defaults to Void)
+    :param remote_config: remote configuration dict (of the server)
     """
     listener = socket.socket()
     listener.bind(("localhost", 0))
@@ -284,8 +286,8 @@ def connect_multiprocess(service=VoidService, config={}, remote_service=VoidServ
 
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict
-    :param server_service: the remote service to expose (of the server; defaults to Void)
-    :param server_config: remote configuration dict (of the server)
+    :param remote_service: the remote service to expose (of the server; defaults to Void)
+    :param remote_config: remote configuration dict (of the server)
     :param args: dict of local vars to pass to new connection, form {'name':var}
 
     Contributed by *@tvanzyl*
