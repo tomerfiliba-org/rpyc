@@ -126,7 +126,7 @@ of TCP endpoints). For more info, see :ref:`api-registry`.
 
 Switches
 ^^^^^^^^
-* ``-m``, ``--mode=MODE` - The registry mode; either ``UDP`` or ``TCP``. The default is ``UDP``.
+* ``-m``, ``--mode=MODE`` - The registry mode; either ``UDP`` or ``TCP``. The default is ``UDP``.
 
 * ``-p``, ``--port=PORT`` - The UDP/TCP port to bind to. The default is ``18811``.
 
