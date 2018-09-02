@@ -6,6 +6,7 @@ import itertools
 import socket
 import time
 import gc
+import collections
 
 from threading import Lock, Condition
 from rpyc.lib import spawn, Timeout
@@ -19,13 +20,13 @@ class PingError(Exception):
     """The exception raised should :func:`Connection.ping` fail"""
     pass
 
-DEFAULT_CONFIG = dict(
+DEFAULT_CONFIG = collections.OrderedDict(
     # ATTRIBUTES
     allow_safe_attrs = True,
     allow_exposed_attrs = True,
     allow_public_attrs = False,
     allow_all_attrs = False,
-    safe_attrs = set(['__abs__', '__add__', '__and__', '__bool__', '__cmp__', '__contains__',
+    safe_attrs = (['__abs__', '__add__', '__and__', '__bool__', '__cmp__', '__contains__',
         '__delitem__', '__delslice__', '__div__', '__divmod__', '__doc__',
         '__eq__', '__float__', '__floordiv__', '__ge__', '__getitem__',
         '__getslice__', '__gt__', '__hash__', '__hex__', '__iadd__', '__iand__',
