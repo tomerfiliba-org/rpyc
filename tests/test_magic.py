@@ -58,8 +58,9 @@ class TestContextManagers(unittest.TestCase):
         self.assertEqual(hash(mod.Foo()), 1234)
         self.assertEqual(hash(mod.Bar()), 1234)
         if is_py3:
-            with self.assertRaises(TypeError):
-                hash(mod.Mux())
+            # py3 implicitly adds '__hash__=None' during class construction
+            # if '__eq__ is defined:
+            self.assertRaises(TypeError, lambda: hash(mod.Mux()))
         else:
             self.assertEqual(hash(mod.Mux()), 1234)
 
