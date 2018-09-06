@@ -103,6 +103,7 @@ class ClassicServer(cli.Application):
         t = OneShotServer(SlaveService, hostname = self.host, port = self.port,
             reuse_addr = True, ipv6 = self.ipv6, authenticator = self.authenticator,
             registrar = self.registrar, auto_register = self.auto_register)
+        t._listen()
         sys.stdout.write("rpyc-oneshot\n")
         sys.stdout.write("%s\t%s\n" % (t.host, t.port))
         sys.stdout.flush()
