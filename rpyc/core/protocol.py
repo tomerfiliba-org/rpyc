@@ -577,11 +577,11 @@ class Connection(object):
         return repr(obj)
     def _handle_str(self, obj):
         return str(obj)
-    def _handle_cmp(self, obj, other):
+    def _handle_cmp(self, obj, other, op='__cmp__'):
         # cmp() might enter recursive resonance... yet another workaround
         #return cmp(obj, other)
         try:
-            return type(obj).__cmp__(obj, other)
+            return getattr(type(obj), op)(obj, other)
         except (AttributeError, TypeError):
             return NotImplemented
     def _handle_hash(self, obj):
