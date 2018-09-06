@@ -111,5 +111,39 @@ created dict.
 That's true, but we sometimes like a bit of sugar;)
 
 
-Continue to :ref:`tut2`...
+The ``teleport`` method
+-----------------------
+There is another interesting method that allows you to transmit functions to
+the other sides and execute them over there::
 
+   >>> def square(x):
+   ...    return x**2
+   >>> fn = conn.teleport(square)
+   >>> fn(2)
+
+This calculates the square of two as expected, but the computation takes place
+on the remote!
+
+Furthermore, teleported functions are automatically defined in the remote
+namespace::
+
+   >>> conn.eval('square(3)')
+   9
+
+   >>> conn.namespace['square'] is fn
+   True
+
+And the teleported code can also access the namespace::
+
+   >>> con.execute('import sys')
+   >>> conn.teleport(lambda: print(sys.version_info))
+
+prints the version on the remote terminal.
+
+Note that currently it is not possible to teleport arbitrary functions, in
+particular there can be issues with closures to non-trivial objects. In case
+of problems it may be worth taking a look at external libraries such as dill_.
+
+.. _dill: https://pypi.org/project/dill/
+
+Continue to :ref:`tut2`...

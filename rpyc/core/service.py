@@ -6,6 +6,8 @@ Note that the services by both parties need not be symmetric, e.g., one side may
 exposed *service A*, while the other may expose *service B*. As long as the two
 can interoperate, you're good to go.
 """
+from functools import partial
+
 from rpyc.lib import hybridmethod
 from rpyc.lib.compat import execute, is_py3k
 from rpyc.core.protocol import Connection
@@ -204,6 +206,9 @@ class MasterService(Service):
         conn.namespace = slave.namespace
         conn.builtin = builtin
         conn.builtins = builtin
+        from rpyc.utils.classic import teleport_function
+        conn.teleport = partial(teleport_function, conn)
+
 
 class ClassicService(MasterService, SlaveService):
     """Full duplex master/slave service, i.e. both parties have full control
@@ -212,6 +217,6 @@ class ClassicService(MasterService, SlaveService):
 
 class ClassicClient(MasterService, FakeSlaveService):
     """MasterService that can be used for connecting to peers that operate a
-    :class:`MasterService`, :class:`ClassicService`, or the old
-    ``SlaveService`` (pre v3.5) without exposing any functionality to them."""
+    :class:`MasterService`, :class:`ClassicService` without exposing any
+    functionality to them."""
     __slots__ = ()
