@@ -12,8 +12,10 @@ matrix:
     - {python: "3.4",      env:                                     }
     - {python: "3.5",      env:                     SKIP_DEPLOY=true}
     - {python: "3.6",      env:                     SKIP_DEPLOY=true}
-    - {python: "3.7-dev",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
-    - {python: "nightly",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
+    - {python: "3.7",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true,
+       dist: xenial,       sudo: true}
+    - {python: "nightly",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true,
+       dist: xenial,       sudo: true}
 
 install:
     - python setup.py install
