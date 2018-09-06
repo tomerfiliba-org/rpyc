@@ -17,10 +17,10 @@ _deleted_netref_attrs = frozenset([
 
 _local_netref_attrs = frozenset([
     '____conn__', '____oid__', '____refcount__', '__class__', '__cmp__', '__del__', '__delattr__',
-    '__dir__', '__doc__', '__getattr__', '__getattribute__', '__methods__',
+    '__dir__', '__doc__', '__getattr__', '__getattribute__', '__hash__',
     '__init__', '__metaclass__', '__module__', '__new__', '__reduce__',
     '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__',
-    '__weakref__', '__dict__', '__members__',  '__exit__',
+    '__weakref__', '__dict__', '__members__', '__methods__', '__exit__',
 ]) | _deleted_netref_attrs
 """the set of attributes that are local to the netref object"""
 
@@ -145,8 +145,6 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
                 raise AttributeError()
             else:
                 return object.__getattribute__(self, name)
-        elif name == "__hash__":
-            return object.__getattribute__(self, "__hash__")
         elif name == "__call__":                          # IronPython issue #10
             return object.__getattribute__(self, "__call__")
         elif name == "__array__":
