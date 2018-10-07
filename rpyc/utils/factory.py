@@ -96,7 +96,7 @@ def connect(host, port, service=VoidService, config={}, ipv6=False, keepalive=Fa
 
 def unix_connect(path, service=VoidService, config={}):
     """
-    creates a socket-connection to the given host and port
+    creates a socket-connection to the given unix domain socket
 
     :param path: the path to the unix domain socket
     :param service: the local service to expose (defaults to Void)
