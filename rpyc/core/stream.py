@@ -11,9 +11,6 @@ from rpyc.lib.compat import poll, select_error, BYTES_LITERAL, get_exc_errno, ma
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 win32event = safe_import("win32event")
-pywintypes = safe_import("pywintypes")
-msvcrt = safe_import("msvcrt")
-ssl = safe_import("ssl")
 
 
 retry_errnos = (errno.EAGAIN, errno.EWOULDBLOCK)
@@ -185,6 +182,7 @@ class SocketStream(Stream):
 
         :returns: a :class:`SocketStream`
         """
+        import ssl
         if kwargs.pop("ipv6", False):
             kwargs["family"] = socket.AF_INET6
         s = cls._connect(host, port, **kwargs)
@@ -332,6 +330,7 @@ class Win32PipeStream(Stream):
     MAX_IO_CHUNK = 32000
 
     def __init__(self, incoming, outgoing):
+        import msvcrt
         self._keepalive = (incoming, outgoing)
         if hasattr(incoming, "fileno"):
             self._fileno = incoming.fileno()
@@ -340,9 +339,11 @@ class Win32PipeStream(Stream):
             outgoing = msvcrt.get_osfhandle(outgoing.fileno())
         self.incoming = incoming
         self.outgoing = outgoing
+    
     @classmethod
     def from_std(cls):
         return cls(sys.stdin, sys.stdout)
+    
     @classmethod
     def create_pair(cls):
         r1, w1 = win32pipe.CreatePipe(None, cls.PIPE_BUFFER_SIZE)
@@ -351,6 +352,7 @@ class Win32PipeStream(Stream):
 
     def fileno(self):
         return self._fileno
+    
     @property
     def closed(self):
         return self.incoming is ClosedFile
@@ -367,6 +369,7 @@ class Win32PipeStream(Stream):
         except Exception:
             pass
         self.outgoing = ClosedFile
+        
     def read(self, count):
         try:
             data = []
@@ -384,6 +387,7 @@ class Win32PipeStream(Stream):
             self.close()
             raise EOFError(ex)
         return BYTES_LITERAL("").join(data)
+    
     def write(self, data):
         try:
             while data:
@@ -425,6 +429,7 @@ class NamedPipeStream(Win32PipeStream):
     CONNECT_TIMEOUT = 3
 
     def __init__(self, handle, is_server_side):
+        import pywintypes
         Win32PipeStream.__init__(self, handle, handle)
         self.is_server_side = is_server_side
         self.read_overlapped = pywintypes.OVERLAPPED()
@@ -518,7 +523,7 @@ class NamedPipeStream(Win32PipeStream):
         try:
             if self.poll_read:
                 win32file.GetOverlappedResult(self.incoming, self.read_overlapped, 1)
-                data = [self.poll_buffer]
+                data = [self.poll_buffer[:]]
                 self.poll_read = False
                 count -= 1
             else:
@@ -582,3 +587,4 @@ class NamedPipeStream(Win32PipeStream):
 
 if sys.platform == "win32":
     PipeStream = Win32PipeStream
+
