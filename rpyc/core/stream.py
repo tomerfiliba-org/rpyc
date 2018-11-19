@@ -339,11 +339,11 @@ class Win32PipeStream(Stream):
             outgoing = msvcrt.get_osfhandle(outgoing.fileno())
         self.incoming = incoming
         self.outgoing = outgoing
-    
+
     @classmethod
     def from_std(cls):
         return cls(sys.stdin, sys.stdout)
-    
+
     @classmethod
     def create_pair(cls):
         r1, w1 = win32pipe.CreatePipe(None, cls.PIPE_BUFFER_SIZE)
@@ -352,7 +352,7 @@ class Win32PipeStream(Stream):
 
     def fileno(self):
         return self._fileno
-    
+
     @property
     def closed(self):
         return self.incoming is ClosedFile
@@ -369,7 +369,7 @@ class Win32PipeStream(Stream):
         except Exception:
             pass
         self.outgoing = ClosedFile
-        
+
     def read(self, count):
         try:
             data = []
@@ -387,7 +387,7 @@ class Win32PipeStream(Stream):
             self.close()
             raise EOFError(ex)
         return BYTES_LITERAL("").join(data)
-    
+
     def write(self, data):
         try:
             while data:
@@ -433,9 +433,9 @@ class NamedPipeStream(Win32PipeStream):
         Win32PipeStream.__init__(self, handle, handle)
         self.is_server_side = is_server_side
         self.read_overlapped = pywintypes.OVERLAPPED()
-        self.read_overlapped.hEvent = win32event.CreateEvent(None,1,1,None)
+        self.read_overlapped.hEvent = win32event.CreateEvent(None, 1, 1, None)
         self.write_overlapped = pywintypes.OVERLAPPED()
-        self.write_overlapped.hEvent = win32event.CreateEvent(None,1,1,None)
+        self.write_overlapped.hEvent = win32event.CreateEvent(None, 1, 1, None)
         self.poll_buffer = win32file.AllocateReadBuffer(1)
         self.poll_read = False
 
