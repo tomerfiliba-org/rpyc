@@ -8,6 +8,10 @@ import socket
 import errno
 from rpyc.lib import safe_import, Timeout
 from rpyc.lib.compat import poll, select_error, BYTES_LITERAL, get_exc_errno, maxint
+win32file = safe_import("win32file")
+win32pipe = safe_import("win32pipe")
+win32event = safe_import("win32event")
+
 
 retry_errnos = (errno.EAGAIN, errno.EWOULDBLOCK)
 
@@ -321,14 +325,12 @@ class Win32PipeStream(Stream):
     """A stream over two simplex pipes (one used to input, another for output).
     This is an implementation for Windows pipes (which suck)"""
 
-    __slots__ = ("incoming", "outgoing", "_fileno", "_keepalive", "win32pipe", "win32file")
+    __slots__ = ("incoming", "outgoing", "_fileno", "_keepalive")
     PIPE_BUFFER_SIZE = 130000
     MAX_IO_CHUNK = 32000
 
     def __init__(self, incoming, outgoing):
         import msvcrt
-        import win32pipe
-        import win32file
         self._keepalive = (incoming, outgoing)
         if hasattr(incoming, "fileno"):
             self._fileno = incoming.fileno()
@@ -337,46 +339,42 @@ class Win32PipeStream(Stream):
             outgoing = msvcrt.get_osfhandle(outgoing.fileno())
         self.incoming = incoming
         self.outgoing = outgoing
-        self.win32pipe = win32pipe
-        self.win32file = win32file
-
+    
     @classmethod
     def from_std(cls):
         return cls(sys.stdin, sys.stdout)
-
+    
     @classmethod
     def create_pair(cls):
-        import win32pipe
         r1, w1 = win32pipe.CreatePipe(None, cls.PIPE_BUFFER_SIZE)
         r2, w2 = win32pipe.CreatePipe(None, cls.PIPE_BUFFER_SIZE)
         return cls(r1, w2), cls(r2, w1)
 
     def fileno(self):
         return self._fileno
-
+    
     @property
     def closed(self):
         return self.incoming is ClosedFile
-
     def close(self):
         if self.closed:
             return
         try:
-            self.win32file.CloseHandle(self.incoming)
+            win32file.CloseHandle(self.incoming)
         except Exception:
             pass
         self.incoming = ClosedFile
         try:
-            self.win32file.CloseHandle(self.outgoing)
+            win32file.CloseHandle(self.outgoing)
         except Exception:
             pass
         self.outgoing = ClosedFile
-
+        
     def read(self, count):
         try:
             data = []
             while count > 0:
-                dummy, buf = self.win32file.ReadFile(self.incoming, int(min(self.MAX_IO_CHUNK, count)))
+                dummy, buf = win32file.ReadFile(self.incoming, int(min(self.MAX_IO_CHUNK, count)))
                 count -= len(buf)
                 data.append(buf)
         except TypeError:
@@ -384,23 +382,23 @@ class Win32PipeStream(Stream):
             if not self.closed:
                 raise
             raise EOFError(ex)
-        except self.win32file.error:
+        except win32file.error:
             ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
         return BYTES_LITERAL("").join(data)
-
+    
     def write(self, data):
         try:
             while data:
-                dummy, count = self.win32file.WriteFile(self.outgoing, data[:self.MAX_IO_CHUNK])
+                dummy, count = win32file.WriteFile(self.outgoing, data[:self.MAX_IO_CHUNK])
                 data = data[count:]
         except TypeError:
             ex = sys.exc_info()[1]
             if not self.closed:
                 raise
             raise EOFError(ex)
-        except self.win32file.error:
+        except win32file.error:
             ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
@@ -410,7 +408,7 @@ class Win32PipeStream(Stream):
         timeout = Timeout(timeout)
         try:
             while True:
-                if self.win32pipe.PeekNamedPipe(self.incoming, 0)[1] != 0:
+                if win32pipe.PeekNamedPipe(self.incoming, 0)[1] != 0:
                     return True
                 if timeout.expired():
                     return False
@@ -426,24 +424,20 @@ class NamedPipeStream(Win32PipeStream):
     """A stream over two named pipes (one used to input, another for output).
     Windows implementation."""
 
-    __slots__ = ("is_server_side", "read_overlapped", "write_overlapped",
-        "poll_buffer", "poll_read","win32event")
     NAMED_PIPE_PREFIX = r'\\.\pipe\rpyc_'
     PIPE_IO_TIMEOUT = 3
     CONNECT_TIMEOUT = 3
 
     def __init__(self, handle, is_server_side):
         import pywintypes
-        import win32event
         Win32PipeStream.__init__(self, handle, handle)
         self.is_server_side = is_server_side
         self.read_overlapped = pywintypes.OVERLAPPED()
         self.read_overlapped.hEvent = win32event.CreateEvent(None,1,1,None)
         self.write_overlapped = pywintypes.OVERLAPPED()
         self.write_overlapped.hEvent = win32event.CreateEvent(None,1,1,None)
-        self.poll_buffer = self.win32file.AllocateReadBuffer(1)
+        self.poll_buffer = win32file.AllocateReadBuffer(1)
         self.poll_read = False
-        self.win32event = win32event
 
     @classmethod
     def from_std(cls):
@@ -465,8 +459,6 @@ class NamedPipeStream(Win32PipeStream):
 
         :returns: a :class:`NamedPipeStream` instance
         """
-        import win32pipe
-        import win32file
         if not pipename.startswith("\\\\."):
             pipename = cls.NAMED_PIPE_PREFIX + pipename
         handle = win32pipe.CreateNamedPipe(
@@ -489,8 +481,8 @@ class NamedPipeStream(Win32PipeStream):
         until a connection arrives)"""
         if not self.is_server_side:
             raise ValueError("this must be the server side")
-        self.win32pipe.ConnectNamedPipe(self.incoming, self.write_overlapped)
-        self.win32event.WaitForSingleObject(self.write_overlapped.hEvent, self.win32event.INFINITE)
+        win32pipe.ConnectNamedPipe(self.incoming, self.write_overlapped)
+        win32event.WaitForSingleObject(self.write_overlapped.hEvent, win32event.INFINITE)
 
     @classmethod
     def create_client(cls, pipename):
@@ -503,7 +495,6 @@ class NamedPipeStream(Win32PipeStream):
 
         :returns: a :class:`NamedPipeStream` instance
         """
-        import win32file
         if not pipename.startswith("\\\\."):
             pipename = cls.NAMED_PIPE_PREFIX + pipename
         handle = win32file.CreateFile(
@@ -521,27 +512,27 @@ class NamedPipeStream(Win32PipeStream):
         if self.closed:
             return
         if self.is_server_side:
-            self.win32file.FlushFileBuffers(self.outgoing)
-            self.win32pipe.DisconnectNamedPipe(self.outgoing)
+            win32file.FlushFileBuffers(self.outgoing)
+            win32pipe.DisconnectNamedPipe(self.outgoing)
 
-        self.win32file.CloseHandle(self.read_overlapped.hEvent)
-        self.win32file.CloseHandle(self.write_overlapped.hEvent)
+        win32file.CloseHandle(self.read_overlapped.hEvent)
+        win32file.CloseHandle(self.write_overlapped.hEvent)
         Win32PipeStream.close(self)
 
     def read(self, count):
         try:
             if self.poll_read:
-                self.win32file.GetOverlappedResult(self.incoming, self.read_overlapped, 1)
+                win32file.GetOverlappedResult(self.incoming, self.read_overlapped, 1)
                 data = [self.poll_buffer[:]]
                 self.poll_read = False
                 count -= 1
             else:
                 data = []
             while count > 0:
-                hr, buf = self.win32file.ReadFile(self.incoming,
-                    self.win32file.AllocateReadBuffer(int(min(self.MAX_IO_CHUNK, count))),
+                hr, buf = win32file.ReadFile(self.incoming,
+                    win32file.AllocateReadBuffer(int(min(self.MAX_IO_CHUNK, count))),
                     self.read_overlapped)
-                n = self.win32file.GetOverlappedResult(self.incoming, self.read_overlapped, 1)
+                n = win32file.GetOverlappedResult(self.incoming, self.read_overlapped, 1)
                 count -= n
                 data.append(buf[:n])
         except TypeError:
@@ -549,7 +540,7 @@ class NamedPipeStream(Win32PipeStream):
             if not self.closed:
                 raise
             raise EOFError(ex)
-        except self.win32file.error:
+        except win32file.error:
             ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
@@ -558,14 +549,14 @@ class NamedPipeStream(Win32PipeStream):
     def write(self, data):
         try:
             while data:
-                dummy, count = self.win32file.WriteFile(self.outgoing, data[:self.MAX_IO_CHUNK], self.write_overlapped)
+                dummy, count = win32file.WriteFile(self.outgoing, data[:self.MAX_IO_CHUNK], self.write_overlapped)
                 data = data[count:]
         except TypeError:
             ex = sys.exc_info()[1]
             if not self.closed:
                 raise
             raise EOFError(ex)
-        except self.win32file.error:
+        except win32file.error:
             ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
@@ -577,17 +568,17 @@ class NamedPipeStream(Win32PipeStream):
             if timeout.finite:
                 wait_time = int(max(1, timeout.timeleft() * 1000))
             else:
-                wait_time = self.win32event.INFINITE
+                wait_time = win32event.INFINITE
 
             if not self.poll_read:
-                hr, self.poll_buffer = self.win32file.ReadFile(self.incoming,
+                hr, self.poll_buffer = win32file.ReadFile(self.incoming,
                     self.poll_buffer,
                     self.read_overlapped)
                 self.poll_read = True;
                 if hr == 0:
                     return True
-            res = self.win32event.WaitForSingleObject(self.read_overlapped.hEvent, wait_time)
-            return res == self.win32event.WAIT_OBJECT_0
+            res = win32event.WaitForSingleObject(self.read_overlapped.hEvent, wait_time)
+            return res == win32event.WAIT_OBJECT_0
         except TypeError:
             ex = sys.exc_info()[1]
             if not self.closed:
@@ -596,3 +587,4 @@ class NamedPipeStream(Win32PipeStream):
 
 if sys.platform == "win32":
     PipeStream = Win32PipeStream
+
