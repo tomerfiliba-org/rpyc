@@ -107,26 +107,30 @@ class SocketStream(Stream):
         family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, family,
             socktype, proto)[0]
         s = socket.socket(family, socktype, proto)
-        s.settimeout(timeout)
-        s.connect(sockaddr)
-        if nodelay:
-            s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
-        if keepalive:
-            s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
+        try:
+            s.settimeout(timeout)
+            s.connect(sockaddr)
+            if nodelay:
+                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+            if keepalive:
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
 
-            if hasattr(socket, "TCP_KEEPIDLE") and hasattr(socket, "TCP_KEEPINTVL") and hasattr(socket, "TCP_KEEPCNT"):
-                # Linux specific: after <keepalive> idle seconds, start sending keepalives every <keepalive> seconds.
-                # Drop connection after 5 failed keepalives
-                # `keepalive` may be a bool or an integer
-                if keepalive is True:
-                    keepalive = 60
-                if keepalive < 1:
-                    raise ValueError("Keepalive minimal value is 1 second")
+                if hasattr(socket, "TCP_KEEPIDLE") and hasattr(socket, "TCP_KEEPINTVL") and hasattr(socket, "TCP_KEEPCNT"):
+                    # Linux specific: after <keepalive> idle seconds, start sending keepalives every <keepalive> seconds.
+                    # Drop connection after 5 failed keepalives
+                    # `keepalive` may be a bool or an integer
+                    if keepalive is True:
+                        keepalive = 60
+                    if keepalive < 1:
+                        raise ValueError("Keepalive minimal value is 1 second")
 
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 5)
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, keepalive)
-                s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepalive)
-        return s
+                    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPCNT, 5)
+                    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPIDLE, keepalive)
+                    s.setsockopt(socket.IPPROTO_TCP, socket.TCP_KEEPINTVL, keepalive)
+            return s
+        except BaseException:
+            s.close()
+            raise
 
     @classmethod
     def connect(cls, host, port, **kwargs):
@@ -161,9 +165,13 @@ class SocketStream(Stream):
         :param timeout: socket timeout
         """
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        s.settimeout(timeout)
-        s.connect(path)
-        return cls(s)
+        try:
+            s.settimeout(timeout)
+            s.connect(path)
+            return cls(s)
+        except BaseException:
+            s.close()
+            raise
 
     @classmethod
     def ssl_connect(cls, host, port, ssl_kwargs, **kwargs):
@@ -186,8 +194,12 @@ class SocketStream(Stream):
         if kwargs.pop("ipv6", False):
             kwargs["family"] = socket.AF_INET6
         s = cls._connect(host, port, **kwargs)
-        s2 = ssl.wrap_socket(s, **ssl_kwargs)
-        return cls(s2)
+        try:
+            s2 = ssl.wrap_socket(s, **ssl_kwargs)
+            return cls(s2)
+        except BaseException:
+            s.close()
+            raise
 
     @property
     def closed(self):
