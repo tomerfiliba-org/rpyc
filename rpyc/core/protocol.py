@@ -231,6 +231,7 @@ class Connection(object):
 
     def _send(self, msg, seq, args):
         data = brine.dump((msg, seq, args))
+        # print("send", data)
         # GC might run while sending data
         # if so, a BaseNetref.__del__ might be called
         # BaseNetref.__del__ must call asyncreq,
@@ -357,6 +358,7 @@ class Connection(object):
     #
 
     def _dispatch(self, data):
+        # print("recv", data)
         msg, seq, args = brine.load(data)
         if msg == consts.MSG_REQUEST:
             self._dispatch_request(seq, args)

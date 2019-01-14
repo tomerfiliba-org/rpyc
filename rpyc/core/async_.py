@@ -1,6 +1,5 @@
-import time
 from rpyc.lib import Timeout
-from rpyc.lib.compat import TimeoutError as AsyncResultTimeout
+from rpyc.lib.compat import is_py3k, TimeoutError as AsyncResultTimeout
 
 
 class AsyncResult(object):
@@ -30,6 +29,8 @@ class AsyncResult(object):
     def __call__(self, is_exc, obj):
         if self.expired:
             return
+        if is_py3k and type(obj) is bytes:
+            obj = obj.decode("utf-8")
         self._is_exc = is_exc
         self._obj = obj
         self._is_ready = True

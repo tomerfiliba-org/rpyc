@@ -160,6 +160,8 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
         else:
             syncreq(self, consts.HANDLE_DELATTR, name)
     def __setattr__(self, name, value):
+        if isinstance(name, bytes):
+            name = name.decode("utf-8")
         if name in _local_netref_attrs:
             object.__setattr__(self, name, value)
         else:
@@ -200,8 +202,7 @@ def _make_method(name, doc):
     :func:`syncreq` on its `self` argument"""
 
     slicers = {"__getslice__" : "__getitem__", "__delslice__" : "__delitem__", "__setslice__" : "__setitem__"}
-
-    name = str(name)                                      # IronPython issue #10
+    # print("make", name)
     if name == "__call__":
         def __call__(_self, *args, **kwargs):
             kwargs = tuple(kwargs.items())
@@ -264,11 +265,19 @@ def class_factory(clsname, modname, methods):
 
     :returns: a netref class
     """
-    clsname = str(clsname)                                # IronPython issue #10
+    if is_py3k and isinstance(clsname, bytes):
+        clsname = clsname.decode("utf-8")
+    elif not is_py3k and isinstance(clsname, unicode):
+        clsname = clsname.encode("utf-8")
+    # print("===", clsname)
+    # clsname = str(clsname)                                # IronPython issue #10
     modname = str(modname)                                # IronPython issue #10
     ns = {"__slots__" : ()}
     for name, doc in methods:
-        name = str(name)                                  # IronPython issue #10
+        if is_py3k and isinstance(name, bytes):
+            name = name.decode("utf-8")                                 # IronPython issue #10
+        elif not is_py3k and isinstance(name, unicode):
+            name = name.encode("utf-8")
         if name not in _local_netref_attrs:
             ns[name] = _make_method(name, doc)
     ns["__module__"] = modname

@@ -124,6 +124,9 @@ class ModuleNamespace(object):
         else:
             return True
     def __getitem__(self, name):
+        # print(self.__getmodule)
+        if isinstance(name, bytes):
+            name = name.decode("utf-8")
         if type(name) is tuple:
             name = ".".join(name)
         if name not in self.__cache:
@@ -145,7 +148,12 @@ class Slave(object):
         return eval(text, self.namespace)
     def getmodule(self, name):
         """imports an arbitrary module"""
+        if isinstance(name, bytes):
+            name = name.decode("utf-8")
         return __import__(name, None, None, "*")
+    def getbuiltins(self):
+        name = "builtins" if is_py3k else "__builtin__"
+        return __import__(name)
     def getconn(self):
         """returns the local connection instance to the other side"""
         return self._conn
@@ -199,7 +207,7 @@ class MasterService(Service):
     @staticmethod
     def _install(conn, slave):
         modules = ModuleNamespace(slave.getmodule)
-        builtin = modules.builtins if is_py3k else modules.__builtin__
+        builtin = slave.getbuiltins()
         conn.modules = modules
         conn.eval = slave.eval
         conn.execute = slave.execute
