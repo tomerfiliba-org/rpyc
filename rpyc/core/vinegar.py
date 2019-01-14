@@ -155,6 +155,10 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
 
     exc.args = args
     for name, attrval in attrs:
+        if is_py3k and isinstance(clsname, bytes):
+            name = name.decode("utf-8")
+        elif not is_py3k and isinstance(clsname, unicode):
+            name = name.encode("utf-8")
         try:
             setattr(exc, name, attrval)
         except AttributeError:      # handle immutable attrs (@property)
