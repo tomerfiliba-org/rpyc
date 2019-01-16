@@ -32,7 +32,7 @@ before_script:
     - "cd tests"
 
 script:
-    - nosetests -vv -I test_deploy -I test_gevent_server
+    - nosetests -vv -I test_deploy -I test_gevent_server -I test_py23
     # need to run in its own python interpreter (`monkey.patch_all()`):
     - "python test_gevent_server.py || [[ -n $SKIP_GEVENT ]]"
     # it currently fails on all but the native python versions on travis:
