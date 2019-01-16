@@ -9,7 +9,7 @@ can interoperate, you're good to go.
 from functools import partial
 
 from rpyc.lib import hybridmethod
-from rpyc.lib.compat import execute, is_py3k
+from rpyc.lib.compat import execute, is_py3k, ensure_str
 from rpyc.core.protocol import Connection
 
 
@@ -124,11 +124,10 @@ class ModuleNamespace(object):
         else:
             return True
     def __getitem__(self, name):
-        # print(self.__getmodule)
-        if isinstance(name, bytes):
-            name = name.decode("utf-8")
         if type(name) is tuple:
             name = ".".join(name)
+        else:
+            name = ensure_str(name)
         if name not in self.__cache:
             self.__cache[name] = self.__getmodule(name)
         return self.__cache[name]
@@ -148,10 +147,10 @@ class Slave(object):
         return eval(text, self.namespace)
     def getmodule(self, name):
         """imports an arbitrary module"""
-        if isinstance(name, bytes):
-            name = name.decode("utf-8")
+        name = ensure_str(name)
         return __import__(name, None, None, "*")
     def getbuiltins(self):
+        """get builtin modules"""
         name = "builtins" if is_py3k else "__builtin__"
         return __import__(name)
     def getconn(self):

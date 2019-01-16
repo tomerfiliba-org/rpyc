@@ -21,7 +21,7 @@ except ImportError:
 
 from rpyc.core import brine
 from rpyc.core import consts
-from rpyc.lib.compat import is_py3k
+from rpyc.lib.compat import is_py3k, ensure_str
 
 
 try:
@@ -155,10 +155,7 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
 
     exc.args = args
     for name, attrval in attrs:
-        if is_py3k and isinstance(clsname, bytes):
-            name = name.decode("utf-8")
-        elif not is_py3k and isinstance(clsname, unicode):
-            name = name.encode("utf-8")
+        name = ensure_str(name)
         try:
             setattr(exc, name, attrval)
         except AttributeError:      # handle immutable attrs (@property)

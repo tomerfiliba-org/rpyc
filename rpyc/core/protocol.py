@@ -10,7 +10,7 @@ import gc
 from threading import Lock, Condition
 from rpyc.lib import spawn, Timeout
 from rpyc.lib.compat import (pickle, next, is_py3k, maxint, select_error,
-                             acquire_lock)
+                             acquire_lock, ensure_str)
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async_ import AsyncResult
@@ -231,7 +231,6 @@ class Connection(object):
 
     def _send(self, msg, seq, args):
         data = brine.dump((msg, seq, args))
-        # print("send", data)
         # GC might run while sending data
         # if so, a BaseNetref.__del__ might be called
         # BaseNetref.__del__ must call asyncreq,
@@ -358,7 +357,6 @@ class Connection(object):
     #
 
     def _dispatch(self, data):
-        # print("recv", data)
         msg, seq, args = brine.load(data)
         if msg == consts.MSG_REQUEST:
             self._dispatch_request(seq, args)

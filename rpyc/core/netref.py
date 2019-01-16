@@ -5,7 +5,7 @@ of *magic*, so beware.
 import sys
 import inspect
 import types
-from rpyc.lib.compat import pickle, is_py3k, maxint, with_metaclass
+from rpyc.lib.compat import pickle, is_py3k, maxint, with_metaclass, ensure_str
 from rpyc.core import consts
 
 
@@ -265,19 +265,11 @@ def class_factory(clsname, modname, methods):
 
     :returns: a netref class
     """
-    if is_py3k and isinstance(clsname, bytes):
-        clsname = clsname.decode("utf-8")
-    elif not is_py3k and isinstance(clsname, unicode):
-        clsname = clsname.encode("utf-8")
-    # print("===", clsname)
-    # clsname = str(clsname)                                # IronPython issue #10
+    clsname = ensure_str(clsname)                                # IronPython issue #10
     modname = str(modname)                                # IronPython issue #10
     ns = {"__slots__" : ()}
     for name, doc in methods:
-        if is_py3k and isinstance(name, bytes):
-            name = name.decode("utf-8")                                 # IronPython issue #10
-        elif not is_py3k and isinstance(name, unicode):
-            name = name.encode("utf-8")
+        name = ensure_str(name)
         if name not in _local_netref_attrs:
             ns[name] = _make_method(name, doc)
     ns["__module__"] = modname

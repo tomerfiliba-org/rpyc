@@ -171,3 +171,12 @@ if sys.version_info >= (3, 2):
 else:
     def acquire_lock(lock, blocking, timeout):
         return lock.acquire(blocking)
+
+
+def ensure_str(name):
+    """convert py2-unicode & py3-bytes to str"""
+    if is_py3k and isinstance(name, bytes):
+        name = name.decode("utf-8")
+    elif not is_py3k and isinstance(name, unicode):
+        name = name.encode("utf-8")
+    return name
