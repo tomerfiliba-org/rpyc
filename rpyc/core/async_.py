@@ -29,8 +29,8 @@ class AsyncResult(object):
     def __call__(self, is_exc, obj):
         if self.expired:
             return
-        if is_py3k and type(obj) is bytes:
-            obj = obj.decode("utf-8")
+        # if is_py3k and type(obj) is bytes:
+        #     obj = obj.decode("utf-8")
         self._is_exc = is_exc
         self._obj = obj
         self._is_ready = True
