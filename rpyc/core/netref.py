@@ -160,8 +160,6 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
         else:
             syncreq(self, consts.HANDLE_DELATTR, name)
     def __setattr__(self, name, value):
-        if isinstance(name, bytes):
-            name = name.decode("utf-8")
         if name in _local_netref_attrs:
             object.__setattr__(self, name, value)
         else:
@@ -189,7 +187,8 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     def __repr__(self):
         return syncreq(self, consts.HANDLE_REPR)
     def __str__(self):
-        return syncreq(self, consts.HANDLE_STR)
+        s = syncreq(self, consts.HANDLE_STR)
+        return ensure_str(s)
     def __exit__(self, exc, typ, tb):
         return syncreq(self, consts.HANDLE_CTXEXIT, exc)  # can't pass type nor traceback
     # support for pickling netrefs
@@ -265,11 +264,11 @@ def class_factory(clsname, modname, methods):
 
     :returns: a netref class
     """
-    clsname = ensure_str(clsname)                                # IronPython issue #10
+    clsname = str(clsname)                                # IronPython issue #10
     modname = str(modname)                                # IronPython issue #10
     ns = {"__slots__" : ()}
     for name, doc in methods:
-        name = ensure_str(name)
+        name = str(name)
         if name not in _local_netref_attrs:
             ns[name] = _make_method(name, doc)
     ns["__module__"] = modname

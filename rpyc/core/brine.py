@@ -124,6 +124,19 @@ def _dump_complex(obj, stream):
 
 @register(_dump_registry, bytes)
 def _dump_bytes(obj, stream):
+    if is_py3k:
+        return __dump_bytes(obj, stream)
+    else:
+        # in py2: bytes is str
+        try:
+            obj.encode("ascii")
+        except UnicodeDecodeError:
+            pass
+        else:
+            stream.append(TAG_UNICODE)
+        return __dump_bytes(obj, stream)
+
+def __dump_bytes(obj, stream):
     l = len(obj)
     if l == 0:
         stream.append(TAG_EMPTY_STR)
@@ -143,7 +156,7 @@ def _dump_bytes(obj, stream):
 @register(_dump_registry, type(u""))
 def _dump_str(obj, stream):
     stream.append(TAG_UNICODE)
-    _dump_bytes(obj.encode("utf8"), stream)
+    __dump_bytes(obj.encode("utf8"), stream)
 
 
 if not is_py3k:
