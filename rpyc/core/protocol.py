@@ -409,7 +409,7 @@ class Connection(object):
         """Serves all requests and replies for as long as the connection is
         alive."""
         try:
-            while True:
+            while not self.closed:
                 self.serve(None)
         except (socket.error, select_error, IOError):
             if not self.closed:
