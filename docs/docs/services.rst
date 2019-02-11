@@ -44,6 +44,31 @@ that's exposed by the other party. For security concerns, access is only granted
 ``exposed_`` members. For instance, the ``foo`` method above is inaccessible (attempting to
 call it will result in an ``AttributeError``).
 
+Rather than having each method name start with ``exposed_``, you may prefer to use a
+decorator. Let's revisit the calculator service, but this time we'll use decorators. ::
+
+    import rpyc
+
+    @rpyc.service
+    class CalculatorService(rpyc.Service):
+        @rpyc.exposed
+        def add(self, a, b):
+            return a + b
+        @rpyc.exposed
+        def sub(self, a, b):
+            return a - b
+        @rpyc.exposed
+        def mul(self, a, b):
+            return a * b
+        @rpyc.exposed
+        def div(self, a, b):
+            return a / b
+        def foo(self):
+            print "foo"
+
+When implementing services, ``@rpyc.service`` and ``@rpyc.exposed`` can replace the ``exposed_`` naming
+convention.
+
 Implementing Services
 ---------------------
 As previously explained, all ``exposed_`` members of your service class will be available to

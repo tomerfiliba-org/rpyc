@@ -16,6 +16,8 @@ if not isinstance(MyMeta, MyMeta):
     # python 3 compatibility
     MyClass = MyMeta(MyClass.__name__, MyClass.__bases__, dict(MyClass.__dict__))
 
+
+@rpyc.service
 class MyService(rpyc.Service):
     on_connect_called = False
     on_disconnect_called = False
@@ -40,6 +42,24 @@ class MyService(rpyc.Service):
     def exposed_getmeta(self):
         return MyClass()
 
+    @rpyc.exposed
+    class MyClass(object):
+        def __init__(self, a, b):
+            self.a = a
+            self.b = b
+
+        @rpyc.exposed
+        def foo(self):
+            return self.a + self.b
+
+    @rpyc.exposed
+    def get_decorated(self):
+        return "decorated"
+
+    @rpyc.exposed('prefix_')
+    def get_decorated_prefix(self):
+        return "decorated_prefix"
+
 
 class TestCustomService(unittest.TestCase):
     config = {}
@@ -47,7 +67,12 @@ class TestCustomService(unittest.TestCase):
     def setUp(self):
         self.service = MyService()
         self.conn = rpyc.connect_thread(remote_service=self.service)
-        self.conn.root # this will block until the service is initialized,
+        cfg = {'exposed_prefix': 'prefix_'}
+        self.prefixed_conn = rpyc.connect_thread(remote_service=self.service,
+                                                 config=cfg,
+                                                 remote_config=cfg)
+        self.conn.root  # this will block until the service is initialized,
+        self.prefixed_conn.root  # this will block until the service is initialized,
         # so we can be sure on_connect_called is True by that time
         self.assertTrue(self.service.on_connect_called)
 
@@ -70,6 +95,15 @@ class TestCustomService(unittest.TestCase):
         self.conn.root.exposed_getlist
         # this is not an exposed attribute:
         self.assertRaises(AttributeError, lambda: self.conn.root.foobar())
+        # methods exposed using decorator
+        self.conn.root.get_decorated
+        self.conn.root.exposed_get_decorated
+        self.prefixed_conn.root.get_decorated_prefix
+        self.prefixed_conn.root.prefix_get_decorated_prefix
+        self.assertFalse(hasattr(self.conn.root, 'get_decorated_prefix'))
+        smc = self.conn.root.MyClass('a', 'b')
+        self.assertEquals(smc.foo(), 'ab')
+
 
     def test_safeattrs(self):
         x = self.conn.root.getlist()
