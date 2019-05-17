@@ -1,8 +1,5 @@
 |Version| |Python| |Tests| |License|
 
-**NOTE:** rpyc is currently looking for a new maintainer. If you are
-interested, don't hesitate to give notice.
-
 RPyC_ (pronounced like *are-pie-see*), or *Remote Python Call*, is a
 **transparent** library for **symmetrical** `remote procedure calls`_,
 clustering_, and distributed-computing_.  RPyC makes use of object-proxying_,
