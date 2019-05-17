@@ -5,7 +5,7 @@ Requires [plumbum](http://plumbum.readthedocs.org/)
 """
 from __future__ import with_statement
 import sys
-import socket
+import socket  # noqa: F401
 from rpyc.lib.compat import BYTES_LITERAL
 from rpyc.core.service import VoidService
 from rpyc.core.stream import SocketStream
@@ -64,6 +64,7 @@ finally:
     thd.join(2)
 """
 
+
 class DeployedServer(object):
     """
     Sets up a temporary, short-lived RPyC deployment on the given remote machine. It will:
@@ -85,7 +86,8 @@ class DeployedServer(object):
     :param extra_setup: any extra code to add to the script
     """
 
-    def __init__(self, remote_machine, server_class = "rpyc.utils.server.ThreadedServer", extra_setup = "", python_executable=None):
+    def __init__(self, remote_machine, server_class="rpyc.utils.server.ThreadedServer",
+                 extra_setup="", python_executable=None):
         self.proc = None
         self.tun = None
         self.remote_machine = remote_machine
@@ -98,7 +100,8 @@ class DeployedServer(object):
 
         script = (tmp / "deployed-rpyc.py")
         modname, clsname = server_class.rsplit(".", 1)
-        script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace("$SERVER$", clsname).replace("$EXTRA_SETUP$", extra_setup))
+        script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace(
+            "$SERVER$", clsname).replace("$EXTRA_SETUP$", extra_setup))
         if python_executable:
             cmd = remote_machine[python_executable]
         else:
@@ -115,7 +118,7 @@ class DeployedServer(object):
             if not cmd:
                 cmd = remote_machine.python
 
-        self.proc = cmd.popen(script, new_session = True)
+        self.proc = cmd.popen(script, new_session=True)
 
         line = ""
         try:
@@ -138,8 +141,10 @@ class DeployedServer(object):
 
     def __del__(self):
         self.close()
+
     def __enter__(self):
         return self
+
     def __exit__(self, t, v, tb):
         self.close()
 
@@ -170,7 +175,7 @@ class DeployedServer(object):
         else:
             return SocketStream._connect("localhost", self.local_port)
 
-    def connect(self, service = VoidService, config = {}):
+    def connect(self, service=VoidService, config={}):
         """Same as :func:`~rpyc.utils.factory.connect`, but with the ``host`` and ``port``
         parameters fixed"""
         return rpyc.utils.factory.connect_stream(
@@ -188,21 +193,27 @@ class MultiServerDeployment(object):
     An 'aggregate' server deployment to multiple SSH machine. It deploys RPyC to each machine
     separately, but lets you manage them as a single deployment.
     """
-    def __init__(self, remote_machines, server_class = "rpyc.utils.server.ThreadedServer"):
+
+    def __init__(self, remote_machines, server_class="rpyc.utils.server.ThreadedServer"):
         self.remote_machines = remote_machines
         # build the list incrementally, so we can clean it up if we have an exception
         self.servers = [DeployedServer(mach, server_class) for mach in remote_machines]
 
     def __del__(self):
         self.close()
+
     def __enter__(self):
         return self
+
     def __exit__(self, t, v, tb):
         self.close()
+
     def __iter__(self):
         return iter(self.servers)
+
     def __len__(self):
         return len(self.servers)
+
     def __getitem__(self, index):
         return self.servers[index]
 
@@ -211,9 +222,10 @@ class MultiServerDeployment(object):
             s = self.servers.pop(0)
             s.close()
 
-    def connect_all(self, service = VoidService, config = {}):
+    def connect_all(self, service=VoidService, config={}):
         """connects to all deployed servers; returns a list of connections (order guaranteed)"""
         return [s.connect(service, config) for s in self.servers]
+
     def classic_connect_all(self):
         """connects to all deployed servers using classic_connect; returns a list of connections (order guaranteed)"""
         return [s.classic_connect() for s in self.servers]

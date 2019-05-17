@@ -3,7 +3,7 @@ import sys
 try:
     import __builtin__
 except ImportError:
-    import builtins as __builtin__
+    import builtins as __builtin__  # noqa: F401
 from rpyc.lib.compat import is_py3k
 from types import CodeType, FunctionType
 from rpyc.core import brine
@@ -14,7 +14,7 @@ CODEOBJ_MAGIC = "MAg1c J0hNNzo0hn ZqhuBP17LQk8"
 
 # NOTE: dislike this kind of hacking on the level of implementation details,
 # should search for a more reliable/future-proof way:
-CODE_HAVEARG_SIZE = 2 if sys.version_info >= (3,6) else 3
+CODE_HAVEARG_SIZE = 2 if sys.version_info >= (3, 6) else 3
 try:
     from dis import _unpack_opargs
 except ImportError:
@@ -26,14 +26,14 @@ except ImportError:
         while i < n:
             op = code[i]
             offset = i
-            i = i+1
+            i = i + 1
             arg = None
             if op >= opcode.HAVE_ARGUMENT:
-                arg = code[i] + code[i+1]*256 + extended_arg
+                arg = code[i] + code[i + 1] * 256 + extended_arg
                 extended_arg = 0
-                i = i+2
+                i = i + 2
                 if op == opcode.EXTENDED_ARG:
-                    extended_arg = arg*65536
+                    extended_arg = arg * 65536
             yield (offset, op, arg)
 
 
@@ -64,6 +64,7 @@ def decode_codeobj(codeobj):
 
         yield (opname, argval)
 
+
 def _export_codeobj(cobj):
     consts2 = []
     for const in cobj.co_consts:
@@ -76,15 +77,16 @@ def _export_codeobj(cobj):
 
     if is_py3k:
         exported = (cobj.co_argcount, cobj.co_kwonlyargcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
-            cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
-            cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
+                    cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
+                    cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
     else:
         exported = (cobj.co_argcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
-            cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
-            cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
+                    cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
+                    cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
 
     assert brine.dumpable(exported)
     return (CODEOBJ_MAGIC, exported)
+
 
 def export_function(func):
     if is_py3k:
@@ -103,6 +105,7 @@ def export_function(func):
 
     return func.__name__, func.__module__, func_defaults, _export_codeobj(func_code)[1]
 
+
 def _import_codetup(codetup):
     if is_py3k:
         (argcnt, kwargcnt, nloc, stk, flg, codestr, consts, names, varnames, filename, name,
@@ -120,10 +123,11 @@ def _import_codetup(codetup):
 
     if is_py3k:
         return CodeType(argcnt, kwargcnt, nloc, stk, flg, codestr, tuple(consts2), names, varnames, filename, name,
-            firstlineno, lnotab, freevars, cellvars)
+                        firstlineno, lnotab, freevars, cellvars)
     else:
         return CodeType(argcnt, nloc, stk, flg, codestr, tuple(consts2), names, varnames, filename, name,
-            firstlineno, lnotab, freevars, cellvars)
+                        firstlineno, lnotab, freevars, cellvars)
+
 
 def import_function(functup, globals=None, def_=True):
     name, modname, defaults, codetup = functup
