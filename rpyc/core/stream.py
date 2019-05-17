@@ -7,7 +7,7 @@ import os
 import socket
 import errno
 from rpyc.lib import safe_import, Timeout
-from rpyc.lib.compat import poll, select_error, BYTES_LITERAL, get_exc_errno, maxint
+from rpyc.lib.compat import poll, select_error, BYTES_LITERAL, get_exc_errno, maxint  # noqa: F401
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 win32event = safe_import("win32event")
@@ -129,9 +129,11 @@ class SocketStream(Stream):
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             if keepalive:
                 s.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-
-                if hasattr(socket, "TCP_KEEPIDLE") and hasattr(socket, "TCP_KEEPINTVL") and hasattr(socket, "TCP_KEEPCNT"):
-                    # Linux specific: after <keepalive> idle seconds, start sending keepalives every <keepalive> seconds.
+                # Linux specific: after <keepalive> idle seconds, start sending keepalives every <keepalive> seconds.
+                is_linux_socket = hasattr(socket, "TCP_KEEPIDLE")
+                is_linux_socket &= hasattr(socket, "TCP_KEEPINTVL")
+                is_linux_socket &= hasattr(socket, "TCP_KEEPCNT")
+                if is_linux_socket:
                     # Drop connection after 5 failed keepalives
                     # `keepalive` may be a bool or an integer
                     if keepalive is True:
@@ -630,4 +632,4 @@ class NamedPipeStream(Win32PipeStream):
 
 
 if sys.platform == "win32":
-    PipeStream = Win32PipeStream
+    PipeStream = Win32PipeStream  # noqa: F811

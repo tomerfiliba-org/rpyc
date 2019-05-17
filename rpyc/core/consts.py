@@ -1,5 +1,4 @@
-"""
-Constants used by the protocol
+"""Constants used by the protocol
 """
 
 # messages
