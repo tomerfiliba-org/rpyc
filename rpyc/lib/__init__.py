@@ -5,20 +5,24 @@ import sys
 import logging
 import threading
 import time
-from rpyc.lib.compat import maxint
+from rpyc.lib.compat import maxint  # noqa: F401
 
 
 class MissingModule(object):
     __slots__ = ["__name"]
+
     def __init__(self, name):
         self.__name = name
+
     def __getattr__(self, name):
-        if name.startswith("__"): # issue 71
+        if name.startswith("__"):  # issue 71
             raise AttributeError("module %r not found" % (self.__name,))
         raise ImportError("module %r not found" % (self.__name,))
+
     def __bool__(self):
         return False
     __nonzero__ = __bool__
+
 
 def safe_import(name):
     try:
@@ -27,13 +31,14 @@ def safe_import(name):
         mod = MissingModule(name)
     except Exception:
         # issue 72: IronPython on Mono
-        if sys.platform == "cli" and name == "signal": #os.name == "posix":
+        if sys.platform == "cli" and name == "signal":  # os.name == "posix":
             mod = MissingModule(name)
         else:
             raise
     return mod
 
-def setup_logger(quiet = False, logfile = None):
+
+def setup_logger(quiet=False, logfile=None):
     opts = {}
     if quiet:
         opts['level'] = logging.ERROR
@@ -48,10 +53,13 @@ class hybridmethod(object):
     """Decorator for hybrid instance/class methods that will act like a normal
     method if accessed via an instance, but act like classmethod if accessed
     via the class."""
+
     def __init__(self, func):
         self.func = func
+
     def __get__(self, obj, cls):
         return self.func.__get__(cls if obj is None else obj, obj)
+
     def __set__(self, obj, val):
         raise AttributeError("Cannot overwrite method")
 
@@ -74,7 +82,8 @@ def spawn_waitready(init, main):
     """
     event = threading.Event()
     stack = [event]     # used to exchange arguments with thread, so `event`
-                        # can be deleted when it has fulfilled its purpose.
+    # can be deleted when it has fulfilled its purpose.
+
     def start():
         stack.append(init())
         stack.pop(0).set()
@@ -92,7 +101,7 @@ class Timeout:
             self.tmax = timeout.tmax
         else:
             self.finite = timeout is not None and timeout >= 0
-            self.tmax = time.time()+timeout if self.finite else None
+            self.tmax = time.time() + timeout if self.finite else None
 
     def expired(self):
         return self.finite and time.time() >= self.tmax
