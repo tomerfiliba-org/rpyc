@@ -1,22 +1,21 @@
-"""
-**Brine** is a simple, fast and secure object serializer for **immutable** objects.
+"""*Brine* is a simple, fast and secure object serializer for **immutable** objects.
+
 The following types are supported: ``int``, ``long``, ``bool``, ``str``, ``float``,
 ``unicode``, ``bytes``, ``slice``, ``complex``, ``tuple`` (of simple types),
 ``frozenset`` (of simple types) as well as the following singletons: ``None``,
 ``NotImplemented``, and ``Ellipsis``.
 
 Example::
-
-    >>> x = ("he", 7, u"llo", 8, (), 900, None, True, Ellipsis, 18.2, 18.2j + 13,
-    ... slice(1,2,3), frozenset([5,6,7]), NotImplemented)
-    >>> dumpable(x)
-    True
-    >>> y = dump(x)
-    >>> y.encode("hex")
-    '140e0b686557080c6c6c6f580216033930300003061840323333333333331b402a000000000000403233333333333319125152531a1255565705'
-    >>> z = load(y)
-    >>> x == z
-    True
+ >>> x = ("he", 7, u"llo", 8, (), 900, None, True, Ellipsis, 18.2, 18.2j + 13,
+ ... slice(1,2,3), frozenset([5,6,7]), NotImplemented)
+ >>> dumpable(x)
+ True
+ >>> y = dump(x)
+ >>> y.encode("hex")
+ '140e0b686557080c6c6c6f580216033930300003061840323333333333331b402a000000000000403233333333333319125152531a1255565705'
+ >>> z = load(y)
+ >>> x == z
+ True
 """
 from rpyc.lib.compat import Struct, BytesIO, is_py3k, BYTES_LITERAL
 
@@ -115,11 +114,11 @@ def _dump_int(obj, stream):
         stream.append(IMM_INTS[obj])
     else:
         obj = BYTES_LITERAL(str(obj))
-        l = len(obj)
-        if l < 256:
-            stream.append(TAG_INT_L1 + I1.pack(l) + obj)
+        lenobj = len(obj)
+        if lenobj < 256:
+            stream.append(TAG_INT_L1 + I1.pack(lenobj) + obj)
         else:
-            stream.append(TAG_INT_L4 + I4.pack(l) + obj)
+            stream.append(TAG_INT_L4 + I4.pack(lenobj) + obj)
 
 
 @register(_dump_registry, float)
@@ -134,21 +133,21 @@ def _dump_complex(obj, stream):
 
 @register(_dump_registry, bytes)
 def _dump_bytes(obj, stream):
-    l = len(obj)
-    if l == 0:
+    lenobj = len(obj)
+    if lenobj == 0:
         stream.append(TAG_EMPTY_STR)
-    elif l == 1:
+    elif lenobj == 1:
         stream.append(TAG_STR1 + obj)
-    elif l == 2:
+    elif lenobj == 2:
         stream.append(TAG_STR2 + obj)
-    elif l == 3:
+    elif lenobj == 3:
         stream.append(TAG_STR3 + obj)
-    elif l == 4:
+    elif lenobj == 4:
         stream.append(TAG_STR4 + obj)
-    elif l < 256:
-        stream.append(TAG_STR_L1 + I1.pack(l) + obj)
+    elif lenobj < 256:
+        stream.append(TAG_STR_L1 + I1.pack(lenobj) + obj)
     else:
-        stream.append(TAG_STR_L4 + I4.pack(l) + obj)
+        stream.append(TAG_STR_L4 + I4.pack(lenobj) + obj)
 
 
 @register(_dump_registry, type(u""))
@@ -158,7 +157,7 @@ def _dump_str(obj, stream):
 
 
 if not is_py3k:
-    @register(_dump_registry, long)
+    @register(_dump_registry, long)  # noqa: F821
     def _dump_long(obj, stream):
         stream.append(TAG_LONG)
         _dump_int(obj, stream)
@@ -166,21 +165,21 @@ if not is_py3k:
 
 @register(_dump_registry, tuple)
 def _dump_tuple(obj, stream):
-    l = len(obj)
-    if l == 0:
+    lenobj = len(obj)
+    if lenobj == 0:
         stream.append(TAG_EMPTY_TUPLE)
-    elif l == 1:
+    elif lenobj == 1:
         stream.append(TAG_TUP1)
-    elif l == 2:
+    elif lenobj == 2:
         stream.append(TAG_TUP2)
-    elif l == 3:
+    elif lenobj == 3:
         stream.append(TAG_TUP3)
-    elif l == 4:
+    elif lenobj == 4:
         stream.append(TAG_TUP4)
-    elif l < 256:
-        stream.append(TAG_TUP_L1 + I1.pack(l))
+    elif lenobj < 256:
+        stream.append(TAG_TUP_L1 + I1.pack(lenobj))
     else:
-        stream.append(TAG_TUP_L4 + I4.pack(l))
+        stream.append(TAG_TUP_L4 + I4.pack(lenobj))
     for item in obj:
         _dump(item, stream)
 
@@ -239,7 +238,7 @@ else:
     @register(_load_registry, TAG_LONG)
     def _load_long(stream):
         obj = _load(stream)
-        return long(obj)
+        return long(obj)  # noqa: F821
 
 
 @register(_load_registry, TAG_FLOAT)
@@ -326,7 +325,7 @@ else:
     @register(_load_registry, TAG_TUP_L4)
     def _load_tup_l4(stream):
         l, = I4.unpack(stream.read(4))
-        return tuple(_load(stream) for i in xrange(l))
+        return tuple(_load(stream) for i in xrange(l))  # noqa
 
 
 @register(_load_registry, TAG_SLICE)
@@ -390,7 +389,7 @@ if is_py3k:
     simple_types = frozenset([type(None), int, bool, float, bytes, str, complex,
                               type(NotImplemented), type(Ellipsis)])
 else:
-    simple_types = frozenset([type(None), int, long, bool, float, bytes, unicode, complex,
+    simple_types = frozenset([type(None), int, long, bool, float, bytes, unicode, complex,  # noqa: F821
                               type(NotImplemented), type(Ellipsis)])
 
 

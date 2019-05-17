@@ -1,4 +1,4 @@
-import time
+import time  # noqa: F401
 from rpyc.lib import Timeout
 from rpyc.lib.compat import TimeoutError as AsyncResultTimeout
 

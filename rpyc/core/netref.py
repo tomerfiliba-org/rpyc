@@ -1,5 +1,4 @@
-"""
-**NetRef**: a transparent *network reference*. This module contains quite a lot
+"""*NetRef*: a transparent *network reference*. This module contains quite a lot
 of *magic*, so beware.
 """
 import sys
@@ -53,7 +52,7 @@ if is_py3k:
     xrange = range
 else:
     _builtin_types.extend([
-        basestring, unicode, long, xrange, type(iter(xrange(10))), file,
+        basestring, unicode, long, xrange, type(iter(xrange(10))), file,  # noqa
         types.InstanceType, types.ClassType, types.DictProxyType,
     ])
 
