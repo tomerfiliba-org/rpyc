@@ -16,6 +16,11 @@ class Test_Ssh(unittest.TestCase):
             self.remote_machine = SshMachine("localhost")
         else:
             # assume "ssh localhost" is configured to run without asking for password
+            # `.ssh/config`
+            # Host localhost
+            #   HostName 127.0.0.1
+            #   User <username>
+            #   IdentityFile <id_rsa>
             self.server = ThreadedServer(SlaveService, hostname = "localhost",
                 ipv6 = False, port = 18888, auto_register=False)
             self.server._start_in_thread()
