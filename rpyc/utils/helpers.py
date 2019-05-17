@@ -9,7 +9,7 @@ from rpyc.core.consts import HANDLE_BUFFITER, HANDLE_CALL
 from rpyc.core.netref import syncreq, asyncreq
 
 
-def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
+def buffiter(obj, chunk=10, max_chunk=1000, factor=2):
     """Buffered iterator - reads the remote iterator in chunks starting with
     *chunk*, multiplying the chunk size by *factor* every time, as an
     exponential-backoff, up to a chunk of *max_chunk* size.
@@ -45,7 +45,8 @@ def buffiter(obj, chunk = 10, max_chunk = 1000, factor = 2):
         for elem in items:
             yield elem
 
-def restricted(obj, attrs, wattrs = None):
+
+def restricted(obj, attrs, wattrs=None):
     """Returns a 'restricted' version of an object, i.e., allowing access only to a subset of its
     attributes. This is useful when returning a "broad" or "dangerous" object, where you don't
     want the other party to have access to all of its attributes.
@@ -71,12 +72,14 @@ def restricted(obj, attrs, wattrs = None):
     """
     if wattrs is None:
         wattrs = attrs
+
     class Restricted(object):
         def _rpyc_getattr(self, name):
             if name not in attrs:
                 raise AttributeError(name)
             return getattr(obj, name)
         __getattr__ = _rpyc_getattr
+
         def _rpyc_setattr(self, name, value):
             if name not in wattrs:
                 raise AttributeError(name)
@@ -84,20 +87,27 @@ def restricted(obj, attrs, wattrs = None):
         __setattr__ = _rpyc_setattr
     return Restricted()
 
+
 class _Async(object):
     """Creates an async proxy wrapper over an existing proxy. Async proxies
     are cached. Invoking an async proxy will return an AsyncResult instead of
     blocking"""
 
     __slots__ = ("proxy", "__weakref__")
+
     def __init__(self, proxy):
         self.proxy = proxy
+
     def __call__(self, *args, **kwargs):
         return asyncreq(self.proxy, HANDLE_CALL, args, tuple(kwargs.items()))
+
     def __repr__(self):
         return "async_(%r)" % (self.proxy,)
 
+
 _async_proxies_cache = WeakValueDict()
+
+
 def async_(proxy):
     """
     Returns an asynchronous "version" of the given proxy. Invoking the returned
@@ -142,6 +152,7 @@ def async_(proxy):
     _async_proxies_cache[id(caller)] = _async_proxies_cache[pid] = caller
     return caller
 
+
 async_.__doc__ = _Async.__doc__
 globals()['async'] = async_         # backward compatibility alias
 
@@ -164,15 +175,19 @@ class timed(object):
     """
 
     __slots__ = ("__weakref__", "proxy", "timeout")
+
     def __init__(self, proxy, timeout):
         self.proxy = async_(proxy)
         self.timeout = timeout
+
     def __call__(self, *args, **kwargs):
         res = self.proxy(*args, **kwargs)
         res.set_expiry(self.timeout)
         return res
+
     def __repr__(self):
         return "timed(%r, %r)" % (self.proxy.proxy, self.timeout)
+
 
 class BgServingThread(object):
     """Runs an RPyC server in the background to serve all requests and replies
@@ -201,20 +216,23 @@ class BgServingThread(object):
         self._active = True
         self._callback = callback
         self._thread = spawn(self._bg_server)
+
     def __del__(self):
         if self._active:
             self.stop()
+
     def _bg_server(self):
         try:
             while self._active:
                 self._conn.serve(self.SERVE_INTERVAL)
-                time.sleep(self.SLEEP_INTERVAL) # to reduce contention
+                time.sleep(self.SLEEP_INTERVAL)  # to reduce contention
         except Exception:
             if self._active:
                 self._active = False
                 if self._callback is None:
                     raise
                 self._callback()
+
     def stop(self):
         """stop the server thread. once stopped, it cannot be resumed. you will
         have to create a new BgServingThread object later."""
@@ -227,8 +245,10 @@ class BgServingThread(object):
 def classpartial(*args, **kwargs):
     """Bind arguments to a class's __init__."""
     cls, args = args[0], args[1:]
+
     class Partial(cls):
         __doc__ = cls.__doc__
+
         def __new__(self):
             return cls(*args, **kwargs)
     Partial.__name__ = cls.__name__

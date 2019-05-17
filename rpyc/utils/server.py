@@ -5,7 +5,7 @@ import sys
 import os
 import socket
 import time
-import threading
+import threading  # noqa: F401
 import errno
 import logging
 from contextlib import closing
@@ -20,7 +20,6 @@ from rpyc.lib import safe_import, spawn, spawn_waitready
 from rpyc.lib.compat import poll, get_exc_errno
 signal = safe_import("signal")
 gevent = safe_import("gevent")
-
 
 
 class Server(object):
@@ -48,10 +47,10 @@ class Server(object):
                              on embedded platforms with limited battery)
     """
 
-    def __init__(self, service, hostname = "", ipv6 = False, port = 0,
-            backlog = 10, reuse_addr = True, authenticator = None, registrar = None,
-            auto_register = None, protocol_config = {}, logger = None, listener_timeout = 0.5,
-            socket_path = None):
+    def __init__(self, service, hostname="", ipv6=False, port=0,
+                 backlog=10, reuse_addr=True, authenticator=None, registrar=None,
+                 auto_register=None, protocol_config={}, logger=None, listener_timeout=0.5,
+                 socket_path=None):
         self.active = False
         self._closed = False
         self.service = service
@@ -65,7 +64,7 @@ class Server(object):
         self.clients = set()
 
         if socket_path is not None:
-            if hostname != "" or port != 0 or ipv6 != False:
+            if hostname != "" or port != 0 or ipv6 is not False:
                 raise ValueError("socket_path is mutually exclusive with: hostname, port, ipv6")
             self.listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self.listener.bind(socket_path)
@@ -99,7 +98,7 @@ class Server(object):
         if "logger" not in self.protocol_config:
             self.protocol_config["logger"] = self.logger
         if registrar is None:
-            registrar = UDPRegistryClient(logger = self.logger)
+            registrar = UDPRegistryClient(logger=self.logger)
         self.registrar = registrar
 
     def close(self):
@@ -197,8 +196,8 @@ class Server(object):
         else:
             self.logger.info("welcome %s", addrinfo)
         try:
-            config = dict(self.protocol_config, credentials = credentials,
-                endpoints = (sock.getsockname(), addrinfo), logger = self.logger)
+            config = dict(self.protocol_config, credentials=credentials,
+                          endpoints=(sock.getsockname(), addrinfo), logger=self.logger)
             conn = self.service._connect(Channel(SocketStream(sock)), config)
             self._handle_connection(conn)
         finally:
@@ -211,7 +210,7 @@ class Server(object):
     def _bg_register(self):
         interval = self.registrar.REREGISTER_INTERVAL
         self.logger.info("started background auto-register thread "
-            "(interval = %s)", interval)
+                         "(interval = %s)", interval)
         tnext = 0
         try:
             while self.active:
@@ -220,7 +219,7 @@ class Server(object):
                     did_register = False
                     aliases = self.service.get_service_aliases()
                     try:
-                        did_register = self.registrar.register(aliases, self.port, interface = self.host)
+                        did_register = self.registrar.register(aliases, self.port, interface=self.host)
                     except Exception:
                         self.logger.exception("error registering services")
 
@@ -262,7 +261,7 @@ class Server(object):
             while self.active:
                 self.accept()
         except EOFError:
-            pass # server closed by another thread
+            pass  # server closed by another thread
         except KeyboardInterrupt:
             print("")
             self.logger.warn("keyboard interrupt!")
@@ -285,9 +284,11 @@ class OneShotServer(Server):
 
     Parameters: see :class:`Server`
     """
+
     def _accept_method(self, sock):
         with closing(sock):
             self._authenticate_and_serve_client(sock)
+
 
 class ThreadedServer(Server):
     """
@@ -296,6 +297,7 @@ class ThreadedServer(Server):
 
     Parameters: see :class:`Server`
     """
+
     def _accept_method(self, sock):
         spawn(self._authenticate_and_serve_client, sock)
 
@@ -424,7 +426,7 @@ class ThreadPoolServer(Server):
         # serve a maximum of RequestBatchSize requests for this connection
         for _ in range(self.request_batch_size):
             try:
-                if not self.fd_to_conn[fd].poll(): # note that poll serves the request
+                if not self.fd_to_conn[fd].poll():  # note that poll serves the request
                     # we could not find a request, so we put this connection back to the inactive set
                     self._add_inactive_connection(fd)
                     return
@@ -474,7 +476,7 @@ class ThreadPoolServer(Server):
             credentials = None
         # build a connection
         h, p = sock.getpeername()
-        config = dict(self.protocol_config, credentials=credentials, connid="%s:%d"%(h, p),
+        config = dict(self.protocol_config, credentials=credentials, connid="%s:%d" % (h, p),
                       endpoints=(sock.getsockname(), (h, p)))
         return self.service._connect(Channel(SocketStream(sock)), config)
 
@@ -535,12 +537,12 @@ class ForkingServer(Server):
             try:
                 self.logger.debug("child process created")
                 signal.signal(signal.SIGCHLD, self._prevhandler)
-                #76: call signal.siginterrupt(False) in forked child
+                # 76: call signal.siginterrupt(False) in forked child
                 signal.siginterrupt(signal.SIGCHLD, False)
                 self.listener.close()
                 self.clients.clear()
                 self._authenticate_and_serve_client(sock)
-            except:
+            except Exception:
                 self.logger.exception("child process terminated abnormally")
             else:
                 self.logger.debug("child process terminated")
