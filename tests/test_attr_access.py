@@ -1,16 +1,24 @@
 import rpyc
+import copy
 import unittest
 import time
+import functools
 from rpyc.utils.server import ThreadedServer
 
 
 class MyClass(object):
+    def __add__(self, other):
+        return self.foo() + str(other)
     def foo(self):
         return "foo"
     def bar(self):
         return "bar"
     def spam(self):
         return "spam"
+    def _privy(self):
+        return "privy"
+    def exposed_foobar(self):
+        return "Fee Fie Foe Foo"
 
 class YourClass(object):
     def lala(self):
@@ -51,13 +59,16 @@ class Protector(object):
             __getattr__ = _rpyc_getattr
         return Restrictor()
 
+SVC_RESTRICTED = ["exposed_foobar", "__add__", "_privy", "foo", "bar"]
+
 class MyService(rpyc.Service):
+    exposed_MyClass = MyClass
     def exposed_get_one(self):
-        return rpyc.restricted(MyClass(), ["foo", "bar"])
+        return rpyc.restricted(MyClass(), SVC_RESTRICTED)
 
     def exposed_get_two(self):
         protector = Protector()
-        protector.register(MyClass, ["foo", "spam"])
+        protector.register(MyClass, SVC_RESTRICTED)
         protector.register(YourClass, ["lala", "baba"])
         return protector.wrap(YourClass())
 
@@ -76,7 +87,95 @@ class TestRestricted(unittest.TestCase):
         obj = self.conn.root.get_one()
         self.assertEqual(obj.foo(), "foo")
         self.assertEqual(obj.bar(), "bar")
+        self.assertEqual(obj.__add__("bar"), "foobar")
+        self.assertEqual(obj._privy(), "privy")
+        self.assertEqual(obj.exposed_foobar(), "Fee Fie Foe Foo")
         self.assertRaises(AttributeError, lambda: obj.spam)
+
+    def test_restricted2(self):
+        self.server.protocol_config = {'allow_public_attrs': False}
+        obj = self.conn.root.get_one()
+        self.assertEqual(obj.foo(), "foo")
+        self.assertEqual(obj.bar(), "bar")
+        self.assertEqual(obj.__add__("bar"), "foobar")
+        self.assertEqual(obj._privy(), "privy")
+        self.assertRaises(AttributeError, lambda: obj.spam)
+
+
+class TestConfigAllows(unittest.TestCase):
+    def setUp(self):
+        self.cfg = self._reset_cfg()
+        self.server = ThreadedServer(MyService, port = 0)
+        self.thd = self.server._start_in_thread()
+        self.conn = rpyc.connect("localhost", self.server.port)
+
+    def tearDown(self):
+        self.conn.close()
+        self.server.close()
+        self.thd.join()
+
+    def _reset_cfg(self):
+        self.cfg = copy.copy(rpyc.core.protocol.DEFAULT_CONFIG)
+        return self.cfg
+
+    def _get_myclass(self, proto_config):
+        self.conn.close()
+        self.server.protocol_config.update(proto_config)
+        self.conn = rpyc.connect("localhost", self.server.port)
+        return self.conn.root.MyClass()
+
+    def test_default_config(self):
+        obj = self._get_myclass(self.cfg)
+        self.assertEqual(obj + 'bar', "foobar")
+        self.assertEqual(obj.foobar(), "Fee Fie Foe Foo")
+        self.assertEqual(obj.exposed_foobar(), "Fee Fie Foe Foo")
+        self.assertRaises(AttributeError, lambda: obj._privy)
+        self.assertRaises(AttributeError, lambda: obj.foo)
+        self.assertRaises(AttributeError, lambda: obj.bar)
+        self.assertRaises(AttributeError, lambda: obj.spam)
+
+    def test_allow_all(self):
+        self._reset_cfg()
+        self.cfg['allow_all_attrs'] = True
+        obj = self._get_myclass(self.cfg)
+        self.assertEqual(obj + 'bar', "foobar")
+        self.assertEqual(obj.__add__("bar"), "foobar")
+        self.assertEqual(obj._privy(), "privy")
+        self.assertEqual(obj.foobar(), "Fee Fie Foe Foo")
+        self.assertEqual(obj.exposed_foobar(), "Fee Fie Foe Foo")
+
+    def test_allow_exposed(self):
+        self._reset_cfg()
+        self.cfg['allow_exposed_attrs'] = False
+        try:
+            obj = self._get_myclass(self.cfg)
+            passed = False
+        except Exception:
+            passed = True
+        self.assertEqual(passed, True)
+
+    def test_allow_safe_attrs(self):
+        self._reset_cfg()
+        self.cfg['allow_safe_attrs'] = False
+        obj = self._get_myclass(self.cfg)
+        self.assertEqual(obj.foobar(), "Fee Fie Foe Foo")
+        self.assertEqual(obj.exposed_foobar(), "Fee Fie Foe Foo")
+        self.assertRaises(AttributeError, lambda: obj._privy)
+        self.assertRaises(AttributeError, lambda: obj + 'bar')
+        self.assertRaises(AttributeError, lambda: obj.foo)
+        self.assertRaises(AttributeError, lambda: obj.bar)
+        self.assertRaises(AttributeError, lambda: obj.spam)
+
+    def test_allow_public_attrs(self):
+        self._reset_cfg()
+        self.cfg['allow_public_attrs'] = True
+        obj = self._get_myclass(self.cfg)
+        self.assertEqual(obj + 'bar', "foobar")
+        self.assertEqual(obj.foo(), "foo")
+        self.assertEqual(obj.bar(), "bar")
+        self.assertEqual(obj.foobar(), "Fee Fie Foe Foo")
+        self.assertEqual(obj.exposed_foobar(), "Fee Fie Foe Foo")
+        self.assertRaises(AttributeError, lambda: obj._privy)
 
 #    def test_type_protector(self):
 #        obj = self.conn.root.get_two()

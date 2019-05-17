@@ -9,6 +9,7 @@ class AsyncResult(object):
     result (which will block if the result has not yet arrived).
     """
     __slots__ = ["_conn", "_is_ready", "_is_exc", "_callbacks", "_obj", "_ttl"]
+
     def __init__(self, conn):
         self._conn = conn
         self._is_ready = False
@@ -16,6 +17,7 @@ class AsyncResult(object):
         self._obj = None
         self._callbacks = []
         self._ttl = Timeout(None)
+
     def __repr__(self):
         if self._is_ready:
             state = "ready"
@@ -58,6 +60,7 @@ class AsyncResult(object):
             func(self)
         else:
             self._callbacks.append(func)
+
     def set_expiry(self, timeout):
         """Sets the expiry time (in seconds, relative to now) or ``None`` for
         unlimited time
@@ -75,10 +78,12 @@ class AsyncResult(object):
             return False
         self._conn.poll_all()
         return self._is_ready
+
     @property
     def error(self):
         """Indicates whether the returned result is an exception"""
         return self.ready and self._is_exc
+
     @property
     def expired(self):
         """Indicates whether the AsyncResult has expired"""
