@@ -2,15 +2,15 @@ import rpyc
 import os
 import unittest
 import time
+import nose
 from rpyc.utils.authenticators import SSLAuthenticator
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
-from nose import SkipTest
 
 try:
     import ssl #@UnusedImport
 except ImportError:
-    raise SkipTest("requires ssl")
+    raise nose.SkipTest("requires ssl")
 
 
 class Test_SSL(unittest.TestCase):
