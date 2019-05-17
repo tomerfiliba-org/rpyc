@@ -22,34 +22,34 @@ from rpyc.lib.compat import Struct, BytesIO, is_py3k, BYTES_LITERAL
 
 
 # singletons
-TAG_NONE            = b"\x00"
-TAG_EMPTY_STR       = b"\x01"
-TAG_EMPTY_TUPLE     = b"\x02"
-TAG_TRUE            = b"\x03"
-TAG_FALSE           = b"\x04"
+TAG_NONE = b"\x00"
+TAG_EMPTY_STR = b"\x01"
+TAG_EMPTY_TUPLE = b"\x02"
+TAG_TRUE = b"\x03"
+TAG_FALSE = b"\x04"
 TAG_NOT_IMPLEMENTED = b"\x05"
-TAG_ELLIPSIS        = b"\x06"
+TAG_ELLIPSIS = b"\x06"
 # types
-TAG_UNICODE         = b"\x08"
-TAG_LONG            = b"\x09"
-TAG_STR1            = b"\x0a"
-TAG_STR2            = b"\x0b"
-TAG_STR3            = b"\x0c"
-TAG_STR4            = b"\x0d"
-TAG_STR_L1          = b"\x0e"
-TAG_STR_L4          = b"\x0f"
-TAG_TUP1            = b"\x10"
-TAG_TUP2            = b"\x11"
-TAG_TUP3            = b"\x12"
-TAG_TUP4            = b"\x13"
-TAG_TUP_L1          = b"\x14"
-TAG_TUP_L4          = b"\x15"
-TAG_INT_L1          = b"\x16"
-TAG_INT_L4          = b"\x17"
-TAG_FLOAT           = b"\x18"
-TAG_SLICE           = b"\x19"
-TAG_FSET            = b"\x1a"
-TAG_COMPLEX         = b"\x1b"
+TAG_UNICODE = b"\x08"
+TAG_LONG = b"\x09"
+TAG_STR1 = b"\x0a"
+TAG_STR2 = b"\x0b"
+TAG_STR3 = b"\x0c"
+TAG_STR4 = b"\x0d"
+TAG_STR_L1 = b"\x0e"
+TAG_STR_L4 = b"\x0f"
+TAG_TUP1 = b"\x10"
+TAG_TUP2 = b"\x11"
+TAG_TUP3 = b"\x12"
+TAG_TUP4 = b"\x13"
+TAG_TUP_L1 = b"\x14"
+TAG_TUP_L4 = b"\x15"
+TAG_INT_L1 = b"\x16"
+TAG_INT_L4 = b"\x17"
+TAG_FLOAT = b"\x18"
+TAG_SLICE = b"\x19"
+TAG_FSET = b"\x1a"
+TAG_COMPLEX = b"\x1b"
 if is_py3k:
     IMM_INTS = dict((i, bytes([i + 0x50])) for i in range(-0x30, 0xa0))
 else:
@@ -64,26 +64,30 @@ _dump_registry = {}
 _load_registry = {}
 IMM_INTS_LOADER = dict((v, k) for k, v in IMM_INTS.items())
 
+
 def register(coll, key):
     def deco(func):
         coll[key] = func
         return func
     return deco
 
-#===============================================================================
+# ===============================================================================
 # dumping
-#===============================================================================
+# ===============================================================================
 @register(_dump_registry, type(None))
 def _dump_none(obj, stream):
     stream.append(TAG_NONE)
+
 
 @register(_dump_registry, type(NotImplemented))
 def _dump_notimplemeted(obj, stream):
     stream.append(TAG_NOT_IMPLEMENTED)
 
+
 @register(_dump_registry, type(Ellipsis))
 def _dump_ellipsis(obj, stream):
     stream.append(TAG_ELLIPSIS)
+
 
 @register(_dump_registry, bool)
 def _dump_bool(obj, stream):
@@ -92,15 +96,18 @@ def _dump_bool(obj, stream):
     else:
         stream.append(TAG_FALSE)
 
+
 @register(_dump_registry, slice)
 def _dump_slice(obj, stream):
     stream.append(TAG_SLICE)
     _dump((obj.start, obj.stop, obj.step), stream)
 
+
 @register(_dump_registry, frozenset)
 def _dump_frozenset(obj, stream):
     stream.append(TAG_FSET)
     _dump(tuple(obj), stream)
+
 
 @register(_dump_registry, int)
 def _dump_int(obj, stream):
@@ -114,13 +121,16 @@ def _dump_int(obj, stream):
         else:
             stream.append(TAG_INT_L4 + I4.pack(l) + obj)
 
+
 @register(_dump_registry, float)
 def _dump_float(obj, stream):
     stream.append(TAG_FLOAT + F8.pack(obj))
 
+
 @register(_dump_registry, complex)
 def _dump_complex(obj, stream):
     stream.append(TAG_COMPLEX + C16.pack(obj.real, obj.imag))
+
 
 @register(_dump_registry, bytes)
 def _dump_bytes(obj, stream):
@@ -139,6 +149,7 @@ def _dump_bytes(obj, stream):
         stream.append(TAG_STR_L1 + I1.pack(l) + obj)
     else:
         stream.append(TAG_STR_L4 + I4.pack(l) + obj)
+
 
 @register(_dump_registry, type(u""))
 def _dump_str(obj, stream):
@@ -173,37 +184,51 @@ def _dump_tuple(obj, stream):
     for item in obj:
         _dump(item, stream)
 
+
 def _undumpable(obj, stream):
     raise TypeError("cannot dump %r" % (obj,))
+
 
 def _dump(obj, stream):
     _dump_registry.get(type(obj), _undumpable)(obj, stream)
 
-#===============================================================================
+# ===============================================================================
 # loading
-#===============================================================================
+# ===============================================================================
 @register(_load_registry, TAG_NONE)
 def _load_none(stream):
     return None
+
+
 @register(_load_registry, TAG_NOT_IMPLEMENTED)
 def _load_nonimp(stream):
     return NotImplemented
+
+
 @register(_load_registry, TAG_ELLIPSIS)
 def _load_elipsis(stream):
     return Ellipsis
+
+
 @register(_load_registry, TAG_TRUE)
 def _load_true(stream):
     return True
+
+
 @register(_load_registry, TAG_FALSE)
 def _load_false(stream):
     return False
+
+
 @register(_load_registry, TAG_EMPTY_TUPLE)
 def _load_empty_tuple(stream):
     return ()
 
+
 @register(_load_registry, TAG_EMPTY_STR)
 def _load_empty_str(stream):
     return b""
+
 
 if is_py3k:
     @register(_load_registry, TAG_LONG)
@@ -216,56 +241,81 @@ else:
         obj = _load(stream)
         return long(obj)
 
+
 @register(_load_registry, TAG_FLOAT)
 def _load_float(stream):
     return F8.unpack(stream.read(8))[0]
+
+
 @register(_load_registry, TAG_COMPLEX)
 def _load_complex(stream):
     real, imag = C16.unpack(stream.read(16))
     return complex(real, imag)
 
+
 @register(_load_registry, TAG_STR1)
 def _load_str1(stream):
     return stream.read(1)
+
+
 @register(_load_registry, TAG_STR2)
 def _load_str2(stream):
     return stream.read(2)
+
+
 @register(_load_registry, TAG_STR3)
 def _load_str3(stream):
     return stream.read(3)
+
+
 @register(_load_registry, TAG_STR4)
 def _load_str4(stream):
     return stream.read(4)
+
+
 @register(_load_registry, TAG_STR_L1)
 def _load_str_l1(stream):
     l, = I1.unpack(stream.read(1))
     return stream.read(l)
+
+
 @register(_load_registry, TAG_STR_L4)
 def _load_str_l4(stream):
     l, = I4.unpack(stream.read(4))
     return stream.read(l)
+
 
 @register(_load_registry, TAG_UNICODE)
 def _load_unicode(stream):
     obj = _load(stream)
     return obj.decode("utf-8")
 
+
 @register(_load_registry, TAG_TUP1)
 def _load_tup1(stream):
     return (_load(stream),)
+
+
 @register(_load_registry, TAG_TUP2)
 def _load_tup2(stream):
     return (_load(stream), _load(stream))
+
+
 @register(_load_registry, TAG_TUP3)
 def _load_tup3(stream):
     return (_load(stream), _load(stream), _load(stream))
+
+
 @register(_load_registry, TAG_TUP4)
 def _load_tup4(stream):
     return (_load(stream), _load(stream), _load(stream), _load(stream))
+
+
 @register(_load_registry, TAG_TUP_L1)
 def _load_tup_l1(stream):
     l, = I1.unpack(stream.read(1))
     return tuple(_load(stream) for i in range(l))
+
 
 if is_py3k:
     @register(_load_registry, TAG_TUP_L4)
@@ -278,22 +328,29 @@ else:
         l, = I4.unpack(stream.read(4))
         return tuple(_load(stream) for i in xrange(l))
 
+
 @register(_load_registry, TAG_SLICE)
 def _load_slice(stream):
     start, stop, step = _load(stream)
     return slice(start, stop, step)
+
+
 @register(_load_registry, TAG_FSET)
 def _load_frozenset(stream):
     return frozenset(_load(stream))
+
 
 @register(_load_registry, TAG_INT_L1)
 def _load_int_l1(stream):
     l, = I1.unpack(stream.read(1))
     return int(stream.read(l))
+
+
 @register(_load_registry, TAG_INT_L4)
 def _load_int_l4(stream):
     l, = I4.unpack(stream.read(4))
     return int(stream.read(l))
+
 
 def _load(stream):
     tag = stream.read(1)
@@ -301,9 +358,11 @@ def _load(stream):
         return IMM_INTS_LOADER[tag]
     return _load_registry.get(tag)(stream)
 
-#===============================================================================
+# ===============================================================================
 # API
-#===============================================================================
+# ===============================================================================
+
+
 def dump(obj):
     """Converts (dumps) the given object to a byte-string representation
 
@@ -315,6 +374,7 @@ def dump(obj):
     _dump(obj, stream)
     return b"".join(stream)
 
+
 def load(data):
     """Recreates (loads) an object from its byte-string representation
 
@@ -325,12 +385,14 @@ def load(data):
     stream = BytesIO(data)
     return _load(stream)
 
+
 if is_py3k:
     simple_types = frozenset([type(None), int, bool, float, bytes, str, complex,
-        type(NotImplemented), type(Ellipsis)])
+                              type(NotImplemented), type(Ellipsis)])
 else:
     simple_types = frozenset([type(None), int, long, bool, float, bytes, unicode, complex,
-        type(NotImplemented), type(Ellipsis)])
+                              type(NotImplemented), type(Ellipsis)])
+
 
 def dumpable(obj):
     """Indicates whether the given object is *dumpable* by brine

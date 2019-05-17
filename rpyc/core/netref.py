@@ -58,7 +58,8 @@ else:
     ])
 
 _normalized_builtin_types = dict(((t.__name__, t.__module__), t)
-    for t in _builtin_types)
+                                 for t in _builtin_types)
+
 
 def syncreq(proxy, handler, *args):
     """Performs a synchronous request on the given proxy object.
@@ -75,6 +76,7 @@ def syncreq(proxy, handler, *args):
     conn = object.__getattribute__(proxy, "____conn__")
     return conn.sync_request(handler, proxy, *args)
 
+
 def asyncreq(proxy, handler, *args):
     """Performs an asynchronous request on the given proxy object.
     Not intended to be invoked directly.
@@ -90,17 +92,20 @@ def asyncreq(proxy, handler, *args):
     conn = object.__getattribute__(proxy, "____conn__")
     return conn.async_request(handler, proxy, *args)
 
+
 class NetrefMetaclass(type):
     """A *metaclass* used to customize the ``__repr__`` of ``netref`` classes.
     It is quite useless, but it makes debugging and interactive programming
     easier"""
 
     __slots__ = ()
+
     def __repr__(self):
         if self.__module__:
             return "<netref class '%s.%s'>" % (self.__module__, self.__name__)
         else:
             return "<netref class '%s'>" % (self.__name__,)
+
 
 class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     """The base netref class, from which all netref classes derive. Some netref
@@ -117,6 +122,7 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     :param oid: the unique object ID of the remote object
     """
     __slots__ = ["____conn__", "____oid__", "__weakref__", "____refcount__"]
+
     def __init__(self, conn, oid):
         self.____conn__ = conn
         self.____oid__ = oid
@@ -150,47 +156,62 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
             return object.__getattribute__(self, "__array__")
         else:
             return syncreq(self, consts.HANDLE_GETATTR, name)
+
     def __getattr__(self, name):
         if name in _deleted_netref_attrs:
             raise AttributeError()
         return syncreq(self, consts.HANDLE_GETATTR, name)
+
     def __delattr__(self, name):
         if name in _local_netref_attrs:
             object.__delattr__(self, name)
         else:
             syncreq(self, consts.HANDLE_DELATTR, name)
+
     def __setattr__(self, name, value):
         if name in _local_netref_attrs:
             object.__setattr__(self, name, value)
         else:
             syncreq(self, consts.HANDLE_SETATTR, name, value)
+
     def __dir__(self):
         return list(syncreq(self, consts.HANDLE_DIR))
 
     # support for metaclasses
     def __hash__(self):
         return syncreq(self, consts.HANDLE_HASH)
+
     def __cmp__(self, other):
         return syncreq(self, consts.HANDLE_CMP, other, '__cmp__')
+
     def __eq__(self, other):
         return syncreq(self, consts.HANDLE_CMP, other, '__eq__')
+
     def __ne__(self, other):
         return syncreq(self, consts.HANDLE_CMP, other, '__ne__')
+
     def __lt__(self, other):
         return syncreq(self, consts.HANDLE_CMP, other, '__lt__')
+
     def __gt__(self, other):
         return syncreq(self, consts.HANDLE_CMP, other, '__gt__')
+
     def __le__(self, other):
         return syncreq(self, consts.HANDLE_CMP, other, '__le__')
+
     def __ge__(self, other):
         return syncreq(self, consts.HANDLE_CMP, other, '__ge__')
+
     def __repr__(self):
         return syncreq(self, consts.HANDLE_REPR)
+
     def __str__(self):
         return syncreq(self, consts.HANDLE_STR)
+
     def __exit__(self, exc, typ, tb):
         return syncreq(self, consts.HANDLE_CTXEXIT, exc)  # can't pass type nor traceback
     # support for pickling netrefs
+
     def __reduce_ex__(self, proto):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
 
@@ -199,7 +220,7 @@ def _make_method(name, doc):
     """creates a method with the given name and docstring that invokes
     :func:`syncreq` on its `self` argument"""
 
-    slicers = {"__getslice__" : "__getitem__", "__delslice__" : "__delitem__", "__setslice__" : "__setitem__"}
+    slicers = {"__getslice__": "__getitem__", "__delslice__": "__delitem__", "__setslice__": "__setitem__"}
 
     name = str(name)                                      # IronPython issue #10
     if name == "__call__":
@@ -231,6 +252,7 @@ def _make_method(name, doc):
         method.__doc__ = doc
         return method
 
+
 def inspect_methods(obj):
     """introspects the given (local) object, returning a list of all of its
     methods (going up the MRO).
@@ -254,6 +276,7 @@ def inspect_methods(obj):
             methods[name] = inspect.getdoc(attr)
     return methods.items()
 
+
 def class_factory(clsname, modname, methods):
     """Creates a netref class proxying the given class
 
@@ -266,7 +289,7 @@ def class_factory(clsname, modname, methods):
     """
     clsname = str(clsname)                                # IronPython issue #10
     modname = str(modname)                                # IronPython issue #10
-    ns = {"__slots__" : ()}
+    ns = {"__slots__": ()}
     for name, doc in methods:
         name = str(name)                                  # IronPython issue #10
         if name not in _local_netref_attrs:
@@ -280,6 +303,7 @@ def class_factory(clsname, modname, methods):
         # to be resolved by the instance
         ns["__class__"] = None
     return type(clsname, (BaseNetref,), ns)
+
 
 builtin_classes_cache = {}
 """The cache of built-in netref classes (each of the types listed in

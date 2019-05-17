@@ -30,6 +30,7 @@ except NameError:
     # python 2.4 compatible
     BaseException = Exception
 
+
 def dump(typ, val, tb, include_local_traceback):
     """Dumps the given exceptions info, as returned by ``sys.exc_info()``
 
@@ -47,7 +48,7 @@ def dump(typ, val, tb, include_local_traceback):
               :func:`brine.dump <rpyc.core.brine.dump>`
     """
     if typ is StopIteration:
-        return consts.EXC_STOP_ITERATION # optimization
+        return consts.EXC_STOP_ITERATION  # optimization
     if type(typ) is str:
         return typ
 
@@ -78,6 +79,7 @@ def dump(typ, val, tb, include_local_traceback):
             attrs.append((name, attrval))
     return (typ.__module__, typ.__name__), tuple(args), tuple(attrs), tbtext
 
+
 def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantiate_oldstyle_exceptions):
     """
     Loads a dumped exception (the tuple returned by :func:`dump`) info a
@@ -101,9 +103,9 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     :returns: A throwable exception object
     """
     if val == consts.EXC_STOP_ITERATION:
-        return StopIteration # optimization
+        return StopIteration  # optimization
     if type(val) is str:
-        return val # deprecated string exceptions
+        return val  # deprecated string exceptions
 
     (modname, clsname), args, attrs, tbtext = val
     if import_custom_exceptions and modname not in sys.modules:
@@ -138,7 +140,7 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
         # py2: `type()` expects `str` not `unicode`!
         fullname = str(fullname)
         if fullname not in _generic_exceptions_cache:
-            fakemodule = {"__module__" : "%s/%s" % (__name__, modname)}
+            fakemodule = {"__module__": "%s/%s" % (__name__, modname)}
             if isinstance(GenericException, ClassType):
                 _generic_exceptions_cache[fullname] = ClassType(fullname, (GenericException,), fakemodule)
             else:
@@ -168,8 +170,10 @@ class GenericException(Exception):
     the other party cannot be instantiated locally"""
     pass
 
+
 _generic_exceptions_cache = {}
 _exception_classes_cache = {}
+
 
 def _get_exception_class(cls):
     if cls in _exception_classes_cache:
@@ -186,6 +190,7 @@ def _get_exception_class(cls):
                 text += "\n\n========= Remote Traceback (%d) =========\n%s" % (
                     self._remote_tb.count("\n\n========= Remote Traceback") + 1, self._remote_tb)
             return text
+
         def __repr__(self):
             return str(self)
 
@@ -193,4 +198,3 @@ def _get_exception_class(cls):
     Derived.__module__ = cls.__module__
     _exception_classes_cache[cls] = Derived
     return Derived
-

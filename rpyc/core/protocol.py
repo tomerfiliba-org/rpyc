@@ -15,50 +15,52 @@ from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async_ import AsyncResult
 
+
 class PingError(Exception):
     """The exception raised should :func:`Connection.ping` fail"""
     pass
 
+
 DEFAULT_CONFIG = dict(
     # ATTRIBUTES
-    allow_safe_attrs = True,
-    allow_exposed_attrs = True,
-    allow_public_attrs = False,
-    allow_all_attrs = False,
-    safe_attrs = set(['__abs__', '__add__', '__and__', '__bool__', '__cmp__', '__contains__',
-        '__delitem__', '__delslice__', '__div__', '__divmod__', '__doc__',
-        '__eq__', '__float__', '__floordiv__', '__ge__', '__getitem__',
-        '__getslice__', '__gt__', '__hash__', '__hex__', '__iadd__', '__iand__',
-        '__idiv__', '__ifloordiv__', '__ilshift__', '__imod__', '__imul__',
-        '__index__', '__int__', '__invert__', '__ior__', '__ipow__', '__irshift__',
-        '__isub__', '__iter__', '__itruediv__', '__ixor__', '__le__', '__len__',
-        '__long__', '__lshift__', '__lt__', '__mod__', '__mul__', '__ne__',
-        '__neg__', '__new__', '__nonzero__', '__oct__', '__or__', '__pos__',
-        '__pow__', '__radd__', '__rand__', '__rdiv__', '__rdivmod__', '__repr__',
-        '__rfloordiv__', '__rlshift__', '__rmod__', '__rmul__', '__ror__',
-        '__rpow__', '__rrshift__', '__rshift__', '__rsub__', '__rtruediv__',
-        '__rxor__', '__setitem__', '__setslice__', '__str__', '__sub__',
-        '__truediv__', '__xor__', 'next', '__length_hint__', '__enter__',
-        '__exit__', '__next__',]),
-    exposed_prefix = "exposed_",
-    allow_getattr = True,
-    allow_setattr = False,
-    allow_delattr = False,
+    allow_safe_attrs=True,
+    allow_exposed_attrs=True,
+    allow_public_attrs=False,
+    allow_all_attrs=False,
+    safe_attrs=set(['__abs__', '__add__', '__and__', '__bool__', '__cmp__', '__contains__',
+                    '__delitem__', '__delslice__', '__div__', '__divmod__', '__doc__',
+                    '__eq__', '__float__', '__floordiv__', '__ge__', '__getitem__',
+                    '__getslice__', '__gt__', '__hash__', '__hex__', '__iadd__', '__iand__',
+                    '__idiv__', '__ifloordiv__', '__ilshift__', '__imod__', '__imul__',
+                    '__index__', '__int__', '__invert__', '__ior__', '__ipow__', '__irshift__',
+                    '__isub__', '__iter__', '__itruediv__', '__ixor__', '__le__', '__len__',
+                    '__long__', '__lshift__', '__lt__', '__mod__', '__mul__', '__ne__',
+                    '__neg__', '__new__', '__nonzero__', '__oct__', '__or__', '__pos__',
+                    '__pow__', '__radd__', '__rand__', '__rdiv__', '__rdivmod__', '__repr__',
+                    '__rfloordiv__', '__rlshift__', '__rmod__', '__rmul__', '__ror__',
+                    '__rpow__', '__rrshift__', '__rshift__', '__rsub__', '__rtruediv__',
+                    '__rxor__', '__setitem__', '__setslice__', '__str__', '__sub__',
+                    '__truediv__', '__xor__', 'next', '__length_hint__', '__enter__',
+                    '__exit__', '__next__', ]),
+    exposed_prefix="exposed_",
+    allow_getattr=True,
+    allow_setattr=False,
+    allow_delattr=False,
     # EXCEPTIONS
-    include_local_traceback = True,
-    instantiate_custom_exceptions = False,
-    import_custom_exceptions = False,
-    instantiate_oldstyle_exceptions = False, # which don't derive from Exception
-    propagate_SystemExit_locally = False, # whether to propagate SystemExit locally or to the other party
-    propagate_KeyboardInterrupt_locally = True,  # whether to propagate KeyboardInterrupt locally or to the other party
-    log_exceptions = True,
+    include_local_traceback=True,
+    instantiate_custom_exceptions=False,
+    import_custom_exceptions=False,
+    instantiate_oldstyle_exceptions=False,  # which don't derive from Exception
+    propagate_SystemExit_locally=False,  # whether to propagate SystemExit locally or to the other party
+    propagate_KeyboardInterrupt_locally=True,  # whether to propagate KeyboardInterrupt locally or to the other party
+    log_exceptions=True,
     # MISC
-    allow_pickle = False,
-    connid = None,
-    credentials = None,
-    endpoints = None,
-    logger = None,
-    sync_request_timeout = 30,
+    allow_pickle=False,
+    connid=None,
+    credentials=None,
+    endpoints=None,
+    logger=None,
+    sync_request_timeout=30,
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
@@ -157,10 +159,13 @@ class Connection(object):
 
     def __del__(self):
         self.close()
+
     def __enter__(self):
         return self
+
     def __exit__(self, t, v, tb):
         self.close()
+
     def __repr__(self):
         a, b = object.__repr__(self).split(" object ")
         return "%s %r object %s" % (a, self._config["connid"], b)
@@ -168,7 +173,7 @@ class Connection(object):
     #
     # IO
     #
-    def _cleanup(self, _anyway = True):
+    def _cleanup(self, _anyway=True):
         if self._closed and not _anyway:
             return
         self._closed = True
@@ -182,10 +187,10 @@ class Connection(object):
         self._remote_root = None
         self._local_root = None
         #self._seqcounter = None
-        #self._config.clear()
+        # self._config.clear()
         del self._HANDLERS
 
-    def close(self, _catchall = True):
+    def close(self, _catchall=True):
         """closes the connection, releasing all held resources"""
         if self._closed:
             return
@@ -198,7 +203,7 @@ class Connection(object):
             if not _catchall:
                 raise
         finally:
-            self._cleanup(_anyway = True)
+            self._cleanup(_anyway=True)
 
     @property
     def closed(self):
@@ -209,7 +214,7 @@ class Connection(object):
         """Returns the connectin's underlying file descriptor"""
         return self._channel.fileno()
 
-    def ping(self, data = None, timeout = 3):
+    def ping(self, data=None, timeout=3):
         """
         Asserts that the other party is functioning properly, by making sure
         the *data* is echoed back before the *timeout* expires
@@ -222,7 +227,7 @@ class Connection(object):
         """
         if data is None:
             data = "abcdefghijklmnopqrstuvwxyz" * 20
-        res = self.async_request(consts.HANDLE_PING, data, timeout = timeout)
+        res = self.async_request(consts.HANDLE_PING, data, timeout=timeout)
         if res.value != data:
             raise PingError("echo mismatches sent data")
 
@@ -299,8 +304,8 @@ class Connection(object):
             if oid in self._proxy_cache:
                 proxy = self._proxy_cache[oid]
                 proxy.____refcount__ += 1  # other side increased refcount on boxing,
-                                           # if I'm returning from cache instead of new object,
-                                           # must increase refcount to match
+                # if I'm returning from cache instead of new object,
+                # must increase refcount to match
                 return proxy
             proxy = self._netref_factory(oid, clsname, modname)
             self._proxy_cache[oid] = proxy
@@ -343,14 +348,13 @@ class Connection(object):
             self._send(consts.MSG_REPLY, seq, self._box(res))
 
     def _box_exc(self, typ, val, tb):
-        return vinegar.dump(typ, val, tb, include_local_traceback=
-                            self._config["include_local_traceback"])
+        return vinegar.dump(typ, val, tb, include_local_traceback=self._config["include_local_traceback"])
 
     def _unbox_exc(self, raw):
         return vinegar.load(raw,
-            import_custom_exceptions = self._config["import_custom_exceptions"],
-            instantiate_custom_exceptions = self._config["instantiate_custom_exceptions"],
-            instantiate_oldstyle_exceptions = self._config["instantiate_oldstyle_exceptions"])
+                            import_custom_exceptions=self._config["import_custom_exceptions"],
+                            instantiate_custom_exceptions=self._config["instantiate_custom_exceptions"],
+                            instantiate_oldstyle_exceptions=self._config["instantiate_oldstyle_exceptions"])
 
     #
     # serving
@@ -397,7 +401,7 @@ class Connection(object):
         self._dispatch(data)
         return True
 
-    def poll(self, timeout = 0):
+    def poll(self, timeout=0):
         """Serves a single transaction, should one arrives in the given
         interval. Note that handling a request/reply may trigger nested
         requests, which are all part of a single transaction.
@@ -470,7 +474,7 @@ class Connection(object):
         timeout = self._config["sync_request_timeout"]
         return self.async_request(handler, *args, timeout=timeout).value
 
-    def _async_request(self, handler, args = (), callback = (lambda a, b: None)):
+    def _async_request(self, handler, args=(), callback=(lambda a, b: None)):
         seq = self._get_seq_id()
         self._request_callbacks[seq] = callback
         try:
@@ -531,7 +535,7 @@ class Connection(object):
         else:
             if type(name) not in (str, unicode):
                 raise TypeError("name must be a string")
-            name = str(name) # IronPython issue #10 + py3k issue
+            name = str(name)  # IronPython issue #10 + py3k issue
         accessor = getattr(type(obj), overrider, None)
         if accessor is None:
             accessor = default
@@ -567,40 +571,55 @@ class Connection(object):
 
     def _handle_ping(self, data):
         return data
+
     def _handle_close(self):
         self._cleanup()
+
     def _handle_getroot(self):
         return self._local_root
+
     def _handle_del(self, obj, count=1):
         self._local_objects.decref(id(obj), count)
+
     def _handle_repr(self, obj):
         return repr(obj)
+
     def _handle_str(self, obj):
         return str(obj)
+
     def _handle_cmp(self, obj, other, op='__cmp__'):
         # cmp() might enter recursive resonance... yet another workaround
-        #return cmp(obj, other)
+        # return cmp(obj, other)
         try:
             return getattr(type(obj), op)(obj, other)
         except (AttributeError, TypeError):
             return NotImplemented
+
     def _handle_hash(self, obj):
         return hash(obj)
+
     def _handle_call(self, obj, args, kwargs=()):
         return obj(*args, **dict(kwargs))
+
     def _handle_dir(self, obj):
         return tuple(dir(obj))
+
     def _handle_inspect(self, oid):
         return tuple(netref.inspect_methods(self._local_objects[oid]))
+
     def _handle_getattr(self, obj, name):
         return self._access_attr(obj, name, (), "_rpyc_getattr", "allow_getattr", getattr)
+
     def _handle_delattr(self, obj, name):
         return self._access_attr(obj, name, (), "_rpyc_delattr", "allow_delattr", delattr)
+
     def _handle_setattr(self, obj, name, value):
         return self._access_attr(obj, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
+
     def _handle_callattr(self, obj, name, args, kwargs=()):
         obj = self._handle_getattr(obj, name)
         return self._handle_call(obj, args, kwargs)
+
     def _handle_ctxexit(self, obj, exc):
         if exc:
             try:
@@ -610,12 +629,15 @@ class Connection(object):
         else:
             typ = tb = None
         return self._handle_getattr(obj, "__exit__")(exc, typ, tb)
+
     def _handle_pickle(self, obj, proto):
         if not self._config["allow_pickle"]:
             raise ValueError("pickling is disabled")
         return bytes(pickle.dumps(obj, proto))
+
     def _handle_buffiter(self, obj, count):
         return tuple(itertools.islice(obj, count))
+
     def _handle_oldslicing(self, obj, attempt, fallback, start, stop, args):
         try:
             # first try __xxxitem__
