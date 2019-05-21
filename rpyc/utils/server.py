@@ -552,6 +552,7 @@ class ForkingServer(Server):
         else:
             # parent
             sock.close()
+            self.clients.discard(sock)
 
 
 class GeventServer(Server):
