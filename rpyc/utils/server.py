@@ -470,7 +470,6 @@ class ThreadPoolServer(Server):
         changed if rpyc evolves'''
         # authenticate
         if self.authenticator:
-            h, p = sock.getpeername()
             sock, credentials = self.authenticator(sock)
         else:
             credentials = None
@@ -478,14 +477,15 @@ class ThreadPoolServer(Server):
         h, p = sock.getpeername()
         config = dict(self.protocol_config, credentials=credentials, connid="%s:%d" % (h, p),
                       endpoints=(sock.getsockname(), (h, p)))
-        return self.service._connect(Channel(SocketStream(sock)), config)
+        return sock, self.service._connect(Channel(SocketStream(sock)), config)
 
     def _accept_method(self, sock):
         '''Implementation of the accept method : only pushes the work to the internal queue.
         In case the queue is full, raises an AsynResultTimeout error'''
         try:
+            h, p = None, None
             # authenticate and build connection object
-            conn = self._authenticate_and_build_connection(sock)
+            sock, conn = self._authenticate_and_build_connection(sock)
             # put the connection in the active queue
             h, p = sock.getpeername()
             fd = conn.fileno()
@@ -494,8 +494,8 @@ class ThreadPoolServer(Server):
             self._add_inactive_connection(fd)
             self.clients.clear()
         except Exception:
-            h, p = sock.getpeername()
-            self.logger.exception("Failed to serve client for %s:%d, caught exception", h, p)
+            err_msg = "Failed to serve client for {}:{}, caught exception".format(h, p)
+            self.logger.exception(err_msg)
             sock.close()
 
 
