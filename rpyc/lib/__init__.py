@@ -2,9 +2,11 @@
 A library of various helpers functions and classes
 """
 import sys
+import socket
 import logging
 import threading
 import time
+import random
 from rpyc.lib.compat import maxint  # noqa: F401
 
 
@@ -111,3 +113,37 @@ class Timeout:
 
     def sleep(self, interval):
         time.sleep(min(interval, self.timeleft()) if self.finite else interval)
+
+
+def socket_backoff_connect(family, socktype, proto, addr, timeout, attempts):
+    """connect will backoff if the response is not ready for a pseudo random number greater than zero and less than
+        51e-6, 153e-6, 358e-6, 768e-6, 1587e-6, 3225e-6, 6502e-6, 13056e-6, 26163e-6, 52377e-6
+    this should help avoid congestion.
+    """
+    sock = socket.socket(family, socktype, proto)
+    collision = 0
+    connecting = True
+    while connecting:
+        collision += 1
+        try:
+            sock.settimeout(timeout)
+            sock.connect(addr)
+            connecting = False
+        except socket.timeout:
+            if collision == attempts or attempts < 1:
+                raise
+            else:
+                sock.close()
+                sock = socket.socket(family, socktype, proto)
+                time.sleep(exp_backoff(collision))
+    return sock
+
+
+def exp_backoff(collision):
+    """ Exponential backoff algorithm from
+    Peterson, L.L., and Davie, B.S. Computer Networks: a systems approach. 5th ed. pp. 127
+    """
+    n = min(collision, 10)
+    supremum_adjustment = 1 if n > 3 else 0
+    k = random.uniform(0, 2**n - supremum_adjustment)
+    return k * 0.0000512
