@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
 import inspect
 import logging
-import gevent
-from gevent import monkey
-monkey.patch_all()
+# import gevent
+# from gevent import monkey
+# monkey.patch_all()
 import rpyc
-from rpyc.utils.server import OneShotServer, ThreadedServer
 
 
 class EchoService(rpyc.Service):
@@ -24,7 +23,7 @@ class EchoService(rpyc.Service):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    choice = 'ThreadPoolServer'  # Bugs
+    choice = 'ForkingServer'  # Debugging
     svc_server = None
     server_class = {}
     # Populate for 'ForkingServer', 'GeventServer', 'OneShotServer', 'ThreadPoolServer', and 'ThreadedServer'
