@@ -6,7 +6,7 @@ import sys
 import os
 import socket
 import errno
-from rpyc.lib import safe_import, Timeout
+from rpyc.lib import safe_import, Timeout, socket_backoff_connect
 from rpyc.lib.compat import poll, select_error, BYTES_LITERAL, get_exc_errno, maxint  # noqa: F401
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
@@ -118,13 +118,11 @@ class SocketStream(Stream):
 
     @classmethod
     def _connect(cls, host, port, family=socket.AF_INET, socktype=socket.SOCK_STREAM,
-                 proto=0, timeout=3, nodelay=False, keepalive=False):
+                 proto=0, timeout=3, nodelay=False, keepalive=False, attempts=6):
         family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, family,
                                                                   socktype, proto)[0]
-        s = socket.socket(family, socktype, proto)
+        s = socket_backoff_connect(family, socktype, proto, sockaddr, timeout, attempts)
         try:
-            s.settimeout(timeout)
-            s.connect(sockaddr)
             if nodelay:
                 s.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
             if keepalive:
