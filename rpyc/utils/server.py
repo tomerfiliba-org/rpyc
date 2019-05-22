@@ -48,7 +48,7 @@ class Server(object):
     """
 
     def __init__(self, service, hostname="", ipv6=False, port=0,
-                 backlog=10, reuse_addr=True, authenticator=None, registrar=None,
+                 backlog=socket.SOMAXCONN, reuse_addr=True, authenticator=None, registrar=None,
                  auto_register=None, protocol_config={}, logger=None, listener_timeout=0.5,
                  socket_path=None):
         self.active = False
