@@ -59,6 +59,7 @@ else:
     ])
 _normalized_builtin_types = {}
 
+
 def syncreq(proxy, handler, *args):
     """Performs a synchronous request on the given proxy object.
     Not intended to be invoked directly.
@@ -117,8 +118,11 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     Do not use this class directly; use :func:`class_factory` instead.
 
     :param conn: the :class:`rpyc.core.protocol.Connection` instance
-    :param id_pack: id tuple for an object such that (remote-obj-type-id, remote-obj-id)
-        (cont.) if remote-obj-type-id == remote-obj-id then object is a class. Otherwise, object is not a class
+    :param id_pack: id tuple for an object ~ (name_pack, remote-class-id, remote-instance-id)
+        (cont.) name_pack := __module__.__name__ (hits or misses on builtin cache and sys.module)
+                remote-class-id := id of object class (hits or misses on netref classes cache and instance checks)
+                remote-instance-id := id object instance (hits or misses on proxy cache)
+        id_pack is usually created by rpyc.lib.get_id_pack
     """
     __slots__ = ["____conn__", "____id_pack__", "__weakref__", "____refcount__"]
 
@@ -217,7 +221,7 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     def __instancecheck__(self, other):
         # support for checking cached instances across connections
         if isinstance(other, BaseNetref):
-            if self.____id_pack__[1] ==  self.____id_pack__[1]:
+            if self.____id_pack__[1] == self.____id_pack__[1]:
                 return True
             else:
                 return syncreq(self, consts.HANDLE_INSTANCECHECK, other.____id_pack__)
@@ -298,7 +302,6 @@ def class_factory(id_pack, methods):
     return type(name_pack, (BaseNetref,), ns)
 
 
-#_normalized_builtin_types = {get_id_pack(_builtin): _builtin for _builtin in _builtin_types}
 for _builtin in _builtin_types:
     _id_pack = get_id_pack(_builtin)
     _name_pack = _id_pack[0]
