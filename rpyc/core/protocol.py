@@ -303,11 +303,7 @@ class Connection(object):
         raise ValueError("invalid label %r" % (label,))
 
     def _netref_factory(self, id_pack):  # boxing
-        """
-        id_pack is for remote, so when class no maptach of id_pack[1]
-        """
-        # importlib\builtin cache
-        # id_pack, if ids are reflixive and zero refcount, check-in with name_pack
+        """id_pack is for remote, so when class id fails to directly match """
         if id_pack[0] in netref.builtin_classes_cache:
             cls = netref.builtin_classes_cache[id_pack[0]]
         elif id_pack[1] in self._netref_classes_cache:
