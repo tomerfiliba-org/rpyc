@@ -221,8 +221,13 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     def __instancecheck__(self, other):
         # support for checking cached instances across connections
         if isinstance(other, BaseNetref):
-            if self.____id_pack__[1] == self.____id_pack__[1]:
-                return True
+            if self.____id_pack__[2] != 0:
+                raise TypeError("isinstance() arg 2 must be a class, type, or tuple of classes and types")
+            elif self.____id_pack__[1] == other.____id_pack__[1]:
+                if other.____id_pack__[2] == 0:
+                    return False
+                elif other.____id_pack__[2] != 0:
+                    return True
             else:
                 return syncreq(self, consts.HANDLE_INSTANCECHECK, other.____id_pack__)
         else:
