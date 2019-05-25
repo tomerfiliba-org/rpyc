@@ -2,26 +2,28 @@
 of *magic*, so beware.
 """
 import sys
-import inspect
 import types
+from rpyc.lib import get_methods, get_id_pack
 from rpyc.lib.compat import pickle, is_py3k, maxint, with_metaclass
 from rpyc.core import consts
 
 
+builtin_id_pack_cache = {}  # name_pack -> id_pack
+builtin_classes_cache = {}  # id_pack -> class
 # If these can be accessed, numpy will try to load the array from local memory,
 # resulting in exceptions and/or segfaults, see #236:
-_deleted_netref_attrs = frozenset([
+DELETED_ATTRS = frozenset([
     '__array_struct__', '__array_interface__',
 ])
 
-_local_netref_attrs = frozenset([
-    '____conn__', '____oid__', '____refcount__', '__class__', '__cmp__', '__del__', '__delattr__',
-    '__dir__', '__doc__', '__getattr__', '__getattribute__', '__hash__',
+LOCAL_ATTRS = frozenset([
+    '____conn__', '____id_pack__', '____refcount__', '__class__', '__cmp__', '__del__', '__delattr__',
+    '__dir__', '__doc__', '__getattr__', '__getattribute__', '__hash__', '__instancecheck__',
     '__init__', '__metaclass__', '__module__', '__new__', '__reduce__',
     '__reduce_ex__', '__repr__', '__setattr__', '__slots__', '__str__',
     '__weakref__', '__dict__', '__methods__', '__exit__',
     '__eq__', '__ne__', '__lt__', '__gt__', '__le__', '__ge__',
-]) | _deleted_netref_attrs
+]) | DELETED_ATTRS
 """the set of attributes that are local to the netref object"""
 
 _builtin_types = [
@@ -55,10 +57,7 @@ else:
         basestring, unicode, long, xrange, type(iter(xrange(10))), file,  # noqa
         types.InstanceType, types.ClassType, types.DictProxyType,
     ])
-
-_normalized_builtin_types = dict(((t.__name__, t.__module__), t)
-                                 for t in _builtin_types)
-
+_normalized_builtin_types = {}
 
 def syncreq(proxy, handler, *args):
     """Performs a synchronous request on the given proxy object.
@@ -118,13 +117,14 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     Do not use this class directly; use :func:`class_factory` instead.
 
     :param conn: the :class:`rpyc.core.protocol.Connection` instance
-    :param oid: the unique object ID of the remote object
+    :param id_pack: id tuple for an object such that (remote-obj-type-id, remote-obj-id)
+        (cont.) if remote-obj-type-id == remote-obj-id then object is a class. Otherwise, object is not a class
     """
-    __slots__ = ["____conn__", "____oid__", "__weakref__", "____refcount__"]
+    __slots__ = ["____conn__", "____id_pack__", "__weakref__", "____refcount__"]
 
-    def __init__(self, conn, oid):
+    def __init__(self, conn, id_pack):
         self.____conn__ = conn
-        self.____oid__ = oid
+        self.____id_pack__ = id_pack
         self.____refcount__ = 1
 
     def __del__(self):
@@ -137,7 +137,7 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
             pass
 
     def __getattribute__(self, name):
-        if name in _local_netref_attrs:
+        if name in LOCAL_ATTRS:
             if name == "__class__":
                 cls = object.__getattribute__(self, "__class__")
                 if cls is None:
@@ -145,7 +145,7 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
                 return cls
             elif name == "__doc__":
                 return self.__getattr__("__doc__")
-            elif name in _deleted_netref_attrs:
+            elif name in DELETED_ATTRS:
                 raise AttributeError()
             else:
                 return object.__getattribute__(self, name)
@@ -157,18 +157,18 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
             return syncreq(self, consts.HANDLE_GETATTR, name)
 
     def __getattr__(self, name):
-        if name in _deleted_netref_attrs:
+        if name in DELETED_ATTRS:
             raise AttributeError()
         return syncreq(self, consts.HANDLE_GETATTR, name)
 
     def __delattr__(self, name):
-        if name in _local_netref_attrs:
+        if name in LOCAL_ATTRS:
             object.__delattr__(self, name)
         else:
             syncreq(self, consts.HANDLE_DELATTR, name)
 
     def __setattr__(self, name, value):
-        if name in _local_netref_attrs:
+        if name in LOCAL_ATTRS:
             object.__setattr__(self, name, value)
         else:
             syncreq(self, consts.HANDLE_SETATTR, name, value)
@@ -209,10 +209,20 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
 
     def __exit__(self, exc, typ, tb):
         return syncreq(self, consts.HANDLE_CTXEXIT, exc)  # can't pass type nor traceback
-    # support for pickling netrefs
 
     def __reduce_ex__(self, proto):
+        # support for pickling netrefs
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
+
+    def __instancecheck__(self, other):
+        # support for checking cached instances across connections
+        if isinstance(other, BaseNetref):
+            if self.____id_pack__[1] ==  self.____id_pack__[1]:
+                return True
+            else:
+                return syncreq(self, consts.HANDLE_INSTANCECHECK, other.____id_pack__)
+        else:
+            return isinstance(other, self)
 
 
 def _make_method(name, doc):
@@ -252,63 +262,47 @@ def _make_method(name, doc):
         return method
 
 
-def inspect_methods(obj):
-    """introspects the given (local) object, returning a list of all of its
-    methods (going up the MRO).
-
-    :param obj: any local (not proxy) python object
-
-    :returns: a list of ``(method name, docstring)`` tuples of all the methods
-              of the given object
-    """
-    methods = {}
-    attrs = {}
-    if isinstance(obj, type):
-        # don't forget the darn metaclass
-        mros = list(reversed(type(obj).__mro__)) + list(reversed(obj.__mro__))
-    else:
-        mros = reversed(type(obj).__mro__)
-    for basecls in mros:
-        attrs.update(basecls.__dict__)
-    for name, attr in attrs.items():
-        if name not in _local_netref_attrs and hasattr(attr, "__call__"):
-            methods[name] = inspect.getdoc(attr)
-    return methods.items()
-
-
-def class_factory(clsname, modname, methods):
+def class_factory(id_pack, methods):
     """Creates a netref class proxying the given class
 
-    :param clsname: the class's name
-    :param modname: the class's module name
-    :param methods: a list of ``(method name, docstring)`` tuples, of the methods
-                    that the class defines
+    :param id_pack: the id pack used for proxy communication
+    :param methods: a list of ``(method name, docstring)`` tuples, of the methods that the class defines
 
     :returns: a netref class
     """
-    clsname = str(clsname)                                # IronPython issue #10
-    modname = str(modname)                                # IronPython issue #10
-    ns = {"__slots__": ()}
+    ns = {"__slots__": (), "__class__": None}
+    name_pack = id_pack[0]
+    if name_pack is not None:  # attempt to resolve against builtins and sys.modules
+        ns["__class__"] = _normalized_builtin_types.get(name_pack)
+        if ns["__class__"] is None:
+            _module = None
+            didx = name_pack.rfind('.')
+            if didx != -1:
+                _module = sys.modules.get(name_pack[:didx])
+                if _module is not None:
+                    _module = getattr(_module, name_pack[didx + 1:], None)
+                else:
+                    _module = sys.modules.get(name_pack)
+            else:
+                _module = sys.modules.get(name_pack)
+            if _module:
+                if id_pack[0] != 0:
+                    ns["__class__"] = _module
+                else:
+                    ns["__class__"] = getattr(_module, "__class__", None)
+
     for name, doc in methods:
-        name = str(name)                                  # IronPython issue #10
-        if name not in _local_netref_attrs:
+        name = str(name)  # IronPython issue #10
+        if name not in LOCAL_ATTRS:  # i.e. `name != __class__`
             ns[name] = _make_method(name, doc)
-    ns["__module__"] = modname
-    if modname in sys.modules and hasattr(sys.modules[modname], clsname):
-        ns["__class__"] = getattr(sys.modules[modname], clsname)
-    elif (clsname, modname) in _normalized_builtin_types:
-        ns["__class__"] = _normalized_builtin_types[clsname, modname]
-    else:
-        # to be resolved by the instance
-        ns["__class__"] = None
-    return type(clsname, (BaseNetref,), ns)
+    return type(name_pack, (BaseNetref,), ns)
 
 
-builtin_classes_cache = {}
-"""The cache of built-in netref classes (each of the types listed in
-:data:`_builtin_types`). These are shared between all RPyC connections"""
-
-# init the builtin_classes_cache
-for cls in _builtin_types:
-    builtin_classes_cache[cls.__name__, cls.__module__] = class_factory(
-        cls.__name__, cls.__module__, inspect_methods(cls))
+#_normalized_builtin_types = {get_id_pack(_builtin): _builtin for _builtin in _builtin_types}
+for _builtin in _builtin_types:
+    _id_pack = get_id_pack(_builtin)
+    _name_pack = _id_pack[0]
+    _normalized_builtin_types[_name_pack] = _builtin
+    _builtin_methods = get_methods(LOCAL_ATTRS, _builtin)
+    # assume all normalized builtins are classes
+    builtin_classes_cache[_name_pack] = class_factory(_id_pack, _builtin_methods)

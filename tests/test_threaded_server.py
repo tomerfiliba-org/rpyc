@@ -18,13 +18,26 @@ class Test_ThreadedServer(unittest.TestCase):
         self.server.close()
 
     def test_connection(self):
-        c = rpyc.classic.connect("localhost", port=18878)
-        print( c.modules.sys )
-        print( c.modules["xml.dom.minidom"].parseString("<a/>") )
-        c.execute("x = 5")
-        self.assertEqual(c.namespace["x"], 5)
-        self.assertEqual(c.eval("1+x"), 6)
-        c.close()
+        conn = rpyc.classic.connect("localhost", port=18878)
+        print(conn.modules.sys)
+        print(conn.modules["xml.dom.minidom"].parseString("<a/>"))
+        conn.execute("x = 5")
+        self.assertEqual(conn.namespace["x"], 5)
+        self.assertEqual(conn.eval("1+x"), 6)
+        conn.close()
+
+    def test_instancecheck_across_connections(self):
+        conn = rpyc.classic.connect("localhost", port=18878)
+        conn2 = rpyc.classic.connect("localhost", port=18878)
+        conn.execute("import test_magic")
+        conn2.execute("import test_magic")
+        foo = conn.modules.test_magic.Foo()
+        bar = conn.modules.test_magic.Bar()
+        self.assertTrue(isinstance(foo, conn.modules.test_magic.Foo))
+        self.assertTrue(isinstance(bar, conn2.modules.test_magic.Bar))
+        self.assertTrue(isinstance(bar, conn.modules.test_magic.Foo))
+        conn.close()
+        conn2.close()
 
 class Test_ThreadedServerOverUnixSocket(unittest.TestCase):
 

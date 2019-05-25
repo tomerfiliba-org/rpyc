@@ -61,7 +61,7 @@ We all know that the best way to understand something is to smash it, slice it
 up and spill the contents into the world! So let's do that::
 
     >>> dir(conn.modules.sys.path)
-    ['____conn__', '____oid__', '__add__', '__class__', '__contains__', '__delattr__',
+    ['____conn__', '____id_pack__', '__add__', '__class__', '__contains__', '__delattr__',
     '__delitem__', '__delslice__', '__doc__', '__eq__', '__ge__', '__getattribute__',
     '__getitem__', '__getslice__', '__gt__', '__hash__', '__iadd__', '__imul__',
     '__init__', '__iter__', '__le__', '__len__', '__lt__', '__mul__', '__ne__', '__new__',
@@ -70,7 +70,7 @@ up and spill the contents into the world! So let's do that::
     'pop', 'remove', 'reverse', 'sort']
 
 In addition to some expected methods and properties, you will have noticed
-``____conn__`` and ``____oid__``. These properties store over which connection
+``____conn__`` and ``____id_pack__``. These properties store over which connection
 the object should be resolved and an identifier that allows the server to
 lookup the object from a dictionary.
 
@@ -96,7 +96,7 @@ propagates transparently to the client. Have a look at this snippet::
       File "D:\projects\rpyc\core\netref.py", line 86, in method
         return self.____sync_req__(consts.HANDLE_CALLATTR, name, args, kwargs)
       File "D:\projects\rpyc\core\netref.py", line 53, in ____sync_req__
-        return self.____conn__.sync_request(handler, self.____oid__, *args)
+        return self.____conn__.sync_request(handler, self.____id_pack__, *args)
       File "D:\projects\rpyc\core\protocol.py", line 224, in sync_request
         self.serve()
       File "D:\projects\rpyc\core\protocol.py", line 196, in serve

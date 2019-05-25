@@ -7,7 +7,7 @@ import time  # noqa: F401
 import gc  # noqa: F401
 
 from threading import Lock, Condition
-from rpyc.lib import spawn, Timeout
+from rpyc.lib import spawn, Timeout, get_methods, get_id_pack
 from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error, acquire_lock  # noqa: F401
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
@@ -267,9 +267,10 @@ class Connection(object):
         if type(obj) is tuple:
             return consts.LABEL_TUPLE, tuple(self._box(item) for item in obj)
         elif isinstance(obj, netref.BaseNetref) and obj.____conn__ is self:
-            return consts.LABEL_LOCAL_REF, obj.____oid__
+            return consts.LABEL_LOCAL_REF, obj.____id_pack__
         else:
-            self._local_objects.add(obj)
+            id_pack = get_id_pack(obj)
+            self._local_objects.add(id_pack, obj)
             try:
                 cls = obj.__class__
             except Exception:
@@ -277,7 +278,7 @@ class Connection(object):
                 cls = type(obj)
             if not isinstance(cls, type):
                 cls = type(obj)
-            return consts.LABEL_REMOTE_REF, (id(obj), cls.__name__, cls.__module__)
+            return consts.LABEL_REMOTE_REF, id_pack
 
     def _unbox(self, package):  # boxing
         """recreate a local object representation of the remote object: if the
@@ -291,29 +292,32 @@ class Connection(object):
         if label == consts.LABEL_LOCAL_REF:
             return self._local_objects[value]
         if label == consts.LABEL_REMOTE_REF:
-            oid, clsname, modname = value
-            if oid in self._proxy_cache:
-                proxy = self._proxy_cache[oid]
-                proxy.____refcount__ += 1  # other side increased refcount on boxing,
-                # if I'm returning from cache instead of new object,
-                # must increase refcount to match
-                return proxy
-            proxy = self._netref_factory(oid, clsname, modname)
-            self._proxy_cache[oid] = proxy
+            id_pack = value  # so value is a id_pack
+            if id_pack in self._proxy_cache:
+                proxy = self._proxy_cache[id_pack]
+                proxy.____refcount__ += 1  # if cached then remote incremented refcount, so sync refcount
+            else:
+                proxy = self._netref_factory(id_pack)
+                self._proxy_cache[id_pack] = proxy
             return proxy
         raise ValueError("invalid label %r" % (label,))
 
-    def _netref_factory(self, oid, clsname, modname):  # boxing?
-        typeinfo = (clsname, modname)
-        if typeinfo in self._netref_classes_cache:
-            cls = self._netref_classes_cache[typeinfo]
-        elif typeinfo in netref.builtin_classes_cache:
-            cls = netref.builtin_classes_cache[typeinfo]
+    def _netref_factory(self, id_pack):  # boxing
+        """
+        id_pack is for remote, so when class no maptach of id_pack[1]
+        """
+        # importlib\builtin cache
+        # id_pack, if ids are reflixive and zero refcount, check-in with name_pack
+        if id_pack[0] in netref.builtin_classes_cache:
+            cls = netref.builtin_classes_cache[id_pack[0]]
+        elif id_pack[1] in self._netref_classes_cache:
+            cls = self._netref_classes_cache[id_pack[1]]
         else:
-            info = self.sync_request(consts.HANDLE_INSPECT, oid)
-            cls = netref.class_factory(clsname, modname, info)
-            self._netref_classes_cache[typeinfo] = cls
-        return cls(self, oid)
+            # in the future, it could see if a sys.module cache/lookup hits first
+            cls_methods = self.sync_request(consts.HANDLE_INSPECT, id_pack)
+            cls = netref.class_factory(id_pack, cls_methods)
+            self._netref_classes_cache[id_pack[1]] = cls
+        return cls(self, id_pack)
 
     def _dispatch_request(self, seq, raw_args):  # dispatch
         try:
@@ -534,6 +538,7 @@ class Connection(object):
             consts.HANDLE_STR: cls._handle_str,
             consts.HANDLE_CMP: cls._handle_cmp,
             consts.HANDLE_HASH: cls._handle_hash,
+            consts.HANDLE_INSTANCECHECK: cls._handle_instancecheck,
             consts.HANDLE_DIR: cls._handle_dir,
             consts.HANDLE_PICKLE: cls._handle_pickle,
             consts.HANDLE_DEL: cls._handle_del,
@@ -553,7 +558,7 @@ class Connection(object):
         return self._local_root
 
     def _handle_del(self, obj, count=1):  # request handler
-        self._local_objects.decref(id(obj), count)
+        self._local_objects.decref(get_id_pack(obj), count)
 
     def _handle_repr(self, obj):  # request handler
         return repr(obj)
@@ -578,8 +583,8 @@ class Connection(object):
     def _handle_dir(self, obj):  # request handler
         return tuple(dir(obj))
 
-    def _handle_inspect(self, oid):  # request handler
-        return tuple(netref.inspect_methods(self._local_objects[oid]))
+    def _handle_inspect(self, id_pack):  # request handler
+        return tuple(get_methods(netref.LOCAL_ATTRS, self._local_objects[id_pack]))
 
     def _handle_getattr(self, obj, name):  # request handler
         return self._access_attr(obj, name, (), "_rpyc_getattr", "allow_getattr", getattr)
@@ -603,6 +608,16 @@ class Connection(object):
         else:
             typ = tb = None
         return self._handle_getattr(obj, "__exit__")(exc, typ, tb)
+
+    def _handle_instancecheck(self, obj, other_id_pack):
+        # Create a name pack which would be familiar here and see if there is a hit
+        other_id_pack2 = (other_id_pack[0], other_id_pack[1], 0)
+        if other_id_pack2 in self._netref_classes_cache:
+            cls = self._netref_classes_cache[other_id_pack2]
+            other = cls(self, other_id_pack2)
+            return isinstance(other, obj)
+        else:  # might just have missed cache, FIX ME
+            return False
 
     def _handle_pickle(self, obj, proto):  # request handler
         if not self._config["allow_pickle"]:
