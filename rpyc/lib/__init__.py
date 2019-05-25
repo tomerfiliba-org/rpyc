@@ -1,6 +1,7 @@
 """
 A library of various helpers functions and classes
 """
+import inspect
 import sys
 import socket
 import logging
@@ -147,3 +148,47 @@ def exp_backoff(collision):
     supremum_adjustment = 1 if n > 3 else 0
     k = random.uniform(0, 2**n - supremum_adjustment)
     return k * 0.0000512
+
+
+def get_id_pack(obj):
+    """introspects the given (local) object, returns id_pack as expected by BaseNetref
+
+    aliases,
+    cross-connection,
+    builtins,
+    sys-modules,
+    type or instance
+
+    # version compatibility without reload, b/c of ____oid__
+    """
+    if not inspect.isclass(obj):
+        name_pack = '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__)
+        return (name_pack, id(type(obj)), id(obj))
+    else:
+        name_pack = '{}.{}'.format(obj.__module__, obj.__name__)
+        return (name_pack, id(obj), 0)
+
+
+
+def get_methods(obj_attrs, obj):
+    """introspects the given (local) object, returning a list of all of its
+    methods (going up the MRO).
+
+    :param obj: any local (not proxy) python object
+
+    :returns: a list of ``(method name, docstring)`` tuples of all the methods
+              of the given object
+    """
+    methods = {}
+    attrs = {}
+    if isinstance(obj, type):
+        # don't forget the darn metaclass
+        mros = list(reversed(type(obj).__mro__)) + list(reversed(obj.__mro__))
+    else:
+        mros = reversed(type(obj).__mro__)
+    for basecls in mros:
+        attrs.update(basecls.__dict__)
+    for name, attr in attrs.items():
+        if name not in obj_attrs and hasattr(attr, "__call__"):
+            methods[name] = inspect.getdoc(attr)
+    return methods.items()

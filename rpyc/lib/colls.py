@@ -82,9 +82,9 @@ class RefCountingColl(object):
     def __repr__(self):
         return repr(self._dict)
 
-    def add(self, obj):
+    def add(self, key, obj):
+        """Add object to refcounting coll."""
         with self._lock:
-            key = id(obj)
             slot = self._dict.get(key, None)
             if slot is None:
                 slot = [obj, 0]

@@ -45,9 +45,9 @@ class ClassicMode(unittest.TestCase):
 
     def test_isinstance(self):
         x = self.conn.builtin.list((1,2,3,4))
-        print( x )
-        print( type(x) )
-        print( x.__class__ )
+        print( self.conn.builtin.list, type(self.conn.builtin.list))  # <class 'list'> <netref class 'builtins.type'>
+        print( x,  type(x) )  # [1, 2, 3, 4] <netref class 'builtins.list'>
+        print( x.__class__, type(x.__class__) )  # <class 'list'> <class 'type'>
         self.assertTrue(isinstance(x, list))
         self.assertTrue(isinstance(x, rpyc.BaseNetref))
 

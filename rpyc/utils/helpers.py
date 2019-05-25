@@ -144,7 +144,7 @@ def async_(proxy):
     pid = id(proxy)
     if pid in _async_proxies_cache:
         return _async_proxies_cache[pid]
-    if not hasattr(proxy, "____conn__") or not hasattr(proxy, "____oid__"):
+    if not hasattr(proxy, "____conn__") or not hasattr(proxy, "____id_pack__"):
         raise TypeError("'proxy' must be a Netref: %r", (proxy,))
     if not callable(proxy):
         raise TypeError("'proxy' must be callable: %r" % (proxy,))
