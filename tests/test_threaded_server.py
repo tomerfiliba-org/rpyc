@@ -35,7 +35,9 @@ class Test_ThreadedServer(unittest.TestCase):
         bar = conn.modules.test_magic.Bar()
         self.assertTrue(isinstance(foo, conn.modules.test_magic.Foo))
         self.assertTrue(isinstance(bar, conn2.modules.test_magic.Bar))
-        self.assertTrue(isinstance(bar, conn.modules.test_magic.Foo))
+        self.assertFalse(isinstance(bar, conn.modules.test_magic.Foo))
+        with self.assertRaises(TypeError):
+            isinstance(conn.modules.test_magic.Foo, bar)
         conn.close()
         conn2.close()
 
