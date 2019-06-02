@@ -1,3 +1,15 @@
+4.1.0
+-----
+Date: 05.25.2019
+
+- Added connection back-off and attempts for congested workloads
+- Fixed minor resource leak for ForkingServer (#304)
+- Cross-connection instance check for cached netref classes (#316)
+- Hashing fixed (#324)
+Note
+- Requests/replies are not compatible between >=4.1.0 and earlier versions
+
+
 4.0.2
 -----
 Date: 04.08.2018
