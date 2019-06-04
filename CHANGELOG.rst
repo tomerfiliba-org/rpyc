@@ -6,8 +6,7 @@ Date: 05.25.2019
 - Fixed minor resource leak for ForkingServer (#304)
 - Cross-connection instance check for cached netref classes (#316)
 - Hashing fixed (#324)
-Note
-- Requests/replies are not compatible between >=4.1.0 and earlier versions
+- New ID Pack convention breaks compatibility between a client/server >= 4.10 with a client/server < 4.10
 
 
 4.0.2
