@@ -37,17 +37,17 @@ class ClassicMode(unittest.TestCase):
         self.assertEqual(list(bi), list(range(10000)))
 
     def test_classic(self):
-        print( self.conn.modules.sys )
-        print( self.conn.modules["xml.dom.minidom"].parseString("<a/>") )
+        print(self.conn.modules.sys)
+        print(self.conn.modules["xml.dom.minidom"].parseString("<a/>"))
         self.conn.execute("x = 5")
         self.assertEqual(self.conn.namespace["x"], 5)
         self.assertEqual(self.conn.eval("1+x"), 6)
 
     def test_isinstance(self):
-        x = self.conn.builtin.list((1,2,3,4))
-        print( self.conn.builtin.list, type(self.conn.builtin.list))  # <class 'list'> <netref class 'builtins.type'>
-        print( x,  type(x) )  # [1, 2, 3, 4] <netref class 'builtins.list'>
-        print( x.__class__, type(x.__class__) )  # <class 'list'> <class 'type'>
+        x = self.conn.builtin.list((1, 2, 3, 4))
+        print(self.conn.builtin.list, type(self.conn.builtin.list))  # <class 'list'> <netref class 'builtins.type'>
+        print(x, type(x))  # [1, 2, 3, 4] <netref class 'builtins.list'>
+        print(x.__class__, type(x.__class__))  # <class 'list'> <class 'type'>
         self.assertTrue(isinstance(x, list))
         self.assertTrue(isinstance(x, rpyc.BaseNetref))
 

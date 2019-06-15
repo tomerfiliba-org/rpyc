@@ -2,6 +2,7 @@ import time
 import unittest
 import rpyc
 
+
 class TestAsync(unittest.TestCase):
     def setUp(self):
         self.conn = rpyc.classic.connect_thread()
@@ -26,7 +27,7 @@ class TestAsync(unittest.TestCase):
         t0 = time.time()
         self.assertRaises(rpyc.AsyncResultTimeout, res.wait)
         dt = time.time() - t0
-        #print( "timed out after %s" % (dt,) )
+        # print( "timed out after %s" % (dt,) )
         self.assertTrue(dt >= 3.5, str(dt))
         self.assertTrue(dt <= 4.5, str(dt))
 
@@ -59,6 +60,7 @@ class TestAsync(unittest.TestCase):
         res.wait()
         self.assertTrue(res.error)
         self.assertRaises(ValueError, lambda: res.value)
+
 
 if __name__ == "__main__":
     unittest.main()
