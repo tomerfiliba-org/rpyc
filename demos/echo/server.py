@@ -23,7 +23,7 @@ class EchoService(rpyc.Service):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    choice = 'ForkingServer'  # Debugging
+    choice = 'OneShotServer'  # Debugging
     svc_server = None
     server_class = {}
     # Populate for 'ForkingServer', 'GeventServer', 'OneShotServer', 'ThreadPoolServer', and 'ThreadedServer'

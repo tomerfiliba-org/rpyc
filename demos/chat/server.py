@@ -5,9 +5,9 @@ from threading import RLock
 
 
 USERS_DB = {
-    "foo" : "bar",
-    "spam" : "bacon",
-    "eggs" : "viking",
+    "foo": "bar",
+    "spam": "bacon",
+    "eggs": "viking",
 }
 broadcast_lock = RLock()
 tokens = set()
@@ -41,7 +41,7 @@ class UserToken(object):
             for tok in tokens:
                 try:
                     tok.callback(text)
-                except:
+                except Exception:
                     stale.add(tok)
             tokens -= stale
 
@@ -65,6 +65,5 @@ class ChatService(Service):
 
 
 if __name__ == "__main__":
-    t = ThreadedServer(ChatService, port = 19912)
+    t = ThreadedServer(ChatService, port=19912)
     t.start()
-
