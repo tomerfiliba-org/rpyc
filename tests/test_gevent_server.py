@@ -1,14 +1,11 @@
-import gevent
-from gevent import monkey; monkey.patch_all()
-
-import os
-import rpyc
-import time
-import tempfile
-from rpyc.utils.server import GeventServer
-from rpyc import SlaveService
-import threading
 import unittest
+from rpyc import SlaveService
+from rpyc.utils.server import GeventServer
+import time
+import rpyc
+import gevent
+from gevent import monkey
+monkey.patch_all()
 
 
 class Test_GeventServer(unittest.TestCase):
@@ -55,11 +52,12 @@ class Test_GeventServer(unittest.TestCase):
             ])
             stop = time.time()
 
-            self.assertLessEqual(stop-start, 2)
+            self.assertLessEqual(stop - start, 2)
 
         finally:
             for c in conns:
                 c.close()
+
 
 if __name__ == "__main__":
     unittest.main()

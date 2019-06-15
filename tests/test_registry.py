@@ -59,6 +59,7 @@ class TestTcpRegistry(BaseRegistryTest, unittest.TestCase):
     def _get_client(self):
         return TCPRegistryClient("localhost")
 
+
 class TestUdpRegistry(BaseRegistryTest, unittest.TestCase):
     def _get_server(self):
         return UDPRegistryServer(pruning_timeout=PRUNING_TIMEOUT)

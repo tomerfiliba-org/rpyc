@@ -1,3 +1,6 @@
+from rpyc.lib.compat import BYTES_LITERAL
+from rpyc.core.stream import PipeStream, NamedPipeStream
+import rpyc
 import sys
 import time
 import unittest
@@ -5,10 +8,6 @@ import unittest
 from nose import SkipTest
 if sys.platform != "win32":
     raise SkipTest("Requires windows")
-
-import rpyc
-from rpyc.core.stream import PipeStream, NamedPipeStream
-from rpyc.lib.compat import BYTES_LITERAL
 
 
 class Test_Pipes(unittest.TestCase):
@@ -42,7 +41,7 @@ class Test_Pipes(unittest.TestCase):
 class Test_NamedPipe(object):
     def setUp(self):
         self.pipe_server_thread = rpyc.spawn(self.pipe_server)
-        time.sleep(1) # make sure server is accepting already
+        time.sleep(1)  # make sure server is accepting already
         self.np_client = NamedPipeStream.create_client("floop")
         self.client = rpyc.connect_stream(self.np_client)
 

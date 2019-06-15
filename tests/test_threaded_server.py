@@ -1,6 +1,5 @@
 import os
 import rpyc
-import time
 import tempfile
 from rpyc.utils.server import ThreadedServer, ThreadPoolServer
 from rpyc import SlaveService
@@ -41,6 +40,7 @@ class Test_ThreadedServer(unittest.TestCase):
         conn.close()
         conn2.close()
 
+
 class Test_ThreadedServerOverUnixSocket(unittest.TestCase):
 
     def setUp(self):
@@ -55,8 +55,8 @@ class Test_ThreadedServerOverUnixSocket(unittest.TestCase):
 
     def test_connection(self):
         c = rpyc.classic.unix_connect(self.socket_path)
-        print( c.modules.sys )
-        print( c.modules["xml.dom.minidom"].parseString("<a/>") )
+        print(c.modules.sys)
+        print(c.modules["xml.dom.minidom"].parseString("<a/>"))
         c.execute("x = 5")
         self.assertEqual(c.namespace["x"], 5)
         self.assertEqual(c.eval("1+x"), 6)

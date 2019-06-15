@@ -16,7 +16,7 @@ class MyService(rpyc.Service):
         self.on_context_enter = True
         try:
             yield 17 + y
-        except:
+        except Exception:
             self.on_context_exc = True
             raise
         finally:
@@ -46,6 +46,7 @@ class TestContextManagers(unittest.TestCase):
             pass
 
         service = self.service
+
         def use_context():
             with self.conn.root.context(3):
                 self.assertTrue(service.on_context_enter)
@@ -57,6 +58,7 @@ class TestContextManagers(unittest.TestCase):
 
         self.assertTrue(service.on_context_exc)
         self.assertTrue(service.on_context_exit)
+
 
 if __name__ == "__main__":
     unittest.main()

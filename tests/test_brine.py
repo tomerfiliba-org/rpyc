@@ -11,10 +11,10 @@ class BrineTest(unittest.TestCase):
         else:
             exec('''x = ("he", 7, u"llo", 8, (), 900, None, True, Ellipsis, 18.2, 18.2j + 13,
                  slice(1, 2, 3), frozenset([5, 6, 7]), NotImplemented, (1,2))''')
-        self.assertTrue(brine.dumpable(x))
-        y = brine.dump(x)
+        self.assertTrue(brine.dumpable(x))  # noqa
+        y = brine.dump(x)  # noqa
         z = brine.load(y)
-        self.assertEqual(x, z)
+        self.assertEqual(x, z)  # noqa
 
 
 if __name__ == "__main__":

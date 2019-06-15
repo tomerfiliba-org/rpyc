@@ -4,19 +4,24 @@ import unittest
 
 is_py3 = sys.version_info >= (3,)
 
+
 class Meta(type):
 
     def __hash__(self):
         return 4321
 
+
 Base = Meta('Base', (object,), {})
+
 
 class Foo(Base):
     def __hash__(self):
         return 1234
 
+
 class Bar(Foo):
     pass
+
 
 class Mux(Foo):
     def __eq__(self, other):

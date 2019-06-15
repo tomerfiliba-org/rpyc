@@ -11,9 +11,9 @@ class TestDeploy(unittest.TestCase):
         SshMachine.python = rem[sys.executable]
         with DeployedServer(rem) as dep:
             conn = dep.classic_connect()
-            print (conn.modules.sys)
+            print(conn.modules.sys)
             func = conn.modules.os.getcwd
-            print (func())
+            print(func())
 
         try:
             func()
@@ -29,12 +29,12 @@ class TestDeploy(unittest.TestCase):
             self.skipTest("Paramiko is not available")
         from plumbum.machines.paramiko_machine import ParamikoMachine
 
-        rem = ParamikoMachine("localhost", missing_host_policy = paramiko.AutoAddPolicy())
+        rem = ParamikoMachine("localhost", missing_host_policy=paramiko.AutoAddPolicy())
         with DeployedServer(rem) as dep:
             conn = dep.classic_connect()
-            print (conn.modules.sys)
+            print(conn.modules.sys)
             func = conn.modules.os.getcwd
-            print (func())
+            print(func())
 
         try:
             func()
