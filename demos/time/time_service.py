@@ -8,4 +8,3 @@ class TimeService(Service):
 
     def exposed_get_time(self):
         return time.ctime()
-

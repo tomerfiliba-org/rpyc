@@ -59,7 +59,7 @@ class Web8Service(rpyc.Service):
 
         def on_btn3_clicked(src):
             if btn3.get_label() == "Start timer":
-                bg_thread[0] = threading.Thread(target = bg_timer_thread)
+                bg_thread[0] = threading.Thread(target=bg_timer_thread)
                 active[0] = True
                 bg_thread[0].start()
                 btn3.set_label("Stop timer")
@@ -83,9 +83,6 @@ class Web8Service(rpyc.Service):
         self.content.pack_start(lbl)
 
 
-
-
 if __name__ == "__main__":
-    t = ThreadedServer(Web8Service, port = 18833)
+    t = ThreadedServer(Web8Service, port=18833)
     t.start()
-

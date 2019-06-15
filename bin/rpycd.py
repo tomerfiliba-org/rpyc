@@ -39,14 +39,16 @@ def start():
     logfile = os.path.join(cur_dir, conf.get("rpycd", "logfile"))
     setup_logger(quiet, logfile)
 
-    server = factory(SlaveService, hostname = conf.get("rpycd", "host"),
-        port = conf.getint("rpycd", "port"), reuse_addr = True)
+    server = factory(SlaveService, hostname=conf.get("rpycd", "host"),
+                     port=conf.getint("rpycd", "port"), reuse_addr=True)
     server.start()
     server.serve_all()
+
 
 def reload(*args):
     server.close()
     start()
+
 
 def stop(*args):
     server.close()
@@ -56,6 +58,6 @@ def stop(*args):
 if __name__ == "__main__":
     pid_file = os.path.join(cur_dir, 'rpycd.pid')
     with daemon.DaemonContext(
-            pidfile = PIDLockFile(pid_file),
-            signal_map = {signal.SIGTERM: stop, signal.SIGHUP: reload}):
+            pidfile=PIDLockFile(pid_file),
+            signal_map={signal.SIGTERM: stop, signal.SIGHUP: reload}):
         start()
