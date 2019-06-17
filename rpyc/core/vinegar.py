@@ -37,7 +37,7 @@ except NameError:
     BaseException = Exception
 
 
-def dump(typ, val, tb, include_local_traceback):
+def dump(typ, val, tb, include_local_traceback, include_local_version):
     """Dumps the given exceptions info, as returned by ``sys.exc_info()``
 
     :param typ: the exception's type (class)
@@ -83,7 +83,10 @@ def dump(typ, val, tb, include_local_traceback):
             if not brine.dumpable(attrval):
                 attrval = repr(attrval)
             attrs.append((name, attrval))
-    attrs.append(("_remote_version", version.version_string))
+    if include_local_version:
+        attrs.append(("_remote_version", version.version_string))
+    else:
+        attrs.append(("_remote_version", "<version denied>"))
     return (typ.__module__, typ.__name__), tuple(args), tuple(attrs), tbtext
 
 
@@ -171,11 +174,10 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
             pass
 
     # When possible and relevant, warn the user about mismatch in major versions between remote and local
-    if hasattr(exc, "_remote_version"):
-        remote_ver = exc._remote_version
-        if remote_ver.split('.')[0] != str(version.version[0]):
-            _warn = '\nWARNING: Remote is on RPyC {} and local is on RPyC {}.\n\n'
-            tbtext += _warn.format(remote_ver, version.version_string)
+    remote_ver = getattr(exc, "_remote_version", "<version denied>")
+    if remote_ver != "<version denied>" and remote_ver.split('.')[0] != str(version.version[0]):
+        _warn = '\nWARNING: Remote is on RPyC {} and local is on RPyC {}.\n\n'
+        tbtext += _warn.format(remote_ver, version.version_string)
 
     exc._remote_tb = tbtext
     return exc

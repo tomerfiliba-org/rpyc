@@ -1,9 +1,6 @@
 from __future__ import with_statement
 import rpyc
 import unittest
-from subprocess import Popen
-
-from contextlib import contextmanager
 
 
 class MyService(rpyc.Service):
@@ -17,7 +14,7 @@ class MyService(rpyc.Service):
 
 class TestRemoteException(unittest.TestCase):
     def setUp(self):
-        self.server = rpyc.utils.server.OneShotServer(MyService, port=0, auto_register=False)
+        self.server = rpyc.utils.server.OneShotServer(MyService, port=0)
         self.server.logger.quiet = False
         self.server._start_in_thread()
         self.original_version_string = rpyc.version.version_string
@@ -52,6 +49,30 @@ class TestRemoteException(unittest.TestCase):
             exc_remote_tb = ''
         self.assertEqual('1.0.0', exc_rpyc_version)
         self.assertTrue(warn_msg in exc_remote_tb)
+
+
+class TestExclusionsRemoteException(unittest.TestCase):
+    def setUp(self):
+        config = {'include_local_traceback': False, 'include_local_version': False}
+        self.server = rpyc.utils.server.OneShotServer(MyService, port=0, protocol_config=config)
+        self.server.logger.quiet = False
+        self.server._start_in_thread()
+        self.conn = rpyc.connect("localhost", port=self.server.port)
+
+    def tearDown(self):
+        self.conn.close()
+
+    def test_remote_exception(self):
+        try:
+            self.conn.root.remote_assert(False)
+        except Exception as exc:
+            exc_rpyc_version = exc._remote_version
+            exc_remote_tb = exc._remote_tb
+        else:
+            exc_rpyc_version = None
+            exc_remote_tb = ''
+        self.assertEqual("<traceback denied>", exc_remote_tb)
+        self.assertEqual("<version denied>", exc_rpyc_version)
 
 
 if __name__ == "__main__":
