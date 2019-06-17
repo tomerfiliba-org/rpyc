@@ -46,6 +46,7 @@ DEFAULT_CONFIG = dict(
     allow_delattr=False,
     # EXCEPTIONS
     include_local_traceback=True,
+    include_local_version=True,
     instantiate_custom_exceptions=False,
     import_custom_exceptions=False,
     instantiate_oldstyle_exceptions=False,  # which don't derive from Exception
@@ -336,7 +337,9 @@ class Connection(object):
             self._send(consts.MSG_REPLY, seq, self._box(res))
 
     def _box_exc(self, typ, val, tb):  # dispatch?
-        return vinegar.dump(typ, val, tb, include_local_traceback=self._config["include_local_traceback"])
+        return vinegar.dump(typ, val, tb,
+                            include_local_traceback=self._config["include_local_traceback"],
+                            include_local_version=self._config["include_local_version"])
 
     def _unbox_exc(self, raw):  # dispatch?
         return vinegar.load(raw,
