@@ -111,7 +111,7 @@ class SocketStream(Stream):
     """A stream over a socket"""
 
     __slots__ = ("sock",)
-    MAX_IO_CHUNK = 8000
+    MAX_IO_CHUNK = 64000  # read/write chunk is 64KB, too large of a value will degrade response for other clients
 
     def __init__(self, sock):
         self.sock = sock
