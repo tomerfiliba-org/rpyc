@@ -30,6 +30,9 @@ class MyService(rpyc.Service):
     def exposed_write_data(self, dataframe):
         rpyc.classic.obtain(dataframe)
 
+    def exposed_ping(self):
+        return "pong"
+
 
 class TestServicePickle(unittest.TestCase):
     """Issues #323 and #329 showed for large objects there is an excessive number of round trips.
@@ -47,9 +50,11 @@ class TestServicePickle(unittest.TestCase):
         self.server.logger.quiet = False
         self.thd = self.server._start_in_thread()
         self.conn = rpyc.connect("localhost", self.server.port, config=self.cfg)
+        self.conn2 = rpyc.connect("localhost", self.server.port, config=self.cfg)
         # globals are made available to timeit, prepare them
         cfg_tests.timeit['conn'] = self.conn
-        cfg_tests.timeit['df'] = pd.DataFrame(np.zeros((DF_ROWS, DF_COLS)))
+        cfg_tests.timeit['conn2'] = self.conn2
+        cfg_tests.timeit['df'] = pd.DataFrame(np.random.rand(DF_ROWS, DF_COLS))
 
     def tearDown(self):
         self.conn.close()
@@ -62,14 +67,16 @@ class TestServicePickle(unittest.TestCase):
         # By timing how long w/ out any round trips pickle.dumps and picke.loads takes, the overhead of RPyC protocol
         # can be found
 
-        rpyc.core.channel.Channel.COMPRESSION_LEVEL = 0
-        rpyc.core.stream.SocketStream.MAX_IO_CHUNK = 65355 * 5
+        rpyc.core.channel.Channel.COMPRESSION_LEVEL = 1
+
+        # rpyc.core.stream.SocketStream.MAX_IO_CHUNK = 8000
         level = rpyc.core.channel.Channel.COMPRESSION_LEVEL
         max_chunk = rpyc.core.stream.SocketStream.MAX_IO_CHUNK
-        repeat = 10
+        repeat = 3
         number = 1
         pickle_stmt = 'pickle.loads(pickle.dumps(cfg_tests.timeit["df"]))'
-        write_stmt = 'cfg_tests.timeit["conn"].root.write_data(cfg_tests.timeit["df"])'
+        write_stmt = 'rpyc.lib.spawn(cfg_tests.timeit["conn"].root.write_data, cfg_tests.timeit["df"]); [cfg_tests.timeit["conn2"].root.ping() for i in range(30)]'
+        #write_stmt = 'cfg_tests.timeit["conn"].root.write_data(cfg_tests.timeit["df"])'
         t = timeit.Timer(pickle_stmt, globals=globals())
         tpickle = min(t.repeat(repeat, number))
         t = timeit.Timer(write_stmt, globals=globals())
@@ -78,8 +85,8 @@ class TestServicePickle(unittest.TestCase):
         headers = ['sample', 'tpickle', 'twrite', 'bytes', 'level', 'max_chunk']  # noqa
         data = [repeat, tpickle, twrite, sys.getsizeof(cfg_tests.timeit['df']), level, max_chunk]
         data = [str(d) for d in data]
-        # print(','.join(headers))
-        # print(','.join(data))
+        # print(','.join(headers), file=open('/tmp/time.csv', 'a'))
+        # print(','.join(data), file=open('/tmp/time.csv', 'a'))
 
 
 if __name__ == "__main__":
