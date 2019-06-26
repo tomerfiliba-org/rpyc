@@ -68,15 +68,15 @@ class TestServicePickle(unittest.TestCase):
         # can be found
 
         rpyc.core.channel.Channel.COMPRESSION_LEVEL = 1
-
         # rpyc.core.stream.SocketStream.MAX_IO_CHUNK = 8000
         level = rpyc.core.channel.Channel.COMPRESSION_LEVEL
         max_chunk = rpyc.core.stream.SocketStream.MAX_IO_CHUNK
         repeat = 3
         number = 1
         pickle_stmt = 'pickle.loads(pickle.dumps(cfg_tests.timeit["df"]))'
-        write_stmt = 'rpyc.lib.spawn(cfg_tests.timeit["conn"].root.write_data, cfg_tests.timeit["df"]); [cfg_tests.timeit["conn2"].root.ping() for i in range(30)]'
-        #write_stmt = 'cfg_tests.timeit["conn"].root.write_data(cfg_tests.timeit["df"])'
+        write_stmt = 'rpyc.lib.spawn(cfg_tests.timeit["conn"].root.write_data, cfg_tests.timeit["df"]); '
+        write_stmt += '[cfg_tests.timeit["conn2"].root.ping() for i in range(30)]'
+        # write_stmt = 'cfg_tests.timeit["conn"].root.write_data(cfg_tests.timeit["df"])'
         t = timeit.Timer(pickle_stmt, globals=globals())
         tpickle = min(t.repeat(repeat, number))
         t = timeit.Timer(write_stmt, globals=globals())
