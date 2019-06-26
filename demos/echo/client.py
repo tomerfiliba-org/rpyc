@@ -58,7 +58,11 @@ def main():
         while True:
             alive = len([_proc for _proc in eid_proc.values() if _proc.is_alive()])
             print('{}/{} alive'.format(alive, limit))
-            time.sleep(1)
+            if alive == 0:
+                print('All of the client processes are dead. Exiting loop...')
+                break
+            else:
+                time.sleep(1)
     except (KeyboardInterrupt, Exception):
         main_event.clear()
         for proc in eid_proc.values():
