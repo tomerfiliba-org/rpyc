@@ -24,20 +24,28 @@ Server:
 ```python
 import rpyc
 from rpyc.utils.server import OneShotServer
-rpyc.lib.setup_logger()
 
-class ListService(rpyc.Service):
-    def exposed_concat(self, lst):
-        return lst + ['world']
 
-server = OneShotServer(ListService, port=12345)
-server.start()
+class HelloService(rpyc.Service):
+    def exposed_concat(self, remote_str):
+        local_str = ' github'
+        return remote_str + local_str
+
+
+if __name__ == "__main__":
+    rpyc.lib.setup_logger()
+    server = OneShotServer(HelloService, port=12345)
+    server.start()
 ```
 
 Client:
 
 ```python
+from __future__ import print_function
 import rpyc
-c = rpyc.connect("localhost", 12345)
-print(c.root.concat(['hello']))
+
+
+if __name__ == "__main__":
+    c = rpyc.connect("localhost", 12345)
+    print(c.root.concat('hello'))
 ```
