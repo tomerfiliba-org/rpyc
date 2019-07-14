@@ -2,6 +2,7 @@
 .project
 .pydevproject
 .settings
+.venv
 dist
 MANIFEST
 __pycache__
