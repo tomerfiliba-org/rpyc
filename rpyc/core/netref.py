@@ -231,7 +231,7 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
             else:
                 return syncreq(self, consts.HANDLE_INSTANCECHECK, other.____id_pack__)
         else:
-            return isinstance(other, self)
+            return isinstance(other, self.__class__)
 
 
 def _make_method(name, doc):
@@ -295,7 +295,7 @@ def class_factory(id_pack, methods):
             else:
                 _module = sys.modules.get(name_pack)
             if _module:
-                if id_pack[0] != 0:
+                if id_pack[2] == 0:
                     ns["__class__"] = _module
                 else:
                     ns["__class__"] = getattr(_module, "__class__", None)

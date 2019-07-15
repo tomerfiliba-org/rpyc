@@ -43,6 +43,9 @@ class MyService(rpyc.Service):
     def exposed_getmeta(self):
         return MyClass()
 
+    def exposed_instance(self, inst, cls):
+        return isinstance(inst, cls)
+
 
 class TestCustomService(unittest.TestCase):
     config = {}
@@ -83,6 +86,10 @@ class TestCustomService(unittest.TestCase):
     def test_metaclasses(self):
         x = self.conn.root.getmeta()
         print(x)
+
+    def test_instancecheck_list(self):
+        remote_list = self.conn.root.getlist()
+        self.assertTrue(self.conn.root.instance(remote_list, list))
 
 
 if __name__ == "__main__":
