@@ -35,7 +35,7 @@ def echo_forever(main_queue, main_event):
     except Exception:
         import traceback
         traceback.print_exc()
-        print("EXCEPT ('{}', {}) with fd {} over {}s".format(addr, port, fileno, cdelta + delta))
+        print("EXCEPT ('{0}', {1}) with fd {2} over {3}s".format(addr, port, fileno, cdelta + delta))
     finally:
         main_queue.put(_max)
 
@@ -57,7 +57,7 @@ def main():
             eid_proc[eid] = proc
         while True:
             alive = len([_proc for _proc in eid_proc.values() if _proc.is_alive()])
-            print('{}/{} alive'.format(alive, limit))
+            print('{0}/{1} alive'.format(alive, limit))
             if alive == 0:
                 print('All of the client processes are dead. Exiting loop...')
                 break
@@ -82,8 +82,8 @@ def main():
         else:
             delta = "unknown"
         time.sleep(1)
-        print("Max time to establish: {}".format(cdelta))
-        print("Max time   echo reply: {}".format(delta))
+        print("Max time to establish: {0}".format(cdelta))
+        print("Max time   echo reply: {0}".format(delta))
         print(cdelta, delta)
 
 
