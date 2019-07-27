@@ -27,7 +27,7 @@ from rpyc.lib.compat import is_py3k
 
 REMOTE_LINE_START = "\n\n========= Remote Traceback "
 REMOTE_LINE_END = " =========\n"
-REMOTE_LINE = "{}({{}}){}".format(REMOTE_LINE_START, REMOTE_LINE_END)
+REMOTE_LINE = "{0}({{}}){1}".format(REMOTE_LINE_START, REMOTE_LINE_END)
 
 
 try:

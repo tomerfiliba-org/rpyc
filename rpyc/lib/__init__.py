@@ -153,10 +153,10 @@ def exp_backoff(collision):
 def get_id_pack(obj):
     """introspects the given (local) object, returns id_pack as expected by BaseNetref"""
     if not inspect.isclass(obj):
-        name_pack = '{}.{}'.format(obj.__class__.__module__, obj.__class__.__name__)
+        name_pack = '{0}.{1}'.format(obj.__class__.__module__, obj.__class__.__name__)
         return (name_pack, id(type(obj)), id(obj))
     else:
-        name_pack = '{}.{}'.format(obj.__module__, obj.__name__)
+        name_pack = '{0}.{1}'.format(obj.__module__, obj.__name__)
         return (name_pack, id(obj), 0)
 
 
