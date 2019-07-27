@@ -186,7 +186,7 @@ class Server(object):
                 sock.shutdown(socket.SHUT_RDWR)
             except Exception:
                 pass
-            sock.close()
+            closing(sock)
             self.clients.discard(sock)
 
     def _serve_client(self, sock, credentials):
@@ -286,8 +286,10 @@ class OneShotServer(Server):
     """
 
     def _accept_method(self, sock):
-        with closing(sock):
+        try:
             self._authenticate_and_serve_client(sock)
+        finally:
+            self.close()
 
 
 class ThreadedServer(Server):
