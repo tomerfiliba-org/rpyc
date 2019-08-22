@@ -155,6 +155,8 @@ def get_id_pack(obj):
     if not inspect.isclass(obj):
         name_pack = '{0}.{1}'.format(obj.__class__.__module__, obj.__class__.__name__)
         return (name_pack, id(type(obj)), id(obj))
+    elif hasattr(obj, '____id_pack__'):
+        return obj.____id_pack__
     else:
         name_pack = '{0}.{1}'.format(obj.__module__, obj.__name__)
         return (name_pack, id(obj), 0)
