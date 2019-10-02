@@ -89,7 +89,7 @@ class MyService(rpyc.Service):
 
 class TestRestricted(unittest.TestCase):
     def setUp(self):
-        self.server = ThreadedServer(MyService, port=0)
+        self.server = ThreadedServer(MyService)
         self.thd = self.server._start_in_thread()
         self.conn = rpyc.connect("localhost", self.server.port)
 
