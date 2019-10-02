@@ -569,9 +569,9 @@ class Connection(object):
         # cmp() might enter recursive resonance... yet another workaround
         # return cmp(obj, other)
         try:
-            return getattr(type(obj), op)(obj, other)
-        except (AttributeError, TypeError):
-            return NotImplemented
+            return self._access_attr(type(obj), op, (), "_rpyc_getattr", "allow_getattr", getattr)(obj, other)
+        except Exception:
+            raise
 
     def _handle_hash(self, obj):  # request handler
         return hash(obj)
