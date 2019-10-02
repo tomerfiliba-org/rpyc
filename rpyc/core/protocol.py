@@ -583,7 +583,11 @@ class Connection(object):
         return tuple(dir(obj))
 
     def _handle_inspect(self, id_pack):  # request handler
-        return tuple(get_methods(netref.LOCAL_ATTRS, self._local_objects[id_pack]))
+        if hasattr(self._local_objects[id_pack], '____conn__'):
+            conn = self._local_objects[id_pack].____conn__
+            return conn.sync_request(consts.HANDLE_INSPECT, id_pack)
+        else:
+            return tuple(get_methods(netref.LOCAL_ATTRS, self._local_objects[id_pack]))
 
     def _handle_getattr(self, obj, name):  # request handler
         return self._access_attr(obj, name, (), "_rpyc_getattr", "allow_getattr", getattr)
