@@ -410,8 +410,14 @@ class Connection(object):
             self.close()
 
     def serve_threaded(self, thread_count=10):  # serving
-        """Serves all requests and replies for as long as the connection is
-        alive."""
+        """Serves all requests and replies for as long as the connection is alive.
+
+        CAVEAT: using non-immutable types that require a netref to be constructed to serve a request,
+        or invoking anything else that performs a sync_request, may timeout due to the sync_request reply being
+        received by another thread serving the connection. A more conventional approach where each client thread
+        opens a new connection would allow `ThreadedServer` to naturally avoid such multiplexing issues and
+        is the preferred approach for threading procedures that invoke sync_request. See issue #345
+        """
         def _thread_target():
             try:
                 while True:
