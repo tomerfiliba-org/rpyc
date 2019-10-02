@@ -566,8 +566,7 @@ class Connection(object):
         return str(obj)
 
     def _handle_cmp(self, obj, other, op='__cmp__'):  # request handler
-        # cmp() might enter recursive resonance... yet another workaround
-        # return cmp(obj, other)
+        # cmp() might enter recursive resonance... so use the underlying type and return cmp(obj, other)
         try:
             return self._access_attr(type(obj), op, (), "_rpyc_getattr", "allow_getattr", getattr)(obj, other)
         except Exception:
@@ -584,6 +583,9 @@ class Connection(object):
 
     def _handle_inspect(self, id_pack):  # request handler
         if hasattr(self._local_objects[id_pack], '____conn__'):
+            # When RPyC is chained (RPyC over RPyC), id_pack is cached in local objects as a netref
+            # since __mro__ is not a safe attribute the request is forwarded using the proxy connection
+            # see issue #346 or tests.test_rpyc_over_rpyc.Test_rpyc_over_rpyc
             conn = self._local_objects[id_pack].____conn__
             return conn.sync_request(consts.HANDLE_INSPECT, id_pack)
         else:
