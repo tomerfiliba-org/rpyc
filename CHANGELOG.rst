@@ -1,3 +1,14 @@
+4.1.2
+-----
+Date: 10.03.2019
+
+- Fixed `CVE-2019-16328`_ which was caused by a missing protocol security check
+- Fixed RPyC over RPyC for mutable parameters and extended unit testing for `#346`_
+
+.. _CVE-2019-16328: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-16328
+.. _#346: https://github.com/tomerfiliba/rpyc/issues/346
+
+
 4.1.1
 -----
 Date: 07.27.2019
