@@ -3,26 +3,34 @@
 Security
 ========
 Operating over a network always involve a certain security risk, and requires some awareness.
-RPyC is believed to be a secure protocol -- no incidents have been reported since version 3 was
-released in 2008. Version 3 was a rewrite of the library, specifically targeting security and
-service-orientation. Unlike v2.6, RPyC no longer makes use of unsecure protocols like ``pickle``,
+Version 3 of RPyC was a rewrite of the library, specifically targeting security and
+service-orientation. Unlike version 2.6, RPyC no longer makes use of unsecure protocols like ``pickle``,
 supports :data:`security-related configuration parameters <rpyc.core.protocol.DEFAULT_CONFIG>`,
-comes with strict defaults, and encourages the use of a capability-based security model.
-I daresay RPyC itself is secure.
+comes with strict defaults, and encourages the use of a capability-based security model. Even so, it behooves you to
+take a layered to secure programming and not let RPyC be a single point of failure.
 
-However, if not used properly, RPyC is also the perfect back-door... The general recommendation
-is not to use RPyC openly exposed over the Internet. It's wiser to use it only over secure local
+`CVE-2019-16328`_ is the first vulnerability since 2008, which made it possible for a remote attacker to
+bypass standard protocol security checks and modify the behavior of a service. The latent flaw was committed
+to master from September 2018 to October 2019 and affected versions `4.1.0`, `4.1.1`, and `4.1.2`. As of version
+`4.1.3`, the vulnerability has been fixed.
+
+RPyC is intuitive and secure when used properly. However, if not used properly, RPyC is also the perfect back-door...
+The general recommendation is not to use RPyC openly exposed over the Internet. It's wiser to use it only over secure local
 networks, where you trust your peers. This does not imply that there's anything wrong with the
-mechanism -- but the implementation details are sometimes too subtle to be sure of.
-Of course you can use RPyC over a :ref:`secure connection <ssl>`, to mitigate these risks
+mechanism--but the implementation details are sometimes too subtle to be sure of.
+Of course, you can use RPyC over a :ref:`secure connection <ssl>`, to mitigate these risks.
 
 RPyC works by exposing a root object, which in turn may expose other objects (and so on). For
 instance, if you expose a module or an object that has a reference to the ``sys`` module,
 a user may be able to reach it. After reaching ``sys``, the user can traverse ``sys.modules`` and
-gain access to all of the modules that the server imports. This of course depends on RPyC
-being configured to allow attribute access (by default, this parameter is set to false).
-But if you enable ``allow_public_attrs``, such things are likely to slip under the radar
-(though it's possible to prevent this -- see below).
+gain access to all of the modules that the server imports. More complex methodologies, similiar to those used in ``CVE-2019-16328``,
+could leverage access to ``builtins.str``, ``builtins.type``, ``builtins.object``, and ``builtins.dict`` and gain access to
+``sys`` modules. The default configurations for RPyC are intended to mitigate access to dangerous objects. But if you enable
+``allow_public_attrs``, return uninitialized classes or override ``_rpyc_getattr`` such things are likely to slip under the radar
+(it's possible to prevent this -- see below).
+
+.. _CVE-2019-16328: https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2019-16328
+
 
 Wrapping
 --------
