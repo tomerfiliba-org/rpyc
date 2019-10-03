@@ -11,8 +11,8 @@ take a layered to secure programming and not let RPyC be a single point of failu
 
 `CVE-2019-16328`_ is the first vulnerability since 2008, which made it possible for a remote attacker to
 bypass standard protocol security checks and modify the behavior of a service. The latent flaw was committed
-to master from September 2018 to October 2019 and affected versions `4.1.0`, `4.1.1`, and `4.1.2`. As of version
-`4.1.3`, the vulnerability has been fixed.
+to master from September 2018 to October 2019 and affected versions `4.1.0` and `4.1.1`. As of version
+`4.1.2`, the vulnerability has been fixed.
 
 RPyC is intuitive and secure when used properly. However, if not used properly, RPyC is also the perfect back-door...
 The general recommendation is not to use RPyC openly exposed over the Internet. It's wiser to use it only over secure local
