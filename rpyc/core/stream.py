@@ -21,6 +21,9 @@ class Stream(object):
 
     __slots__ = ("__max_io_chunk")
 
+    def __init__(self):
+      self.__max_io_chunk = None
+
     @property
     def max_io_chunk(self): return self.__max_io_chunk
     @max_io_chunk.setter
