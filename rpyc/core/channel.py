@@ -21,13 +21,25 @@ class Channel(object):
     COMPRESSION_LEVEL = 1
     FRAME_HEADER = Struct("!LB")
     FLUSHER = BYTES_LITERAL("\n")  # cause any line-buffered layers below us to flush
-    __slots__ = ["stream", "compress"]
+    __slots__ = ["stream", "__compression"]
 
     def __init__(self, stream, compress=True):
         self.stream = stream
-        if not zlib:
-            compress = False
-        self.compress = compress
+        self.__compression = compress and bool(zlib)
+
+    @property
+    def compression(self): return self.__compression
+    @compression.setter
+    def compression(self, value):
+      if value is None: self.__compression = bool(zlib)
+      else:
+        if not (isinstance(value, bool)): raise TypeError("invalid value, boolean expected")
+        self.__compression = bool(zlib) and value
+
+    @property
+    def max_io_chunk(self): return self.stream.max_io_chunk
+    @max_io_chunk.setter
+    def max_io_chunk(self, value): self.stream.max_io_chunk = value
 
     def close(self):
         """closes the channel and underlying stream"""
@@ -65,7 +77,7 @@ class Channel(object):
 
         :param data: the byte string to send as a packet
         """
-        if self.compress and len(data) > self.COMPRESSION_THRESHOLD:
+        if self.__compression and len(data) > self.COMPRESSION_THRESHOLD:
             compressed = 1
             data = zlib.compress(data, self.COMPRESSION_LEVEL)
         else:

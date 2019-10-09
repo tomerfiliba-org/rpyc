@@ -60,6 +60,8 @@ DEFAULT_CONFIG = dict(
     endpoints=None,
     logger=None,
     sync_request_timeout=30,
+    compression=None,
+    max_io_chunk=None
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
@@ -117,6 +119,8 @@ Parameter                                Default value     Description
                                                            do no have this configuration option set.
 
 ``sync_request_timeout``                 ``30``            Default timeout for waiting results
+``compression``                          ``None``          Channel comression (None for default, watch rpyc.core.channel.py)
+``max_io_chunk``                         ``None``          Max i/o chunk size for streams (None for default, watch rpyc.core.stream.py)
 =======================================  ================  =====================================================
 """
 
@@ -156,6 +160,18 @@ class Connection(object):
         self._local_root = root
         self._closed = False
 
+        def __update_compression():
+          if "compression" in self._config:
+            __value = self._config["compression"]
+            if not (__value is None): self.compression = __value
+        __update_compression()
+
+        def __update_max_io_chunk():
+          if "max_io_chunk" in self._config:
+            __value = self._config["max_io_chunk"]
+            if not (__value is None): self.max_io_chunk = __value
+        __update_max_io_chunk()
+
     def __del__(self):
         self.close()
 
@@ -185,6 +201,16 @@ class Connection(object):
         # self._seqcounter = None
         # self._config.clear()
         del self._HANDLERS
+
+    @property
+    def compression(self): return self._channel.compression
+    @compression.setter
+    def compression(self, value): self._channel.compression = value
+
+    @property
+    def max_io_chunk(self): return self._channel.max_io_chunk
+    @max_io_chunk.setter
+    def max_io_chunk(self, value): self._channel.max_io_chunk = value
 
     def close(self, _catchall=True):  # IO
         """closes the connection, releasing all held resources"""

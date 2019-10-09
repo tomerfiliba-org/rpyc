@@ -19,7 +19,17 @@ retry_errnos = (errno.EAGAIN, errno.EWOULDBLOCK)
 class Stream(object):
     """Base Stream"""
 
-    __slots__ = ()
+    __slots__ = ("__max_io_chunk")
+
+    @property
+    def max_io_chunk(self): return self.__max_io_chunk
+    @max_io_chunk.setter
+    def max_io_chunk(self, value):
+      if value is None: self.__max_io_chunk = None
+      else:
+        if not (isinstance(value, int)): raise TypeError("invalid value, non-zero positive integer expected")
+        if not (0 < value): raise ValueError("invalid value, non-zero positive integer expected")
+        self.__max_io_chunk = value
 
     def close(self):
         """closes the stream, releasing any system resources associated with it"""
@@ -115,6 +125,7 @@ class SocketStream(Stream):
 
     def __init__(self, sock):
         self.sock = sock
+        self.max_io_chunk = self.MAX_IO_CHUNK
 
     @classmethod
     def _connect(cls, host, port, family=socket.AF_INET, socktype=socket.SOCK_STREAM,
@@ -244,7 +255,7 @@ class SocketStream(Stream):
         data = []
         while count > 0:
             try:
-                buf = self.sock.recv(min(self.MAX_IO_CHUNK, count))
+                buf = self.sock.recv(min(self.max_io_chunk, count))
             except socket.timeout:
                 continue
             except socket.error:
@@ -264,7 +275,7 @@ class SocketStream(Stream):
     def write(self, data):
         try:
             while data:
-                count = self.sock.send(data[:self.MAX_IO_CHUNK])
+                count = self.sock.send(data[:self.max_io_chunk])
                 data = data[count:]
         except socket.error:
             ex = sys.exc_info()[1]
@@ -297,6 +308,7 @@ class PipeStream(Stream):
         outgoing.flush()
         self.incoming = incoming
         self.outgoing = outgoing
+        self.max_io_chunk = self.MAX_IO_CHUNK
 
     @classmethod
     def from_std(cls):
@@ -337,7 +349,7 @@ class PipeStream(Stream):
         data = []
         try:
             while count > 0:
-                buf = os.read(self.incoming.fileno(), min(self.MAX_IO_CHUNK, count))
+                buf = os.read(self.incoming.fileno(), min(self.max_io_chunk, count))
                 if not buf:
                     raise EOFError("connection closed by peer")
                 data.append(buf)
@@ -354,7 +366,7 @@ class PipeStream(Stream):
     def write(self, data):
         try:
             while data:
-                chunk = data[:self.MAX_IO_CHUNK]
+                chunk = data[:self.max_io_chunk]
                 written = os.write(self.outgoing.fileno(), chunk)
                 data = data[written:]
         except EnvironmentError:
@@ -381,6 +393,7 @@ class Win32PipeStream(Stream):
             outgoing = msvcrt.get_osfhandle(outgoing.fileno())
         self.incoming = incoming
         self.outgoing = outgoing
+        self.max_io_chunk = self.MAX_IO_CHUNK
 
     @classmethod
     def from_std(cls):
@@ -417,7 +430,7 @@ class Win32PipeStream(Stream):
         try:
             data = []
             while count > 0:
-                dummy, buf = win32file.ReadFile(self.incoming, int(min(self.MAX_IO_CHUNK, count)))
+                dummy, buf = win32file.ReadFile(self.incoming, int(min(self.max_io_chunk, count)))
                 count -= len(buf)
                 data.append(buf)
         except TypeError:
@@ -434,7 +447,7 @@ class Win32PipeStream(Stream):
     def write(self, data):
         try:
             while data:
-                dummy, count = win32file.WriteFile(self.outgoing, data[:self.MAX_IO_CHUNK])
+                dummy, count = win32file.WriteFile(self.outgoing, data[:self.max_io_chunk])
                 data = data[count:]
         except TypeError:
             ex = sys.exc_info()[1]
@@ -573,7 +586,7 @@ class NamedPipeStream(Win32PipeStream):
                 data = []
             while count > 0:
                 hr, buf = win32file.ReadFile(self.incoming,
-                                             win32file.AllocateReadBuffer(int(min(self.MAX_IO_CHUNK, count))),
+                                             win32file.AllocateReadBuffer(int(min(self.max_io_chunk, count))),
                                              self.read_overlapped)
                 n = win32file.GetOverlappedResult(self.incoming, self.read_overlapped, 1)
                 count -= n
@@ -592,7 +605,7 @@ class NamedPipeStream(Win32PipeStream):
     def write(self, data):
         try:
             while data:
-                dummy, count = win32file.WriteFile(self.outgoing, data[:self.MAX_IO_CHUNK], self.write_overlapped)
+                dummy, count = win32file.WriteFile(self.outgoing, data[:self.max_io_chunk], self.write_overlapped)
                 data = data[count:]
         except TypeError:
             ex = sys.exc_info()[1]
