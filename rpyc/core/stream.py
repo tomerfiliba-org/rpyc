@@ -114,6 +114,7 @@ class SocketStream(Stream):
     MAX_IO_CHUNK = 64000  # read/write chunk is 64KB, too large of a value will degrade response for other clients
 
     def __init__(self, sock):
+        Stream.__init__(self)
         self.sock = sock
 
     @classmethod
@@ -278,6 +279,7 @@ class TunneledSocketStream(SocketStream):
     __slots__ = ("tun",)
 
     def __init__(self, sock):
+        SocketStream.__init__(self)
         self.sock = sock
         self.tun = None
 
@@ -294,6 +296,7 @@ class PipeStream(Stream):
     MAX_IO_CHUNK = 32000
 
     def __init__(self, incoming, outgoing):
+        Stream.__init__(self)
         outgoing.flush()
         self.incoming = incoming
         self.outgoing = outgoing
@@ -372,6 +375,7 @@ class Win32PipeStream(Stream):
     MAX_IO_CHUNK = 32000
 
     def __init__(self, incoming, outgoing):
+        Stream.__init__(self)
         import msvcrt
         self._keepalive = (incoming, outgoing)
         if hasattr(incoming, "fileno"):
