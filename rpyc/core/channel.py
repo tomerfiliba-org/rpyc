@@ -70,6 +70,6 @@ class Channel(object):
             data = zlib.compress(data, self.COMPRESSION_LEVEL)
         else:
             compressed = 0
-        header = self.FRAME_HEADER.pack(len(data), compressed)
-        buf = header + data + self.FLUSHER
-        self.stream.write(buf)
+        self.stream.write(self.FRAME_HEADER.pack(len(data), compressed))
+        self.stream.write(data)
+        self.stream.write(self.FLUSHER)
