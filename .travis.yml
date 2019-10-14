@@ -6,12 +6,9 @@ dist: trusty
 # and: https://docs.travis-ci.com/user/customizing-the-build/
 matrix:
   include:
-    - {python: "2.6",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
     - {python: "2.7",      env: SKIP_GEVENT=true                    }
-    - {python: "3.3",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
-    - {python: "3.4",      env:                                     }
-    - {python: "3.5",      env:                     SKIP_DEPLOY=true}
-    - {python: "3.6",      env:                     SKIP_DEPLOY=true}
+    - {python: "3.5",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
+    - {python: "3.6",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
     - {python: "3.7",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true,
        dist: xenial,       sudo: true}
     - {python: "nightly",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true,
