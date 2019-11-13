@@ -13,6 +13,7 @@ import rpyc.utils.factory
 import rpyc.utils.classic
 try:
     from plumbum import local, ProcessExecutionError, CommandNotFound
+    from plumbum.commands.base import BoundCommand
     from plumbum.path import copy
 except ImportError:
     import inspect
@@ -102,7 +103,9 @@ class DeployedServer(object):
         modname, clsname = server_class.rsplit(".", 1)
         script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace(
             "$SERVER$", clsname).replace("$EXTRA_SETUP$", extra_setup))
-        if python_executable:
+        if isinstance(python_executable, BoundCommand):
+            cmd = python_executable
+        elif python_executable:
             cmd = remote_machine[python_executable]
         else:
             major = sys.version_info[0]
