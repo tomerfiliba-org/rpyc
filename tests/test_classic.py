@@ -43,14 +43,6 @@ class ClassicMode(unittest.TestCase):
         self.assertEqual(self.conn.namespace["x"], 5)
         self.assertEqual(self.conn.eval("1+x"), 6)
 
-    def test_isinstance(self):
-        x = self.conn.builtin.list((1, 2, 3, 4))
-        print(self.conn.builtin.list, type(self.conn.builtin.list))  # <class 'list'> <netref class 'builtins.type'>
-        print(x, type(x))  # [1, 2, 3, 4] <netref class 'builtins.list'>
-        print(x.__class__, type(x.__class__))  # <class 'list'> <class 'type'>
-        self.assertTrue(isinstance(x, list))
-        self.assertTrue(isinstance(x, rpyc.BaseNetref))
-
     def test_mock_connection(self):
         from rpyc.utils.classic import MockClassicConnection
         import sys

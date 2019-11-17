@@ -40,6 +40,8 @@ _builtin_types = [
 ]
 """a list of types considered built-in (shared between connections)"""
 
+_builtin_type_name_pack = get_id_pack(type)[0]
+
 try:
     BaseException
 except NameError:
@@ -127,6 +129,13 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     __slots__ = ["____conn__", "____id_pack__", "__weakref__", "____refcount__"]
 
     def __init__(self, conn, id_pack):
+        """
+        if id_pack[0] == '__builtin__.list': 
+            print('#'*120)
+            print('ctor of', id_pack)
+            print('#'*120)
+            import traceback
+            traceback.print_stack()"""
         self.____conn__ = conn
         self.____id_pack__ = id_pack
         self.____refcount__ = 1
@@ -144,8 +153,11 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
         if name in LOCAL_ATTRS:
             if name == "__class__":
                 cls = object.__getattribute__(self, "__class__")
+                print('GA getattr', self.____id_pack__, cls)
+                # if  self.____id_pack__[0] == '__builtin__.list': import pdb; pdb.set_trace()
                 if cls is None:
                     cls = self.__getattr__("__class__")
+                    print('GA', self.____id_pack__, cls)
                 return cls
             elif name == "__doc__":
                 return self.__getattr__("__doc__")
@@ -219,6 +231,8 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
         return pickle.loads, (syncreq(self, consts.HANDLE_PICKLE, proto),)
 
     def __instancecheck__(self, other):
+        print(type(self), self)
+        print(type(other), other)
         # support for checking cached instances across connections
         if isinstance(other, BaseNetref):
             if self.____id_pack__[2] != 0:
@@ -229,9 +243,13 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
                 elif other.____id_pack__[2] != 0:
                     return True
             else:
+                # seems dubious if each netref proxies to a different address spaces
                 return syncreq(self, consts.HANDLE_INSTANCECHECK, other.____id_pack__)
         else:
-            return isinstance(other, self.__class__)
+            if self.____id_pack__[2] == 0:
+                return isinstance(other, type(self).__dict__['__class__'].instance)
+            else:
+                return isinstance(other, self.__class__)
 
 
 def _make_method(name, doc):
@@ -270,8 +288,29 @@ def _make_method(name, doc):
         method.__doc__ = doc
         return method
 
+class NetrefClass(object):
+    # TODO add slots
+    def __init__(self, class_obj):
+        self._class_obj = class_obj
+        self._class_type_name = get_id_pack(type(self._class_obj))[0]
 
-def class_factory(id_pack, methods):
+    @property
+    def type_name(self):
+        return self._class_type_name
+
+    @property
+    def instance(self):
+        return self._class_obj
+
+    @property
+    def owner(self):
+        return self._class_obj.__class__
+
+    def __get__(self, netref_instance, netref_owner):
+        return self.owner if netref_instance.____id_pack__[2] == 0 else self.instance
+
+
+def class_factory(id_pack, methods, class_descriptor=None):
     """Creates a netref class proxying the given class
 
     :param id_pack: the id pack used for proxy communication
@@ -281,30 +320,38 @@ def class_factory(id_pack, methods):
     """
     ns = {"__slots__": (), "__class__": None}
     name_pack = id_pack[0]
+    bases = (BaseNetref,)
+    class_descriptor = None
     if name_pack is not None:  # attempt to resolve against builtins and sys.modules
-        ns["__class__"] = _normalized_builtin_types.get(name_pack)
+        if name_pack in _normalized_builtin_types:
+            _builtin_class = _normalized_builtin_types.get(name_pack)
+            ns["__class__"] = _builtin_class
+            class_descriptor = NetrefClass(ns["__class__"])
         if ns["__class__"] is None:
             _module = None
-            didx = name_pack.rfind('.')
-            if didx != -1:
-                _module = sys.modules.get(name_pack[:didx])
-                if _module is not None:
-                    _module = getattr(_module, name_pack[didx + 1:], None)
-                else:
-                    _module = sys.modules.get(name_pack)
-            else:
-                _module = sys.modules.get(name_pack)
-            if _module:
-                if id_pack[2] == 0:
-                    ns["__class__"] = _module
-                else:
-                    ns["__class__"] = getattr(_module, "__class__", None)
+            __next_module_name = name_pack
+            cursor = len(name_pack)
+            while cursor != -1:
+                _module = sys.modules.get(name_pack[:cursor])
+                if _module is None:
+                    cursor = name_pack.rfind('.')
+                    continue
+                _class_name = name_pack[cursor + 1:]
+                _class = getattr(_module, _class_name, None)
+                if _class is not None and hasattr(_class, '__class__'):
+                    class_descriptor = NetrefClass(_class)
+                break
+    ns['__class__'] = class_descriptor
+    netref_name = class_descriptor.owner.__name__ if class_descriptor is not None and id_pack[2] == 0 else name_pack 
+
+    # if name_pack == '__builtin__.list' and id_pack[2] !=0: import pdb; pdb.set_trace()
 
     for name, doc in methods:
         name = str(name)  # IronPython issue #10
+        # only create methods that wont shadow BaseNetref during merge for mro
         if name not in LOCAL_ATTRS:  # i.e. `name != __class__`
             ns[name] = _make_method(name, doc)
-    return type(name_pack, (BaseNetref,), ns)
+    return type(netref_name, bases, ns)
 
 
 for _builtin in _builtin_types:

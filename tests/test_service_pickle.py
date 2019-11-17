@@ -30,6 +30,9 @@ class MyService(rpyc.Service):
     def exposed_write_data(self, dataframe):
         rpyc.classic.obtain(dataframe)
 
+    def exposed_get(self):
+        return np.random.rand(3, 3)
+
     def exposed_ping(self):
         return "pong"
 
