@@ -41,6 +41,7 @@ Reference
    docs/security
    docs/secure-connection
    docs/zerodeploy
+   docs/advanced-debugging
 
 
 * :ref:`Servers <servers>` - using the built-in servers and writing custom ones
@@ -62,3 +63,5 @@ Reference
 
 * :ref:`Zero-Deploy <zerodeploy>` - spawn temporary, short-lived RPyC server on remote
   machine with nothing more than SSH and a Python interpreter
+
+* :ref:`Advanced Debugging <advdebugging>` - debugging at the packet level
