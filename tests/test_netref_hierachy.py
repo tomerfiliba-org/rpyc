@@ -1,17 +1,10 @@
-# uncompyle6 version 3.5.0
-# Python bytecode 2.7 (62211)
-# Decompiled from: Python 3.8.0 (default, Oct 23 2019, 18:51:26) 
-# [GCC 9.2.0]
-# Embedded file name: test_netref_hierachy.py
-# Compiled at: 2019-11-17 05:50:47
-"""
-`python -m unittest unit.test_descriptive_name`
-
-"""
-import os, rpyc, tempfile
+import os
+import rpyc
+import tempfile
 from rpyc.utils.server import ThreadedServer, ThreadPoolServer
 from rpyc import SlaveService
 import unittest
+
 
 class MyMeta(type):
 
@@ -40,7 +33,7 @@ class MyService(rpyc.Service):
 
     def exposed_getlist(self):
         return [
-         1, 2, 3]
+            1, 2, 3]
 
     def foobar(self):
         assert False
@@ -80,9 +73,9 @@ class Test_Netref_Hierarchy(unittest.TestCase):
     def test_classic(self):
         conn = rpyc.classic.connect_thread()
         x = conn.builtin.list((1, 2, 3, 4))
-        print (conn.builtin.list, type(conn.builtin.list))
-        print (x, type(x))
-        print (x.__class__, type(x.__class__))
+        print(conn.builtin.list, type(conn.builtin.list))
+        print(x, type(x))
+        print(x.__class__, type(x.__class__))
         self.assertTrue(isinstance(x, list))
         self.assertTrue(isinstance(x, rpyc.BaseNetref))
         with self.assertRaises(TypeError):
@@ -104,4 +97,3 @@ class Test_Netref_Hierarchy(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-# okay decompiling test_netref_hierachy.pyc
