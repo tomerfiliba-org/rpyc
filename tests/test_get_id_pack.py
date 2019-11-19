@@ -4,12 +4,6 @@ from rpyc import SlaveService
 import unittest
 
 
-class MyService(rpyc.Service):
-
-    def exposed_foo(self):
-        return "bar"
-
-
 class Test_get_id_pack(unittest.TestCase):
 
     def setUp(self):
@@ -28,6 +22,9 @@ class Test_get_id_pack(unittest.TestCase):
         self.conn.close()
         self.server.close()
         self.server2.close()
+
+    def test_netref(self):
+        self.assertEquals(self.conn.root.____id_pack__, rpyc.lib.get_id_pack(self.conn.root))
 
     def test_chained_connect(self):
         self.chained_conn.root.getmodule('os')
