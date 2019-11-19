@@ -151,8 +151,16 @@ def exp_backoff(collision):
 
 
 def get_id_pack(obj):
-    """introspects the given (local) object, returns id_pack as expected by BaseNetref"""
+    """introspects the given "local" object, returns id_pack as expected by BaseNetref
+
+    The given object is "local" in the sense that it is from the local cache. Any object in the local cache exists
+    in the current address space or is a netref. A netref in the local cache could be from a chained-connection.
+    To handle type related behavior properly, the attribute `__class__` is a descriptor for netrefs.
+
+    So, check thy assumptions regarding the given object when creating `id_pack`.
+    """
     if hasattr(obj, '____id_pack__'):
+        # netrefs are handled first since __class__ is a descriptor
         return obj.____id_pack__
     elif not inspect.isclass(obj):
         # TODO: this is wrong for modules
