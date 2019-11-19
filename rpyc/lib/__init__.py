@@ -152,12 +152,12 @@ def exp_backoff(collision):
 
 def get_id_pack(obj):
     """introspects the given (local) object, returns id_pack as expected by BaseNetref"""
-    if not inspect.isclass(obj):
+    if hasattr(obj, '____id_pack__'):
+        return obj.____id_pack__
+    elif not inspect.isclass(obj):
         # TODO: this is wrong for modules
         name_pack = '{0}.{1}'.format(obj.__class__.__module__, obj.__class__.__name__)
         return (name_pack, id(type(obj)), id(obj))
-    elif hasattr(obj, '____id_pack__'):
-        return obj.____id_pack__
     else:
         name_pack = '{0}.{1}'.format(obj.__module__, obj.__name__)
         return (name_pack, id(obj), 0)
