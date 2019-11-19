@@ -306,17 +306,18 @@ class Connection(object):
     def _netref_factory(self, id_pack):  # boxing
         """id_pack is for remote, so when class id fails to directly match """
         cls = None
-        if id_pack[2] == 0:
-            if id_pack[0] in netref.builtin_classes_cache:
-                cls = netref.builtin_classes_cache[id_pack[0]]
-            elif id_pack[1] in self._netref_classes_cache:  #
-                cls = self._netref_classes_cache[id_pack[1]]
+        if id_pack[2] == 0 and id_pack in self._netref_classes_cache:
+            cls = self._netref_classes_cache[id_pack]
+        elif id_pack[0] in netref.builtin_classes_cache:
+            cls = netref.builtin_classes_cache[id_pack[0]]
         if cls is None:
             # in the future, it could see if a sys.module cache/lookup hits first
             cls_methods = self.sync_request(consts.HANDLE_INSPECT, id_pack)
             cls = netref.class_factory(id_pack, cls_methods)
             if id_pack[2] == 0:
-                self._netref_classes_cache[id_pack[1]] = cls
+                # only use cached netrefs for classes
+                # ... instance caching after gc of a proxy will take some mental gymnastics
+                self._netref_classes_cache[id_pack] = cls
         return cls(self, id_pack)
 
     def _dispatch_request(self, seq, raw_args):  # dispatch
