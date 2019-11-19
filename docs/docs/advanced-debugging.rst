@@ -31,7 +31,7 @@ After stopping Wireshark, export specified packets, and open the PCAP. If not al
     Title,        Type,   Fields,     Field Occurrence
     Stream Index, Custom, tcp.stream, 0
 
-The stream index column makes it easier to decide which TCP stream to follow. It may be helpful to follow the relevant TCP
-streams and print them into PDFs with descriptive names. Hopefully, the end result is helpful.
+The stream index column makes it easier to decide which TCP stream to follow. Following a TCP provides a more human readable overview
+of requests and replies that can be printed as a PDF.
 
 .. figure:: _static/advanced-debugging-chained-connection-w-wireshark.png
