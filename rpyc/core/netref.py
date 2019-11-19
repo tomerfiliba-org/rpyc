@@ -281,7 +281,7 @@ class NetrefClass(object):
     Future considerations:
      + there may be a cleaner alternative but lib.compat.with_metaclass prevented using __new__
      + consider using __slot__ for this class
-     + revisit the design choice to user properties here
+     + revisit the design choice to use properties here
     """
     def __init__(self, class_obj):
         self._class_obj = class_obj
