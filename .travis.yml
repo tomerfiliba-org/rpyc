@@ -1,18 +1,17 @@
 language: python
 
-dist: trusty
+dist: bionic
 
 # See: https://docs.travis-ci.com/user/languages/python/
 # and: https://docs.travis-ci.com/user/customizing-the-build/
 matrix:
   include:
-    - {python: "2.7",      env: SKIP_GEVENT=true                    }
-    - {python: "3.5",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
+    - {python: "2.7",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
     - {python: "3.6",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
-    - {python: "3.7",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true,
-       dist: xenial,       sudo: true}
-    - {python: "nightly",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true,
-       dist: xenial,       sudo: true}
+    - {python: "3.7",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
+    - {python: "3.8",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
+    - {python: "3.8-dev",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
+    - {python: "nightly",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
 
 install:
     - python setup.py install
