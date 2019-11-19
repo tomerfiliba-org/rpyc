@@ -276,28 +276,32 @@ def _make_method(name, doc):
 
 
 class NetrefClass(object):
-    # TODO add slots
+    """a descriptor of the class being proxied
+
+    Future considerations:
+     + there may be a cleaner alternative but lib.compat.with_metaclass prevented using __new__
+     + consider using __slot__ for this class
+     + revisit the design choice to user properties here
+    """
     def __init__(self, class_obj):
         self._class_obj = class_obj
-        self._class_type_name = get_id_pack(type(self._class_obj))[0]
-
-    @property
-    def type_name(self):
-        return self._class_type_name
 
     @property
     def instance(self):
+        """accessor to class object for the instance being proxied"""
         return self._class_obj
 
     @property
     def owner(self):
+        """accessor to the class object for the instance owner being proxied"""
         return self._class_obj.__class__
 
     def __get__(self, netref_instance, netref_owner):
+        """the value returned when accessing the netref class is dictated by whether or not an instance is proxied"""
         return self.owner if netref_instance.____id_pack__[2] == 0 else self.instance
 
 
-def class_factory(id_pack, methods, class_descriptor=None):
+def class_factory(id_pack, methods):
     """Creates a netref class proxying the given class
 
     :param id_pack: the id pack used for proxy communication
