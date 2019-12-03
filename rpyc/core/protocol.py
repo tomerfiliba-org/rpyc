@@ -625,14 +625,27 @@ class Connection(object):
         return self._handle_getattr(obj, "__exit__")(exc, typ, tb)
 
     def _handle_instancecheck(self, obj, other_id_pack):
+        # TODOs:
+        #  + refactor cache instancecheck/inspect/class_factory
+        #  + improve cache docs
+
+        if hasattr(obj, '____conn__'):  # keep unwrapping!
+            # When RPyC is chained (RPyC over RPyC), id_pack is cached in local objects as a netref
+            # since __mro__ is not a safe attribute the request is forwarded using the proxy connection
+            # relates to issue #346 or tests.test_netref_hierachy.Test_Netref_Hierarchy.test_StandardError
+            conn = obj.____conn__
+            return conn.sync_request(consts.HANDLE_INSPECT, id_pack)
         # Create a name pack which would be familiar here and see if there is a hit
         other_id_pack2 = (other_id_pack[0], other_id_pack[1], 0)
-        if other_id_pack2 in self._netref_classes_cache:
+        if other_id_pack[0] in netref.builtin_classes_cache:
+            cls = netref.builtin_classes_cache[other_id_pack[0]]
+            other = cls(self, other_id_pack)
+        elif other_id_pack2 in self._netref_classes_cache:
             cls = self._netref_classes_cache[other_id_pack2]
             other = cls(self, other_id_pack2)
-            return isinstance(other, obj)
         else:  # might just have missed cache, FIX ME
             return False
+        return isinstance(other, obj)
 
     def _handle_pickle(self, obj, proto):  # request handler
         if not self._config["allow_pickle"]:

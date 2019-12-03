@@ -37,8 +37,6 @@ class ClassicMode(unittest.TestCase):
         self.assertEqual(list(bi), list(range(10000)))
 
     def test_classic(self):
-        print(self.conn.modules.sys)
-        print(self.conn.modules["xml.dom.minidom"].parseString("<a/>"))
         self.conn.execute("x = 5")
         self.assertEqual(self.conn.namespace["x"], 5)
         self.assertEqual(self.conn.eval("1+x"), 6)

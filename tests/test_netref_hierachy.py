@@ -73,9 +73,6 @@ class Test_Netref_Hierarchy(unittest.TestCase):
     def test_classic(self):
         conn = rpyc.classic.connect_thread()
         x = conn.builtin.list((1, 2, 3, 4))
-        print(conn.builtin.list, type(conn.builtin.list))
-        print(x, type(x))
-        print(x.__class__, type(x.__class__))
         self.assertTrue(isinstance(x, list))
         self.assertTrue(isinstance(x, rpyc.BaseNetref))
         with self.assertRaises(TypeError):
@@ -93,6 +90,36 @@ class Test_Netref_Hierarchy(unittest.TestCase):
         remote_list = conn.root.getlist()
         self.assertTrue(conn.root.instance(remote_list, list))
         conn.close()
+
+    def test_StandardError(self):
+        conn = rpyc.classic.connect_thread()
+        _builtins = conn.modules.builtins if rpyc.lib.compat.is_py3k else conn.modules.__builtin__
+        self.assertTrue(isinstance(_builtins.Exception(), _builtins.BaseException))
+        self.assertTrue(isinstance(_builtins.Exception(), _builtins.Exception))
+        self.assertTrue(isinstance(_builtins.Exception(), BaseException))
+        self.assertTrue(isinstance(_builtins.Exception(), Exception))
+
+    def test_modules(self):
+        """
+        >>> type(sys)
+        <type 'module'>  # base case
+        >>> type(conn.modules.sys)
+        <netref class 'rpyc.core.netref.__builtin__.module'>  # matches base case
+        >>> sys.__class__
+        <type 'module'>  # base case
+        >>> conn.modules.sys.__class__
+        <type 'module'>  # matches base case
+        >>> type(sys.__class__)
+        <type 'type'>  # base case
+        >>> type(conn.modules.sys.__class__)
+        <netref class 'rpyc.core.netref.__builtin__.module'>  # doesn't match.  Should be a netref class of "type" (or maybe just <type 'type'> itself?)
+        """
+        import sys
+        conn = rpyc.classic.connect_thread()
+        self.assertEqual(repr(sys.__class__), repr(conn.modules.sys.__class__))
+        # _builtin = sys.modules['builtins' if rpyc.lib.compat.is_py3k else '__builtins__'].__name__
+        # self.assertEqual(repr(type(conn.modules.sys)), "<netref class 'rpyc.core.netref.{}.module'>".format(_builtin))
+        # self.assertEqual(repr(type(conn.modules.sys.__class__)), "<netref class 'rpyc.core.netref.{}.type'>".format(_builtin))
 
 
 if __name__ == '__main__':

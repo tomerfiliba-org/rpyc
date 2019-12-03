@@ -285,6 +285,7 @@ class NetrefClass(object):
      + consider using __slot__ for this class
      + revisit the design choice to use properties here
     """
+
     def __init__(self, class_obj):
         self._class_obj = class_obj
 
@@ -329,7 +330,7 @@ def class_factory(id_pack, methods):
                 class_descriptor = NetrefClass(_class)
             break
     ns['__class__'] = class_descriptor
-    netref_name = class_descriptor.owner.__name__ if class_descriptor is not None and id_pack[2] == 0 else name_pack
+    netref_name = class_descriptor.owner.__name__ if class_descriptor is not None else name_pack
     # create methods that must perform a syncreq
     for name, doc in methods:
         name = str(name)  # IronPython issue #10
