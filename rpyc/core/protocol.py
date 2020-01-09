@@ -325,7 +325,7 @@ class Connection(object):
             handler, args = raw_args
             args = self._unbox(args)
             res = self._HANDLERS[handler](self, *args)
-        except Exception:
+        except:
             # need to catch old style exceptions too
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
