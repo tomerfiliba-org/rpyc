@@ -325,7 +325,7 @@ class Connection(object):
             handler, args = raw_args
             args = self._unbox(args)
             res = self._HANDLERS[handler](self, *args)
-        except:
+        except:  # TODO: revist how to catch handle locally, this should simplify when py2 is dropped
             # need to catch old style exceptions too
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
