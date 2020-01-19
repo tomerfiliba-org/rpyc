@@ -351,16 +351,24 @@ class Connection(object):
                             instantiate_custom_exceptions=self._config["instantiate_custom_exceptions"],
                             instantiate_oldstyle_exceptions=self._config["instantiate_oldstyle_exceptions"])
 
+    def _seq_request_callback(self, msg, seq, is_exc, obj):
+        _callback = self._request_callbacks.pop(seq, None)
+        if _callback is not None:
+            _callback(is_exc, obj)
+        elif self._config["logger"] is not None:
+            debug_msg = 'Recieved {} seq {} and a related request callback did not exist'
+            self._config["logger"].debug(debug_msg.format(msg, seq))
+
     def _dispatch(self, data):  # serving---dispatch?
         msg, seq, args = brine.load(data)
         if msg == consts.MSG_REQUEST:
             self._dispatch_request(seq, args)
         elif msg == consts.MSG_REPLY:
             obj = self._unbox(args)
-            self._request_callbacks.pop(seq)(False, obj)
+            self._seq_request_callback(msg, seq, False, obj)
         elif msg == consts.MSG_EXCEPTION:
             obj = self._unbox_exc(args)
-            self._request_callbacks.pop(seq)(True, obj)
+            self._seq_request_callback(msg, seq, True, obj)
         else:
             raise ValueError("invalid message type: %r" % (msg,))
 
@@ -473,6 +481,9 @@ class Connection(object):
         try:
             self._send(consts.MSG_REQUEST, seq, (handler, self._box(args)))
         except Exception:
+            # TODO: review test_remote_exception, logging exceptions show attempt to write on closed stream
+            # depending on the case, the MSG_REQUEST may or may not have been sent completely
+            # so, pop the callback and raise to keep response integrity is consistent
             self._request_callbacks.pop(seq, None)
             raise
 
