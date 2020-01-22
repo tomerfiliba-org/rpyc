@@ -272,13 +272,6 @@ class Connection(object):
         else:
             id_pack = get_id_pack(obj)
             self._local_objects.add(id_pack, obj)
-            try:
-                cls = obj.__class__
-            except Exception:
-                # see issue #16
-                cls = type(obj)
-            if not isinstance(cls, type):
-                cls = type(obj)
             return consts.LABEL_REMOTE_REF, id_pack
 
     def _unbox(self, package):  # boxing
