@@ -1,3 +1,19 @@
+4.1.3
+-----
+Date: 1.25.2020
+
+- Perfomance improvements: `#366`_ and `#351`_
+- Merged fix for propagate_KeyboardInterrupt_locally `#364`_
+- Fixed handling of exceptions for request callbacks `#365`_
+- Partially fixed return value for netref.__class__ `#355`_
+
+.. _#366: https://github.com/tomerfiliba/rpyc/issues/366
+.. _#351: https://github.com/tomerfiliba/rpyc/pull/351
+.. _#364: https://github.com/tomerfiliba/rpyc/pull/364
+.. _#365: https://github.com/tomerfiliba/rpyc/issues/365
+.. _#355: https://github.com/tomerfiliba/rpyc/issues/355
+
+
 4.1.2
 -----
 Date: 10.03.2019
