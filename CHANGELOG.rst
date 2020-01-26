@@ -2,7 +2,7 @@
 -----
 Date: 1.25.2020
 
-- Perfomance improvements: `#366`_ and `#351`_
+- Performance improvements: `#366`_ and `#351`_
 - Merged fix for propagate_KeyboardInterrupt_locally `#364`_
 - Fixed handling of exceptions for request callbacks `#365`_
 - Partially fixed return value for netref.__class__ `#355`_
