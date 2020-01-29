@@ -322,7 +322,7 @@ def class_factory(id_pack, methods):
         while cursor != -1:
             _module = sys.modules.get(name_pack[:cursor])
             if _module is None:
-                cursor = name_pack.rfind('.')
+                cursor = name_pack[:cursor].rfind('.')
                 continue
             _class_name = name_pack[cursor + 1:]
             _class = getattr(_module, _class_name, None)
