@@ -113,12 +113,15 @@ def export_function(func):
 
 
 def _import_codetup(codetup):
-    if is_py38x:
-        (argcount, posonlyargcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames,
-         filename, name, firstlineno, lnotab, freevars, cellvars) = codetup
-    elif is_py3k:
-        (argcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames,
-         filename, name, firstlineno, lnotab, freevars, cellvars) = codetup
+    if is_py3k:
+        # Handle tuples sent from 3.8 as well as 3 < version < 3.8.
+        if len(codetup) == 16:
+            (argcount, posonlyargcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames,
+             filename, name, firstlineno, lnotab, freevars, cellvars) = codetup
+        else:
+            (argcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames,
+             filename, name, firstlineno, lnotab, freevars, cellvars) = codetup
+            posonlyargcount = 0
     else:
         (argcount, nlocals, stacksize, flags, code, consts, names, varnames,
          filename, name, firstlineno, lnotab, freevars, cellvars) = codetup
