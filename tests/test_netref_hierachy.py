@@ -79,7 +79,7 @@ class Test_Netref_Hierarchy(unittest.TestCase):
             isinstance([], x)
         i = 0
         self.assertTrue(type(x).__getitem__(x, i) == x.__getitem__(i))
-        _builtins = conn.modules.builtins if rpyc.lib.compat.is_py3k else conn.modules.__builtin__
+        _builtins = conn.modules.builtins if rpyc.lib.compat.is_py_3k else conn.modules.__builtin__
         self.assertEqual(repr(_builtins.float.__class__), repr(type))
         self.assertEqual(repr(type(_builtins.float)), repr(type(_builtins.type)))
 
@@ -93,7 +93,7 @@ class Test_Netref_Hierarchy(unittest.TestCase):
 
     def test_StandardError(self):
         conn = rpyc.classic.connect_thread()
-        _builtins = conn.modules.builtins if rpyc.lib.compat.is_py3k else conn.modules.__builtin__
+        _builtins = conn.modules.builtins if rpyc.lib.compat.is_py_3k else conn.modules.__builtin__
         self.assertTrue(isinstance(_builtins.Exception(), _builtins.BaseException))
         self.assertTrue(isinstance(_builtins.Exception(), _builtins.Exception))
         self.assertTrue(isinstance(_builtins.Exception(), BaseException))
@@ -117,7 +117,7 @@ class Test_Netref_Hierarchy(unittest.TestCase):
         import sys
         conn = rpyc.classic.connect_thread()
         self.assertEqual(repr(sys.__class__), repr(conn.modules.sys.__class__))
-        # _builtin = sys.modules['builtins' if rpyc.lib.compat.is_py3k else '__builtins__'].__name__
+        # _builtin = sys.modules['builtins' if rpyc.lib.compat.is_py_3k else '__builtins__'].__name__
         # self.assertEqual(repr(type(conn.modules.sys)), "<netref class 'rpyc.core.netref.{}.module'>".format(_builtin))
         # self.assertEqual(repr(type(conn.modules.sys.__class__)), "<netref class 'rpyc.core.netref.{}.type'>".format(_builtin))
 

@@ -22,7 +22,7 @@ except ImportError:
 from rpyc.core import brine
 from rpyc.core import consts
 from rpyc import version
-from rpyc.lib.compat import is_py3k
+from rpyc.lib.compat import is_py_3k
 
 
 REMOTE_LINE_START = "\n\n========= Remote Traceback "
@@ -135,7 +135,7 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     else:
         cls = None
 
-    if is_py3k:
+    if is_py_3k:
         if not isinstance(cls, type) or not issubclass(cls, BaseException):
             cls = None
     else:

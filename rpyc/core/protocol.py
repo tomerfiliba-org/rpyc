@@ -8,7 +8,7 @@ import gc  # noqa: F401
 
 from threading import Lock, Condition
 from rpyc.lib import spawn, Timeout, get_methods, get_id_pack
-from rpyc.lib.compat import pickle, next, is_py3k, maxint, select_error, acquire_lock  # noqa: F401
+from rpyc.lib.compat import pickle, next, is_py_3k, maxint, select_error, acquire_lock  # noqa: F401
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
 from rpyc.core.async_ import AsyncResult
@@ -521,7 +521,7 @@ class Connection(object):
         raise AttributeError("cannot access %r" % (name,))
 
     def _access_attr(self, obj, name, args, overrider, param, default):  # attribute access
-        if is_py3k:
+        if is_py_3k:
             if type(name) is bytes:
                 name = str(name, "utf8")
             elif type(name) is not str:
