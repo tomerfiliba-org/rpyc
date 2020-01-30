@@ -6,7 +6,7 @@ import rpyc
 import types
 import unittest
 from rpyc.utils.teleportation import export_function, import_function
-from rpyc.lib.compat import is_py3k, is_py38x
+from rpyc.lib.compat import is_py_3k, is_py_gte38
 from rpyc.utils.classic import teleport_function
 
 
@@ -92,7 +92,7 @@ class TeleportationTest(unittest.TestCase):
                     cobj.co_varnames, cobj.co_filename, cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab,
                     cobj.co_freevars, cobj.co_cellvars)
 
-        if is_py3k:
+        if is_py_3k:
             pow37 = lambda x, y : x ** y  # noqa
             pow38 = lambda x, y : x ** y  # noqa
             export37 = get37_schema(pow37.__code__)
@@ -104,7 +104,7 @@ class TeleportationTest(unittest.TestCase):
             self.assertEquals(pow37_netref(2, 3), pow37(2, 3))
             self.assertEquals(pow38_netref(2, 3), pow38(2, 3))
             self.assertEquals(pow37_netref(x=2, y=3), pow37(x=2, y=3))
-            if not is_py38x:
+            if not is_py_gte38:
                 return  # skip remained of tests for 3.7
             pow38.__code__ = types.CodeType(*export38)  # pow38 = lambda x, y, /: x ** y
             with self.assertRaises(TypeError):  # show local behavior

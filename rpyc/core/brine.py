@@ -17,7 +17,7 @@ Example::
  >>> x == z
  True
 """
-from rpyc.lib.compat import Struct, BytesIO, is_py3k, BYTES_LITERAL
+from rpyc.lib.compat import Struct, BytesIO, is_py_3k, BYTES_LITERAL
 
 
 # singletons
@@ -49,7 +49,7 @@ TAG_FLOAT = b"\x18"
 TAG_SLICE = b"\x19"
 TAG_FSET = b"\x1a"
 TAG_COMPLEX = b"\x1b"
-if is_py3k:
+if is_py_3k:
     IMM_INTS = dict((i, bytes([i + 0x50])) for i in range(-0x30, 0xa0))
 else:
     IMM_INTS = dict((i, chr(i + 0x50)) for i in range(-0x30, 0xa0))
@@ -156,7 +156,7 @@ def _dump_str(obj, stream):
     _dump_bytes(obj.encode("utf8"), stream)
 
 
-if not is_py3k:
+if not is_py_3k:
     @register(_dump_registry, long)  # noqa: F821
     def _dump_long(obj, stream):
         stream.append(TAG_LONG)
@@ -229,7 +229,7 @@ def _load_empty_str(stream):
     return b""
 
 
-if is_py3k:
+if is_py_3k:
     @register(_load_registry, TAG_LONG)
     def _load_long(stream):
         obj = _load(stream)
@@ -316,7 +316,7 @@ def _load_tup_l1(stream):
     return tuple(_load(stream) for i in range(l))
 
 
-if is_py3k:
+if is_py_3k:
     @register(_load_registry, TAG_TUP_L4)
     def _load_tup_l4(stream):
         l, = I4.unpack(stream.read(4))
@@ -385,7 +385,7 @@ def load(data):
     return _load(stream)
 
 
-if is_py3k:
+if is_py_3k:
     simple_types = frozenset([type(None), int, bool, float, bytes, str, complex,
                               type(NotImplemented), type(Ellipsis)])
 else:

@@ -4,7 +4,7 @@ try:
     import __builtin__
 except ImportError:
     import builtins as __builtin__  # noqa: F401
-from rpyc.lib.compat import is_py3k, is_py38x
+from rpyc.lib.compat import is_py_3k, is_py_gte38
 from types import CodeType, FunctionType
 from rpyc.core import brine
 from rpyc.core import netref
@@ -39,7 +39,7 @@ except ImportError:
 
 def decode_codeobj(codeobj):
     # adapted from dis.dis
-    if is_py3k:
+    if is_py_3k:
         codestr = codeobj.co_code
     else:
         codestr = [ord(ch) for ch in codeobj.co_code]
@@ -75,13 +75,13 @@ def _export_codeobj(cobj):
         else:
             raise TypeError("Cannot export a function with non-brinable constants: %r" % (const,))
 
-    if is_py38x:
+    if is_py_gte38:
         # Constructor was changed in 3.8 to support "advanced" programming styles
         exported = (cobj.co_argcount, cobj.co_posonlyargcount, cobj.co_kwonlyargcount, cobj.co_nlocals,
                     cobj.co_stacksize, cobj.co_flags, cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames,
                     cobj.co_filename, cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars,
                     cobj.co_cellvars)
-    elif is_py3k:
+    elif is_py_3k:
         exported = (cobj.co_argcount, cobj.co_kwonlyargcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
                     cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
                     cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
@@ -95,7 +95,7 @@ def _export_codeobj(cobj):
 
 
 def export_function(func):
-    if is_py3k:
+    if is_py_3k:
         func_closure = func.__closure__
         func_code = func.__code__
         func_defaults = func.__defaults__
@@ -113,7 +113,7 @@ def export_function(func):
 
 
 def _import_codetup(codetup):
-    if is_py3k:
+    if is_py_3k:
         # Handle tuples sent from 3.8 as well as 3 < version < 3.8.
         if len(codetup) == 16:
             (argcount, posonlyargcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames,
@@ -133,10 +133,10 @@ def _import_codetup(codetup):
         else:
             consts2.append(const)
     consts = tuple(consts2)
-    if is_py38x:
+    if is_py_gte38:
         codetup = (argcount, posonlyargcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames,
                    filename, name, firstlineno, lnotab, freevars, cellvars)
-    elif is_py3k:
+    elif is_py_3k:
         codetup = (argcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames, filename, name,
                    firstlineno, lnotab, freevars, cellvars)
     else:
