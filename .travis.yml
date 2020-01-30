@@ -6,17 +6,18 @@ dist: bionic
 # and: https://docs.travis-ci.com/user/customizing-the-build/
 matrix:
   include:
-    - {python: "2.7",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
-    - {python: "3.6",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
-    - {python: "3.7",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
-    - {python: "3.8",      env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
-    - {python: "3.8-dev",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
-    - {python: "nightly",  env: SKIP_GEVENT=true    SKIP_DEPLOY=true}
+    - {python: "2.7"}
+    - {python: "3.6"}
+    - {python: "3.7"}
+    - {python: "3.8"}
+    - {python: "3.8-dev"}
+    - {python: "nightly"}
 
 install:
     - python setup.py install
-    - "pip install gevent   || [[ -n $SKIP_GEVENT ]]"
-    - "pip install paramiko || [[ -n $SKIP_DEPLOY ]]"
+    # Install fails and historically has been skipped anyway
+    # - pip install gevent
+    # - pip install paramiko
 
 before_script:
     - "echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config"
@@ -28,11 +29,7 @@ before_script:
     - "cd tests"
 
 script:
-    - nosetests -vv -I test_deploy -I test_gevent_server
-    # need to run in its own python interpreter (`monkey.patch_all()`):
-    - "python test_gevent_server.py || [[ -n $SKIP_GEVENT ]]"
-    # it currently fails on all but the native python versions on travis:
-    - "python test_deploy.py        || [[ -n $SKIP_DEPLOY ]]"
+    - python -m unittest discover
 
 notifications:
     email:

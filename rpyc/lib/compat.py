@@ -6,7 +6,7 @@ import sys
 import time
 
 is_py3k = (sys.version_info[0] >= 3)
-is_py38x = is_py3k and (sys.version_info[1] == 8)
+is_py38 = is_py3k and (sys.version_info[1] >= 8)
 
 
 if is_py3k:
