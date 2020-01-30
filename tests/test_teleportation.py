@@ -3,8 +3,10 @@ import subprocess
 import sys
 import os
 import rpyc
+import types
 import unittest
 from rpyc.utils.teleportation import export_function, import_function
+from rpyc.lib.compat import is_py3k, is_py38x
 from rpyc.utils.classic import teleport_function
 
 
@@ -75,6 +77,40 @@ class TeleportationTest(unittest.TestCase):
         bar_ = teleport_function(self.conn, bar)
         self.assertEqual(foo_(), 43)
         self.assertEqual(bar_(), 42)
+
+    def test_compat(self):  # assumes func has only brineable types
+
+        def get37_schema(cobj):
+            return (cobj.co_argcount, 0, cobj.co_nlocals, cobj.co_stacksize,
+                    cobj.co_flags, cobj.co_code, cobj.co_consts, cobj.co_names, cobj.co_varnames,
+                    cobj.co_filename, cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab,
+                    cobj.co_freevars, cobj.co_cellvars)
+
+        def get38_schema(cobj):
+            return (cobj.co_argcount, 2, cobj.co_kwonlyargcount, cobj.co_nlocals,
+                    cobj.co_stacksize, cobj.co_flags, cobj.co_code, cobj.co_consts, cobj.co_names,
+                    cobj.co_varnames, cobj.co_filename, cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab,
+                    cobj.co_freevars, cobj.co_cellvars)
+
+        if is_py3k:
+            pow37 = lambda x, y : x ** y  # noqa
+            pow38 = lambda x, y : x ** y  # noqa
+            export37 = get37_schema(pow37.__code__)
+            export38 = get38_schema(pow38.__code__)
+            schema37 = (pow37.__name__, pow37.__module__, pow37.__defaults__, export37)
+            schema38 = (pow38.__name__, pow38.__module__, pow38.__defaults__, export38)
+            pow37_netref = self.conn.modules["rpyc.utils.teleportation"].import_function(schema37)
+            pow38_netref = self.conn.modules["rpyc.utils.teleportation"].import_function(schema38)
+            self.assertEquals(pow37_netref(2, 3), pow37(2, 3))
+            self.assertEquals(pow38_netref(2, 3), pow38(2, 3))
+            self.assertEquals(pow37_netref(x=2, y=3), pow37(x=2, y=3))
+            if not is_py38x:
+                return  # skip remained of tests for 3.7
+            pow38.__code__ = types.CodeType(*export38)  # pow38 = lambda x, y, /: x ** y
+            with self.assertRaises(TypeError):  # show local behavior
+                pow38(x=2, y=3)
+            with self.assertRaises(TypeError):
+                pow38_netref(x=2, y=3)
 
 
 if __name__ == "__main__":
