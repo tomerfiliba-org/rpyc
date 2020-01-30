@@ -3,14 +3,19 @@ from rpyc import SlaveService
 from rpyc.utils.server import GeventServer
 import time
 import rpyc
-import gevent
-from gevent import monkey
-monkey.patch_all()
+try:
+    import gevent
+    _gevent_import_failed = False
+except Exception:
+    _gevent_import_failed = True
 
 
+@unittest.skipIf(_gevent_import_failed, "Gevent is not available")
 class Test_GeventServer(unittest.TestCase):
 
     def setUp(self):
+        from gevent import monkey
+        monkey.patch_all()
         self.server = GeventServer(SlaveService, port=18878, auto_register=False)
         self.server.logger.quiet = False
         self.server._listen()

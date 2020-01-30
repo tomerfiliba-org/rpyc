@@ -4,13 +4,15 @@ import pickle  # noqa
 import timeit
 import rpyc
 import unittest
-from nose import SkipTest
 import cfg_tests
 try:
     import pandas as pd
     import numpy as np
+    _pampy_import_failed = False
 except Exception:
-    raise SkipTest("Requires pandas, numpy, and tables")
+    pd = None
+    np = None
+    _pampy_import_failed = True
 
 
 DF_ROWS = 2000
@@ -37,6 +39,7 @@ class MyService(rpyc.Service):
         return "pong"
 
 
+@unittest.skipIf(_pampy_import_failed, "Pandas & numpy are not available")
 class TestServicePickle(unittest.TestCase):
     """Issues #323 and #329 showed for large objects there is an excessive number of round trips.
 

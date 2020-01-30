@@ -2,12 +2,10 @@ import rpyc
 import unittest
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
-from nose import SkipTest
+
 
 # travis: "Network is unreachable", https://travis-ci.org/tomerfiliba/rpyc/jobs/108231239#L450
-raise SkipTest("requires IPv6")
-
-
+@unittest.skip("requires IPv6")
 class Test_IPv6(unittest.TestCase):
     def setUp(self):
         self.server = ThreadedServer(SlaveService, port=0, ipv6=True)

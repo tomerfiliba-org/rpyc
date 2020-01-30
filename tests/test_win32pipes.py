@@ -5,11 +5,8 @@ import sys
 import time
 import unittest
 
-from nose import SkipTest
-if sys.platform != "win32":
-    raise SkipTest("Requires windows")
 
-
+@unittest.skipIf(sys.platform != "win32", "Requires windows")
 class Test_Pipes(unittest.TestCase):
     def test_basic_io(self):
         p1, p2 = PipeStream.create_pair()
@@ -38,6 +35,7 @@ class Test_Pipes(unittest.TestCase):
         server_thread.join()
 
 
+@unittest.skipIf(sys.platform != "win32", "Requires windows")
 class Test_NamedPipe(object):
     def setUp(self):
         self.pipe_server_thread = rpyc.spawn(self.pipe_server)
