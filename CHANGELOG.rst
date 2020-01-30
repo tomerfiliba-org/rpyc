@@ -1,3 +1,14 @@
+4.1.4
+-----
+Date: 1.30.2020
+
+- Merged 3.7 and 3.8 teleportatio compat enhancement `#371`_
+- Fixed connection hanging due to namepack cursor  `#369`_
+- Fixed test dependencies and is_py_* for 3.9
+
+.. _#371: https://github.com/tomerfiliba/rpyc/issues/371
+.. _#369: https://github.com/tomerfiliba/rpyc/issues/369
+
 4.1.3
 -----
 Date: 1.25.2020
