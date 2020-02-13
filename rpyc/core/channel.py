@@ -70,6 +70,15 @@ class Channel(object):
             data = zlib.compress(data, self.COMPRESSION_LEVEL)
         else:
             compressed = 0
-        self.stream.write(self.FRAME_HEADER.pack(len(data), compressed))
-        self.stream.write(data)
-        self.stream.write(self.FLUSHER)
+        data_size = len(data)
+        header = self.FRAME_HEADER.pack(data_size, compressed)
+        flush_size = len(self.FLUSHER)
+        if self.FRAME_HEADER.size + data_size + flush_size <= self.stream.MAX_IO_CHUNK:
+            # avoid overhead from socket writes requiring GIL to be held
+            self.stream.write(header + data + self.FLUSHER)
+        else:
+            # Data larger than 64KB, the extra writes are negligible
+            part1 = self.stream.MAX_IO_CHUNK - self.FRAME_HEADER.size
+            self.stream.write(header + data[:part1])
+            self.stream.write(data[part1:])
+            self.stream.write(self.FLUSHER)
