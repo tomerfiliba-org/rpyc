@@ -135,8 +135,9 @@ namespace::
 
 And the teleported code can also access the namespace::
 
-   >>> con.execute('import sys')
-   >>> conn.teleport(lambda: print(sys.version_info))
+   >>> conn.execute('import sys')
+   >>> version = conn.teleport(lambda: print(sys.version_info))
+   >>> version()
 
 prints the version on the remote terminal.
 
