@@ -7,6 +7,8 @@ a technique that employs python's dynamic nature, to overcome the physical
 boundaries between processes and computers, so that remote objects can be
 manipulated as if they were local.
 
+Documentation can be found at https://rpyc.readthedocs.io
+
 .. figure:: http://rpyc.readthedocs.org/en/latest/_images/screenshot.png
    :align: center
 
