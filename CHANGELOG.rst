@@ -1,3 +1,14 @@
+4.1.5
+-----
+Date: 4.25.2020
+- Fixed mutable object used as kwarg for Server ctor `#376`_
+- Corrections to teleport example `#374`_
+- Lowered GIL-lock acquires for <64kb within channel sends to address slowness `#280`_
+
+.. _#376: https://github.com/tomerfiliba/rpyc/pull/376
+.. _#374: https://github.com/tomerfiliba/rpyc/pull/374
+.. _#280: https://github.com/tomerfiliba/rpyc/issues/280
+
 4.1.4
 -----
 Date: 1.30.2020
