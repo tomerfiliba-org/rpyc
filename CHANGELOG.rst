@@ -1,6 +1,7 @@
 4.1.5
 -----
 Date: 4.25.2020
+
 - Fixed mutable object used as kwarg for Server ctor `#376`_
 - Corrections to teleport example `#374`_
 - Lowered GIL-lock acquires for <64kb within channel sends to address slowness `#280`_
