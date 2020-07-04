@@ -4,6 +4,7 @@ from rpyc.utils.server import ThreadedServer
 import unittest
 import subprocess
 import pathlib
+from shutil import which
 
 
 class ParentGDB(rpyc.Service):
@@ -23,7 +24,7 @@ class ParentGDB(rpyc.Service):
     def exposed_get_gdb(self):
         return self.gdb_svc_conn.root.get()
 
-
+@skipUnless(which('gdb') is not None, "Skipping gdb example test since gdb not found")
 class Test_GDB(unittest.TestCase):
 
     def setUp(self):
