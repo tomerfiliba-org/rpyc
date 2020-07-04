@@ -30,7 +30,7 @@ class Test_GDB(unittest.TestCase):
     def setUp(self):
         self.dtemp = tempfile.mkdtemp()
         self.a_out = pathlib.Path(self.dtemp, 'a.out')
-        compile_cmd = ['g++', '-g', '-o', f'{self.a_out}', '-x', 'c++', '-']
+        compile_cmd = ['g++', '-g', '-o', str(self.a_out), '-x', 'c++', '-']
         proc = subprocess.Popen(compile_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
         proc_input = b'int func(int a, int b){return a + b;}int main(){return func(1, 2);}'
         stdout, stderr = proc.communicate(input=proc_input)
@@ -46,7 +46,7 @@ class Test_GDB(unittest.TestCase):
     def test_gdb(self):
         parent_gdb_conn = rpyc.connect(host='localhost', port=18878)
         gdb = parent_gdb_conn.root.get_gdb()
-        gdb.execute(f'file {self.a_out}')
+        gdb.execute('file {}'.format(test_gdb))
         disasm = gdb.execute('disassemble main', to_string=True)
         self.assertIn('End of assembler dump', disasm)
 
