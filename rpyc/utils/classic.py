@@ -384,6 +384,11 @@ def teleport_function(conn, func, globals=None, def_=True):
             import os
             return (os.getpid() + y) * x
 
+    .. note:: While it is not forbidden to "teleport" functions across different Python
+              versions, it *may* result in errors due to Python bytecode differences. It is
+              recommended to ensure both the client and the server are of the same Python
+              version when using this function.
+
     :param conn: the RPyC connection
     :param func: the function object to be delivered to the other party
     """
