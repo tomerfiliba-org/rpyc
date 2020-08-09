@@ -1,12 +1,6 @@
 import rpyc
 from time import sleep
 
-def MyServiceFactory():
-    class MyService(rpyc.Service):
-        def on_connect(self, conn):
-            conn._config["allow_public_attrs"] = True
-
-    return MyService
 
 class MyClient(object):
 
