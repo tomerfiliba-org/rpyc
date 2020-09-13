@@ -471,7 +471,7 @@ class ThreadPoolServer(Server):
                 time.sleep(0.2)
 
     def _authenticate_and_build_connection(self, sock):
-        '''Authenticate a client and if it succees, wraps the socket in a connection object.
+        '''Authenticate a client and if it succeeds, wraps the socket in a connection object.
         Note that this code is cut and paste from the rpyc internals and may have to be
         changed if rpyc evolves'''
         # authenticate
