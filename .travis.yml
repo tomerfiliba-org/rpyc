@@ -1,12 +1,11 @@
 language: python
 
-dist: bionic
+dist: focal
 
 # See: https://docs.travis-ci.com/user/languages/python/
 # and: https://docs.travis-ci.com/user/customizing-the-build/
 matrix:
   include:
-    - {python: "2.7"}
     - {python: "3.6"}
     - {python: "3.7"}
     - {python: "3.8"}
