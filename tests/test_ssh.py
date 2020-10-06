@@ -4,15 +4,22 @@ import os
 import unittest
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService, MasterService
-from plumbum import SshMachine
 
 
+try:
+    from plumbum.machines.paramiko_machine import ParamikoMachine as SshMachine
+    localhost_machine = SshMachine("localhost")
+except Exception:
+    localhost_machine = None
+
+
+@unittest.skipIf(localhost_machine is None, "Requires paramiko_machine to localhost")
 class Test_Ssh(unittest.TestCase):
     def setUp(self):
         if sys.platform == "win32":
             self.server = None
             os.environ["HOME"] = os.path.expanduser("~")
-            self.remote_machine = SshMachine("localhost")
+            self.remote_machine = localhost_machine
         else:
             # assume "ssh localhost" is configured to run without asking for password
             # `.ssh/config`
@@ -23,7 +30,7 @@ class Test_Ssh(unittest.TestCase):
             self.server = ThreadedServer(SlaveService, hostname="localhost",
                                          ipv6=False, port=18888, auto_register=False)
             self.server._start_in_thread()
-            self.remote_machine = SshMachine("localhost")
+            self.remote_machine = localhost_machine
 
     def tearDown(self):
         if self.server:
