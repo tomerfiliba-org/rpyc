@@ -1,9 +1,9 @@
-import rpyc
-import tempfile
-from rpyc.utils.server import ThreadedServer
-import unittest
-import subprocess
 import pathlib
+import rpyc
+import subprocess
+import tempfile
+import unittest
+from rpyc.utils.server import ThreadedServer
 from shutil import which
 
 
@@ -11,7 +11,8 @@ class ParentGDB(rpyc.Service):
     """ starts a new gdb service instance on connect and quits on disconnect """
 
     def on_connect(self, conn):
-        gdb_cmd = ['gdb', '-q', '-x', 'gdb_service.py']
+        tests_path = pathlib.Path(__file__).resolve().parent
+        gdb_cmd = ['gdb', '-q', '-x', pathlib.Path(tests_path, 'gdb_service.py')]
         self._proc = subprocess.Popen(gdb_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout = self._proc.stdout.readline()
         self._gdb_svc_port = int(stdout.strip().decode())
@@ -24,7 +25,8 @@ class ParentGDB(rpyc.Service):
     def exposed_get_gdb(self):
         return self.gdb_svc_conn.root.get()
 
-@skipUnless(which('gdb') is not None, "Skipping gdb example test since gdb not found")
+
+@unittest.skipUnless(which('gdb') is not None, "Skipping gdb example test since gdb not found")
 class Test_GDB(unittest.TestCase):
 
     def setUp(self):
@@ -46,7 +48,7 @@ class Test_GDB(unittest.TestCase):
     def test_gdb(self):
         parent_gdb_conn = rpyc.connect(host='localhost', port=18878)
         gdb = parent_gdb_conn.root.get_gdb()
-        gdb.execute('file {}'.format(test_gdb))
+        gdb.execute('file {}'.format(self.a_out))
         disasm = gdb.execute('disassemble main', to_string=True)
         self.assertIn('End of assembler dump', disasm)
 
