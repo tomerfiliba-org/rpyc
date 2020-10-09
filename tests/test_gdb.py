@@ -19,6 +19,8 @@ class ParentGDB(rpyc.Service):
         self.gdb_svc_conn = rpyc.connect(host='localhost', port=self._gdb_svc_port)
 
     def on_disconnect(self, conn):
+        self._proc.communicate()
+        self._proc.kill()
         self.gdb_svc_conn.root.quit()
         self.gdb_svc_conn.close()
 
@@ -44,6 +46,8 @@ class Test_GDB(unittest.TestCase):
 
     def tearDown(self):
         self.server.close()
+        while not self.server._closed:
+            pass
 
     def test_gdb(self):
         parent_gdb_conn = rpyc.connect(host='localhost', port=18878)
@@ -51,6 +55,7 @@ class Test_GDB(unittest.TestCase):
         gdb.execute('file {}'.format(self.a_out))
         disasm = gdb.execute('disassemble main', to_string=True)
         self.assertIn('End of assembler dump', disasm)
+        parent_gdb_conn.close()
 
 
 if __name__ == "__main__":
