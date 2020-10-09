@@ -28,6 +28,7 @@ class TestDeploy(unittest.TestCase):
             pass
         else:
             self.fail("expected an EOFError")
+        rem.close()
 
     def test_deploy_paramiko(self):
         rem = ParamikoMachine("localhost", missing_host_policy=paramiko.AutoAddPolicy())
@@ -43,6 +44,7 @@ class TestDeploy(unittest.TestCase):
             pass
         else:
             self.fail("expected an EOFError")
+        rem.close()
 
 
 if __name__ == "__main__":
