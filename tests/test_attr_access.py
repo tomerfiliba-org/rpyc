@@ -95,6 +95,8 @@ class TestRestricted(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
+        while self.server.clients:
+            pass
         self.server.close()
         self.thd.join()
 
@@ -126,6 +128,8 @@ class TestConfigAllows(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
+        while self.server.clients:
+            pass
         self.server.close()
         self.thd.join()
 
