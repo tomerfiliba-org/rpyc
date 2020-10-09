@@ -638,7 +638,7 @@ class Connection(object):
             # since __mro__ is not a safe attribute the request is forwarded using the proxy connection
             # relates to issue #346 or tests.test_netref_hierachy.Test_Netref_Hierarchy.test_StandardError
             conn = obj.____conn__
-            return conn.sync_request(consts.HANDLE_INSPECT, id_pack)
+            return conn.sync_request(consts.HANDLE_INSPECT, other_id_pack)
         # Create a name pack which would be familiar here and see if there is a hit
         other_id_pack2 = (other_id_pack[0], other_id_pack[1], 0)
         if other_id_pack[0] in netref.builtin_classes_cache:
