@@ -47,7 +47,7 @@ class Server(object):
                              on embedded platforms with limited battery)
     """
 
-    def __init__(self, service, hostname="", ipv6=False, port=0,
+    def __init__(self, service, hostname=None, ipv6=False, port=0,
                  backlog=socket.SOMAXCONN, reuse_addr=True, authenticator=None, registrar=None,
                  auto_register=None, protocol_config=None, logger=None, listener_timeout=0.5,
                  socket_path=None):
@@ -68,7 +68,7 @@ class Server(object):
         self.clients = set()
 
         if socket_path is not None:
-            if hostname != "" or port != 0 or ipv6 is not False:
+            if hostname is not None or port != 0 or ipv6 is not False:
                 raise ValueError("socket_path is mutually exclusive with: hostname, port, ipv6")
             self.listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             self.listener.bind(socket_path)
@@ -76,20 +76,18 @@ class Server(object):
             self.host, self.port = "", socket_path
         else:
             if ipv6:
-                if hostname == "localhost" and sys.platform != "win32":
-                    # on windows, you should bind to localhost even for ipv6
-                    hostname = "localhost6"
-                self.listener = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+                family = socket.AF_INET6
             else:
-                self.listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                family = socket.AF_INET
+            self.listener = socket.socket(family, socket.SOCK_STREAM)
+            address = socket.getaddrinfo(hostname, port, family=family, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP)[0][-1]
 
             if reuse_addr and sys.platform != "win32":
                 # warning: reuseaddr is not what you'd expect on windows!
                 # it allows you to bind an already bound port, resulting in
                 # "unexpected behavior" (quoting MSDN)
                 self.listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-            self.listener.bind((hostname, port))
+            self.listener.bind(address)
             self.listener.settimeout(listener_timeout)
 
             # hack for IPv6 (the tuple can be longer than 2)
@@ -480,27 +478,27 @@ class ThreadPoolServer(Server):
         else:
             credentials = None
         # build a connection
-        h, p = sock.getpeername()
-        config = dict(self.protocol_config, credentials=credentials, connid="%s:%d" % (h, p),
-                      endpoints=(sock.getsockname(), (h, p)))
+        addrinfo = sock.getpeername()
+        config = dict(self.protocol_config, credentials=credentials, connid="{}".format(addrinfo),
+                      endpoints=(sock.getsockname(), addrinfo))
         return sock, self.service._connect(Channel(SocketStream(sock)), config)
 
     def _accept_method(self, sock):
         '''Implementation of the accept method : only pushes the work to the internal queue.
         In case the queue is full, raises an AsynResultTimeout error'''
         try:
-            h, p = None, None
+            addrinfo = None
             # authenticate and build connection object
             sock, conn = self._authenticate_and_build_connection(sock)
             # put the connection in the active queue
-            h, p = sock.getpeername()
+            addrinfo = sock.getpeername()
             fd = conn.fileno()
-            self.logger.debug("Created connection to %s:%d with fd %d", h, p, fd)
+            self.logger.debug("Created connection to %s with fd %d", addrinfo, fd)
             self.fd_to_conn[fd] = conn
             self._add_inactive_connection(fd)
             self.clients.clear()
         except Exception:
-            err_msg = "Failed to serve client for {}:{}, caught exception".format(h, p)
+            err_msg = "Failed to serve client for {}, caught exception".format(addrinfo)
             self.logger.exception(err_msg)
             sock.close()
 
