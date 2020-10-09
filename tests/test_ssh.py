@@ -7,19 +7,20 @@ from rpyc import SlaveService, MasterService
 
 
 try:
-    from plumbum.machines.paramiko_machine import ParamikoMachine as SshMachine
+    from plumbum.machines.ssh_machine import SshMachine
     localhost_machine = SshMachine("localhost")
+    localhost_machine.close()
 except Exception:
     localhost_machine = None
 
 
 @unittest.skipIf(localhost_machine is None, "Requires paramiko_machine to localhost")
 class Test_Ssh(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         if sys.platform == "win32":
-            self.server = None
+            cls.server = None
             os.environ["HOME"] = os.path.expanduser("~")
-            self.remote_machine = localhost_machine
         else:
             # assume "ssh localhost" is configured to run without asking for password
             # `.ssh/config`
@@ -27,25 +28,28 @@ class Test_Ssh(unittest.TestCase):
             #   HostName 127.0.0.1
             #   User <username>
             #   IdentityFile <id_rsa>
-            self.server = ThreadedServer(SlaveService, hostname="localhost",
+            cls.server = ThreadedServer(SlaveService, hostname="localhost",
                                          ipv6=False, port=18888, auto_register=False)
-            self.server._start_in_thread()
-            self.remote_machine = localhost_machine
+            cls.server._start_in_thread()
+        cls.remote_machine =  SshMachine("localhost")
+        cls.conn = rpyc.classic.ssh_connect(cls.remote_machine, 18888)
+        cls.conn2 = rpyc.ssh_connect(cls.remote_machine, 18888, service=MasterService)
 
-    def tearDown(self):
-        if self.server:
-            self.server.close()
+    @classmethod
+    def tearDownClass(cls):
+        cls.conn.close()
+        cls.conn2.close()
+        cls.remote_machine.close()
+        cls.server.close()
 
     def test_simple(self):
-        conn = rpyc.classic.ssh_connect(self.remote_machine, 18888)
-        print("server's pid =", conn.modules.os.getpid())
-        conn.modules.sys.stdout.write("hello over ssh\n")
-        conn.modules.sys.stdout.flush()
+        print("server's pid =", self.conn.modules.os.getpid())
+        self.conn.modules.sys.stdout.write("hello over ssh\n")
+        self.conn.modules.sys.stdout.flush()
 
     def test_connect(self):
-        conn2 = rpyc.ssh_connect(self.remote_machine, 18888, service=MasterService)
-        conn2.modules.sys.stdout.write("hello through rpyc.ssh_connect()\n")
-        conn2.modules.sys.stdout.flush()
+        self.conn2.modules.sys.stdout.write("hello through rpyc.ssh_connect()\n")
+        self.conn2.modules.sys.stdout.flush()
 
 
 if __name__ == "__main__":
