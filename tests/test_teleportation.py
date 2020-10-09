@@ -5,6 +5,9 @@ import os
 import rpyc
 import types
 import unittest
+import tracemalloc
+tracemalloc.start()
+
 from rpyc.utils.teleportation import export_function, import_function
 from rpyc.lib.compat import is_py_3k, is_py_gte38
 from rpyc.utils.classic import teleport_function
@@ -51,6 +54,7 @@ class TeleportationTest(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
+        self.proc.communicate()  # clear io so resources are closed
 
     def test(self):
         exp = export_function(f)
@@ -101,9 +105,9 @@ class TeleportationTest(unittest.TestCase):
             schema38 = (pow38.__name__, pow38.__module__, pow38.__defaults__, export38)
             pow37_netref = self.conn.modules["rpyc.utils.teleportation"].import_function(schema37)
             pow38_netref = self.conn.modules["rpyc.utils.teleportation"].import_function(schema38)
-            self.assertEquals(pow37_netref(2, 3), pow37(2, 3))
-            self.assertEquals(pow38_netref(2, 3), pow38(2, 3))
-            self.assertEquals(pow37_netref(x=2, y=3), pow37(x=2, y=3))
+            self.assertEqual(pow37_netref(2, 3), pow37(2, 3))
+            self.assertEqual(pow38_netref(2, 3), pow38(2, 3))
+            self.assertEqual(pow37_netref(x=2, y=3), pow37(x=2, y=3))
             if not is_py_gte38:
                 return  # skip remained of tests for 3.7
             pow38.__code__ = types.CodeType(*export38)  # pow38 = lambda x, y, /: x ** y
