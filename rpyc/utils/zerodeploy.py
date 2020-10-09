@@ -155,15 +155,26 @@ class DeployedServer(object):
         if self.proc is not None:
             try:
                 self.proc.terminate()
+                self.proc.communicate()
             except Exception:
                 pass
             self.proc = None
         if self.tun is not None:
             try:
+                self.tun._session.proc.terminate()
+                self.tun._session.proc.communicate()
                 self.tun.close()
             except Exception:
                 pass
             self.tun = None
+        if self.remote_machine is not None:
+            try:
+                self.remote_machine._session.proc.terminate()
+                self.remote_machine._session.proc.communicate()
+                self.remote_machine.close()
+            except Exception:
+                pass
+            self.remote_machine = None
         if self._tmpdir_ctx is not None:
             try:
                 self._tmpdir_ctx.__exit__(None, None, None)

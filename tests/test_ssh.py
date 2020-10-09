@@ -39,6 +39,9 @@ class Test_Ssh(unittest.TestCase):
     def tearDownClass(cls):
         cls.conn.close()
         cls.conn2.close()
+        # TODO review "ResourceWarning: subprocess 111785 is still running"
+        cls.remote_machine._session.proc.terminate()  # fix resource warning
+        cls.remote_machine._session.proc.communicate()  # fix resource warning
         cls.remote_machine.close()
         cls.server.close()
 
