@@ -73,6 +73,8 @@ class Test_rpyc_over_rpyc(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
+        while self.server.clients or self.i_server.clients:
+            pass
         self.server.close()
         self.i_server.close()
 
