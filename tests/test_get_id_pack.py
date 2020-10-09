@@ -6,28 +6,34 @@ import unittest
 
 class Test_get_id_pack(unittest.TestCase):
 
-    def setUp(self):
-        self.port = 18878
-        self.port2 = 18879
-        self.server = ThreadedServer(SlaveService, port=self.port, auto_register=False)
-        self.server2 = ThreadedServer(SlaveService, port=self.port2, auto_register=False)
-        self.server._start_in_thread()
-        self.server2._start_in_thread()
-        self.conn = rpyc.classic.connect("localhost", port=self.port)
-        self.conn_rpyc = self.conn.root.getmodule('rpyc')
-        self.chained_conn = self.conn_rpyc.connect('localhost', self.port2)
+    @classmethod
+    def setUpClass(cls):
+        cls.port = 18878
+        cls.port2 = 18879
+        cls.server = ThreadedServer(SlaveService, port=cls.port, auto_register=False)
+        cls.server2 = ThreadedServer(SlaveService, port=cls.port2, auto_register=False)
+        cls.thd = cls.server._start_in_thread()
+        cls.thd2 = cls.server2._start_in_thread()
+        cls.conn = rpyc.classic.connect("localhost", port=cls.port)
+        cls.conn_rpyc = cls.conn.root.getmodule('rpyc')
+        cls.chained_conn = cls.conn_rpyc.connect('localhost', cls.port2)
 
-    def tearDown(self):
-        self.chained_conn.close()
-        self.conn.close()
-        self.server.close()
-        self.server2.close()
-
-    def test_netref(self):
-        self.assertEquals(self.conn.root.____id_pack__, rpyc.lib.get_id_pack(self.conn.root))
+    @classmethod
+    def tearDownClass(cls):
+        cls.chained_conn.close()
+        cls.conn.close()
+        while cls.server2.clients or cls.server.clients:
+            pass  #sti
+        cls.server2.close()
+        cls.server.close()
+        cls.thd.join()
+        cls.thd2.join()
 
     def test_chained_connect(self):
-        self.chained_conn.root.getmodule('os')
+        remote_os = self.chained_conn.root.getmodule('os')
+
+    def test_netref(self):
+        self.assertEqual(self.conn.root.____id_pack__, rpyc.lib.get_id_pack(self.conn.root))
 
     def test_class_instance_wo_name(self):
         ss = rpyc.SlaveService()
