@@ -14,6 +14,8 @@ class Test_ThreadedServer(unittest.TestCase):
         self.server._start_in_thread()
 
     def tearDown(self):
+        while self.server.clients:
+            pass
         self.server.close()
 
     def test_connection(self):
