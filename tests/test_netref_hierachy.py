@@ -1,7 +1,6 @@
-import os
+import math
 import rpyc
-import tempfile
-from rpyc.utils.server import ThreadedServer, ThreadPoolServer
+from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
 import unittest
 
@@ -47,39 +46,46 @@ class MyService(rpyc.Service):
 
 class Test_Netref_Hierarchy(unittest.TestCase):
 
+    @classmethod
+    def setUpClass(cls):
+        cls.server = ThreadedServer(SlaveService, port=18878, auto_register=False)
+        cls.server.logger.quiet = False
+        cls.server._start_in_thread()
+
     def setUp(self):
-        self.server = ThreadedServer(SlaveService, port=18878, auto_register=False)
-        self.server.logger.quiet = False
-        self.server._start_in_thread()
+        self.conn = rpyc.classic.connect('localhost', port=18878)
+        self.conn2 = None
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.close()
 
     def tearDown(self):
-        self.server.close()
+        self.conn.close()
+        if self.conn2 is not None:
+            self.conn2.close()
 
     def test_instancecheck_across_connections(self):
-        conn = rpyc.classic.connect('localhost', port=18878)
-        conn2 = rpyc.classic.connect('localhost', port=18878)
-        conn.execute('import test_magic')
-        conn2.execute('import test_magic')
-        foo = conn.modules.test_magic.Foo()
-        bar = conn.modules.test_magic.Bar()
-        self.assertTrue(isinstance(foo, conn.modules.test_magic.Foo))
-        self.assertTrue(isinstance(bar, conn2.modules.test_magic.Bar))
-        self.assertFalse(isinstance(bar, conn.modules.test_magic.Foo))
+        self.conn2 = rpyc.classic.connect('localhost', port=18878)
+        self.conn.execute('import test_magic')
+        self.conn2.execute('import test_magic')
+        foo = self.conn.modules.test_magic.Foo()
+        bar = self.conn.modules.test_magic.Bar()
+        self.assertTrue(isinstance(foo, self.conn.modules.test_magic.Foo))
+        self.assertTrue(isinstance(bar, self.conn2.modules.test_magic.Bar))
+        self.assertFalse(isinstance(bar, self.conn.modules.test_magic.Foo))
         with self.assertRaises(TypeError):
-            isinstance(conn.modules.test_magic.Foo, bar)
-        conn.close()
-        conn2.close()
+            isinstance(self.conn.modules.test_magic.Foo, bar)
 
     def test_classic(self):
-        conn = rpyc.classic.connect_thread()
-        x = conn.builtin.list((1, 2, 3, 4))
+        x = self.conn.builtin.list((1, 2, 3, 4))
         self.assertTrue(isinstance(x, list))
         self.assertTrue(isinstance(x, rpyc.BaseNetref))
         with self.assertRaises(TypeError):
             isinstance([], x)
         i = 0
         self.assertTrue(type(x).__getitem__(x, i) == x.__getitem__(i))
-        _builtins = conn.modules.builtins if rpyc.lib.compat.is_py_3k else conn.modules.__builtin__
+        _builtins = self.conn.modules.builtins if rpyc.lib.compat.is_py_3k else self.conn.modules.__builtin__
         self.assertEqual(repr(_builtins.float.__class__), repr(type))
         self.assertEqual(repr(type(_builtins.float)), repr(type(_builtins.type)))
 
@@ -92,8 +98,7 @@ class Test_Netref_Hierarchy(unittest.TestCase):
         conn.close()
 
     def test_StandardError(self):
-        conn = rpyc.classic.connect_thread()
-        _builtins = conn.modules.builtins if rpyc.lib.compat.is_py_3k else conn.modules.__builtin__
+        _builtins = self.conn.modules.builtins if rpyc.lib.compat.is_py_3k else self.conn.modules.__builtin__
         self.assertTrue(isinstance(_builtins.Exception(), _builtins.BaseException))
         self.assertTrue(isinstance(_builtins.Exception(), _builtins.Exception))
         self.assertTrue(isinstance(_builtins.Exception(), BaseException))
@@ -112,14 +117,16 @@ class Test_Netref_Hierarchy(unittest.TestCase):
         >>> type(sys.__class__)
         <type 'type'>  # base case
         >>> type(conn.modules.sys.__class__)
-        <netref class 'rpyc.core.netref.__builtin__.module'>  # doesn't match.  Should be a netref class of "type" (or maybe just <type 'type'> itself?)
+        <netref class 'rpyc.core.netref.__builtin__.module'>  # doesn't match.
+        # ^Should be a netref class of "type" (or maybe just <type 'type'> itself?)
         """
         import sys
-        conn = rpyc.classic.connect_thread()
-        self.assertEqual(repr(sys.__class__), repr(conn.modules.sys.__class__))
+        self.assertEqual(repr(sys.__class__), repr(self.conn.modules.sys.__class__))
         # _builtin = sys.modules['builtins' if rpyc.lib.compat.is_py_3k else '__builtins__'].__name__
-        # self.assertEqual(repr(type(conn.modules.sys)), "<netref class 'rpyc.core.netref.{}.module'>".format(_builtin))
-        # self.assertEqual(repr(type(conn.modules.sys.__class__)), "<netref class 'rpyc.core.netref.{}.type'>".format(_builtin))
+        # self.assertEqual(repr(type(self.conn.modules.sys)),
+        #                  "<netref class 'rpyc.core.netref.{}.module'>".format(_builtin))
+        # self.assertEqual(repr(type(self.conn.modules.sys.__class__)),
+        #                  "<netref class 'rpyc.core.netref.{}.type'>".format(_builtin))
 
 
 if __name__ == '__main__':
