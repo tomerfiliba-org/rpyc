@@ -14,6 +14,7 @@ win32event = safe_import("win32event")
 
 
 retry_errnos = (errno.EAGAIN, errno.EWOULDBLOCK)
+DEFAULT_CHUNK = 64000  # read/write chunk is 64KB, too large of a value will degrade response for other clients
 
 
 class Stream(object):
@@ -111,7 +112,7 @@ class SocketStream(Stream):
     """A stream over a socket"""
 
     __slots__ = ("sock",)
-    MAX_IO_CHUNK = 64000  # read/write chunk is 64KB, too large of a value will degrade response for other clients
+    MAX_IO_CHUNK = DEFAULT_CHUNK
 
     def __init__(self, sock):
         self.sock = sock
@@ -291,7 +292,7 @@ class PipeStream(Stream):
     """A stream over two simplex pipes (one used to input, another for output)"""
 
     __slots__ = ("incoming", "outgoing")
-    MAX_IO_CHUNK = 32000
+    MAX_IO_CHUNK = DEFAULT_CHUNK
 
     def __init__(self, incoming, outgoing):
         outgoing.flush()
@@ -369,7 +370,7 @@ class Win32PipeStream(Stream):
 
     __slots__ = ("incoming", "outgoing", "_fileno", "_keepalive")
     PIPE_BUFFER_SIZE = 130000
-    MAX_IO_CHUNK = 32000
+    MAX_IO_CHUNK = DEFAULT_CHUNK
 
     def __init__(self, incoming, outgoing):
         import msvcrt
