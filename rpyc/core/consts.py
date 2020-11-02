@@ -37,6 +37,9 @@ HANDLE_INSTANCECHECK = 20
 # optimized exceptions
 EXC_STOP_ITERATION = 1
 
+# IO values
+STREAM_CHUNK = 64000  # read/write chunk is 64KB, too large of a value will degrade response for other clients
+
 # DEBUG
 # for k in globals().keys():
 #    globals()[k] = k
