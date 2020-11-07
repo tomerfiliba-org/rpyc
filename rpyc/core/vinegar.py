@@ -22,19 +22,11 @@ except ImportError:
 from rpyc.core import brine
 from rpyc.core import consts
 from rpyc import version
-from rpyc.lib.compat import is_py_3k
 
 
 REMOTE_LINE_START = "\n\n========= Remote Traceback "
 REMOTE_LINE_END = " =========\n"
 REMOTE_LINE = "{0}({{}}){1}".format(REMOTE_LINE_START, REMOTE_LINE_END)
-
-
-try:
-    BaseException
-except NameError:
-    # python 2.4 compatible
-    BaseException = Exception
 
 
 def dump(typ, val, tb, include_local_traceback, include_local_version):
@@ -135,16 +127,8 @@ def load(val, import_custom_exceptions, instantiate_custom_exceptions, instantia
     else:
         cls = None
 
-    if is_py_3k:
-        if not isinstance(cls, type) or not issubclass(cls, BaseException):
-            cls = None
-    else:
-        if not isinstance(cls, (type, ClassType)):
-            cls = None
-        elif issubclass(cls, ClassType) and not instantiate_oldstyle_exceptions:
-            cls = None
-        elif not issubclass(cls, BaseException):
-            cls = None
+    if not isinstance(cls, type) or not issubclass(cls, BaseException):
+        cls = None
 
     if cls is None:
         fullname = "%s.%s" % (modname, clsname)

@@ -4,7 +4,7 @@ of *magic*, so beware.
 import sys
 import types
 from rpyc.lib import get_methods, get_id_pack
-from rpyc.lib.compat import pickle, is_py_3k, maxint, with_metaclass
+from rpyc.lib.compat import pickle, maxint, with_metaclass
 from rpyc.core import consts
 
 
@@ -16,6 +16,7 @@ DELETED_ATTRS = frozenset([
     '__array_struct__', '__array_interface__',
 ])
 
+"""the set of attributes that are local to the netref object"""
 LOCAL_ATTRS = frozenset([
     '____conn__', '____id_pack__', '____refcount__', '__class__', '__cmp__', '__del__', '__delattr__',
     '__dir__', '__doc__', '__getattr__', '__getattribute__', '__hash__', '__instancecheck__',
@@ -24,11 +25,13 @@ LOCAL_ATTRS = frozenset([
     '__weakref__', '__dict__', '__methods__', '__exit__',
     '__eq__', '__ne__', '__lt__', '__gt__', '__le__', '__ge__',
 ]) | DELETED_ATTRS
-"""the set of attributes that are local to the netref object"""
 
+"""a list of types considered built-in (shared between connections)
+TODO: with the deprecation of py2 support, why not iterate the members of the builtins module?
+"""
 _builtin_types = [
     type, object, bool, complex, dict, float, int, list, slice, str, tuple, set,
-    frozenset, Exception, type(None), types.BuiltinFunctionType, types.GeneratorType,
+    frozenset, BaseException, Exception, type(None), types.BuiltinFunctionType, types.GeneratorType,
     types.MethodType, types.CodeType, types.FrameType, types.TracebackType,
     types.ModuleType, types.FunctionType,
 
@@ -37,26 +40,8 @@ _builtin_types = [
     type(iter([])),         # listiterator
     type(iter(())),         # tupleiterator
     type(iter(set())),      # setiterator
+    bytes, bytearray, type(iter(range(10))), memoryview
 ]
-"""a list of types considered built-in (shared between connections)"""
-
-try:
-    BaseException
-except NameError:
-    pass
-else:
-    _builtin_types.append(BaseException)
-
-if is_py_3k:
-    _builtin_types.extend([
-        bytes, bytearray, type(iter(range(10))), memoryview,
-    ])
-    xrange = range
-else:
-    _builtin_types.extend([
-        basestring, unicode, long, xrange, type(iter(xrange(10))), file,  # noqa
-        types.InstanceType, types.ClassType, types.DictProxyType,
-    ])
 _normalized_builtin_types = {}
 
 
