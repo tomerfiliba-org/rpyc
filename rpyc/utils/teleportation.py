@@ -4,45 +4,22 @@ try:
     import __builtin__
 except ImportError:
     import builtins as __builtin__  # noqa: F401
-from rpyc.lib.compat import is_py_3k, is_py_gte38
+from rpyc.lib.compat import is_py_gte38
 from types import CodeType, FunctionType
-from rpyc.core import brine
-from rpyc.core import netref
+from rpyc.core import brine, netref
+from dis import _unpack_opargs
 
 CODEOBJ_MAGIC = "MAg1c J0hNNzo0hn ZqhuBP17LQk8"
 
 
 # NOTE: dislike this kind of hacking on the level of implementation details,
 # should search for a more reliable/future-proof way:
-CODE_HAVEARG_SIZE = 2 if sys.version_info >= (3, 6) else 3
-try:
-    from dis import _unpack_opargs
-except ImportError:
-    # COPIED from 3.5's `dis.py`, this should hopefully be correct for <=3.5:
-    def _unpack_opargs(code):
-        extended_arg = 0
-        n = len(code)
-        i = 0
-        while i < n:
-            op = code[i]
-            offset = i
-            i = i + 1
-            arg = None
-            if op >= opcode.HAVE_ARGUMENT:
-                arg = code[i] + code[i + 1] * 256 + extended_arg
-                extended_arg = 0
-                i = i + 2
-                if op == opcode.EXTENDED_ARG:
-                    extended_arg = arg * 65536
-            yield (offset, op, arg)
+CODE_HAVEARG_SIZE = 3
 
 
 def decode_codeobj(codeobj):
     # adapted from dis.dis
-    if is_py_3k:
-        codestr = codeobj.co_code
-    else:
-        codestr = [ord(ch) for ch in codeobj.co_code]
+    codestr = codeobj.co_code
     free = None
     for i, op, oparg in _unpack_opargs(codestr):
         opname = opcode.opname[op]
@@ -81,28 +58,18 @@ def _export_codeobj(cobj):
                     cobj.co_stacksize, cobj.co_flags, cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames,
                     cobj.co_filename, cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars,
                     cobj.co_cellvars)
-    elif is_py_3k:
+    else:
         exported = (cobj.co_argcount, cobj.co_kwonlyargcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
                     cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
                     cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
-    else:
-        exported = (cobj.co_argcount, cobj.co_nlocals, cobj.co_stacksize, cobj.co_flags,
-                    cobj.co_code, tuple(consts2), cobj.co_names, cobj.co_varnames, cobj.co_filename,
-                    cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab, cobj.co_freevars, cobj.co_cellvars)
-
     assert brine.dumpable(exported)
     return (CODEOBJ_MAGIC, exported)
 
 
 def export_function(func):
-    if is_py_3k:
-        func_closure = func.__closure__
-        func_code = func.__code__
-        func_defaults = func.__defaults__
-    else:
-        func_closure = func.func_closure
-        func_code = func.func_code
-        func_defaults = func.func_defaults
+    func_closure = func.__closure__
+    func_code = func.__code__
+    func_defaults = func.__defaults__
 
     if func_closure:
         raise TypeError("Cannot export a function closure")
@@ -113,18 +80,14 @@ def export_function(func):
 
 
 def _import_codetup(codetup):
-    if is_py_3k:
-        # Handle tuples sent from 3.8 as well as 3 < version < 3.8.
-        if len(codetup) == 16:
-            (argcount, posonlyargcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames,
-             filename, name, firstlineno, lnotab, freevars, cellvars) = codetup
-        else:
-            (argcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames,
-             filename, name, firstlineno, lnotab, freevars, cellvars) = codetup
-            posonlyargcount = 0
-    else:
-        (argcount, nlocals, stacksize, flags, code, consts, names, varnames,
+    # Handle tuples sent from 3.8 as well as 3 < version < 3.8.
+    if len(codetup) == 16:
+        (argcount, posonlyargcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames,
          filename, name, firstlineno, lnotab, freevars, cellvars) = codetup
+    else:
+        (argcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames,
+         filename, name, firstlineno, lnotab, freevars, cellvars) = codetup
+        posonlyargcount = 0
 
     consts2 = []
     for const in consts:
@@ -136,12 +99,9 @@ def _import_codetup(codetup):
     if is_py_gte38:
         codetup = (argcount, posonlyargcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames,
                    filename, name, firstlineno, lnotab, freevars, cellvars)
-    elif is_py_3k:
+    else:
         codetup = (argcount, kwonlyargcount, nlocals, stacksize, flags, code, consts, names, varnames, filename, name,
                    firstlineno, lnotab, freevars, cellvars)
-    else:
-        codetup = (argcount, nlocals, stacksize, flags, code, consts, names, varnames, filename, name, firstlineno,
-                   lnotab, freevars, cellvars)
     return CodeType(*codetup)
 
 

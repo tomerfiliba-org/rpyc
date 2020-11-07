@@ -9,7 +9,7 @@ can interoperate, you're good to go.
 from functools import partial
 
 from rpyc.lib import hybridmethod
-from rpyc.lib.compat import execute, is_py_3k
+from rpyc.lib.compat import execute
 from rpyc.core.protocol import Connection
 
 
@@ -215,13 +215,12 @@ class MasterService(Service):
     @staticmethod
     def _install(conn, slave):
         modules = ModuleNamespace(slave.getmodule)
-        builtin = modules.builtins if is_py_3k else modules.__builtin__
         conn.modules = modules
         conn.eval = slave.eval
         conn.execute = slave.execute
         conn.namespace = slave.namespace
-        conn.builtin = builtin
-        conn.builtins = builtin
+        conn.builtins = modules.builtins
+        conn.builtin = modules.builtins  # TODO: cruft from py2 that requires cleanup elsewhere and CHANGELOG note
         from rpyc.utils.classic import teleport_function
         conn.teleport = partial(teleport_function, conn)
 
