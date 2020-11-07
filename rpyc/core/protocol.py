@@ -169,6 +169,9 @@ class Connection(object):
         a, b = object.__repr__(self).split(" object ")
         return "%s %r object %s" % (a, self._config["connid"], b)
 
+    def _pre_cleanup(self):  # IO
+        self._local_root.on_about_to_disconnect(self)
+
     def _cleanup(self, _anyway=True):  # IO
         if self._closed and not _anyway:
             return
@@ -192,6 +195,7 @@ class Connection(object):
             return
         self._closed = True
         try:
+            self.sync_request(consts.HANDLE_ABOUT_TO_CLOSE)
             self._async_request(consts.HANDLE_CLOSE)
         except EOFError:
             pass
@@ -554,6 +558,7 @@ class Connection(object):
             consts.HANDLE_BUFFITER: cls._handle_buffiter,
             consts.HANDLE_OLDSLICING: cls._handle_oldslicing,
             consts.HANDLE_CTXEXIT: cls._handle_ctxexit,
+            consts.HANDLE_ABOUT_TO_CLOSE: cls._handle_about_to_close,
         }
 
     def _handle_ping(self, data):  # request handler
@@ -561,6 +566,9 @@ class Connection(object):
 
     def _handle_close(self):  # request handler
         self._cleanup()
+
+    def _handle_about_to_close(self):  # request handler
+        self._pre_cleanup()
 
     def _handle_getroot(self):  # request handler
         return self._local_root

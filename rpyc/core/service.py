@@ -60,6 +60,11 @@ class Service(object):
         """called when the connection is established"""
         pass
 
+    def on_about_to_disconnect(self, conn):
+        """called when the connection is about to be terminated for pre-cleanup
+        (IO on the connection can be performed for a final time)"""
+        pass
+
     def on_disconnect(self, conn):
         """called when the connection had already terminated for cleanup
         (must not perform any IO on the connection)"""
@@ -202,7 +207,6 @@ class FakeSlaveService(VoidService):
 
 
 class MasterService(Service):
-
     """Peer for a new-style (>=v3.5) :class:`SlaveService`. Use this service
     if you want to connect to a ``SlaveService`` without exposing any
     functionality to them."""
