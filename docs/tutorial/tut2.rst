@@ -112,4 +112,43 @@ As you can see, we get two tracebacks: the remote one, showing what went wrong o
 and a local one, showing what we did to cause it.
 
 
+Custom Exception Handling Example
+---------------------------------
+The server example::
+
+    import rpyc
+    import urllib.error
+    from rpyc.utils.server import OneShotServer
+
+
+    class HelloService(rpyc.Service):
+        def exposed_foobar(self, remote_str):
+            raise urllib.error.URLError("test")
+
+
+    if __name__ == "__main__":
+        rpyc.lib.setup_logger()
+        server = OneShotServer(
+            HelloService,
+            port=12345,
+            protocol_config={'import_custom_exceptions': True}
+        )
+        server.start()
+
+
+The client example::
+
+    import rpyc
+    import urllib.error
+    rpyc.core.vinegar._generic_exceptions_cache["urllib.error.URLError"] = urllib.error.URLError
+
+
+    if __name__ == "__main__":
+        conn = rpyc.connect("localhost", 12345)
+        try:
+            print(conn.root.foobar('hello'))
+        except urllib.error.URLError:
+            print('caught a URLError')
+
+
 Continue to :ref:`tut3`...
