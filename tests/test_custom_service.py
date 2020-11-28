@@ -22,12 +22,16 @@ if not isinstance(MyMeta, MyMeta):
 class MyService(rpyc.Service):
     on_connect_called = False
     on_disconnect_called = False
+    on_about_to_close_called = False
 
     def on_connect(self, conn):
         self.on_connect_called = True
 
     def on_disconnect(self, conn):
         self.on_disconnect_called = True
+
+    def exposed_on_about_to_close(self):
+        self.on_about_to_close_called = True
 
     def exposed_distance(self, p1, p2):
         x1, y1 = p1
@@ -47,21 +51,33 @@ class MyService(rpyc.Service):
         return isinstance(inst, cls)
 
 
+def before_closed(root):
+    root.on_about_to_close()
+
+
 class TestCustomService(unittest.TestCase):
     config = {}
 
     def setUp(self):
         self.service = MyService()
-        self.conn = rpyc.connect_thread(remote_service=self.service)
+        client_config = {"before_closed": before_closed, "close_catchall": False}
+        self.conn = rpyc.connect_thread( remote_service=self.service, config=client_config)
+
         self.conn.root  # this will block until the service is initialized,
         # so we can be sure on_connect_called is True by that time
         self.assertTrue(self.service.on_connect_called)
 
     def tearDown(self):
-        self.conn.close()
+        if not self.conn.closed:
+            self.conn.close()
         time.sleep(0.5)  # this will wait a little, making sure
         # on_disconnect_called is already True
         self.assertTrue(self.service.on_disconnect_called)
+
+    def test_before_closed(self):
+        self.assertFalse(self.service.on_about_to_close_called)
+        self.conn.close()
+        self.assertTrue(self.service.on_about_to_close_called)
 
     def test_aliases(self):
         print("service name: %s" % (self.conn.root.get_service_name(),))
