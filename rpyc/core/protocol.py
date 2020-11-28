@@ -60,6 +60,8 @@ DEFAULT_CONFIG = dict(
     endpoints=None,
     logger=None,
     sync_request_timeout=30,
+    before_closed=None,
+    close_catchall=False,
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
@@ -186,17 +188,19 @@ class Connection(object):
         # self._config.clear()
         del self._HANDLERS
 
-    def close(self, _catchall=True):  # IO
+    def close(self):  # IO
         """closes the connection, releasing all held resources"""
         if self._closed:
             return
-        self._closed = True
         try:
+            self._closed = True
+            if self._config.get("before_closed"):
+                self._config["before_closed"](self.root)
             self._async_request(consts.HANDLE_CLOSE)
         except EOFError:
             pass
         except Exception:
-            if not _catchall:
+            if not self._config["close_catchall"]:
                 raise
         finally:
             self._cleanup(_anyway=True)
