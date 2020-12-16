@@ -9,7 +9,8 @@ import rpyc
 
 class EchoService(rpyc.Service):
     def on_connect(self, conn):
-        pass
+        msg = f"on connect service peer name: {conn._channel.stream.sock.getpeername()}"
+        conn._config["logger"].debug(msg)
 
     def on_disconnect(self, conn):
         pass
