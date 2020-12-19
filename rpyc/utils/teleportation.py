@@ -66,13 +66,18 @@ def export_function(func):
     closure = func.__closure__
     code = func.__code__
     defaults = func.__defaults__
+    kwdefaults = func.__kwdefaults__
+    if kwdefaults is not None:
+        kwdefaults = tuple(kwdefaults.items())
 
     if closure:
         raise TypeError("Cannot export a function closure")
     if not brine.dumpable(defaults):
         raise TypeError("Cannot export a function with non-brinable defaults (__defaults__)")
+    if not brine.dumpable(kwdefaults):
+        raise TypeError("Cannot export a function with non-brinable defaults (__kwdefaults__)")
 
-    return func.__name__, func.__module__, defaults, _export_codeobj(code)[1]
+    return func.__name__, func.__module__, defaults, kwdefaults, _export_codeobj(code)[1]
 
 
 def _import_codetup(codetup):
@@ -102,7 +107,7 @@ def _import_codetup(codetup):
 
 
 def import_function(functup, globals=None, def_=True):
-    name, modname, defaults, codetup = functup
+    name, modname, defaults, kwdefaults, codetup = functup
     if globals is None:
         try:
             mod = __import__(modname, None, None, "*")
@@ -116,6 +121,8 @@ def import_function(functup, globals=None, def_=True):
     globals.setdefault('__builtins__', __builtins__)
     codeobj = _import_codetup(codetup)
     funcobj = FunctionType(codeobj, globals, name, defaults)
+    if kwdefaults is not None:
+        funcobj.__kwdefaults__ = {t[0]: t[1] for t in kwdefaults}
     if def_:
         globals[name] = funcobj
     return funcobj
