@@ -26,6 +26,14 @@ def f(a):
     return g
 
 
+def defaults(a=5, b="hi", c=(5.5, )):
+    return a, b, c
+
+
+def kwdefaults(pos=5, *, a=42, b="bye", c=(12.4, )):
+    return pos, a, b, c
+
+
 def h(a):
     import os
     return a * os.getpid()
@@ -81,6 +89,14 @@ class TeleportationTest(unittest.TestCase):
         bar_ = teleport_function(self.conn, bar)
         self.assertEqual(foo_(), 43)
         self.assertEqual(bar_(), 42)
+
+    def test_defaults(self):
+        defaults_ = teleport_function(self.conn, defaults)
+        self.assertEqual(defaults_(), defaults())
+
+    def test_kwdefaults(self):
+        kwdefaults_ = teleport_function(self.conn, kwdefaults)
+        self.assertEqual(kwdefaults_(), kwdefaults())
 
     def test_compat(self):  # assumes func has only brineable types
 
