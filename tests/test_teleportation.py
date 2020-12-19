@@ -101,8 +101,8 @@ class TeleportationTest(unittest.TestCase):
             pow38 = lambda x, y : x ** y  # noqa
             export37 = get37_schema(pow37.__code__)
             export38 = get38_schema(pow38.__code__)
-            schema37 = (pow37.__name__, pow37.__module__, pow37.__defaults__, export37)
-            schema38 = (pow38.__name__, pow38.__module__, pow38.__defaults__, export38)
+            schema37 = (pow37.__name__, pow37.__module__, pow37.__defaults__, pow37.__kwdefaults__, export37)
+            schema38 = (pow38.__name__, pow38.__module__, pow38.__defaults__, pow38.__kwdefaults__, export38)
             pow37_netref = self.conn.modules["rpyc.utils.teleportation"].import_function(schema37)
             pow38_netref = self.conn.modules["rpyc.utils.teleportation"].import_function(schema38)
             self.assertEqual(pow37_netref(2, 3), pow37(2, 3))
