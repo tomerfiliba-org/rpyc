@@ -1,9 +1,5 @@
 import opcode
-import sys
-try:
-    import __builtin__
-except ImportError:
-    import builtins as __builtin__  # noqa: F401
+
 from rpyc.lib.compat import is_py_gte38
 from types import CodeType, FunctionType
 from rpyc.core import brine, netref
@@ -67,16 +63,16 @@ def _export_codeobj(cobj):
 
 
 def export_function(func):
-    func_closure = func.__closure__
-    func_code = func.__code__
-    func_defaults = func.__defaults__
+    closure = func.__closure__
+    code = func.__code__
+    defaults = func.__defaults__
 
-    if func_closure:
+    if closure:
         raise TypeError("Cannot export a function closure")
-    if not brine.dumpable(func_defaults):
-        raise TypeError("Cannot export a function with non-brinable defaults (func_defaults)")
+    if not brine.dumpable(defaults):
+        raise TypeError("Cannot export a function with non-brinable defaults (__defaults__)")
 
-    return func.__name__, func.__module__, func_defaults, _export_codeobj(func_code)[1]
+    return func.__name__, func.__module__, defaults, _export_codeobj(code)[1]
 
 
 def _import_codetup(codetup):
