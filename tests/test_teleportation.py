@@ -26,6 +26,14 @@ def f(a):
     return g
 
 
+def defaults(a=5, b="hi", c=(5.5, )):
+    return a, b, c
+
+
+def kwdefaults(pos=5, *, a=42, b="bye", c=(12.4, )):
+    return pos, a, b, c
+
+
 def h(a):
     import os
     return a * os.getpid()
@@ -82,6 +90,14 @@ class TeleportationTest(unittest.TestCase):
         self.assertEqual(foo_(), 43)
         self.assertEqual(bar_(), 42)
 
+    def test_defaults(self):
+        defaults_ = teleport_function(self.conn, defaults)
+        self.assertEqual(defaults_(), defaults())
+
+    def test_kwdefaults(self):
+        kwdefaults_ = teleport_function(self.conn, kwdefaults)
+        self.assertEqual(kwdefaults_(), kwdefaults())
+
     def test_compat(self):  # assumes func has only brineable types
 
         def get37_schema(cobj):
@@ -101,8 +117,8 @@ class TeleportationTest(unittest.TestCase):
             pow38 = lambda x, y : x ** y  # noqa
             export37 = get37_schema(pow37.__code__)
             export38 = get38_schema(pow38.__code__)
-            schema37 = (pow37.__name__, pow37.__module__, pow37.__defaults__, export37)
-            schema38 = (pow38.__name__, pow38.__module__, pow38.__defaults__, export38)
+            schema37 = (pow37.__name__, pow37.__module__, pow37.__defaults__, pow37.__kwdefaults__, export37)
+            schema38 = (pow38.__name__, pow38.__module__, pow38.__defaults__, pow38.__kwdefaults__, export38)
             pow37_netref = self.conn.modules["rpyc.utils.teleportation"].import_function(schema37)
             pow38_netref = self.conn.modules["rpyc.utils.teleportation"].import_function(schema38)
             self.assertEqual(pow37_netref(2, 3), pow37(2, 3))
