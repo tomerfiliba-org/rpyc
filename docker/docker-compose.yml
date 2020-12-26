@@ -1,0 +1,50 @@
+version: "3.9"
+networks:
+  rpyc-test-net:
+    internal: false
+# extension field for common rpyc service settings
+x-rpyc: &rpyc
+  environment:
+    - PYTHONPATH=/opt/rpyc:/opt/plumbum-master
+  stdin_open: true
+  tty: true
+  networks:
+    - rpyc-test-net
+    - default
+  command: >
+    /bin/sh -c "wget -nc https://github.com/tomerfiliba/plumbum/archive/master.zip;
+    rm -rf /opt/plumbum-master;
+    unzip master.zip -d /opt;
+    python"
+
+services:
+  rpyc-python-3.10:
+    container_name: rpyc-3.10
+    image: python:3.10-rc-alpine
+    << : *rpyc
+    volumes:
+      - ../:/opt/rpyc
+  rpyc-python-3.9:
+    container_name: rpyc-3.9
+    image: python:3.9-alpine
+    << : *rpyc
+    volumes:
+      - ../:/opt/rpyc
+  rpyc-python-3.8:
+    container_name: rpyc-3.8
+    image: python:3.8-alpine
+    << : *rpyc
+    volumes:
+      - ../:/opt/rpyc
+  rpyc-python-3.7:
+    container_name: rpyc-3.7
+    image: python:3.7-alpine
+    << : *rpyc
+    volumes:
+      - ../:/opt/rpyc
+  rpyc-python-3.6:
+    container_name: rpyc-3.6
+    image: python:3.6-alpine
+    << : *rpyc
+    volumes:
+      - ../:/opt/rpyc
