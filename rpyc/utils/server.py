@@ -26,8 +26,8 @@ class Server(object):
     """Base server implementation
 
     :param service: the :class:`~rpyc.core.service.Service` to expose
-    :param hostname: the host to bind to. Default is IPADDR_ANY, but you may
-                     want to restrict it only to ``localhost`` in some setups
+    :param hostname: the host to bind to. By default, the 'wildcard address' is used to listen on all interfaces.
+                     if not properly secured, the server can receive traffic from unintended or even malicious sources.
     :param ipv6: whether to create an IPv6 or IPv4 socket. The default is IPv4
     :param port: the TCP port to bind to
     :param backlog: the socket's backlog (passed to ``listen()``)
@@ -80,7 +80,7 @@ class Server(object):
             else:
                 family = socket.AF_INET
             self.listener = socket.socket(family, socket.SOCK_STREAM)
-            address = socket.getaddrinfo(hostname, port, family=family, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP)[0][-1]
+            address = socket.getaddrinfo(hostname, port, family=family, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP, flags=socket.AI_PASSIVE)[0][-1]
 
             if reuse_addr and sys.platform != "win32":
                 # warning: reuseaddr is not what you'd expect on windows!
