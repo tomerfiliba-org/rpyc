@@ -8,8 +8,8 @@ try:
 except ImportError:
     from distutils.core import setup
 
-if sys.version_info < (2, 6):
-    sys.exit("requires python 2.6 and up")
+if sys.version_info < (3, 6):
+    sys.exit("requires python 3.6 and up")
 
 here = os.path.dirname(__file__)
 exec(open(os.path.join(here, 'rpyc', 'version.py')).read())
@@ -57,6 +57,7 @@ setup(name="rpyc",
           "Programming Language :: Python :: 3.7",
           "Programming Language :: Python :: 3.8",
           "Programming Language :: Python :: 3.9",
+          "Programming Language :: Python :: 3.10-rc",
           "Topic :: Internet",
           "Topic :: Software Development :: Libraries :: Python Modules",
           "Topic :: Software Development :: Object Brokering",
