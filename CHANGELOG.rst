@@ -1,3 +1,22 @@
+5.0.0
+-----
+Date: 12.26.2020
+
+- Server hostname default supports IPv4 and IPv6 by using the wildcard address `#425`_
+- Added docker/docker-compose.yml for Python 3.6, 3.7, 3.8, 3.9, and 3.10 containers to improve local workflow
+- Fixed pickle failure on windows for connect_multiprocess and connect_thread `#412`_
+- Fixed teleport function behavior for keyword-only arguments with default `#422`_
+- Improved documentation on custom exception handling
+- Fixed IPv6 support for server `#407`_
+- Dropped Python 2 support since it has reached EOL
+- Added a simple asynchrounous service example `#400`_
+
+.. _#425: https://github.com/tomerfiliba-org/rpyc/issues/425
+.. _#412: https://github.com/tomerfiliba-org/rpyc/pull/412
+.. _#422: https://github.com/tomerfiliba-org/rpyc/pull/422
+.. _#407: https://github.com/tomerfiliba-org/rpyc/issues/407
+.. _#400: https://github.com/tomerfiliba-org/rpyc/pull/400
+
 4.1.5
 -----
 Date: 4.25.2020
