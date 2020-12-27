@@ -1,0 +1,2 @@
+# Shared State Server
+When using the `ThreadedServer`, you may wish to share data between clients. Although Python does not support genuine concurrency, an application using the `ThreadedServer` provides a concurrency illusion which still needs to be thread-safe (i.e. invariants are upheld, no data-races, etc.). The `sharing/server.py` defines a constant `THREAD_SAFE` that allows you to toggle between safe and unsafe function calls.
