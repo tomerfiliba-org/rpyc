@@ -1,2 +1,2 @@
 # Simple Echo Server
-When looking to reproduce a potential bug, this is the place to start.
+The client will open a connection once and send a message. The server is a `OneShotServer`. So, the server will close once the client is done.

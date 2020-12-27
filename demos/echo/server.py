@@ -24,13 +24,5 @@ class EchoService(rpyc.Service):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
-    choice = 'OneShotServer'  # Debugging
-    svc_server = None
-    server_class = {}
-    # Populate for 'ForkingServer', 'GeventServer', 'OneShotServer', 'ThreadPoolServer', and 'ThreadedServer'
-    for name, value in inspect.getmembers(rpyc.utils.server, inspect.isclass):
-        if rpyc.utils.server.Server in getattr(value, '__mro__', []):
-            server_class[name] = value
-    svc_server = server_class[choice]
-    echo_svc = svc_server(service=EchoService, port=18861, protocol_config={'allow_all_attrs': True})
+    echo_svc = rpyc.OneShotServer(service=EchoService, port=18861, protocol_config={'allow_all_attrs': True})
     echo_svc.start()
