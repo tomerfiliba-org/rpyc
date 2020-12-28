@@ -58,7 +58,7 @@ class ChatService(Service):
         if self.token and not self.token.stale:
             raise ValueError("already logged in")
         if username in USERS_DB and password == USERS_DB[username]:
-            self.token = UserToken(username, async(callback))
+            self.token = UserToken(username, async_(callback))
             return self.token
         else:
             raise ValueError("wrong username or password")
