@@ -27,7 +27,9 @@ LOCAL_ATTRS = frozenset([
 ]) | DELETED_ATTRS
 
 """a list of types considered built-in (shared between connections)
-TODO: with the deprecation of py2 support, why not iterate the members of the builtins module?
+this is needed because iterating the members of the builtins module is not enough,
+some types (e.g NoneType) are not members of the builtins module.
+TODO: this list is not complete.
 """
 _builtin_types = [
     type, object, bool, complex, dict, float, int, list, slice, str, tuple, set,
@@ -301,19 +303,24 @@ def class_factory(id_pack, methods):
     name_pack = id_pack[0]
     class_descriptor = None
     if name_pack is not None:
-        # attempt to resolve __class__ using sys.modules (i.e. builtins and imported modules)
-        _module = None
-        cursor = len(name_pack)
-        while cursor != -1:
-            _module = sys.modules.get(name_pack[:cursor])
-            if _module is None:
-                cursor = name_pack[:cursor].rfind('.')
-                continue
-            _class_name = name_pack[cursor + 1:]
-            _class = getattr(_module, _class_name, None)
-            if _class is not None and hasattr(_class, '__class__'):
-                class_descriptor = NetrefClass(_class)
-            break
+        # attempt to resolve __class__ using normalized builtins first
+        _builtin_class = _normalized_builtin_types.get(name_pack)
+        if _builtin_class is not None:
+            class_descriptor = NetrefClass(_builtin_class)
+        # then by imported modules (this also tries all builtins under "builtins")
+        else:
+            _module = None
+            cursor = len(name_pack)
+            while cursor != -1:
+                _module = sys.modules.get(name_pack[:cursor])
+                if _module is None:
+                    cursor = name_pack[:cursor].rfind('.')
+                    continue
+                _class_name = name_pack[cursor + 1:]
+                _class = getattr(_module, _class_name, None)
+                if _class is not None and hasattr(_class, '__class__'):
+                    class_descriptor = NetrefClass(_class)
+                break
     ns['__class__'] = class_descriptor
     netref_name = class_descriptor.owner.__name__ if class_descriptor is not None else name_pack
     # create methods that must perform a syncreq
