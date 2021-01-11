@@ -1,3 +1,13 @@
+5.0.1
+-----
+Date: 1.11.2021
+
+- Fixed unexpected behavior when using inspect.isfunction `#426`_
+- Now prevents installation of RPyC on unsupported versions of python `#429`_
+
+.. _#426: https://github.com/tomerfiliba/rpyc/issues/426
+.. _#429: https://github.com/tomerfiliba/rpyc/pull/429
+
 5.0.0
 -----
 Date: 12.26.2020
