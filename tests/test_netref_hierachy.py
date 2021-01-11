@@ -43,6 +43,9 @@ class MyService(rpyc.Service):
     def exposed_instance(self, inst, cls):
         return isinstance(inst, cls)
 
+    def exposed_getnonetype(self):
+        return type(None)
+
 
 class Test_Netref_Hierarchy(unittest.TestCase):
 
@@ -95,6 +98,16 @@ class Test_Netref_Hierarchy(unittest.TestCase):
         conn.root
         remote_list = conn.root.getlist()
         self.assertTrue(conn.root.instance(remote_list, list))
+        conn.close()
+
+    def test_instancecheck_none(self):
+        """
+        test for the regression reported in https://github.com/tomerfiliba-org/rpyc/issues/426
+        """
+        service = MyService()
+        conn = rpyc.connect_thread(remote_service=service)
+        remote_NoneType = conn.root.getnonetype()
+        self.assertTrue(isinstance(None, remote_NoneType))
         conn.close()
 
     def test_StandardError(self):
