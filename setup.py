@@ -8,9 +8,6 @@ try:
 except ImportError:
     from distutils.core import setup
 
-if sys.version_info < (3, 6):
-    sys.exit("requires python 3.6 and up")
-
 here = os.path.dirname(__file__)
 exec(open(os.path.join(here, 'rpyc', 'version.py')).read())
 
@@ -43,6 +40,7 @@ setup(name="rpyc",
       #        ],
       #    ),
       platforms=["POSIX", "Windows"],
+      python_requires='>=3.6',
       use_2to3=False,
       zip_safe=False,
       long_description=open(os.path.join(here, "README.rst"), "r").read(),
