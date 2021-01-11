@@ -44,6 +44,9 @@ class MyService(rpyc.Service):
         return isinstance(inst, cls)
 
     def exposed_getnonetype(self):
+        """ About the unit test - what's common to types.MethodType and NoneType is that both are
+        not accessible via builtins. So the unit test I've added in 108ff8e was enough to 
+        my understanding (implement it with NoneType because that's more easily "created") """
         return type(None)
 
 
