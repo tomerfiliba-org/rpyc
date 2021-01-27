@@ -221,7 +221,7 @@ def download(conn, remotepath, localpath, filter=None, ignore_invalid=False, chu
     :param chunk_size: the IO chunk size
     """
     if conn.modules.os.path.isdir(remotepath):
-        download_dir(conn, remotepath, localpath, filter)
+        download_dir(conn, remotepath, localpath, filter, chunk_size)
     elif conn.modules.os.path.isfile(remotepath):
         download_file(conn, remotepath, localpath, chunk_size)
     else:
@@ -246,7 +246,7 @@ def download_dir(conn, remotepath, localpath, filter=None, chunk_size=STREAM_CHU
         if not filter or filter(fn):
             rfn = conn.modules.os.path.join(remotepath, fn)
             lfn = os.path.join(localpath, fn)
-            download(conn, rfn, lfn, filter=filter, ignore_invalid=True)
+            download(conn, rfn, lfn, filter=filter, ignore_invalid=True, chunk_size=chunk_size)
 
 
 def upload_package(conn, module, remotepath=None, chunk_size=STREAM_CHUNK):
