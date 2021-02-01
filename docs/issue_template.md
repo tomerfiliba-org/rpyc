@@ -41,7 +41,6 @@ if __name__ == "__main__":
 Client:
 
 ```python
-from __future__ import print_function
 import rpyc
 
 

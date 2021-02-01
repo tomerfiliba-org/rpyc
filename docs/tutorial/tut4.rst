@@ -22,23 +22,23 @@ Here's an example ::
 
     >>> import rpyc
     >>> c = rpyc.classic.connect("localhost")
-    >>> rlist = c.modules.__builtin__.range(10) # this is a remote list
+    >>> rlist = c.modules.builtins.list((0,1,2,3,4,5,6,7,8,9))  # this is a remote list
     >>> rlist
     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
     >>>
     >>> def f(x):
     ...     return x**3
     ...
-    >>> c.modules.__builtin__.map(f, rlist)  # calling the remote map with the local function f as an argument
+    >>> list(c.modules.builtins.map(f, rlist))  # calling the remote map with the local function f as an argument
     [0, 1, 8, 27, 64, 125, 216, 343, 512, 729]
     >>>
 
     # and to better understand the previous example
     >>> def g(x):
-    ...     print "hi, this is g, executing locally", x
+    ...     print("hi, this is g, executing locally", x)
     ...     return x**3
     ...
-    >>> c.modules.__builtin__.map(g, rlist)
+    >>> list(c.modules.builtins.map(g, rlist))
     hi, this is g, executing locally 0
     hi, this is g, executing locally 1
     hi, this is g, executing locally 2
