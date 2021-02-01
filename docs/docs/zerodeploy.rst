@@ -45,11 +45,11 @@ it requires only two lines of code::
 
     # and now you can connect to it the usual way
     conn1 = server.classic_connect()
-    print conn1.modules.sys.platform
+    print(conn1.modules.sys.platform)
 
     # you're not limited to a single connection, of course
     conn2 = server.classic_connect()
-    print conn2.modules.os.getpid()
+    print(conn2.modules.os.getpid())
 
     # when you're done - close the server and everything will disappear
     server.close()

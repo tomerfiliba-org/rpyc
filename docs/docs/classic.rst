@@ -27,7 +27,7 @@ to it like so ::
 
     proc = conn.modules.subprocess.Popen("ls", stdout = -1, stderr = -1)
     stdout, stderr = proc.communicate()
-    print stdout.split()
+    print(stdout.split())
 
     remote_list = conn.builtin.range(7)
 

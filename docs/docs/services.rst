@@ -24,7 +24,7 @@ Let's have a look at a rather basic service -- a calculator
         def exposed_div(self, a, b):
             return a / b
         def foo(self):
-            print "foo"
+            print("foo")
 
 When a client connects, it can access any of the exposed members of the service ::
 
