@@ -39,7 +39,7 @@ DEFAULT_CONFIG = dict(
                     '__rpow__', '__rrshift__', '__rshift__', '__rsub__', '__rtruediv__',
                     '__rxor__', '__setitem__', '__setslice__', '__str__', '__sub__',
                     '__truediv__', '__xor__', 'next', '__length_hint__', '__enter__',
-                    '__exit__', '__next__', ]),
+                    '__exit__', '__next__', '__format__']),
     exposed_prefix="exposed_",
     allow_getattr=True,
     allow_setattr=False,
