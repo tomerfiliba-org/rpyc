@@ -201,5 +201,4 @@ incoming requests). Here's an example of that::
     file changed
         old stat: (33188, 1564681L, 2051L, 1, 1011, 1011, 0L, 1225205197, 1225205197, 1225205197)
         new stat: (33188, 1564681L, 2051L, 1, 1011, 1011, 6L, 1225205197, 1225205218, 1225205218)
-    <__main__.exposed_FileMonitor object at 0xb7a7a52c>
     >>>
