@@ -67,14 +67,14 @@ it's really not that scary::
     # ... after 15 seconds...
     >>> res.ready
     True
-    >>> print res.value
+    >>> print(res.value)
     None
     >>> res
     <AsyncResult object (ready) at 0x0842c6bc>
 
 And here's a more interesting snippet::
 
-    >>> aint = rpyc.async_(c.modules.__builtin__.int)  # async wrapper for the remote type int
+    >>> aint = rpyc.async_(c.builtins.int)  # async wrapper for the remote type int
 
     # a valid call
     >>> x = aint("8")
@@ -95,11 +95,18 @@ And here's a more interesting snippet::
     True
     >>> x.error
     True
-    >>> x.value #
+    >>> x.value
     Traceback (most recent call last):
     ...
-      File "/home/tomer/workspace/rpyc/core/async_.py", line 102, in value
+      File "/opt/rpyc/rpyc/core/async_.py", line 102, in value
         raise self._obj
+    ValueError: invalid literal for int() with base 10: 'this is not a valid number'
+
+    ========= Remote Traceback (1) =========
+    Traceback (most recent call last):
+      File "/opt/rpyc/rpyc/core/protocol.py", line 324, in _dispatch_request
+        res = self._HANDLERS[handler](self, *args)
+    ...
     ValueError: invalid literal for int() with base 10: 'this is not a valid number'
     >>>
 
@@ -121,7 +128,7 @@ consider the following ``FileMonitor`` example -- it monitors a file
     import time
     from threading import Thread
 
-    class FileMonitorService(rpyc.SlaveService):
+    class FileMonitorService(rpyc.Service):
         class exposed_FileMonitor(object):   # exposing names is not limited to methods :)
             def __init__(self, filename, callback, interval = 1):
                 self.filename = filename
@@ -150,41 +157,25 @@ consider the following ``FileMonitor`` example -- it monitors a file
 And here's a live demonstration of events::
 
     >>> import rpyc
-    >>>
-    >>> f = open("/tmp/floop.bloop", "w")
+    >>> f = open("/tmp/floop.bloop", "wb", buffering=0)
     >>> conn = rpyc.connect("localhost", 18871)
     >>> bgsrv = rpyc.BgServingThread(conn)  # creates a bg thread to process incoming events
     >>>
     >>> def on_file_changed(oldstat, newstat):
-    ...     print "file changed"
-    ...     print "    old stat: %s" % (oldstat,)
-    ...     print "    new stat: %s" % (newstat,)
+    ...     print("\nfile changed")
+    ...     print(f"    old stat: {oldstat}")
+    ...     print(f"    new stat: {newstat}")
     ...
-    >>> mon = conn.root.FileMonitor("/tmp/floop.bloop", on_file_changed) # create a filemon
+    >>> mon = conn.root.FileMonitor("/tmp/floop.bloop", on_file_changed)  # create a filemon
 
     # wait a little for the filemon to have a look at the original file
 
-    >>> f.write("shmoop") # change size
-    >>> f.flush()
-
-    # the other thread then prints
+    >>> f.write(b"oloop")  # change the file size and wait for filemon to notice the change
     file changed
         old stat: (33188, 1564681L, 2051L, 1, 1011, 1011, 0L, 1225204483, 1225204483, 1225204483)
         new stat: (33188, 1564681L, 2051L, 1, 1011, 1011, 6L, 1225204483, 1225204556, 1225204556)
 
-    >>>
-    >>> f.write("groop") # change size
-    >>> f.flush()
-    file changed
-        old stat: (33188, 1564681L, 2051L, 1, 1011, 1011, 6L, 1225204483, 1225204556, 1225204556)
-        new stat: (33188, 1564681L, 2051L, 1, 1011, 1011, 11L, 1225204483, 1225204566, 1225204566)
-
     >>> f.close()
-    >>> f = open(filename, "w")
-    file changed
-        old stat: (33188, 1564681L, 2051L, 1, 1011, 1011, 11L, 1225204483, 1225204566, 1225204566)
-        new stat: (33188, 1564681L, 2051L, 1, 1011, 1011, 0L, 1225204483, 1225204583, 1225204583)
-
     >>> mon.stop()
     >>> bgsrv.stop()
     >>> conn.close()
@@ -198,19 +189,15 @@ reactor and don't wish to open threads, you should be aware that these notificat
 not be processed until you make some interaction with the connection (which pulls all
 incoming requests). Here's an example of that::
 
-    >>> f = open("/tmp/floop.bloop", "w")
     >>> conn = rpyc.connect("localhost", 18871)
     >>> mon = conn.root.FileMonitor("/tmp/floop.bloop", on_file_changed)
-    >>>
+    >>> f.write(b"zloop")  # change the file size 
 
-    # change the size...
-    >>> f.write("shmoop")
-    >>> f.flush()
-
-    # ... seconds pass but nothing is printed ...
-    # until we make some interaction with the connection: printing a remote object invokes
-    # the remote __str__ of the object, so that all pending requests are suddenly processed
-    >>> print mon
+    # Notice that nothing is printed. To print the file change messages,
+    # the RPyC connection must serve requests from filemon that contain stat data.
+    # Dispatching a request would implicitly make the connection serve existing requests.
+    # Executing conn.poll_all() would explicitly serve all requests, without an extra dispatch.
+    >>> conn.poll_all()
     file changed
         old stat: (33188, 1564681L, 2051L, 1, 1011, 1011, 0L, 1225205197, 1225205197, 1225205197)
         new stat: (33188, 1564681L, 2051L, 1, 1011, 1011, 6L, 1225205197, 1225205218, 1225205218)
