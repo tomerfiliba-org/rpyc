@@ -6,17 +6,17 @@ Part 5: Asynchrounous Operation and Events
 Asynchronism
 ------------
 The last part of the tutorial deals with a more "advanced" issue of RPC programming,
-*asynchronous operation*, which is a key feature of RPyC. The code you've seen so far was
-*synchronous* -- which is probably very similar to the code you normally write:
-when you invoke a function, you block until the result arrives. Asynchronous invocation,
-on the other hand, allows you to start the request and continue, rather than waiting.
-Instead of getting the result of the call, you get a special object known as an
-``AsyncResult`` (also known as a `"future" or "promise" <http://en.wikipedia.org/wiki/Futures_and_promises>`_]),
+*asynchronous operation*, which is a key feature of RPyC. The code you have seen so far was
+*synchronous* -- which is similar to the code you often write:
+when you invoke a function, you block until the result arrives. Asynchronous invocation
+allows you to start the request and continue rather than waiting.
+Instead of getting the result of the call, you get an object known as an
+``AsyncResult`` (also known as a `"future" or "promise" <http://en.wikipedia.org/wiki/Futures_and_promises>`_)
 that will **eventually** hold the result.
 
 Note that there is no guarantee on execution order for async requests!
 
-In order to turn the invocation of a remote function (or any callable object) asynchronous,
+To turn the invocation of a remote function (or any callable object) asynchronous,
 all you have to do is wrap it with :func:`async_ <rpyc.utils.helpers.async_>`, which creates a
 wrapper function that will return an ``AsyncResult`` instead of blocking. ``AsyncResult``
 objects have several properties and methods that
@@ -31,7 +31,7 @@ objects have several properties and methods that
 
 * ``value`` - the value contained in the AsyncResult. If the value has not yet arrived,
   accessing this property will block. If the result is an exception, accessing this property
-  will raise it. If the object has expired, an exception will be raised. Otherwise, the
+  will raise it. If the object has expired, then an exception is raised. Otherwise, the
   value is returned
 
 * ``wait()`` - wait for the result to arrive, or until the object is expired
@@ -41,8 +41,8 @@ objects have several properties and methods that
 * ``set_expiry(seconds)`` - sets the expiry time of the AsyncResult. By default, no
   expiry time is set
 
-This may sound a bit complicated, so let's have a look at some real-life code, to convince you
-it's really not that scary::
+This may sound a bit complicated, so let us have a look at some real-life code, to convince you
+it is not that scary::
 
     >>> import rpyc
     >>> c=rpyc.classic.connect("localhost")
