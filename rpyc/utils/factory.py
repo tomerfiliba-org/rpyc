@@ -225,7 +225,7 @@ def discover(service_name, host=None, registrar=None, timeout=2):
     return addrs
 
 
-def connect_by_service(service_name, host=None, service=VoidService, config={}):
+def connect_by_service(service_name, host=None, registrar=None, timeout=2, service=VoidService, config={}):
     """create a connection to an arbitrary server that exposes the requested service
 
     :param service_name: the service to discover
@@ -240,7 +240,7 @@ def connect_by_service(service_name, host=None, service=VoidService, config={}):
     # some of which could be dead. We iterate over the list returned and return the first
     # one we could connect to. If none of the registered servers is responsive we re-throw
     # the exception
-    addrs = discover(service_name, host=host)
+    addrs = discover(service_name, host=host, registrar=registrar, timeout=timeout)
     for host, port in addrs:
         try:
             return connect(host, port, service, config=config)
