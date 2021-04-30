@@ -252,7 +252,6 @@ class Server(object):
 
     def _register(self):
         if self.auto_register:
-            self.auto_register = False
             spawn(self._bg_register)
 
     def start(self):
@@ -565,7 +564,6 @@ class GeventServer(Server):
 
     def _register(self):
         if self.auto_register:
-            self.auto_register = False
             gevent.spawn(self._bg_register)
 
     def _accept_method(self, sock):
