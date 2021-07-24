@@ -58,7 +58,7 @@ class SSLAuthenticator(object):
     """
 
     def __init__(self, keyfile, certfile, ca_certs=None, cert_reqs=None,
-                 ssl_version=ssl.PROTOCOL_TLS, ciphers=None):
+                 ssl_version=None, ciphers=None):
         self.keyfile = str(keyfile)
         self.certfile = str(certfile)
         self.ca_certs = str(ca_certs) if ca_certs else None
@@ -70,7 +70,10 @@ class SSLAuthenticator(object):
                 self.cert_reqs = ssl.CERT_NONE
         else:
             self.cert_reqs = cert_reqs
-        self.ssl_version = ssl_version
+        if ssl_version is None:
+            self.ssl_version = ssl.PROTOCOL_TLS
+        else:
+            self.ssl_version = ssl_version
 
     def __call__(self, sock):
         kwargs = dict(keyfile=self.keyfile, certfile=self.certfile,
