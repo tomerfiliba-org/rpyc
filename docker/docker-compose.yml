@@ -1,3 +1,7 @@
+#
+# Documentation and examples can be found @ ../docs/docs/advanced-debugging.rst
+#
+---
 version: "3.9"
 networks:
   rpyc-test-net:
@@ -10,39 +14,34 @@ x-rpyc: &rpyc
   tty: true
   networks:
     - rpyc-test-net
-    - default
+  volumes:
+    - type: bind
+      source: ../
+      target: /opt/rpyc
+      read_only: true
   command: >
-    /bin/sh -c "python -m pip install git+https://github.com/tomerfiliba/plumbum.git;
+    /bin/sh -c "python -m pip install \
+                git+https://github.com/tomerfiliba/plumbum.git;
     python"
 
 services:
   rpyc-python-3.10:
     container_name: rpyc-3.10
     image: python:3.10-rc-buster
-    << : *rpyc
-    volumes:
-      - ../:/opt/rpyc
+    <<: *rpyc
   rpyc-python-3.9:
     container_name: rpyc-3.9
     image: python:3.9-buster
-    << : *rpyc
-    volumes:
-      - ../:/opt/rpyc
+    <<: *rpyc
   rpyc-python-3.8:
     container_name: rpyc-3.8
     image: python:3.8-buster
-    << : *rpyc
-    volumes:
-      - ../:/opt/rpyc
+    <<: *rpyc
   rpyc-python-3.7:
     container_name: rpyc-3.7
     image: python:3.7-buster
-    << : *rpyc
-    volumes:
-      - ../:/opt/rpyc
+    <<: *rpyc
   rpyc-python-3.6:
     container_name: rpyc-3.6
     image: python:3.6-buster
-    << : *rpyc
-    volumes:
-      - ../:/opt/rpyc
+    <<: *rpyc

@@ -5,16 +5,23 @@ Advanced Debugging
 
 A guide to using Wireshark when debugging complex use such as chained-connections.
 
+Testing Supported Python Versions via Docker
+--------------------------------------------
+Testing RPyC often requires that you use specific Python versions. Docker will make your life easier when testing RPyC locally, especially when performing packet captures of RPyC communication across Python versions. The current settings will use bind mounts to simplify synchronization of RPyC source code within the containers. So, remember to checkout the commit you desire the containers to use on your host!
+
+If desired, individual containers can be specified started ::
+
+    docker-compose -f ./docker/docker-compose.yml start rpyc-python-3.7
+    docker-compose -f ./docker/docker-compose.yml start rpyc-python-3.10
+
+The containers can then be used to test to your hearts desire ::
+
+    docker exec rpyc-3.7 /opt/rpyc/bin/rpyc_classic.py --host 0.0.0.0 &
+    docker exec -it rpyc-3.10 python -c "import rpyc;conn = rpyc.utils.classic.connect('rpyc-3.7'); conn.modules.sys.stderr.write('hello world\n')"
+
+
 Tips and Tricks
 ---------------
-Setting up for a specific version ::
-
-    pkgver=4.0.2
-    myvenv=rpyc${pkgver}
-    virtualenv2 /tmp/$myvenv
-    source /tmp/$myvenv/bin/activate
-    pip install rpyc==$pkgver
-
 Display filtering for Wireshark ::
 
     tcp.port == 18878 || tcp.port == 18879
