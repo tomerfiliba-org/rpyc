@@ -37,6 +37,13 @@ class BaseRegistryTest(object):
         res = c.discover("FOO")
         expected = (45678,)
         self.assertEqual(set(p for _, p in res), set(expected))
+        res = c.list()
+        expected = ("FOO",)
+        self.assertEqual(set(p for p in res), set(expected))
+        c.register(("BAR",), 54321)
+        res = c.list()
+        expected = ("FOO", "BAR")
+        self.assertEqual(set(res), set(expected))
 
     def test_pruning(self):
         c = self._get_client()

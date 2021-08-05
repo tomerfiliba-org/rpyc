@@ -225,6 +225,14 @@ def discover(service_name, host=None, registrar=None, timeout=2):
     return addrs
 
 
+def list_services(registrar=None, timeout=2):
+    services = ()
+    if registrar is None:
+        registrar = UDPRegistryClient(timeout=timeout)
+    services = registrar.list()
+    return services
+
+
 def connect_by_service(service_name, host=None, registrar=None, timeout=2, service=VoidService, config={}):
     """create a connection to an arbitrary server that exposes the requested service
 
