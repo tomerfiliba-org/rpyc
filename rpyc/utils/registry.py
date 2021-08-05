@@ -97,6 +97,13 @@ class RegistryServer(object):
         self.logger.debug("replying with %r", servers)
         return tuple(servers)
 
+    def cmd_list(self, host):
+        """ implementation fo the ``list`` command"""
+        services = tuple(self.services.keys())
+        self.logger.debug(f"{host} request list of available services:"
+                          f"{services}")
+        return services
+
     def cmd_register(self, host, names, port):
         """implementation of the ``register`` command"""
         self.logger.debug("registering %s:%s as %s", host, port, ", ".join(names))
@@ -334,6 +341,24 @@ class UDPRegistryClient(RegistryClient):
                 servers = brine.load(data)
         return servers
 
+    def list(self):
+        sock = socket.socket(self.sock_family, socket.SOCK_DGRAM)
+
+        with closing(sock):
+            if self.bcast:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+            data = brine.dump(("RPYC", "LIST", ()))
+            sock.sendto(data, (self.ip, self.port))
+            sock.settimeout(self.timeout)
+
+            try:
+                data, _ = sock.recvfrom(MAX_DGRAM_SIZE)
+            except (socket.error, socket.timeout):
+                services = ()
+            else:
+                services = brine.load(data)
+        return services
+
     def register(self, aliases, port, interface=""):
         self.logger.info("registering on %s:%s", self.ip, self.port)
         sock = socket.socket(self.sock_family, socket.SOCK_DGRAM)
@@ -401,6 +426,22 @@ class TCPRegistryClient(RegistryClient):
         with closing(sock):
             sock.settimeout(self.timeout)
             data = brine.dump(("RPYC", "QUERY", (name,)))
+            sock.connect((self.ip, self.port))
+            sock.send(data)
+
+            try:
+                data = sock.recv(MAX_DGRAM_SIZE)
+            except (socket.error, socket.timeout):
+                servers = ()
+            else:
+                servers = brine.load(data)
+        return servers
+
+    def list(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        with closing(sock):
+            sock.settimeout(self.timeout)
+            data = brine.dump(("RPYC", "LIST", ()))
             sock.connect((self.ip, self.port))
             sock.send(data)
 
