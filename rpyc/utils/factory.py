@@ -29,6 +29,10 @@ class DiscoveryError(Exception):
     pass
 
 
+class ForbiddenError(Exception):
+    pass
+
+
 # ------------------------------------------------------------------------------
 # API
 # ------------------------------------------------------------------------------
@@ -230,6 +234,8 @@ def list_services(registrar=None, timeout=2):
     if registrar is None:
         registrar = UDPRegistryClient(timeout=timeout)
     services = registrar.list()
+    if services is None:
+        raise ForbiddenError("Registry doesn't allow listing")
     return services
 
 
