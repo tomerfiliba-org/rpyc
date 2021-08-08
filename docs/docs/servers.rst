@@ -122,7 +122,12 @@ by command-line switches. The registry server is a bonjour-like agent, with whic
 register and clients may perform queries. For instance, if you start an RPyC server that provides
 service ``Foo`` on ``myhost:17777``, you can register that server with the registry server, which
 would allow clients to later query for the servers that expose that service (and get back a list
-of TCP endpoints). For more info, see :ref:`api-registry`.
+of TCP endpoints). Example usage::
+
+    $ ./bin/rpyc_registry.py --listing
+    DEBUG:REGSRV/UDP/18811:registering 172.18.0.6:18861 as MY
+
+ For more info, see :ref:`api-registry`.
 
 Switches
 ^^^^^^^^

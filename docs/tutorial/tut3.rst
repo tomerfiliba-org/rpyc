@@ -146,7 +146,7 @@ case-insensitive). If you wish to define a custom name, or multiple names (alias
 you can do so by setting the ``ALIASES`` list. The first alias is considered to be the
 "formal name", while the rest are aliases::
 
-    class SomeOtherService(rpyc.Service):
+    class MyService(rpyc.Service):
         ALIASES = ["floop", "bloop"]
         ...
 
@@ -165,8 +165,14 @@ answer to queries about  which services are running where.
 
 Once a registry server is running somewhere "broadcastable" on your network, and the
 servers are configured to auto-register with it (the default), clients can discover
-services *automagically*. To find servers running a given service name::
+services *automagically*. To start a server::
 
+   >>> mysvc = rpyc.OneShotServer(service=MyService, port=18861, auto_register=True)
+   >>> mysvc.start()
+
+To find servers running a given service name::
+
+    >>> rpyc.list_services()
     >>> rpyc.discover("MY")
     (('192.168.1.101', 18861),)
 
