@@ -40,13 +40,13 @@ class Test_Multithreaded(unittest.TestCase):
 
         def callback(x):
             counter[0] += 1
-            print("callback %s" % (x,))
+            print(f"callback {x}")
         invoker = self.conn.root.Invoker(callback, 1)
         # 3 * 2sec = 6 sec = ~6 calls to callback
         for i in range(3):
-            print("foo%s = %s" % (i, self.conn.root.foo(i)))
+            print(f"foo{i} = {self.conn.root.foo(i)}")
         invoker.stop()
-        print("callback called %s times" % (counter[0],))
+        print(f"callback called {counter[0]} times")
         self.assertTrue(counter[0] >= 5)
 
 

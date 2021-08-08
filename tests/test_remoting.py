@@ -19,7 +19,7 @@ class Test_Remoting(unittest.TestCase):
         base3 = os.path.join(base, "3")
         os.mkdir(base1)
         for i in range(10):
-            f = open(os.path.join(base1, "foofoo%d" % (i,)), "w")
+            f = open(os.path.join(base1, f"foofoo{i}"), "w")
             f.close()
         os.mkdir(os.path.join(base1, "somedir1"))
 
