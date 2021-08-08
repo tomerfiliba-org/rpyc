@@ -187,7 +187,7 @@ def upload(conn, localpath, remotepath, filter=None, ignore_invalid=False, chunk
         upload_file(conn, localpath, remotepath, chunk_size)
     else:
         if not ignore_invalid:
-            raise ValueError("cannot upload %r" % (localpath,))
+            raise ValueError(f"cannot upload {localpath!r}")
 
 
 def upload_file(conn, localpath, remotepath, chunk_size=STREAM_CHUNK):
@@ -226,7 +226,7 @@ def download(conn, remotepath, localpath, filter=None, ignore_invalid=False, chu
         download_file(conn, remotepath, localpath, chunk_size)
     else:
         if not ignore_invalid:
-            raise ValueError("cannot download %r" % (remotepath,))
+            raise ValueError(f"cannot download {remotepath!r}")
 
 
 def download_file(conn, remotepath, localpath, chunk_size=STREAM_CHUNK):

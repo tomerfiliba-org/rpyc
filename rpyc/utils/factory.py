@@ -220,12 +220,12 @@ def discover(service_name, host=None, registrar=None, timeout=2):
         registrar = UDPRegistryClient(timeout=timeout)
     addrs = registrar.discover(service_name)
     if not addrs:
-        raise DiscoveryError("no servers exposing %r were found" % (service_name,))
+        raise DiscoveryError(f"no servers exposing {service_name!r} were found")
     if host:
         ips = socket.gethostbyname_ex(host)[2]
         addrs = [(h, p) for h, p in addrs if h in ips]
     if not addrs:
-        raise DiscoveryError("no servers exposing %r were found on %r" % (service_name, host))
+        raise DiscoveryError(f"no servers exposing {service_name} were found on {host}")
     return addrs
 
 
@@ -260,7 +260,7 @@ def connect_by_service(service_name, host=None, registrar=None, timeout=2, servi
             return connect(host, port, service, config=config)
         except socket.error:
             pass
-    raise DiscoveryError("All services are down: %s" % (addrs,))
+    raise DiscoveryError(f"All services are down: {addrs}")
 
 
 def connect_subproc(args, service=VoidService, config={}):
