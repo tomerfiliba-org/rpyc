@@ -14,8 +14,8 @@ bgsrv = rpyc.BgServingThread(conn)  # create a bg thread to process incoming eve
 
 def on_file_changed(oldstat, newstat):
     print("file changed")
-    print("    old stat: %s" % (oldstat,))
-    print("    new stat: %s" % (newstat,))
+    print(f"    old stat: {oldstat}")
+    print(f"    new stat: {newstat}")
 
 
 mon = conn.root.FileMonitor(filename, on_file_changed)  # create a filemon

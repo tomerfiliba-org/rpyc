@@ -12,11 +12,11 @@ class Web8Service(rpyc.Service):
         self.gtk = gtk
         self.content = content
         page = page.replace(" ", "_").lower()
-        pagefunc = getattr(self, "page_%s" % (page,), None)
+        pagefunc = getattr(self, f"page_{page}", None)
         if pagefunc:
             pagefunc()
         else:
-            lbl1 = self.gtk.Label("Page %r does not exist" % (page,))
+            lbl1 = self.gtk.Label(f"Page {page!r} does not exist")
             lbl1.show()
             self.content.pack_start(lbl1)
 
@@ -29,7 +29,7 @@ class Web8Service(rpyc.Service):
 
         def on_btn1_clicked(src):
             counter[0] += 1
-            lbl2.set_text("You have clicked the button %d times" % (counter[0],))
+            lbl2.set_text(f"You have clicked the button {counter[0]} times")
 
         btn1 = self.gtk.Button("Add 1")
         btn1.connect("clicked", on_btn1_clicked)
@@ -52,7 +52,7 @@ class Web8Service(rpyc.Service):
 
         def bg_timer_thread():
             while active[0]:
-                rpyc.async_(lbl3.set_text)("Server time is: %s" % (time.ctime(),))
+                rpyc.async_(lbl3.set_text)(f"Server time is: {time.ctime()}")
                 time.sleep(1)
 
         bg_thread = [None]

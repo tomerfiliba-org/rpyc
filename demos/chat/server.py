@@ -18,13 +18,13 @@ class UserToken(object):
         self.name = name
         self.stale = False
         self.callback = callback
-        self.broadcast("* Hello %s *" % (self.name,))
+        self.broadcast(f"* Hello {self.name} *")
         tokens.add(self)
 
     def exposed_say(self, message):
         if self.stale:
             raise ValueError("User token is stale")
-        self.broadcast("[%s] %s" % (self.name, message))
+        self.broadcast(f"[{self.name}] {message}")
 
     def exposed_logout(self):
         if self.stale:
@@ -32,7 +32,7 @@ class UserToken(object):
         self.stale = True
         self.callback = None
         tokens.discard(self)
-        self.broadcast("* Goodbye %s *" % (self.name,))
+        self.broadcast(f"* Goodbye {self.name} *")
 
     def broadcast(self, text):
         global tokens

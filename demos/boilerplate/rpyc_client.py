@@ -12,8 +12,8 @@ class MyClient(object):
 
     def on_event(self, oldstat, newstat):
         print("file changed")
-        print("    old stat: %s" % (oldstat,))
-        print("    new stat: %s" % (newstat,))
+        print(f"    old stat: {oldstat}")
+        print(f"    new stat: {newstat}")
 
     def close(self):
         self.service.stop()
