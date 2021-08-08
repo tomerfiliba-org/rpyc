@@ -11,8 +11,13 @@ Testing RPyC often requires that you use specific Python versions. Docker will m
 
 If desired, individual containers can be specified started ::
 
+    docker-compose -f ./docker/docker-compose.yml create
     docker-compose -f ./docker/docker-compose.yml start rpyc-python-3.7
     docker-compose -f ./docker/docker-compose.yml start rpyc-python-3.10
+
+The registry server can be started like so ::
+
+    docker exec rpyc-3.8 /opt/rpyc/bin/rpyc_registry.py
 
 The containers can then be used to test to your hearts desire ::
 
