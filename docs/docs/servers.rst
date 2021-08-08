@@ -138,8 +138,5 @@ Switches
   time is the amount of time the registry server will keep a previously-registered service, when
   it no longer sends timely keepalives. The default is 4 minutes (240 seconds).
 
-
-
-
-
-
+* ``-l``, ``--listing`` - Give a boolean indicating if registry should allow sending the list of its known services.
+  The default is False.

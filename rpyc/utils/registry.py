@@ -31,7 +31,7 @@ REGISTRY_PORT = 18811
 class RegistryServer(object):
     """Base registry server"""
 
-    def __init__(self, listenersock, pruning_timeout=None, logger=None):
+    def __init__(self, listenersock, pruning_timeout=None, logger=None, allow_listing=False):
         self.sock = listenersock
         self.port = self.sock.getsockname()[1]
         self.active = False
@@ -41,6 +41,7 @@ class RegistryServer(object):
         self.pruning_timeout = pruning_timeout
         if logger is None:
             logger = self._get_logger()
+        self.allow_listing = allow_listing
         self.logger = logger
 
     def _get_logger(self):
@@ -96,6 +97,17 @@ class RegistryServer(object):
 
         self.logger.debug("replying with %r", servers)
         return tuple(servers)
+
+    def cmd_list(self, host):
+        """ implementation fo the ``list`` command"""
+        self.logger.debug("querying for services list:")
+        if not self.allow_listing:
+            self.logger.debug("listing is disabled")
+            return None
+        services = tuple(self.services.keys())
+        self.logger.debug(f"replying with {services}")
+
+        return services
 
     def cmd_register(self, host, names, port):
         """implementation of the ``register`` command"""
@@ -174,14 +186,14 @@ class UDPRegistryServer(RegistryServer):
 
     TIMEOUT = 1.0
 
-    def __init__(self, host="0.0.0.0", port=REGISTRY_PORT, pruning_timeout=None, logger=None):
+    def __init__(self, host="0.0.0.0", port=REGISTRY_PORT, pruning_timeout=None, logger=None, allow_listing=False):
         family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, 0,
                                                                   socket.SOCK_DGRAM)[0]
         sock = socket.socket(family, socktype, proto)
         sock.bind(sockaddr)
         sock.settimeout(self.TIMEOUT)
         RegistryServer.__init__(self, sock, pruning_timeout=pruning_timeout,
-                                logger=logger)
+                                logger=logger, allow_listing=allow_listing)
 
     def _get_logger(self):
         return logging.getLogger("REGSRV/UDP/%d" % (self.port,))
@@ -204,10 +216,9 @@ class TCPRegistryServer(RegistryServer):
     TIMEOUT = 3.0
 
     def __init__(self, host="0.0.0.0", port=REGISTRY_PORT, pruning_timeout=None,
-                 logger=None, reuse_addr=True):
+                 logger=None, reuse_addr=True, allow_listing=False):
 
-        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, 0,
-                                                                  socket.SOCK_STREAM)[0]
+        family, socktype, proto, _, sockaddr = socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM)[0]
         sock = socket.socket(family, socktype, proto)
         if reuse_addr and sys.platform != "win32":
             # warning: reuseaddr is not what you expect on windows!
@@ -216,7 +227,7 @@ class TCPRegistryServer(RegistryServer):
         sock.listen(10)
         sock.settimeout(self.TIMEOUT)
         RegistryServer.__init__(self, sock, pruning_timeout=pruning_timeout,
-                                logger=logger)
+                                logger=logger, allow_listing=allow_listing)
         self._connected_sockets = {}
 
     def _get_logger(self):
@@ -264,6 +275,13 @@ class RegistryClient(object):
         :param name: the service name (or one of its aliases)
 
         :returns: a list of ``(host, port)`` tuples
+        """
+        raise NotImplementedError()
+
+    def list(self):
+        """
+        Send a query for the full lists of exposed servers
+        :returns: a list of `` service_name ``
         """
         raise NotImplementedError()
 
@@ -334,6 +352,24 @@ class UDPRegistryClient(RegistryClient):
                 servers = brine.load(data)
         return servers
 
+    def list(self):
+        sock = socket.socket(self.sock_family, socket.SOCK_DGRAM)
+
+        with closing(sock):
+            if self.bcast:
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
+            data = brine.dump(("RPYC", "LIST", ()))
+            sock.sendto(data, (self.ip, self.port))
+            sock.settimeout(self.timeout)
+
+            try:
+                data, _ = sock.recvfrom(MAX_DGRAM_SIZE)
+            except (socket.error, socket.timeout):
+                services = ()
+            else:
+                services = brine.load(data)
+        return services
+
     def register(self, aliases, port, interface=""):
         self.logger.info("registering on %s:%s", self.ip, self.port)
         sock = socket.socket(self.sock_family, socket.SOCK_DGRAM)
@@ -401,6 +437,22 @@ class TCPRegistryClient(RegistryClient):
         with closing(sock):
             sock.settimeout(self.timeout)
             data = brine.dump(("RPYC", "QUERY", (name,)))
+            sock.connect((self.ip, self.port))
+            sock.send(data)
+
+            try:
+                data = sock.recv(MAX_DGRAM_SIZE)
+            except (socket.error, socket.timeout):
+                servers = ()
+            else:
+                servers = brine.load(data)
+        return servers
+
+    def list(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        with closing(sock):
+            sock.settimeout(self.timeout)
+            data = brine.dump(("RPYC", "LIST", ()))
             sock.connect((self.ip, self.port))
             sock.send(data)
 
