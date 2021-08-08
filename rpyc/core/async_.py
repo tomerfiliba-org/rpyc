@@ -27,7 +27,7 @@ class AsyncResult(object):
             state = "expired"
         else:
             state = "pending"
-        return "<AsyncResult object (%s) at 0x%08x>" % (state, id(self))
+        return f"<AsyncResult object ({state}) at 0x{id(self):08x}>"
 
     def __call__(self, is_exc, obj):
         if self.expired:
