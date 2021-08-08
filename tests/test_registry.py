@@ -37,6 +37,13 @@ class BaseRegistryTest(object):
         res = c.discover("FOO")
         expected = (45678,)
         self.assertEqual(set(p for _, p in res), set(expected))
+        res = c.list()
+        expected = ("FOO",)
+        self.assertEqual(set(p for p in res), set(expected))
+        c.register(("BAR",), 54321)
+        res = c.list()
+        expected = ("FOO", "BAR")
+        self.assertEqual(set(res), set(expected))
 
     def test_pruning(self):
         c = self._get_client()
@@ -54,7 +61,7 @@ class BaseRegistryTest(object):
 
 class TestTcpRegistry(BaseRegistryTest, unittest.TestCase):
     def _get_server(self):
-        return TCPRegistryServer(pruning_timeout=PRUNING_TIMEOUT)
+        return TCPRegistryServer(pruning_timeout=PRUNING_TIMEOUT, allow_listing=True)
 
     def _get_client(self):
         return TCPRegistryClient("localhost")
@@ -62,7 +69,7 @@ class TestTcpRegistry(BaseRegistryTest, unittest.TestCase):
 
 class TestUdpRegistry(BaseRegistryTest, unittest.TestCase):
     def _get_server(self):
-        return UDPRegistryServer(pruning_timeout=PRUNING_TIMEOUT)
+        return UDPRegistryServer(pruning_timeout=PRUNING_TIMEOUT, allow_listing=True)
 
     def _get_client(self):
         return UDPRegistryClient()

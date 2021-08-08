@@ -29,6 +29,10 @@ class DiscoveryError(Exception):
     pass
 
 
+class ForbiddenError(Exception):
+    pass
+
+
 # ------------------------------------------------------------------------------
 # API
 # ------------------------------------------------------------------------------
@@ -223,6 +227,16 @@ def discover(service_name, host=None, registrar=None, timeout=2):
     if not addrs:
         raise DiscoveryError("no servers exposing %r were found on %r" % (service_name, host))
     return addrs
+
+
+def list_services(registrar=None, timeout=2):
+    services = ()
+    if registrar is None:
+        registrar = UDPRegistryClient(timeout=timeout)
+    services = registrar.list()
+    if services is None:
+        raise ForbiddenError("Registry doesn't allow listing")
+    return services
 
 
 def connect_by_service(service_name, host=None, registrar=None, timeout=2, service=VoidService, config={}):
