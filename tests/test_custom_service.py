@@ -80,7 +80,7 @@ class TestCustomService(unittest.TestCase):
         self.assertTrue(self.service.on_about_to_close_called)
 
     def test_aliases(self):
-        print("service name: %s" % (self.conn.root.get_service_name(),))
+        print(f"service name: {self.conn.root.get_service_name()}")
 
     def test_distance(self):
         assert self.conn.root.distance((2, 7), (5, 11)) == 5
