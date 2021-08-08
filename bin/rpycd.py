@@ -33,7 +33,7 @@ def start():
     elif mode == "forking":
         factory = ForkingServer
     else:
-        raise ValueError("Invalid mode %r" % (mode,))
+        raise ValueError(f"Invalid mode {mode!r}")
 
     quiet = conf.getboolean("rpycd", "quiet")
     logfile = os.path.join(cur_dir, conf.get("rpycd", "logfile"))

@@ -27,8 +27,10 @@ class ClassicServer(cli.Application):
                           "inetd, etc.)")
 
     port = cli.SwitchAttr(["-p", "--port"], cli.Range(0, 65535), default=None,
-                          help="The TCP listener port (default = %s, default for SSL = %s)" %
-                          (DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT), group="Socket Options")
+                          help="The TCP listener port ("
+                               "default = {DEFAULT_SERVER_PORT!r}, "
+                               "default for SSL = {DEFAULT_SERVER_SSL_PORT!r})",
+                          group="Socket Options")
     host = cli.SwitchAttr(["--host"], str, default="", help="The host to bind to. "
                           "The default is localhost", group="Socket Options")
     ipv6 = cli.Flag(["--ipv6"], help="Enable IPv6", group="Socket Options")
@@ -106,7 +108,7 @@ class ClassicServer(cli.Application):
                           registrar=self.registrar, auto_register=self.auto_register)
         t._listen()
         sys.stdout.write("rpyc-oneshot\n")
-        sys.stdout.write("%s\t%s\n" % (t.host, t.port))
+        sys.stdout.write(f"{t.host}\t{t.port}\n")
         sys.stdout.flush()
         t.start()
 
