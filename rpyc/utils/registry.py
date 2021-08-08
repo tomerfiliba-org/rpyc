@@ -1,13 +1,8 @@
 """
-RPyC **registry server** implementation. The registry is much like
-`Avahi <http://en.wikipedia.org/wiki/Avahi_(software)>`_ or
-`Bonjour <http://en.wikipedia.org/wiki/Bonjour_(software)>`_, but tailored to
-the needs of RPyC. Also, neither of them supports (or supported) Windows,
-and Bonjour has a restrictive license. Moreover, they are too "powerful" for
-what RPyC needed and required too complex a setup.
+RPyC Registry Server maintains service information on RPyC services for *Service Registry and Discovery patterns*. Service Registry and Discovery patterns solve the connectivity problem for communication between services and external consumers. RPyC services will register with the server when :code:`auto_register` is :code:`True`.
 
-If anyone wants to implement the RPyC registry using Avahi, Bonjour, or any
-other zeroconf implementation -- I'll be happy to include them.
+Service registries such as `Avahi <http://en.wikipedia.org/wiki/Avahi_(software)>`_ and
+`Bonjour <http://en.wikipedia.org/wiki/Bonjour_(software)>`_ are alternatives to the RPyC Registry Server. These alternatives do no support Windows and have more restrictive licensing.
 
 Refer to :file:`rpyc/scripts/rpyc_registry.py` for more info.
 """
@@ -99,7 +94,7 @@ class RegistryServer(object):
         return tuple(servers)
 
     def cmd_list(self, host):
-        """ implementation fo the ``list`` command"""
+        """implementation for the ``list`` command"""
         self.logger.debug("querying for services list:")
         if not self.allow_listing:
             self.logger.debug("listing is disabled")
@@ -311,6 +306,7 @@ class UDPRegistryClient(RegistryClient):
     Example::
 
         registrar = UDPRegistryClient()
+        list_of_services = registrar.list()
         list_of_servers = registrar.discover("foo")
 
     .. note::
@@ -419,6 +415,7 @@ class TCPRegistryClient(RegistryClient):
     Example::
 
         registrar = TCPRegistryClient("localhost")
+        list_of_services = registrar.list()
         list_of_servers = registrar.discover("foo")
 
     .. note::
