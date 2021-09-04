@@ -45,7 +45,7 @@ class AsyncResult(object):
         expiry set, and the result did not arrive within that timeout,
         an :class:`AsyncResultTimeout` exception is raised"""
         while not self._is_ready.is_set() and not self._ttl.expired():
-            if self._conn.serve(self._ttl) == True:
+            if self._conn.serve(self._ttl):
                 # we received a response, wait for the completion call
                 self._is_ready.wait()
         if not self._is_ready.is_set():
