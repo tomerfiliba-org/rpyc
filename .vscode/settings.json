@@ -10,6 +10,5 @@
     "python.testing.nosetestsEnabled": false,
     "python.testing.unittestEnabled": true,
     "python.terminal.activateEnvironment": true,
-    "python.venvPath": "${workspaceFolder}\\.venv",
-    "python.pythonPath": "C:\\Users\\${env:USERNAME}\\AppData\\Local\\Programs\\Python\\Python37\\python.exe"
+    "python.venvPath": "${workspaceFolder}\\.venv"
 }
