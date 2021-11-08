@@ -137,7 +137,10 @@ class ModuleNamespace(object):
         return self.__cache[name]
 
     def __getattr__(self, name):
-        return self[name]
+        try:
+            return self[name]
+        except ImportError:
+            raise AttributeError(name)
 
 
 class Slave(object):
