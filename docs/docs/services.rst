@@ -67,14 +67,10 @@ If you wish to change the name of your service, or specify a list of aliases, se
 The first name in this list is considered the "proper name" of the service, while the rest
 are considered aliases. This distinction is meaningless to the protocol and the registry server.
 
-Your service class may also define two special methods: ``on_connect(self)`` and
-``on_disconnect(self)``. These methods are invoked, not surprisingly, when a connection
+Your service class may also define two special methods: ``on_connect(self, conn)`` and
+``on_disconnect(self, conn)``. These methods are invoked, not surprisingly, when a connection
 has been established, and when it's been disconnected. Note that during ``on_disconnect``,
 the connection is already dead, so you can no longer access any remote objects.
-
-Other than that, your service instance has the ``_conn`` attribute, which represents the
-:class:`~rpyc.core.protocol.Connection` that it serves. This attribute already
-exists when ``on_connected`` is called.
 
 .. note::
    Try to avoid overriding the ``__init__`` method of the service. Place all initialization-related
@@ -109,8 +105,11 @@ it's not the most common use case, two-sides services are quite useful. Consider
 And this server::
 
     class ServerService(rpyc.Service):
+        def on_connect(self, conn):
+            self.conn = conn
+
         def exposed_bar(self):
-            return self._conn.root.foo() + "bar"
+            return self.conn.root.foo() + "bar"
 
 The client can invoke ``conn.root.bar()`` on the server, which will, in turn, invoke ``foo`` back
 on the client. The final result would be ``"foobar"``.
