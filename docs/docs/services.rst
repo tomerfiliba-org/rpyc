@@ -106,10 +106,10 @@ And this server::
 
     class ServerService(rpyc.Service):
         def on_connect(self, conn):
-            self.conn = conn
+            self._conn = conn
 
         def exposed_bar(self):
-            return self.conn.root.foo() + "bar"
+            return self._conn.root.foo() + "bar"
 
 The client can invoke ``conn.root.bar()`` on the server, which will, in turn, invoke ``foo`` back
 on the client. The final result would be ``"foobar"``.
