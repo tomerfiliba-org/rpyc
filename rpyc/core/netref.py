@@ -35,7 +35,7 @@ _builtin_types = [
     type, object, bool, complex, dict, float, int, list, slice, str, tuple, set,
     frozenset, BaseException, Exception, type(None), types.BuiltinFunctionType, types.GeneratorType,
     types.MethodType, types.CodeType, types.FrameType, types.TracebackType,
-    types.ModuleType, types.FunctionType,
+    types.ModuleType, types.FunctionType, types.MappingProxyType,
 
     type(int.__add__),      # wrapper_descriptor
     type((1).__add__),      # method-wrapper
