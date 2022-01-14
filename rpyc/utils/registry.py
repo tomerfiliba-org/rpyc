@@ -360,7 +360,7 @@ class UDPRegistryClient(RegistryClient):
             sock.settimeout(self.timeout)
 
             try:
-                data, _ = sock.recvfrom(MAX_DGRAM_SIZE)
+                data, _ = sock.recvfrom(MAX_DGRAM_SIZE * 10)
             except (socket.error, socket.timeout):
                 services = ()
             else:
