@@ -1,3 +1,27 @@
+5.1.0
+=====
+Date: 2022-02-26
+
+- Add `types.MappingProxyType` to `_builtin_types` `#470`_
+- Updated documentation `#469`_
+- Fixed spradic dealock issues from wait within AsyncResult `#463`_ and `#455`_
+- Fixed chained Classic RPyC connections `#460`_
+- Added ability to list Registry services `#452`_
+- Fixed bug that prevented RPyC from running on systems without SSL `#451`_
+- Fixed unexpected behavior with respect to `auto_register` `#445`_
+- Fixed propagation of `chunk_size` parameter for `download_dir` `#433`_
+
+.. _#470: https://github.com/tomerfiliba-org/rpyc/pull/470
+.. _#469: https://github.com/tomerfiliba-org/rpyc/pull/469
+.. _#463: https://github.com/tomerfiliba-org/rpyc/pull/463
+.. _#460: https://github.com/tomerfiliba-org/rpyc/pull/460
+.. _#455: https://github.com/tomerfiliba-org/rpyc/pull/455
+.. _#452: https://github.com/tomerfiliba-org/rpyc/pull/452
+.. _#451: https://github.com/tomerfiliba-org/rpyc/pull/451
+.. _#445: https://github.com/tomerfiliba-org/rpyc/pull/445
+.. _#433: https://github.com/tomerfiliba-org/rpyc/pull/433
+
+
 5.0.1
 -----
 Date: 1.11.2021
