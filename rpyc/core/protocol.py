@@ -6,6 +6,7 @@ import socket
 import time  # noqa: F401
 import gc  # noqa: F401
 
+from inspect import getattr_static
 from threading import Lock, Condition, RLock
 from rpyc.lib import spawn, Timeout, get_methods, get_id_pack
 from rpyc.lib.compat import pickle, next, maxint, select_error, acquire_lock  # noqa: F401
@@ -520,6 +521,14 @@ class Connection(object):
         return self._remote_root
 
     def _check_attr(self, obj, name, perm):  # attribute access
+        def hasattr_static(obj, name):
+            try:
+                getattr_static(obj, name)
+            except AttributeError:
+                return hasattr(obj, name)
+            return True
+
+
         config = self._config
         if not config[perm]:
             raise AttributeError(f"cannot access {name!r}")
@@ -528,7 +537,7 @@ class Connection(object):
         plain |= config["allow_exposed_attrs"] and name.startswith(prefix)
         plain |= config["allow_safe_attrs"] and name in config["safe_attrs"]
         plain |= config["allow_public_attrs"] and not name.startswith("_")
-        has_exposed = prefix and hasattr(obj, prefix + name)
+        has_exposed = prefix and hasattr_static(obj, prefix + name)
         if plain and (not has_exposed or hasattr(obj, name)):
             return name
         if has_exposed:
