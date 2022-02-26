@@ -74,6 +74,16 @@ class Protector(object):
 SVC_RESTRICTED = ["exposed_foobar", "__add__", "_privy", "foo", "bar"]
 
 
+class MyDescriptor1(object):
+    def __get__(self, instance, owner=None):
+        raise AttributeError("abcd")
+
+
+class MyDescriptor2(object):
+    def __get__(self, instance, owner=None):
+        raise RuntimeError("efgh")
+
+
 class MyService(rpyc.Service):
     exposed_MyClass = MyClass
 
@@ -85,6 +95,10 @@ class MyService(rpyc.Service):
         protector.register(MyClass, SVC_RESTRICTED)
         protector.register(YourClass, ["lala", "baba"])
         return protector.wrap(YourClass())
+
+    exposed_desc_1 = MyDescriptor1()
+
+    exposed_desc_2 = MyDescriptor2()
 
 
 class TestRestricted(unittest.TestCase):
@@ -152,6 +166,11 @@ class TestConfigAllows(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: obj.foo)
         self.assertRaises(AttributeError, lambda: obj.bar)
         self.assertRaises(AttributeError, lambda: obj.spam)
+        root = self.conn.root
+        self.assertRaisesRegex(AttributeError, "abcd", lambda: root.exposed_desc_1)
+        self.assertRaisesRegex(AttributeError, "abcd", lambda: root.desc_1)
+        self.assertRaisesRegex(RuntimeError, "efgh", lambda: root.exposed_desc_2)
+        self.assertRaisesRegex(RuntimeError, "efgh", lambda: root.desc_2)
 
     def test_allow_all(self):
         self._reset_cfg()
@@ -162,6 +181,11 @@ class TestConfigAllows(unittest.TestCase):
         self.assertEqual(obj._privy(), "privy")
         self.assertEqual(obj.foobar(), "Fee Fie Foe Foo")
         self.assertEqual(obj.exposed_foobar(), "Fee Fie Foe Foo")
+        root = self.conn.root
+        self.assertRaisesRegex(AttributeError, "abcd", lambda: root.exposed_desc_1)
+        self.assertRaisesRegex(AttributeError, "abcd", lambda: root.desc_1)
+        self.assertRaisesRegex(RuntimeError, "efgh", lambda: root.exposed_desc_2)
+        self.assertRaisesRegex(RuntimeError, "efgh", lambda: root.desc_2)
 
     def test_allow_exposed(self):
         self._reset_cfg()
@@ -172,6 +196,11 @@ class TestConfigAllows(unittest.TestCase):
         except Exception:
             passed = True
         self.assertEqual(passed, True)
+        root = self.conn.root
+        self.assertRaises(AttributeError, lambda: root.exposed_desc_1)
+        self.assertRaises(AttributeError, lambda: root.desc_1)
+        self.assertRaises(AttributeError, lambda: root.exposed_desc_2)
+        self.assertRaises(AttributeError, lambda: root.desc_2)
 
     def test_allow_safe_attrs(self):
         self._reset_cfg()
@@ -184,6 +213,11 @@ class TestConfigAllows(unittest.TestCase):
         self.assertRaises(AttributeError, lambda: obj.foo)
         self.assertRaises(AttributeError, lambda: obj.bar)
         self.assertRaises(AttributeError, lambda: obj.spam)
+        root = self.conn.root
+        self.assertRaisesRegex(AttributeError, "abcd", lambda: root.exposed_desc_1)
+        self.assertRaisesRegex(AttributeError, "abcd", lambda: root.desc_1)
+        self.assertRaisesRegex(RuntimeError, "efgh", lambda: root.exposed_desc_2)
+        self.assertRaisesRegex(RuntimeError, "efgh", lambda: root.desc_2)
 
     def test_allow_public_attrs(self):
         self._reset_cfg()
@@ -195,6 +229,11 @@ class TestConfigAllows(unittest.TestCase):
         self.assertEqual(obj.foobar(), "Fee Fie Foe Foo")
         self.assertEqual(obj.exposed_foobar(), "Fee Fie Foe Foo")
         self.assertRaises(AttributeError, lambda: obj._privy)
+        root = self.conn.root
+        self.assertRaisesRegex(AttributeError, "abcd", lambda: root.exposed_desc_1)
+        self.assertRaisesRegex(AttributeError, "abcd", lambda: root.desc_1)
+        self.assertRaisesRegex(RuntimeError, "efgh", lambda: root.exposed_desc_2)
+        self.assertRaisesRegex(RuntimeError, "efgh", lambda: root.desc_2)
 
 #    def test_type_protector(self):
 #        obj = self.conn.root.get_two()
