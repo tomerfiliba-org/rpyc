@@ -12,6 +12,7 @@ A walkthrough of doing a RPyC Release.
 6. Clean up any old build artifacts: `pyenv exec python setup.py clean --all`
 7. Create a wheel package: `pyenv exec python setup.py bdist_wheel`
 8. Upload the wheel package: `twine upload --repository-url https://upload.pypi.org/legacy/ dist/rpyc-*-any.whl`
+9. Create new release such that the notes are from `CHANGELOG.rst` entry.
 
 .. _Semantic Versioning: https://semver.org/
 
