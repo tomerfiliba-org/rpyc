@@ -20,6 +20,9 @@ setup(name="rpyc",
       maintainer_email="james@network-perception.com",
       license="MIT",
       url="http://rpyc.readthedocs.org",
+      project_urls={
+        "Source": "https://github.com/tomerfiliba-org/rpyc",
+      },
       packages=[
           'rpyc',
           'rpyc.core',
