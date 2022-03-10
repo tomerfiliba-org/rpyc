@@ -140,7 +140,7 @@ def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
     :param cert_reqs: see ``ssl.wrap_socket``. By default, if ``ca_cert`` is specified,
                       the requirement is set to ``CERT_REQUIRED``; otherwise it is
                       set to ``CERT_NONE``
-    :param ssl_version: see ``ssl.wrap_socket``. The default is ``PROTOCOL_TLSv1``
+    :param ssl_version: see ``ssl.wrap_socket``. The default is ``PROTOCOL_TLSv2``
     :param ciphers: see ``ssl.wrap_socket``. May be ``None``. New in Python 2.7/3.2
 
     :returns: an RPyC connection
@@ -156,7 +156,7 @@ def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
     if cert_reqs is not None:
         ssl_kwargs["cert_reqs"] = cert_reqs
     if ssl_version is None:
-        ssl_kwargs["ssl_version"] = ssl.PROTOCOL_TLSv1
+        ssl_kwargs["ssl_version"] = ssl.PROTOCOL_TLSv2
     else:
         ssl_kwargs["ssl_version"] = ssl_version
     if ciphers is not None:
