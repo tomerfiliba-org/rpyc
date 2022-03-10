@@ -282,7 +282,7 @@ class RegistryClient(object):
         """
         raise NotImplementedError()
 
-    def list(self):
+    def list(self, filter_host=None):
         """
         Send a query for the full lists of exposed servers
         :returns: a list of `` service_name ``
