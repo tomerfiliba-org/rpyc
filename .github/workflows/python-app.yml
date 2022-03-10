@@ -32,6 +32,8 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Init ssh settings
       run: |
+        mkdir -pv ~/.ssh
+        chmod 700 ~/.ssh
         echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config
         echo StrictHostKeyChecking no >> ~/.ssh/config
         ssh-keygen -q -f ~/.ssh/id_rsa -N ''
