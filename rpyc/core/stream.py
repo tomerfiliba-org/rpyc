@@ -206,12 +206,20 @@ class SocketStream(Stream):
 
         :returns: a :class:`SocketStream`
         """
+        from ssl import SSLContext
         import ssl
         if kwargs.pop("ipv6", False):
             kwargs["family"] = socket.AF_INET6
         s = cls._connect(host, port, **kwargs)
         try:
-            s2 = ssl.wrap_socket(s, **ssl_kwargs)
+            context = SSLContext(ssl_kwargs.pop('ssl_version'))
+            certfile = ssl_kwargs.pop('certfile', None)
+            keyfile = ssl_kwargs.pop('keyfile', None)
+            if certfile is not None:
+                context.load_cert_chain(certfile, keyfile=keyfile)
+            context.check_hostname = ssl_kwargs.pop('check_hostname', True)
+            context.verify_mode = ssl_kwargs.pop('cert_reqs', ssl.CERT_NONE)
+            s2 = context.wrap_socket(s, **ssl_kwargs)
             return cls(s2)
         except BaseException:
             s.close()
