@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # encoding: utf-8
-import sys
 import os
 
 try:
@@ -12,7 +11,7 @@ here = os.path.dirname(__file__)
 exec(open(os.path.join(here, 'rpyc', 'version.py')).read())
 
 setup(name="rpyc",
-      version=version_string,  # @UndefinedVariable
+      version=version_string,  # noqa
       description="Remote Python Call (RPyC), a transparent and symmetric RPC library",
       author="Tomer Filiba",
       author_email="tomerfiliba@gmail.com",
@@ -20,6 +19,9 @@ setup(name="rpyc",
       maintainer_email="james@network-perception.com",
       license="MIT",
       url="http://rpyc.readthedocs.org",
+      project_urls={
+        "Source": "https://github.com/tomerfiliba-org/rpyc",
+      },
       packages=[
           'rpyc',
           'rpyc.core',

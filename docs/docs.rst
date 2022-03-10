@@ -42,6 +42,7 @@ Reference
    docs/secure-connection
    docs/zerodeploy
    docs/advanced-debugging
+   docs/rpyc-release-process
 
 
 * :ref:`Servers <servers>` - using the built-in servers and writing custom ones

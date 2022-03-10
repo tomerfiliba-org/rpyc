@@ -119,7 +119,7 @@ def unix_connect(path, service=VoidService, config={}):
 
 def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
                 cert_reqs=None, ssl_version=None, ciphers=None,
-                service=VoidService, config={}, ipv6=False, keepalive=False):
+                service=VoidService, config={}, ipv6=False, keepalive=False, verify_mode=None):
     """
     creates an SSL-wrapped connection to the given host (encrypted and
     authenticated).
@@ -131,17 +131,15 @@ def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
     :param ipv6: whether to create an IPv6 socket or an IPv4 one(defaults to ``False``)
     :param keepalive: whether to set TCP keepalive on the socket (defaults to ``False``)
 
-    The following arguments are passed directly to
-    `ssl.wrap_socket <http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket>`_:
-
     :param keyfile: see ``ssl.wrap_socket``. May be ``None``
     :param certfile: see ``ssl.wrap_socket``. May be ``None``
     :param ca_certs: see ``ssl.wrap_socket``. May be ``None``
     :param cert_reqs: see ``ssl.wrap_socket``. By default, if ``ca_cert`` is specified,
                       the requirement is set to ``CERT_REQUIRED``; otherwise it is
                       set to ``CERT_NONE``
-    :param ssl_version: see ``ssl.wrap_socket``. The default is ``PROTOCOL_TLSv1``
+    :param ssl_version: see ``ssl.wrap_socket``. The default is ``PROTOCOL_TLS_CLIENT``
     :param ciphers: see ``ssl.wrap_socket``. May be ``None``. New in Python 2.7/3.2
+    :param verify_mode: see ``ssl.SSLContext.verify_mode``
 
     :returns: an RPyC connection
     """
@@ -150,13 +148,19 @@ def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
         ssl_kwargs["keyfile"] = keyfile
     if certfile is not None:
         ssl_kwargs["certfile"] = certfile
+    if verify_mode is not None:
+        ssl_kwargs["cert_reqs"] = verify_mode
+    else:
+        ssl_kwargs["cert_reqs"] = ssl.CERT_NONE
     if ca_certs is not None:
         ssl_kwargs["ca_certs"] = ca_certs
         ssl_kwargs["cert_reqs"] = ssl.CERT_REQUIRED
     if cert_reqs is not None:
         ssl_kwargs["cert_reqs"] = cert_reqs
+    elif cert_reqs != ssl.CERT_NONE:
+        ssl_kwargs["check_hostname"] = False
     if ssl_version is None:
-        ssl_kwargs["ssl_version"] = ssl.PROTOCOL_TLSv1
+        ssl_kwargs["ssl_version"] = ssl.PROTOCOL_TLS_CLIENT
     else:
         ssl_kwargs["ssl_version"] = ssl_version
     if ciphers is not None:

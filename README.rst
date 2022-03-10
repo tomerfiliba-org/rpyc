@@ -36,8 +36,8 @@ Documentation can be found at https://rpyc.readthedocs.io
    :target:            https://pypi.python.org/pypi/rpyc#downloads
    :alt:               Python Versions
 
-.. |Tests| image::     https://img.shields.io/travis/tomerfiliba-org/rpyc/master.svg?style=flat
-   :target:            https://travis-ci.org/tomerfiliba-org/rpyc
+.. |Tests| image::     https://github.com/tomerfiliba-org/rpyc/actions/workflows/python-app.yml/badge.svg
+   :target:            https://github.com/tomerfiliba-org/rpyc/actions/workflows/python-app.yml
    :alt:               Build Status
 
 .. |License| image::   https://img.shields.io/pypi/l/rpyc.svg?style=flat

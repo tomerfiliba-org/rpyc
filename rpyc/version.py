@@ -1,3 +1,3 @@
-version = (5, 0, 1)
+version = (5, 1, 0)
 version_string = ".".join(map(str, version))
-release_date = "2021.01.11"
+release_date = "2022-02-26"
