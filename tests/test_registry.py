@@ -58,6 +58,23 @@ class BaseRegistryTest(object):
         res = c.discover("BAR")
         self.assertEqual(res, ())
 
+    def test_listing(self):
+        c = self._get_client()
+        c.logger.quiet = True
+
+        c.register(("FOO",), 12345)
+        c.register(("BAR", ), 54321, interface='127.0.0.2')
+        host_ip = c.discover("FOO")[0][0]
+
+        # test basic listing
+        res = c.list()
+        expected = ("FOO", "BAR")
+        self.assertEqual(set(p for p in res), set(expected))
+
+        # test listing with filter
+        res = c.list(filter_host=host_ip)
+        expected = ("FOO",)
+        self.assertEqual(set(res), set(expected))
 
 class TestTcpRegistry(BaseRegistryTest, unittest.TestCase):
     def _get_server(self):

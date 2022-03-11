@@ -93,13 +93,21 @@ class RegistryServer(object):
         self.logger.debug(f"replying with {servers!r}")
         return tuple(servers)
 
-    def cmd_list(self, host):
+    def cmd_list(self, host, filter_host):
         """implementation for the ``list`` command"""
         self.logger.debug("querying for services list:")
         if not self.allow_listing:
             self.logger.debug("listing is disabled")
             return None
-        services = tuple(self.services.keys())
+        services = []
+        if filter_host[0]:
+            for serv in self.services.keys():
+                known_hosts = [h[0] for h in self.services[serv].keys()]
+                if filter_host[0] in known_hosts:
+                    services.append(serv)
+            services = tuple(services)
+        else:
+            services = tuple(self.services.keys())
         self.logger.debug(f"replying with {services}")
 
         return services
@@ -274,7 +282,7 @@ class RegistryClient(object):
         """
         raise NotImplementedError()
 
-    def list(self):
+    def list(self, filter_host=None):
         """
         Send a query for the full lists of exposed servers
         :returns: a list of `` service_name ``
@@ -349,18 +357,18 @@ class UDPRegistryClient(RegistryClient):
                 servers = brine.load(data)
         return servers
 
-    def list(self):
+    def list(self, filter_host=None):
         sock = socket.socket(self.sock_family, socket.SOCK_DGRAM)
 
         with closing(sock):
             if self.bcast:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
-            data = brine.dump(("RPYC", "LIST", ()))
+            data = brine.dump(("RPYC", "LIST", ((filter_host,),)))
             sock.sendto(data, (self.ip, self.port))
             sock.settimeout(self.timeout)
 
             try:
-                data, _ = sock.recvfrom(MAX_DGRAM_SIZE)
+                data, _ = sock.recvfrom(MAX_DGRAM_SIZE * 10)
             except (socket.error, socket.timeout):
                 services = ()
             else:
@@ -446,11 +454,11 @@ class TCPRegistryClient(RegistryClient):
                 servers = brine.load(data)
         return servers
 
-    def list(self):
+    def list(self, filter_host=None):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         with closing(sock):
             sock.settimeout(self.timeout)
-            data = brine.dump(("RPYC", "LIST", ()))
+            data = brine.dump(("RPYC", "LIST", ((filter_host,),)))
             sock.connect((self.ip, self.port))
             sock.send(data)
 
