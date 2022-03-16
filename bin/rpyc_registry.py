@@ -31,10 +31,10 @@ class RegistryServer(cli.Application):
     allow_listing = cli.SwitchAttr(["-l", "--listing"], bool, default=False, help="Enable/disable listing on registry")
 
     def main(self):
-        if self.mode == "UDP":
+        if self.mode.upper() == "UDP":
             server = UDPRegistryServer(host='::' if self.ipv6 else '0.0.0.0', port=self.port,
                                        pruning_timeout=self.pruning_timeout, allow_listing=self.allow_listing)
-        elif self.mode == "TCP":
+        elif self.mode.upper() == "TCP":
             server = TCPRegistryServer(port=self.port, pruning_timeout=self.pruning_timeout,
                                        allow_listing=self.allow_listing)
         setup_logger(self.quiet, self.logfile)
