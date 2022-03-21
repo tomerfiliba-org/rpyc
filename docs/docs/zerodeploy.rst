@@ -114,4 +114,8 @@ under the user's permissions. You can connect as an unprivileged user to make su
 ``rm -rf /``. Second, it creates an SSH tunnel for the transport, so everything is kept encrypted on the wire.
 And you get these features for free -- just configuring SSH accounts will do.
 
-
+Timeouts
+--------
+You can pass a ``timeout`` argument, in seconds, to the ``close()`` method.  A ``TimeoutExpired`` is raised if
+any subprocess communication takes longer than the timeout, after the subprocess has been told to terminate.  By
+default, the timeout is four minutes.  The timeout prevents a ``close()`` call blocking indefinitely.
