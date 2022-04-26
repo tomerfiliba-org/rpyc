@@ -152,7 +152,7 @@ class DeployedServer(object):
     def __exit__(self, t, v, tb):
         self.close()
 
-    def close(self, timeout=4*60):
+    def close(self, timeout=None):
         if self.proc is not None:
             try:
                 self.proc.terminate()

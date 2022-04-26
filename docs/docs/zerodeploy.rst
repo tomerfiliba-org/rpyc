@@ -118,4 +118,5 @@ Timeouts
 --------
 You can pass a ``timeout`` argument, in seconds, to the ``close()`` method.  A ``TimeoutExpired`` is raised if
 any subprocess communication takes longer than the timeout, after the subprocess has been told to terminate.  By
-default, the timeout is four minutes.  The timeout prevents a ``close()`` call blocking indefinitely.
+default, the timeout is ``None`` i.e. infinite.  A timeout value prevents a ``close()`` call blocking
+indefinitely.
