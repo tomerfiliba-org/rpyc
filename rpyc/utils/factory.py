@@ -159,9 +159,7 @@ def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
         ssl_kwargs["cert_reqs"] = cert_reqs
     elif cert_reqs != ssl.CERT_NONE:
         ssl_kwargs["check_hostname"] = False
-    if ssl_version is None:
-        ssl_kwargs["ssl_version"] = ssl.PROTOCOL_TLS_CLIENT
-    else:
+    if ssl_version is not None:
         ssl_kwargs["ssl_version"] = ssl_version
     if ciphers is not None:
         ssl_kwargs["ciphers"] = ciphers
