@@ -5,8 +5,9 @@ import itertools
 import socket
 import time  # noqa: F401
 import gc  # noqa: F401
+import struct
 
-from threading import Lock, Condition
+from threading import Lock, Condition, RLock
 from rpyc.lib import spawn, Timeout, get_methods, get_id_pack
 from rpyc.lib.compat import pickle, next, maxint, select_error, acquire_lock  # noqa: F401
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
@@ -145,7 +146,7 @@ class Connection(object):
         self._HANDLERS = self._request_handlers()
         self._channel = channel
         self._seqcounter = itertools.count()
-        self._recvlock = Lock()
+        self._recvlock = RLock()
         self._sendlock = Lock()
         self._recv_event = Condition()
         self._request_callbacks = {}
@@ -234,7 +235,7 @@ class Connection(object):
         return next(self._seqcounter)
 
     def _send(self, msg, seq, args):  # IO
-        data = brine.dump((msg, seq, args))
+        data = struct.pack("B", msg) + brine.dump((seq, args))
         # GC might run while sending data
         # if so, a BaseNetref.__del__ might be called
         # BaseNetref.__del__ must call asyncreq,
@@ -357,19 +358,25 @@ class Connection(object):
             self._config["logger"].debug(debug_msg.format(msg, seq))
 
     def _dispatch(self, data):  # serving---dispatch?
-        msg, seq, args = brine.load(data)
+        msg = data[0]
         if msg == consts.MSG_REQUEST:
+            self._recvlock.release()
+            seq, args = brine.load(data[1:])
             self._dispatch_request(seq, args)
         elif msg == consts.MSG_REPLY:
+            seq, args = brine.load(data[1:])
             obj = self._unbox(args)
             self._seq_request_callback(msg, seq, False, obj)
+            self._recvlock.release()
         elif msg == consts.MSG_EXCEPTION:
+            self._recvlock.release()
+            seq, args = brine.load(data[1:])
             obj = self._unbox_exc(args)
             self._seq_request_callback(msg, seq, True, obj)
         else:
             raise ValueError(f"invalid message type: {msg!r}")
 
-    def serve(self, timeout=1, wait_for_lock=True):  # serving
+    def serve(self, timeout=1, wait_for_lock=True, lock_extended=False):  # serving
         """Serves a single request or reply that arrives within the given
         time frame (default is 1 sec). Note that the dispatching of a request
         might trigger multiple (nested) requests, thus this function may be
@@ -380,7 +387,7 @@ class Connection(object):
         """
         timeout = Timeout(timeout)
         with self._recv_event:
-            if not self._recvlock.acquire(False):
+            if not (lock_extended or self._recvlock.acquire(False)):
                 return wait_for_lock and self._recv_event.wait(timeout.timeleft())
         try:
             data = self._channel.poll(timeout) and self._channel.recv()
@@ -390,7 +397,6 @@ class Connection(object):
             self.close()
             raise
         finally:
-            self._recvlock.release()
             with self._recv_event:
                 self._recv_event.notify_all()
         self._dispatch(data)
