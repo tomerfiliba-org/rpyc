@@ -358,7 +358,7 @@ class Connection(object):
             self._config["logger"].debug(debug_msg.format(msg, seq))
 
     def _dispatch(self, data):  # serving---dispatch?
-        msg = data[0]
+        msg = data[0] if data else None
         if msg == consts.MSG_REQUEST:
             self._recvlock.release()
             seq, args = brine.load(data[1:])
@@ -374,6 +374,7 @@ class Connection(object):
             obj = self._unbox_exc(args)
             self._seq_request_callback(msg, seq, True, obj)
         else:
+            self._recvlock.release()
             raise ValueError(f"invalid message type: {msg!r}")
 
     def serve(self, timeout=1, wait_for_lock=True, lock_extended=False):  # serving
@@ -392,9 +393,14 @@ class Connection(object):
         try:
             data = self._channel.poll(timeout) and self._channel.recv()
             if not data:
+                self._recvlock.release()
                 return False
         except EOFError:
             self.close()
+            self._recvlock.release()
+            raise
+        except:
+            self._recvlock.release()
             raise
         finally:
             with self._recv_event:
