@@ -4,6 +4,7 @@
 Requires [plumbum](http://plumbum.readthedocs.org/)
 """
 from __future__ import with_statement
+from subprocess import TimeoutExpired
 import sys
 import socket  # noqa: F401
 from rpyc.lib.compat import BYTES_LITERAL
@@ -151,27 +152,36 @@ class DeployedServer(object):
     def __exit__(self, t, v, tb):
         self.close()
 
-    def close(self):
+    def close(self, timeout=None):
         if self.proc is not None:
             try:
                 self.proc.terminate()
-                self.proc.communicate()
+                self.proc.communicate(timeout=timeout)
+            except TimeoutExpired:
+                self.proc.kill()
+                raise
             except Exception:
                 pass
             self.proc = None
         if self.tun is not None:
             try:
                 self.tun._session.proc.terminate()
-                self.tun._session.proc.communicate()
+                self.tun._session.proc.communicate(timeout=timeout)
                 self.tun.close()
+            except TimeoutExpired:
+                self.tun._session.proc.kill()
+                raise
             except Exception:
                 pass
             self.tun = None
         if self.remote_machine is not None:
             try:
                 self.remote_machine._session.proc.terminate()
-                self.remote_machine._session.proc.communicate()
+                self.remote_machine._session.proc.communicate(timeout=timeout)
                 self.remote_machine.close()
+            except TimeoutExpired:
+                self.remote_machine._session.proc.kill()
+                raise
             except Exception:
                 pass
             self.remote_machine = None
