@@ -196,8 +196,8 @@ class SocketStream(Stream):
 
         :param host: the host name
         :param port: the TCP port
-        :param ssl_kwargs: a dictionary of keyword arguments to be passed
-                           directly to ``ssl.wrap_socket``
+        :param ssl_kwargs: a dictionary of keyword arguments for
+                           ``ssl.SSLContext`` and ``ssl.SSLContext.wrap_socket``
         :param kwargs: additional keyword arguments: ``family``, ``socktype``,
                        ``proto``, ``timeout``, ``nodelay``, passed directly to
                        the ``socket`` constructor, or ``ipv6``.

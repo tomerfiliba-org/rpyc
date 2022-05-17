@@ -35,7 +35,7 @@ class AuthenticationError(Exception):
 
 class SSLAuthenticator(object):
     """An implementation of the authenticator protocol for ``SSL``. The given
-    socket is wrapped by ``ssl.wrap_socket`` and is validated based on
+    socket is wrapped by ``ssl.SSLContext.wrap_socket`` and is validated based on
     certificates
 
     :param keyfile: the server's key file
@@ -48,7 +48,7 @@ class SSLAuthenticator(object):
                     to restrict the available ciphers. New in Python 2.7/3.2
     :param ssl_version: the SSL version to use
 
-    Refer to `ssl.wrap_socket <http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket>`_
+    Refer to `ssl.SSLContext <http://docs.python.org/dev/library/ssl.html#ssl.SSLContext>`_
     for more info.
 
     Clients can connect to this authenticator using

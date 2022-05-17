@@ -131,14 +131,16 @@ def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
     :param ipv6: whether to create an IPv6 socket or an IPv4 one(defaults to ``False``)
     :param keepalive: whether to set TCP keepalive on the socket (defaults to ``False``)
 
-    :param keyfile: see ``ssl.wrap_socket``. May be ``None``
-    :param certfile: see ``ssl.wrap_socket``. May be ``None``
-    :param ca_certs: see ``ssl.wrap_socket``. May be ``None``
-    :param cert_reqs: see ``ssl.wrap_socket``. By default, if ``ca_cert`` is specified,
-                      the requirement is set to ``CERT_REQUIRED``; otherwise it is
-                      set to ``CERT_NONE``
-    :param ssl_version: see ``ssl.wrap_socket``. The default is ``PROTOCOL_TLS_CLIENT``
-    :param ciphers: see ``ssl.wrap_socket``. May be ``None``. New in Python 2.7/3.2
+    :param keyfile: see ``ssl.SSLContext.load_cert_chain``. May be ``None``
+    :param certfile: see ``ssl.SSLContext.load_cert_chain``. May be ``None``
+    :param ca_certs: see ``ssl.SSLContext.load_verify_locations``. May be ``None``
+    :param cert_reqs: see ``ssl.SSLContext.verify_mode``. By default, if ``ca_cert`` is
+                      specified, the requirement is set to ``CERT_REQUIRED``; otherwise
+                      it is set to ``CERT_NONE``
+    :param ssl_version: see ``ssl.SSLContext``. The default is defined by
+                        ``ssl.create_default_context``
+    :param ciphers: see ``ssl.SSLContext.set_ciphers``. May be ``None``. New in
+                    Python 2.7/3.2
     :param verify_mode: see ``ssl.SSLContext.verify_mode``
 
     :returns: an RPyC connection
