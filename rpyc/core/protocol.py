@@ -6,7 +6,7 @@ import socket
 import time  # noqa: F401
 import gc  # noqa: F401
 
-from threading import Lock, Condition
+from threading import Lock, Condition, RLock
 from rpyc.lib import spawn, Timeout, get_methods, get_id_pack
 from rpyc.lib.compat import pickle, next, maxint, select_error, acquire_lock  # noqa: F401
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
@@ -145,7 +145,7 @@ class Connection(object):
         self._HANDLERS = self._request_handlers()
         self._channel = channel
         self._seqcounter = itertools.count()
-        self._recvlock = Lock()
+        self._recvlock = RLock()
         self._sendlock = Lock()
         self._recv_event = Condition()
         self._request_callbacks = {}
@@ -380,14 +380,20 @@ class Connection(object):
         """
         timeout = Timeout(timeout)
         with self._recv_event:
+            # Exit early if we cannot acquire the recvlock
             if not self._recvlock.acquire(False):
-                return wait_for_lock and self._recv_event.wait(timeout.timeleft())
+                if wait_for_lock:
+                    # Wait condition for recvlock release; recvlock is not underlying lock for condition
+                    return self._recv_event.wait(timeout.timeleft())
+                else:
+                    return False
+        # Assume the receive rlock is acquired and incremented
         try:
             data = self._channel.poll(timeout) and self._channel.recv()
             if not data:
                 return False
         except EOFError:
-            self.close()
+            self.close()  # sends close async request
             raise
         finally:
             self._recvlock.release()
@@ -470,7 +476,14 @@ class Connection(object):
         :returns: the result of the request
         """
         timeout = self._config["sync_request_timeout"]
-        return self.async_request(handler, *args, timeout=timeout).value
+        # The recv rlock is acquired prior to invoking the request.
+        # AsyncResult will be constructed and it is possible GIL switches
+        # threads before AsyncResult.wait is invoked. So, using an rlock
+        # we acquire once here and once inside of wait which invokes serve
+        self._recvlock.acquire()
+        value = self.async_request(handler, *args, timeout=timeout).value
+        self._recvlock.release()
+        return value
 
     def _async_request(self, handler, args=(), callback=(lambda a, b: None)):  # serving
         seq = self._get_seq_id()
