@@ -42,7 +42,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'RPyC'
-copyright = u'%d, Tomer Filiba, licensed under Attribution-ShareAlike 3.0' % (time.gmtime().tm_year,)
+copyright = f'{time.gmtime().tm_year}, Tomer Filiba, licensed under Attribution-ShareAlike 3.0'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
