@@ -48,7 +48,7 @@ class AsyncResult(object):
             # Serve the connection since we are not ready. Suppose
             # the reply for our seq is served. The callback is this class
             # so __call__ sets our obj and _is_ready to true.
-            self._conn.serve(self._ttl, wait_for_lock=False)
+            self._conn.serve(self._ttl)
 
         # Check if we timed out before result was ready
         if not self._is_ready:
