@@ -27,6 +27,16 @@ class Test_Affinity(unittest.TestCase):
         cls.cfg = {'sync_request_timeout': 5}
         if sys.platform != "linux":
             print("Running Test_Affinity is less productive on non-linux systems...")
+        try:
+            cls._skip = None
+            cls._os = None
+            cls._supported = True
+            cls._os = support.import_module('os', fromlist=('sched_setaffinity', 'sched_getaffinity'))
+            cls._orig_affinity = cls._os.sched_getaffinity(0)
+        except unittest.SkipTest as skip:
+            cls._skip = skip
+            cls._supported = False
+            cls._orig_affinity = None
 
     @classmethod
     def tearDownClass(cls):
@@ -42,6 +52,7 @@ class Test_Affinity(unittest.TestCase):
         self.bg_threads = []
         self.conn.close()
         self.conn = None
+        self._reset_affinity()
 
     def _time_execute_sleep(self):
         """returns time to execute 0.3s worth of sleeping"""
@@ -51,14 +62,9 @@ class Test_Affinity(unittest.TestCase):
             self.conn.execute(f"time.sleep({p})")
         return time.time() - t0
 
-    def _setaffinity_or_skip(self):
-        sched_setaffinity = support.import_module('os', required_on=('linux',), fromlist=('sched_setaffinity',))
-        return sched_setaffinity(0, 0)
-
-    def _resetaffinity_or_skip(self):
-        # sched_getaffinity = support.import_module('os', required_on=('linux',), fromlist=('sched_getaffinity',))
-        sched_setaffinity = support.import_module('os', required_on=('linux',), fromlist=('sched_setaffinity',))
-        return sched_setaffinity(0, 0)
+    def _reset_affinity(self):
+        if self._os is not None:
+            return self._os.sched_setaffinity(0, self._orig_affinity)
 
     def test_unpinned(self):
         """test without changing the default processor affinity"""
@@ -67,14 +73,13 @@ class Test_Affinity(unittest.TestCase):
         self.assertLess(elapsed_time, max_elapsed_time)
         self.assertIn('count=0', repr(self.conn._recvlock))
 
-    @unittest.skipIf(not hasattr('posix', 'sched_setaffinity'),
-                     "CPU pinning uses requires the function posix.sched_getaffinity to be available")
     def test_pinned_to_0(self):
         """test behavior with processor affinity set such that this process is pinned to 0"""
-
-        breakpoint()
+        if self._skip:
+            raise self._skip
         max_elapsed_time = self.cfg['sync_request_timeout']
-        self._setaffinity_or_skip()
+        self._os.sched_setaffinity(0, {0, })
         elapsed_time = self._time_execute_sleep()
+
         self.assertLess(elapsed_time, max_elapsed_time)
         self.assertIn('count=0', repr(self.conn._recvlock))

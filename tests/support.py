@@ -4,9 +4,9 @@ The core logic of the functions `_ignore_deprecated_imports` and `import_module`
 - https://github.com/python/cpython/blob/da576e08296490e94924421af71001bcfbccb317/Lib/test/support/import_helper.py
 """
 import warnings
-import importlib
 import sys
 import contextlib
+import unittest
 
 
 @contextlib.contextmanager
@@ -34,7 +34,11 @@ def import_module(name, deprecated=False, *, required_on=(), fromlist=()):
     """
     with _ignore_deprecated_imports(deprecated):
         try:
-            return __import__(name, fromlist=fromlist)
+            module = __import__(name, fromlist=fromlist)
+            for a in fromlist:
+                if not hasattr(module, a):
+                    raise ImportError(f"cannot import name '{a}' from '{name}'")
+            return module
         except ImportError as msg:
             if sys.platform.startswith(tuple(required_on)):
                 raise
