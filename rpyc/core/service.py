@@ -189,7 +189,7 @@ class SlaveService(Slave, Service):
             instantiate_custom_exceptions=True,
             instantiate_oldstyle_exceptions=True,
         ))
-        super(SlaveService, self).on_connect(conn)
+        super().on_connect(conn)
 
 
 class FakeSlaveService(VoidService):
@@ -212,7 +212,7 @@ class MasterService(Service):
     __slots__ = ()
 
     def on_connect(self, conn):
-        super(MasterService, self).on_connect(conn)
+        super().on_connect(conn)
         self._install(conn, conn.root)
 
     @staticmethod
