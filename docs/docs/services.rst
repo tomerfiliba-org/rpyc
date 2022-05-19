@@ -68,9 +68,8 @@ The first name in this list is considered the "proper name" of the service, whil
 are considered aliases. This distinction is meaningless to the protocol and the registry server.
 
 Your service class may also define two special methods: ``on_connect(self, conn)`` and
-``on_disconnect(self, conn)``. These methods are invoked, not surprisingly, when a connection
-has been established, and when it's been disconnected. Note that during ``on_disconnect``,
-the connection is already dead, so you can no longer access any remote objects.
+``on_disconnect(self, conn)``. The ``on_connect`` method is invoked when a connection has been established.
+From the client-side perspective, ``on_connect`` is invoked each time a client successfully invokes ``rpyc.connect`` or any other function provided by the connection factory module: ``rpyc.utils.factory``. After the connection is dead, ``on_disconnect`` is invoked (you will not be able to access remote objects inside of ``on_disconnect``).
 
 .. note::
    Try to avoid overriding the ``__init__`` method of the service. Place all initialization-related
