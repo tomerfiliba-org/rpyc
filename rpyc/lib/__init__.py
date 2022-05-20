@@ -41,15 +41,20 @@ def safe_import(name):
     return mod
 
 
-def setup_logger(quiet=False, logfile=None):
+def setup_logger(quiet=False, logfile=None, namespace=None):
     opts = {}
     if quiet:
         opts['level'] = logging.ERROR
+        opts['format'] = '%(asctime)s %(levelname)s: %(message)s'
+        opts['datefmt'] = '%b %d %H:%M:%S'
     else:
         opts['level'] = logging.DEBUG
+        opts['format'] = '%(asctime)s %(levelname)s %(name)s[%(threadName)s]: %(message)s'
+        opts['datefmt'] = '%b %d %H:%M:%S'
     if logfile:
         opts['filename'] = logfile
     logging.basicConfig(**opts)
+    return logging.getLogger('rpyc' if namespace is None else f'rpyc.{namespace}')
 
 
 class hybridmethod(object):
