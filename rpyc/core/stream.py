@@ -196,8 +196,8 @@ class SocketStream(Stream):
 
         :param host: the host name
         :param port: the TCP port
-        :param ssl_kwargs: a dictionary of keyword arguments to be passed
-                           directly to ``ssl.wrap_socket``
+        :param ssl_kwargs: a dictionary of keyword arguments for
+                           ``ssl.SSLContext`` and ``ssl.SSLContext.wrap_socket``
         :param kwargs: additional keyword arguments: ``family``, ``socktype``,
                        ``proto``, ``timeout``, ``nodelay``, passed directly to
                        the ``socket`` constructor, or ``ipv6``.
@@ -206,20 +206,32 @@ class SocketStream(Stream):
 
         :returns: a :class:`SocketStream`
         """
-        from ssl import SSLContext
         import ssl
         if kwargs.pop("ipv6", False):
             kwargs["family"] = socket.AF_INET6
         s = cls._connect(host, port, **kwargs)
         try:
-            context = SSLContext(ssl_kwargs.pop('ssl_version'))
-            certfile = ssl_kwargs.pop('certfile', None)
-            keyfile = ssl_kwargs.pop('keyfile', None)
+            if "ssl_version" in ssl_kwargs:
+                context = ssl.SSLContext(ssl_kwargs.pop("ssl_version"))
+            else:
+                context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH)
+            certfile = ssl_kwargs.pop("certfile", None)
+            keyfile = ssl_kwargs.pop("keyfile", None)
             if certfile is not None:
                 context.load_cert_chain(certfile, keyfile=keyfile)
-            context.check_hostname = ssl_kwargs.pop('check_hostname', True)
-            context.verify_mode = ssl_kwargs.pop('cert_reqs', ssl.CERT_NONE)
-            s2 = context.wrap_socket(s, **ssl_kwargs)
+            ca_certs = ssl_kwargs.pop("ca_certs", None)
+            if ca_certs is not None:
+                context.load_verify_locations(ca_certs)
+            ciphers = ssl_kwargs.pop("ciphers", None)
+            if ciphers is not None:
+                context.set_ciphers(ciphers)
+            check_hostname = ssl_kwargs.pop("check_hostname", None)
+            if check_hostname is not None:
+                context.check_hostname = check_hostname
+            cert_reqs = ssl_kwargs.pop("cert_reqs", None)
+            if cert_reqs is not None:
+                context.verify_mode = cert_reqs
+            s2 = context.wrap_socket(s, server_hostname=host, **ssl_kwargs)
             return cls(s2)
         except BaseException:
             s.close()

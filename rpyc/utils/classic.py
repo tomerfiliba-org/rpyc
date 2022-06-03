@@ -97,17 +97,20 @@ def ssl_connect(host, port=DEFAULT_SERVER_SSL_PORT, keyfile=None,
     :param port: the TCP port to use
     :param ipv6: whether to create an IPv6 socket or an IPv4 one
 
-    The following arguments are passed directly to
-    `ssl.wrap_socket <http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket>`_:
+    The following arguments are passed to
+    `ssl.SSLContext <http://docs.python.org/dev/library/ssl.html#ssl.SSLContext>`_ and
+    its corresponding methods:
 
-    :param keyfile: see ``ssl.wrap_socket``. May be ``None``
-    :param certfile: see ``ssl.wrap_socket``. May be ``None``
-    :param ca_certs: see ``ssl.wrap_socket``. May be ``None``
-    :param cert_reqs: see ``ssl.wrap_socket``. By default, if ``ca_cert`` is specified,
-                      the requirement is set to ``CERT_REQUIRED``; otherwise it is
-                      set to ``CERT_NONE``
-    :param ssl_version: see ``ssl.wrap_socket``. The default is ``PROTOCOL_TLSv1``
-    :param ciphers: see ``ssl.wrap_socket``. May be ``None``. New in Python 2.7/3.2
+    :param keyfile: see ``ssl.SSLContext.load_cert_chain``. May be ``None``
+    :param certfile: see ``ssl.SSLContext.load_cert_chain``. May be ``None``
+    :param ca_certs: see ``ssl.SSLContext.load_verify_locations``. May be ``None``
+    :param cert_reqs: see ``ssl.SSLContext.verify_mode``. By default, if ``ca_cert`` is
+                      specified, the requirement is set to ``CERT_REQUIRED``; otherwise
+                      it is set to ``CERT_NONE``
+    :param ssl_version: see ``ssl.SSLContext``. The default is defined by
+                        ``ssl.create_default_context``
+    :param ciphers: see ``ssl.SSLContext.set_ciphers``. May be ``None``. New in
+                    Python 2.7/3.2
 
     :returns: an RPyC connection exposing ``SlaveService``
 

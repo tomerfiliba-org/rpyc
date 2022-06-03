@@ -35,7 +35,7 @@ class AuthenticationError(Exception):
 
 class SSLAuthenticator(object):
     """An implementation of the authenticator protocol for ``SSL``. The given
-    socket is wrapped by ``ssl.wrap_socket`` and is validated based on
+    socket is wrapped by ``ssl.SSLContext.wrap_socket`` and is validated based on
     certificates
 
     :param keyfile: the server's key file
@@ -48,7 +48,7 @@ class SSLAuthenticator(object):
                     to restrict the available ciphers. New in Python 2.7/3.2
     :param ssl_version: the SSL version to use
 
-    Refer to `ssl.wrap_socket <http://docs.python.org/dev/library/ssl.html#ssl.wrap_socket>`_
+    Refer to `ssl.SSLContext <http://docs.python.org/dev/library/ssl.html#ssl.SSLContext>`_
     for more info.
 
     Clients can connect to this authenticator using
@@ -70,19 +70,22 @@ class SSLAuthenticator(object):
                 self.cert_reqs = ssl.CERT_NONE
         else:
             self.cert_reqs = cert_reqs
-        if ssl_version is None:
-            self.ssl_version = ssl.PROTOCOL_TLS
-        else:
-            self.ssl_version = ssl_version
+        self.ssl_version = ssl_version
 
     def __call__(self, sock):
-        kwargs = dict(keyfile=self.keyfile, certfile=self.certfile,
-                      server_side=True, ca_certs=self.ca_certs, cert_reqs=self.cert_reqs,
-                      ssl_version=self.ssl_version)
-        if self.ciphers is not None:
-            kwargs["ciphers"] = self.ciphers
         try:
-            sock2 = ssl.wrap_socket(sock, **kwargs)
+            if self.ssl_version is None:
+                context = ssl.create_default_context(purpose=ssl.Purpose.CLIENT_AUTH)
+            else:
+                context = ssl.SSLContext(self.ssl_version)
+            context.load_cert_chain(self.certfile, keyfile=self.keyfile)
+            if self.ca_certs is not None:
+                context.load_verify_locations(self.ca_certs)
+            if self.ciphers is not None:
+                context.set_ciphers(self.ciphers)
+            if self.cert_reqs is not None:
+                context.verify_mode = self.cert_reqs
+            sock2 = context.wrap_socket(sock, server_side=True)
         except ssl.SSLError:
             ex = sys.exc_info()[1]
             raise AuthenticationError(str(ex))
