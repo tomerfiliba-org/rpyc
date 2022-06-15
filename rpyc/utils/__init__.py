@@ -6,13 +6,6 @@ import inspect
 from rpyc.core import DEFAULT_CONFIG
 
 
-try:
-    # python3 depricated basestring, so if this causes exception catch and alias to str
-    basestring
-except Exception:
-    basestring = str
-
-
 def service(cls):
     """find and rename exposed decorated attributes"""
     for attr_name, attr_obj in inspect.getmembers(cls):  # rebind exposed decorated attributes
@@ -29,7 +22,7 @@ def service(cls):
 def exposed(arg):
     """decorator that adds the exposed prefix information to functions which `service` uses to rebind attrs"""
     exposed_prefix = DEFAULT_CONFIG['exposed_prefix']
-    if isinstance(arg, basestring):
+    if isinstance(arg, str):
         # When the arg is a string (i.e. `@rpyc.exposed("customPrefix_")`) the prefix
         # is partially evaluated into the wrapper. The function returned is "frozen" and used as a decorator.
         return functools.partial(_wrapper, arg)
