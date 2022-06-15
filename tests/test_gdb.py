@@ -1,8 +1,10 @@
 import pathlib
 import rpyc
 import subprocess
+import sys
 import tempfile
 import unittest
+import os
 from rpyc.utils.server import ThreadedServer
 from shutil import which
 
@@ -13,9 +15,12 @@ class ParentGDB(rpyc.Service):
     def on_connect(self, conn):
         tests_path = pathlib.Path(__file__).resolve().parent
         gdb_cmd = ['gdb', '-q', '-x', pathlib.Path(tests_path, 'gdb_service.py')]
-        self._proc = subprocess.Popen(gdb_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        env = os.environ.copy()
+        env['PYTHONPATH'] = ':'.join(sys.path)
+        self._proc = subprocess.Popen(gdb_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
         stdout = self._proc.stdout.readline()
         self._gdb_svc_port = int(stdout.strip().decode())
+        print(self._gdb_svc_port)
         self.gdb_svc_conn = rpyc.connect(host='localhost', port=self._gdb_svc_port)
 
     def on_disconnect(self, conn):
@@ -50,10 +55,15 @@ class Test_GDB(unittest.TestCase):
             pass
 
     def test_gdb(self):
+        print(0)
         parent_gdb_conn = rpyc.connect(host='localhost', port=18878)
+        print(1)
         gdb = parent_gdb_conn.root.get_gdb()
+        print(2)
         gdb.execute('file {}'.format(self.a_out))
+        print(3)
         disasm = gdb.execute('disassemble main', to_string=True)
+        print(4)
         self.assertIn('End of assembler dump', disasm)
         parent_gdb_conn.close()
 
