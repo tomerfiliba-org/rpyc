@@ -49,7 +49,7 @@ from rpyc.utils.factory import (connect_stream, connect_channel, connect_pipes,
                                 connect_stdpipes, connect, ssl_connect, list_services, discover, connect_by_service, connect_subproc,
                                 connect_thread, ssh_connect)
 from rpyc.utils.helpers import async_, timed, buffiter, BgServingThread, restricted
-from rpyc.utils import classic
+from rpyc.utils import classic, exposed, service
 from rpyc.version import version as __version__
 
 from rpyc.lib import setup_logger, spawn
