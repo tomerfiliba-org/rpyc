@@ -525,8 +525,9 @@ class Connection(object):
             try:
                 getattr_static(obj, name)
             except AttributeError:
-                return hasattr(obj, name)
-            return True
+                return False
+            else:
+                return True
 
 
         config = self._config
@@ -537,7 +538,7 @@ class Connection(object):
         plain |= config["allow_exposed_attrs"] and name.startswith(prefix)
         plain |= config["allow_safe_attrs"] and name in config["safe_attrs"]
         plain |= config["allow_public_attrs"] and not name.startswith("_")
-        has_exposed = prefix and hasattr_static(obj, prefix + name)
+        has_exposed = prefix and (hasattr(obj, prefix + name) or hasattr_static(obj, prefix + name))
         if plain and (not has_exposed or hasattr(obj, name)):
             return name
         if has_exposed:
