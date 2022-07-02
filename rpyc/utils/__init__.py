@@ -8,6 +8,9 @@ from rpyc.core import DEFAULT_CONFIG
 
 def service(cls):
     """find and rename exposed decorated attributes"""
+    # NOTE: inspect.getmembers invokes getattr for each attribute-name. Descriptors may raise AttributeError.
+    # Only the AttributeError exception is caught when raised. This decorator will if a descriptor raises
+    # any exception other than AttributeError when getattr is called.
     for attr_name, attr_obj in inspect.getmembers(cls):  # rebind exposed decorated attributes
         exposed_prefix = getattr(attr_obj, '__exposed__', False)
         if exposed_prefix and not inspect.iscode(attr_obj):  # exclude the implementation
@@ -26,11 +29,11 @@ def exposed(arg):
         # When the arg is a string (i.e. `@rpyc.exposed("customPrefix_")`) the prefix
         # is partially evaluated into the wrapper. The function returned is "frozen" and used as a decorator.
         return functools.partial(_wrapper, arg)
-    elif hasattr(arg, '__call__'):
+    elif hasattr(arg, '__call__') or hasattr(arg, '__get__'):
         # When the arg is callable (i.e. `@rpyc.exposed`) then use default prefix and invoke
         return _wrapper(exposed_prefix, arg)
     else:
-        raise TypeError('rpyc.exposed expects a callable object or a string')
+        raise TypeError('rpyc.exposed expects a callable object, descriptor, or string')
 
 
 def _wrapper(exposed_prefix, exposed_obj):
