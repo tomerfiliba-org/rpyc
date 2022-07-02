@@ -480,9 +480,7 @@ class Connection(object):
         # AsyncResult will be constructed and it is possible GIL switches
         # threads before AsyncResult.wait is invoked. So, using an rlock
         # we acquire once here and once inside of wait which invokes serve
-        self._recvlock.acquire()
         value = self.async_request(handler, *args, timeout=timeout).value
-        self._recvlock.release()
         return value
 
     def _async_request(self, handler, args=(), callback=(lambda a, b: None)):  # serving
