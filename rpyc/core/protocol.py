@@ -145,9 +145,9 @@ class Connection(object):
         self._HANDLERS = self._request_handlers()
         self._channel = channel
         self._seqcounter = itertools.count()
-        self._recvlock = RLock()
+        self._recvlock = RLock()  # AsyncResult implementation means that synchronous requests have multiple acquires
         self._sendlock = Lock()
-        self._recv_event = Condition()  # TODO: current use may suggest we could simply timeout and catch an acquire
+        self._recv_event = Condition()  # TODO: why not simply timeout? why not associate w/ recvlock? explain/redesign
         self._request_callbacks = {}
         self._local_objects = RefCountingColl()
         self._last_traceback = None
@@ -477,17 +477,17 @@ class Connection(object):
             pass
         return at_least_once
 
-    def sync_request(self, handler, *args):  # serving
+    def sync_request(self, handler, *args):
         """requests, sends a synchronous request (waits for the reply to arrive)
 
         :raises: any exception that the requets may be generated
         :returns: the result of the request
         """
         timeout = self._config["sync_request_timeout"]
-        # AsyncResult will be constructed and it is possible GIL switches
-        # threads before AsyncResult.wait is invoked.
-        value = self.async_request(handler, *args, timeout=timeout).value
-        return value
+        _async_res = self.async_request(handler, *args, timeout=timeout)
+        # _async_res is an instance of AsyncResult, the value property invokes Connection.serve via AsyncResult.wait
+        # So, the _recvlock can be acquired multiple times by the owning thread and warrants the use of RLock
+        return _async_res.value
 
     def _async_request(self, handler, args=(), callback=(lambda a, b: None)):  # serving
         seq = self._get_seq_id()
