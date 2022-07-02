@@ -12,6 +12,7 @@ from rpyc.core.consts import STREAM_CHUNK
 win32file = safe_import("win32file")
 win32pipe = safe_import("win32pipe")
 win32event = safe_import("win32event")
+ssl = safe_import("ssl")
 
 
 retry_errnos = (errno.EAGAIN, errno.EWOULDBLOCK)
@@ -206,7 +207,6 @@ class SocketStream(Stream):
 
         :returns: a :class:`SocketStream`
         """
-        import ssl
         if kwargs.pop("ipv6", False):
             kwargs["family"] = socket.AF_INET6
         s = cls._connect(host, port, **kwargs)
