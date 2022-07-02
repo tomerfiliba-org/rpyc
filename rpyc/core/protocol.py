@@ -147,7 +147,7 @@ class Connection(object):
         self._seqcounter = itertools.count()
         self._recvlock = RLock()
         self._sendlock = Lock()
-        self._recv_event = Condition()
+        self._recv_event = Condition()  # TODO: current use may suggest we could simply timeout and catch an acquire
         self._request_callbacks = {}
         self._local_objects = RefCountingColl()
         self._last_traceback = None
