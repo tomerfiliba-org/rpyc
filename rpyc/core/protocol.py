@@ -398,15 +398,17 @@ class Connection(object):
             with self._recv_event:
                 self._recv_event.notify_all()
             raise
-        else:
+        # At this point, the recvlock was acquired once, we must release once before exiting the function
+        if data:
+            # Dispatch will unbox, invoke callbacks, etc.
+            self._dispatch(data)
             self._recvlock.release()
             with self._recv_event:
                 self._recv_event.notify_all()
-        if not data:
-            return False
-        else:
-            self._dispatch(data)
             return True
+        else:
+            self._recvlock.release()
+            return False
 
     def poll(self, timeout=0):  # serving
         """Serves a single transaction, should one arrives in the given
