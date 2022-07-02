@@ -476,10 +476,8 @@ class Connection(object):
         :returns: the result of the request
         """
         timeout = self._config["sync_request_timeout"]
-        # The recv rlock is acquired prior to invoking the request.
         # AsyncResult will be constructed and it is possible GIL switches
-        # threads before AsyncResult.wait is invoked. So, using an rlock
-        # we acquire once here and once inside of wait which invokes serve
+        # threads before AsyncResult.wait is invoked.
         value = self.async_request(handler, *args, timeout=timeout).value
         return value
 
