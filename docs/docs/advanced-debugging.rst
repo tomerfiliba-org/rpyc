@@ -20,13 +20,19 @@ Let's use `pyenv` to install Python versions under active development. Since dev
         printf "${PWD}\n" > "${site}/rpyc.pth"
     done
 
-Each `venv` contains a `.pth` file that appends `rpyc` to `sys.path`.
+Each `venv` contains a `.pth` file that appends `rpyc` to `sys.path`. We can run `rpyc_classic.py` using `pyenv` like so.
 
 .. code-block:: bash
 
-    PYENV_VERSION=3.11-dev pyenv exec python ./bin/rpyc_classic.py --host 127.0.0.1
-    PYENV_VERSION=3.10-dev pyenv exec python -c "import rpyc; conn = rpyc.utils.classic.connect('127.0.0.1'); conn.modules.sys.stderr.write('hello world\n')"
+    PYENV_VERSION=3.10-dev pyenv exec python ./bin/rpyc_classic.py --host 127.0.0.1
+    PYENV_VERSION=3.9-dev pyenv exec python -c "import rpyc; conn = rpyc.utils.classic.connect('127.0.0.1'); conn.modules.sys.stderr.write('hello world\n')"
 
+Unit tests can be ran using your desired Python version as well.
+
+.. code-block:: bash
+
+    PYENV_VERSION=3.9-dev pyenv exec python -m unittest discover -s ./tests -k test_affinity
+    PYENV_VERSION=3.8-dev pyenv exec python -m unittest discover -s ./tests
 
 Testing Supported Python Versions via Docker
 --------------------------------------------
@@ -67,8 +73,7 @@ Running the chained-connection unit test
 
 .. code-block:: bash
 
-    cd tests
-    python  -m unittest test_get_id_pack.Test_get_id_pack.test_chained_connect
+    python -m unittest discover -s ./tests -k test_get_id_pack.Test_get_id_pack.test_chained_connect
 
 
 After stopping Wireshark, export specified packets, and open the PCAP. If not already configured, add a custom display column:
