@@ -389,18 +389,24 @@ class Connection(object):
                     return False
         # Assume the receive rlock is acquired and incremented
         try:
+            data = None  # Ensure data is initialized
             data = self._channel.poll(timeout) and self._channel.recv()
-            if not data:
-                return False
-        except EOFError:
-            self.close()  # sends close async request
-            raise
-        finally:
+        except Exception as exc:
+            if isinstance(exc, EOFError):
+                self.close()  # sends close async request
             self._recvlock.release()
             with self._recv_event:
                 self._recv_event.notify_all()
-        self._dispatch(data)
-        return True
+            raise
+        else:
+            self._recvlock.release()
+            with self._recv_event:
+                self._recv_event.notify_all()
+        if not data:
+            return False
+        else:
+            self._dispatch(data)
+            return True
 
     def poll(self, timeout=0):  # serving
         """Serves a single transaction, should one arrives in the given
