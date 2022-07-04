@@ -211,10 +211,12 @@ class BgServingThread(object):
     SERVE_INTERVAL = 0.0
     SLEEP_INTERVAL = 0.1
 
-    def __init__(self, conn, callback=None):
+    def __init__(self, conn, callback=None, serve_interval=SERVE_INTERVAL, sleep_interval=SLEEP_INTERVAL):
         self._conn = conn
         self._active = True
         self._callback = callback
+        self._serve_interval = serve_interval
+        self._sleep_interval = sleep_interval
         self._thread = spawn(self._bg_server)
 
     def __del__(self):
@@ -224,8 +226,8 @@ class BgServingThread(object):
     def _bg_server(self):
         try:
             while self._active:
-                self._conn.serve(self.SERVE_INTERVAL)
-                time.sleep(self.SLEEP_INTERVAL)  # to reduce contention
+                self._conn.serve(self._serve_interval)
+                time.sleep(self._sleep_interval)  # to reduce contention
         except Exception:
             if self._active:
                 self._active = False
