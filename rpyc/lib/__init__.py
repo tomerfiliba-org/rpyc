@@ -72,6 +72,16 @@ class hybridmethod(object):
         raise AttributeError("Cannot overwrite method")
 
 
+def hasattr_static(obj, attr):
+    """Returns if `inspect.getattr_static` can find an attribute of ``obj``."""
+    try:
+        inspect.getattr_static(obj, attr)
+    except AttributeError:
+        return False
+    else:
+        return True
+
+
 def spawn(*args, **kwargs):
     """Start and return daemon thread. ``spawn(func, *args, **kwargs)``."""
     func, args = args[0], args[1:]
