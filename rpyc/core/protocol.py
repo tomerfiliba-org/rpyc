@@ -6,9 +6,8 @@ import socket
 import time  # noqa: F401
 import gc  # noqa: F401
 
-from inspect import getattr_static
 from threading import Lock, Condition, RLock
-from rpyc.lib import spawn, Timeout, get_methods, get_id_pack
+from rpyc.lib import spawn, Timeout, get_methods, get_id_pack, hasattr_static
 from rpyc.lib.compat import pickle, next, maxint, select_error, acquire_lock  # noqa: F401
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
@@ -525,15 +524,6 @@ class Connection(object):
         return self._remote_root
 
     def _check_attr(self, obj, name, perm):  # attribute access
-        def hasattr_static(obj, name):
-            try:
-                getattr_static(obj, name)
-            except AttributeError:
-                return False
-            else:
-                return True
-
-
         config = self._config
         if not config[perm]:
             raise AttributeError(f"cannot access {name!r}")
