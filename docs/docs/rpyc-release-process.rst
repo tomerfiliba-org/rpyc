@@ -3,16 +3,17 @@ RPyC Release Process
 
 A walkthrough of doing a RPyC Release.
 
-1. Describe commit history within `CHANGELOG.rst` (see `Generate Entry`_)
-2. Update `version` and `release_date` values for `rpyc/version.py` (`Semantic Versioning`_)
-3. Review `git status`, commit changes, and `git push`.
-4. Create an Annotated tag: `git tag -a 5.X.Y -m "Updated CHANGELOG.rst and version for release 5.X.Y"`
-5. Publish release tag: `git push origin 5.X.Y`
+1.
+2. Describe commit history within `CHANGELOG.rst` (see `Generate Entry`_)
+3. Update `version` and `release_date` values for `rpyc/version.py` (`Semantic Versioning`_)
+4. Review `git status`, commit changes, and `git push`.
+5. Create an Annotated tag: `git tag -a 5.X.Y -m "Updated CHANGELOG.rst and version for release 5.X.Y"`
+6. Publish release tag: `git push origin 5.X.Y`
 
-6. Clean up any old build artifacts: `pyenv exec python setup.py clean --all`
-7. Create a wheel package: `pyenv exec python setup.py bdist_wheel`
-8. Upload the wheel package: `twine upload --repository-url https://upload.pypi.org/legacy/ dist/rpyc-*-any.whl`
-9. Create new release such that the notes are from `CHANGELOG.rst` entry.
+7. Clean up any old build artifacts: `pyenv exec python setup.py clean --all`
+8. Create a wheel package: `pyenv exec python setup.py bdist_wheel`
+9. Upload the wheel package: `twine upload --repository-url https://upload.pypi.org/legacy/ dist/rpyc-*-any.whl`
+10. Create new release such that the notes are from `CHANGELOG.rst` entry.
 
 .. _Semantic Versioning: https://semver.org/
 

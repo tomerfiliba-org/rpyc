@@ -6,7 +6,7 @@ import unittest
 class MyService(rpyc.Service):
 
     def exposed_set_version(self):
-        rpyc.version.version_string = '1.0.0'
+        rpyc.version.__version__ = '1.0.0'
 
     def exposed_remote_assert(self, val):
         assert val
@@ -17,11 +17,11 @@ class TestRemoteException(unittest.TestCase):
         self.server = rpyc.utils.server.OneShotServer(MyService, port=0)
         self.server.logger.quiet = False
         self.server._start_in_thread()
-        self.original_version_string = rpyc.version.version_string
+        self.original_version_string = rpyc.version.__version__
         self.conn = rpyc.connect("localhost", port=self.server.port)
 
     def tearDown(self):
-        rpyc.version.version_string = self.original_version_string
+        rpyc.version.__version__ = self.original_version_string
         self.conn.close()
 
     def test_remote_exception(self):
