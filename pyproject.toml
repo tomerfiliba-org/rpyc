@@ -1,0 +1,58 @@
+[build-system]
+requires = [
+    "hatchling>=1.6.0",
+]
+build-backend = "hatchling.build"
+
+[project]
+name = "rpyc"
+description = "Remote Python Call (RPyC) is a transparent and symmetric distributed computing library"
+readme = "README.rst"
+license = "MIT"
+requires-python = ">=3.7"
+authors = [
+    { name = "Tomer Filiba", email = "tomerfiliba@gmail.com" },
+    { name = "James Stronz", email = "comrumino@archstrike.org" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Object Brokering",
+    "Topic :: Software Development :: Testing",
+    "Topic :: System :: Clustering",
+    "Topic :: System :: Distributed Computing",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Networking",
+    "Topic :: System :: Systems Administration",
+]
+dependencies = [
+    "plumbum",
+]
+dynamic = [
+    "version",
+]
+
+[project.urls]
+Homepage = "https://rpyc.readthedocs.org"
+Source = "https://github.com/tomerfiliba-org/rpyc"
+
+[tool.hatch.version]
+path = "rpyc/version.py"
+
+[tool.hatch.build.targets.sdist]
+only-include = [
+    "/rpyc",
+    "/bin",
+]
+[tool.hatch.build.targets.wheel]
+packages = ["rpyc"]
