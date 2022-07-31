@@ -1,4 +1,4 @@
-5.2.0
+5.2.1
 =====
 Date: 2022-07-30
 
@@ -27,6 +27,8 @@ Date: 2022-07-30
 .. _#491: https://github.com/tomerfiliba-org/rpyc/issues/491
 .. _#307: https://github.com/tomerfiliba-org/rpyc/issues/307
 .. _#292: https://github.com/tomerfiliba-org/rpyc/issues/292
+
+* 5.2.0 was skipped due to PyPi not allowing file name reuse
 
 5.1.0
 =====
