@@ -1,3 +1,33 @@
+5.2.0
+=====
+Date: 2022-07-30
+
+- `#494`_ Added support for using decorators to expose methods (see `#292`_)
+- `#499`_ Allow `BgServingThread` serve and sleep intervals to be customized
+- `#498`_ Avoid redefining `hasattr_static` on every `_check_attr` call
+- `#489`_ Updated SSL context usage to avoid deprecated aspects and changes
+- `#485`_ Add a configurable timeout on the zero deploy close method
+- `#484`_ Fixed `--mode` CLI argument for `rpyc_registry`
+- `#479`_ Fixed propagation of `AttributeErrors` raised by exposed descriptors
+- `#476`_ Allow filtering by host on list_services
+- `#493`_ and `#502`_  Improved documentation and fixed typos
+- `#492`_ Some work around race conditions but proper fix is rather involved (see `#491`_)
+
+.. _#502: https://github.com/tomerfiliba-org/rpyc/pull/502
+.. _#499: https://github.com/tomerfiliba-org/rpyc/pull/499
+.. _#498: https://github.com/tomerfiliba-org/rpyc/pull/498
+.. _#494: https://github.com/tomerfiliba-org/rpyc/pull/494
+.. _#489: https://github.com/tomerfiliba-org/rpyc/pull/489
+.. _#485: https://github.com/tomerfiliba-org/rpyc/pull/485
+.. _#484: https://github.com/tomerfiliba-org/rpyc/pull/484
+.. _#479: https://github.com/tomerfiliba-org/rpyc/pull/479
+.. _#476: https://github.com/tomerfiliba-org/rpyc/pull/476
+.. _#492: https://github.com/tomerfiliba-org/rpyc/pull/492
+.. _#493: https://github.com/tomerfiliba-org/rpyc/issues/493
+.. _#491: https://github.com/tomerfiliba-org/rpyc/issues/491
+.. _#307: https://github.com/tomerfiliba-org/rpyc/issues/307
+.. _#292: https://github.com/tomerfiliba-org/rpyc/issues/292
+
 5.1.0
 =====
 Date: 2022-02-26

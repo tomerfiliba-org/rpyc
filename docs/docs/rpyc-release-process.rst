@@ -3,17 +3,18 @@ RPyC Release Process
 
 A walkthrough of doing a RPyC Release.
 
-1. Ensure a clean and current build environment (i.e., `git pull; git status`)
-2. Describe commit history within `CHANGELOG.rst` (see `Generate Entry`_)
-3. Update `release_date` in `rpyc/version.py` and bump version (`Semantic Versioning`_ and `Versioning using Hatch`_)
-4. Review `git diff`, commit changes, `git push`, and `export ver=$(python -c 'import rpyc; print(rpyc.__version__)')`.
-5. Create an Annotated tag: `git tag -a ${ver} -m "Updated CHANGELOG.rst and version for release ${ver}"`
-6. Publish release tag: `git push origin ${ver}`
-7. Install hatch: `pyenv exec pip install hatch`
-7. Clean up any old build artifacts: `git clean -Xf -- dist/`
-8. Create a wheel package: `pyenv exec hatch -v build`
-9. Upload the wheel package: `pyenv exec hatch -v publish`
-10. Create new release such that the notes are from `CHANGELOG.rst` entry.
+1. Ensure a clean and current build environment (i.e., ``git pull; git status``)
+2. Describe commit history within ``CHANGELOG.rst`` (see `Generate Entry`_)
+3. Update ``release_date`` in ``rpyc/version.py`` and bump version (`Semantic Versioning`_ and `Versioning using Hatch`_)
+4. Verify changes and run ``git add .``, ``git push``, and ``export ver=$(python -c 'import rpyc; print(rpyc.__version__)')``.
+5. Create an Annotated tag: ``git tag -a ${ver} -m "Updated CHANGELOG.rst and version for release ${ver}"``
+6. Publish release tag: ``git push origin ${ver}``
+7. Install hatch: ``pyenv exec pip install hatch``
+8. Clean up any old build artifacts: ``git clean -Xf -- dist/``
+9. Create a wheel package: ``pyenv exec hatch -v build``
+10. Upload the wheel package: ``pyenv exec hatch -v publish --user=__token__ --auth=${pypi_token} ; history -c && history -w``
+11. Create new release such that the notes are from `CHANGELOG.rst` entry (``%s/`#/#/g`` and ``%s/`_//g``)
+12. Make sure to add the wheel as an attachment to the release and you are done!
 
 .. _Semantic Versioning: https://semver.org/
 .. _Versioning using Hatch: https://hatch.pypa.io/latest/version/
