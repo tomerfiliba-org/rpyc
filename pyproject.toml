@@ -46,13 +46,16 @@ dynamic = [
 Homepage = "https://rpyc.readthedocs.org"
 Source = "https://github.com/tomerfiliba-org/rpyc"
 
+[project.scripts]
+rpyc_classic = "rpyc.cli.rpyc_classic:main"
+rpyc_registry = "rpyc.cli.rpyc_registry:main"
+
 [tool.hatch.version]
 path = "rpyc/version.py"
 
 [tool.hatch.build.targets.sdist]
-only-include = [
-    "/rpyc",
-    "/bin",
-]
+only-include = ["rpyc"]
+
+
 [tool.hatch.build.targets.wheel]
-packages = ["rpyc"]
+only-include = ["rpyc"]

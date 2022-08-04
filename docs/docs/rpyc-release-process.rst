@@ -6,7 +6,7 @@ A walkthrough of doing a RPyC Release.
 1. Ensure a clean and current build environment (i.e., ``git pull; git status``)
 2. Describe commit history within ``CHANGELOG.rst`` (see `Generate Entry`_)
 3. Update ``release_date`` in ``rpyc/version.py`` and bump version (`Semantic Versioning`_ and `Versioning using Hatch`_)
-4. Verify changes and run ``git add .``, ``git push``, and ``export ver=$(python -c 'import rpyc; print(rpyc.__version__)')``.
+4. Verify changes and run ``export ver=$(python -c 'import rpyc; print(rpyc.__version__)')``, ``git add .``, and ``git push``.
 5. Create an Annotated tag: ``git tag -a ${ver} -m "Updated CHANGELOG.rst and version for release ${ver}"``
 6. Publish release tag: ``git push origin ${ver}``
 7. Install hatch: ``pyenv exec pip install hatch``
