@@ -1,3 +1,11 @@
+5.2.2
+=====
+Date: 2022-08-03
+
+- `#503`_ `rpyc_classic.py` can now be resolved as `rpyc_classic` (limitations on pyproject.toml syntax)
+
+.. _#503: https://github.com/tomerfiliba-org/rpyc/issues/503
+
 5.2.1
 =====
 Date: 2022-07-30
