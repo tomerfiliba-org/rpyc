@@ -16,15 +16,26 @@ except ImportError:
 server = None
 cur_dir = os.getcwd()
 bin_dir = os.path.dirname(__file__)
+DEFAULTS = {
+    "rpycd": {
+        "mode": "threaded",
+        "host": "127.0.0.1",
+        "port": 18812,
+        "quiet": "True",
+        "logfile": "rpycd.log"
+    }
+}
 
 
 def start():
     global server
 
     conf = ConfigParser()
+    conf.read_dict(DEFAULTS)
     conf.read([
         os.path.join(cur_dir, 'rpycd.conf'),
         os.path.join(bin_dir, 'rpycd.conf'),    # later files trump earlier ones
+        os.environ.get("RPYC_DAEMON_CONF", "rpycd.conf")
     ])
 
     mode = conf.get("rpycd", "mode").lower()
@@ -55,7 +66,7 @@ def stop(*args):
     sys.exit()
 
 
-if __name__ == "__main__":
+def main():
     pid_file = os.path.join(cur_dir, 'rpycd.pid')
     with daemon.DaemonContext(
             pidfile=PIDLockFile(pid_file),
