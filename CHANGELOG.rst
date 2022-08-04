@@ -1,8 +1,8 @@
-5.2.2
+5.2.3
 =====
 Date: 2022-08-03
 
-- `#503`_ `rpyc_classic.py` can now be resolved as `rpyc_classic` (limitations on pyproject.toml syntax)
+- `#503`_ `rpyc_classic.py` and `rpyc_registry.py` can now be resolved without the suffix as well.
 
 .. _#503: https://github.com/tomerfiliba-org/rpyc/issues/503
 

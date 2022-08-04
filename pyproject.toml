@@ -49,6 +49,8 @@ Source = "https://github.com/tomerfiliba-org/rpyc"
 [project.scripts]
 rpyc_classic = "rpyc.cli.rpyc_classic:main"
 rpyc_registry = "rpyc.cli.rpyc_registry:main"
+"rpyc_classic.py" = "rpyc.cli.rpyc_classic:main"
+"rpyc_registry.py" = "rpyc.cli.rpyc_registry:main"
 
 [tool.hatch.version]
 path = "rpyc/version.py"
