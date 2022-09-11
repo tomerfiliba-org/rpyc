@@ -6,6 +6,10 @@ import socket
 import time  # noqa: F401
 import gc  # noqa: F401
 
+import collections
+import struct
+import threading
+
 from threading import Lock, Condition, RLock
 from rpyc.lib import spawn, Timeout, get_methods, get_id_pack, hasattr_static
 from rpyc.lib.compat import pickle, next, maxint, select_error, acquire_lock  # noqa: F401
@@ -123,6 +127,10 @@ Parameter                                Default value     Description
 """
 
 
+class _RECEIVE:
+    pass
+
+
 _connection_id_generator = itertools.count(1)
 
 
@@ -157,6 +165,11 @@ class Connection(object):
         self._send_queue = []
         self._local_root = root
         self._closed = False
+
+        self._lock = threading.Lock()
+        self._threads = {}
+        self._receiving = False
+        self._thread_pool = []
 
     def __del__(self):
         self.close()
@@ -234,7 +247,15 @@ class Connection(object):
         return next(self._seqcounter)
 
     def _send(self, msg, seq, args):  # IO
-        data = brine.dump((msg, seq, args))
+        this_thread = self._get_thread()
+        _ = struct.pack('<QQ', this_thread.id, this_thread._remote_thread_id)
+        data = _ + brine.dump((msg, seq, args))
+        if msg == consts.MSG_REQUEST:
+            this_thread._occupation_count += 1
+        else:
+            this_thread._occupation_count -= 1
+            if this_thread._occupation_count == 0:
+                this_thread._remote_thread_id = 0
         # GC might run while sending data
         # if so, a BaseNetref.__del__ might be called
         # BaseNetref.__del__ must call asyncreq,
@@ -358,16 +379,23 @@ class Connection(object):
 
     def _dispatch(self, data):  # serving---dispatch?
         msg, seq, args = brine.load(data)
+        this_thread = self._get_thread()
         if msg == consts.MSG_REQUEST:
+            this_thread._occupation_count += 1
             self._dispatch_request(seq, args)
-        elif msg == consts.MSG_REPLY:
-            obj = self._unbox(args)
-            self._seq_request_callback(msg, seq, False, obj)
-        elif msg == consts.MSG_EXCEPTION:
-            obj = self._unbox_exc(args)
-            self._seq_request_callback(msg, seq, True, obj)
         else:
-            raise ValueError(f"invalid message type: {msg!r}")
+            this_thread._occupation_count -= 1
+            if this_thread._occupation_count == 0:
+                this_thread._remote_thread_id = 0
+
+            if msg == consts.MSG_REPLY:
+                obj = self._unbox(args)
+                self._seq_request_callback(msg, seq, False, obj)
+            elif msg == consts.MSG_EXCEPTION:
+                obj = self._unbox_exc(args)
+                self._seq_request_callback(msg, seq, True, obj)
+            else:
+                raise ValueError(f"invalid message type: {msg!r}")
 
     def serve(self, timeout=1, wait_for_lock=True):  # serving
         """Serves a single request or reply that arrives within the given
@@ -379,36 +407,129 @@ class Connection(object):
                   otherwise.
         """
         timeout = Timeout(timeout)
-        with self._recv_event:
-            # Exit early if we cannot acquire the recvlock
-            if not self._recvlock.acquire(False):
-                if wait_for_lock:
-                    # Wait condition for recvlock release; recvlock is not underlying lock for condition
-                    return self._recv_event.wait(timeout.timeleft())
+
+        this_thread = self._get_thread()
+        wait = False
+
+        with self._lock:
+            message_available = this_thread._event.is_set()
+
+            if message_available:
+                remote_thread_id, message = this_thread._deque.popleft()
+                if len(this_thread._deque) == 0:
+                    this_thread._event.clear()
+
+            else:
+                if self._receiving:  # enter pool
+                    self._thread_pool.append(this_thread)
+                    wait = True
+
                 else:
-                    return False
-        # Assume the receive rlock is acquired and incremented
-        try:
-            data = None  # Ensure data is initialized
-            data = self._channel.poll(timeout) and self._channel.recv()
-        except Exception as exc:
-            if isinstance(exc, EOFError):
-                self.close()  # sends close async request
-            self._recvlock.release()
-            with self._recv_event:
-                self._recv_event.notify_all()
-            raise
-        # At this point, the recvlock was acquired once, we must release once before exiting the function
-        if data:
-            # Dispatch will unbox, invoke callbacks, etc.
-            self._dispatch(data)
-            self._recvlock.release()
-            with self._recv_event:
-                self._recv_event.notify_all()
+                    self._receiving = True
+
+        if message_available:  # just process
+            this_thread._remote_thread_id = remote_thread_id
+            self._dispatch(message)
             return True
-        else:
-            self._recvlock.release()
-            return False
+
+        if wait:
+            this_thread._event.wait(timeout.timeleft())
+
+            with self._lock:  # leave pool
+                self._thread_pool.remove(this_thread)
+                message_available = this_thread._event.is_set()
+
+                if message_available:
+                    object = this_thread._deque.popleft()
+                    if len(this_thread._deque) == 0:
+                        this_thread._event.clear()
+
+            if message_available:
+                if object is not _RECEIVE:
+                    remote_thread_id, message = object
+                    this_thread._remote_thread_id = remote_thread_id
+                    self._dispatch(message)
+                    return True
+
+            else:  # timeout
+                return False
+
+        while True:
+            # from upstream
+            try:
+                message = self._channel.poll(timeout) and self._channel.recv()
+
+            except Exception as exception:
+                if isinstance(exception, EOFError):
+                    self.close()  # sends close async request
+
+                raise
+
+            if not message:  # timeout; from upstream
+                with self._lock:
+                    for thread in self._thread_pool:
+                        if not thread._event.is_set():
+                            thread._deque.append(_RECEIVE)
+                            thread._event.set()
+                            break
+
+                    else:  # stop receiving
+                        self._receiving = False
+
+                return False
+
+            remote_thread_id, local_thread_id = struct.unpack('<QQ', message[:16])
+            message = message[16:]
+
+            this = False
+
+            if local_thread_id == 0:  # root request
+                if this_thread._occupation_count == 0:  # this
+                    this = True
+
+                else:  # other
+                    new = False
+
+                    with self._lock:
+                        for thread in self._thread_pool:
+                            if thread._occupation_count == 0 and not thread._event.is_set():
+                                thread._deque.append((remote_thread_id, message))
+                                thread._event.set()
+                                break
+
+                        else:
+                            new = True
+
+                    if new:
+                        thread = _Thread(None)
+                        thread._deque.append((remote_thread_id, message))
+                        thread._event.set()
+
+                        threading.Thread(target=self._serve, args=(thread,)).start()
+
+            elif local_thread_id == this_thread.id:
+                this = True
+
+            else:  # sub request
+                thread = self._get_thread(id=local_thread_id)
+                with self._lock:
+                    thread._deque.append((remote_thread_id, message))
+                    thread._event.set()
+
+            if this:
+                with self._lock:
+                    for thread in self._thread_pool:
+                        if not thread._event.is_set():
+                            thread._deque.append(_RECEIVE)
+                            thread._event.set()
+                            break
+
+                    else:  # stop receiving
+                        self._receiving = False
+
+                this_thread._remote_thread_id = remote_thread_id
+                self._dispatch(message)
+                return True
 
     def poll(self, timeout=0):  # serving
         """Serves a single transaction, should one arrives in the given
@@ -686,3 +807,41 @@ class Connection(object):
                 stop = maxint
             getslice = self._handle_getattr(obj, fallback)
             return getslice(start, stop, *args)
+
+    def _get_thread(self, id=None):
+        if id is None:
+            id = threading.get_ident()
+
+        thread = self._threads.get(id)
+        if thread is None:
+            thread = _Thread(id)
+            self._threads[id] = thread
+
+        return thread
+
+    def _serve(self, thread):
+        id = threading.get_ident()
+        thread.id = id
+        self._threads[id] = thread
+
+        # from upstream
+        try:
+            while not self.closed:
+                self.serve(None)
+        except (socket.error, select_error, IOError):
+            if not self.closed:
+                raise
+        except EOFError:
+            pass
+
+
+class _Thread:
+    def __init__(self, id):
+        super().__init__()
+
+        self.id = id
+
+        self._remote_thread_id = 0
+        self._occupation_count = 0
+        self._event = threading.Event()
+        self._deque = collections.deque()
