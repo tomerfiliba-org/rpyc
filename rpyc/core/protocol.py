@@ -127,10 +127,6 @@ Parameter                                Default value     Description
 """
 
 
-class _RECEIVE:
-    pass
-
-
 _connection_id_generator = itertools.count(1)
 
 
@@ -412,7 +408,7 @@ class Connection(object):
         wait = False
 
         with self._lock:
-            message_available = this_thread._event.is_set()
+            message_available = this_thread._event.is_set() and len(this_thread._deque) != 0
 
             if message_available:
                 remote_thread_id, message = this_thread._deque.popleft()
@@ -433,26 +429,36 @@ class Connection(object):
             return True
 
         if wait:
-            this_thread._event.wait(timeout.timeleft())
+            while True:
+                this_thread._event.wait(timeout.timeleft())
 
-            with self._lock:  # leave pool
-                self._thread_pool.remove(this_thread)
-                message_available = this_thread._event.is_set()
+                with self._lock:
+                    if this_thread._event.is_set():
+                        message_available = len(this_thread._deque) != 0
 
-                if message_available:
-                    object = this_thread._deque.popleft()
-                    if len(this_thread._deque) == 0:
-                        this_thread._event.clear()
+                        if message_available:
+                            remote_thread_id, message = this_thread._deque.popleft()
+                            if len(this_thread._deque) == 0:
+                                this_thread._event.clear()
+
+                        else:
+                            this_thread._event.clear()
+
+                            if self._receiving:  # another thread was faster
+                                continue
+
+                            self._receiving = True
+
+                        self._thread_pool.remove(this_thread)  # leave pool
+                        break
+
+                    else:  # timeout
+                        return False
 
             if message_available:
-                if object is not _RECEIVE:
-                    remote_thread_id, message = object
-                    this_thread._remote_thread_id = remote_thread_id
-                    self._dispatch(message)
-                    return True
-
-            else:  # timeout
-                return False
+                this_thread._remote_thread_id = remote_thread_id
+                self._dispatch(message)
+                return True
 
         while True:
             # from upstream
@@ -463,13 +469,20 @@ class Connection(object):
                 if isinstance(exception, EOFError):
                     self.close()  # sends close async request
 
+                with self._lock:
+                    self._receiving = False
+
+                    for thread in self._thread_pool:
+                        thread._event.set()
+                        break
+
                 raise
 
             if not message:  # timeout; from upstream
                 with self._lock:
                     for thread in self._thread_pool:
                         if not thread._event.is_set():
-                            thread._deque.append(_RECEIVE)
+                            self._receiving = False
                             thread._event.set()
                             break
 
@@ -520,7 +533,7 @@ class Connection(object):
                 with self._lock:
                     for thread in self._thread_pool:
                         if not thread._event.is_set():
-                            thread._deque.append(_RECEIVE)
+                            self._receiving = False
                             thread._event.set()
                             break
 
