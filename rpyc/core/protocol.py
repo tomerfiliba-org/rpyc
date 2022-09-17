@@ -7,6 +7,7 @@ import time  # noqa: F401
 import gc  # noqa: F401
 
 import collections
+import concurrent.futures as c_futures
 import struct
 import threading
 
@@ -166,6 +167,7 @@ class Connection(object):
         self._threads = {}
         self._receiving = False
         self._thread_pool = []
+        self._thread_pool_executor = c_futures.ThreadPoolExecutor()
 
     def __del__(self):
         self.close()
@@ -196,6 +198,8 @@ class Connection(object):
         # self._seqcounter = None
         # self._config.clear()
         del self._HANDLERS
+
+        self._thread_pool_executor.shutdown(wait=False)  # TODO where?
 
     def close(self):  # IO
         """closes the connection, releasing all held resources"""
@@ -514,11 +518,7 @@ class Connection(object):
                             new = True
 
                     if new:
-                        thread = _Thread(None)
-                        thread._deque.append((remote_thread_id, message))
-                        thread._event.set()
-
-                        threading.Thread(target=self._serve, args=(thread,)).start()
+                        self._thread_pool_executor.submit(self._serve, remote_thread_id, message)
 
             elif local_thread_id == this_thread.id:
                 this = True
@@ -832,15 +832,19 @@ class Connection(object):
 
         return thread
 
-    def _serve(self, thread):
-        id = threading.get_ident()
-        thread.id = id
-        self._threads[id] = thread
+    def _serve(self, remote_thread_id, message):
+        thread = self._get_thread()
+        thread._deque.append((remote_thread_id, message))
+        thread._event.set()
 
         # from upstream
         try:
             while not self.closed:
                 self.serve(None)
+
+                if thread._occupation_count == 0:
+                    break
+
         except (socket.error, select_error, IOError):
             if not self.closed:
                 raise
