@@ -8,6 +8,7 @@ import gc  # noqa: F401
 
 import collections
 import concurrent.futures as c_futures
+import os
 import struct
 import threading
 
@@ -67,6 +68,7 @@ DEFAULT_CONFIG = dict(
     sync_request_timeout=30,
     before_closed=None,
     close_catchall=False,
+    bind_threads=os.environ.get('RPYC_BIND_THREADS', '0') != '0',
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
@@ -162,12 +164,13 @@ class Connection(object):
         self._send_queue = []
         self._local_root = root
         self._closed = False
-
-        self._lock = threading.Lock()
-        self._threads = {}
-        self._receiving = False
-        self._thread_pool = []
-        self._thread_pool_executor = c_futures.ThreadPoolExecutor()
+        self._bind_threads = self._config['bind_threads']
+        if self._bind_threads:
+            self._lock = threading.Lock()
+            self._threads = {}
+            self._receiving = False
+            self._thread_pool = []
+            self._thread_pool_executor = c_futures.ThreadPoolExecutor()
 
     def __del__(self):
         self.close()
@@ -198,8 +201,8 @@ class Connection(object):
         # self._seqcounter = None
         # self._config.clear()
         del self._HANDLERS
-
-        self._thread_pool_executor.shutdown(wait=False)  # TODO where?
+        if self._bind_threads:
+            self._thread_pool_executor.shutdown(wait=False)  # TODO where?
 
     def close(self):  # IO
         """closes the connection, releasing all held resources"""
@@ -247,15 +250,16 @@ class Connection(object):
         return next(self._seqcounter)
 
     def _send(self, msg, seq, args):  # IO
-        this_thread = self._get_thread()
-        _ = struct.pack('<QQ', this_thread.id, this_thread._remote_thread_id)
-        data = _ + brine.dump((msg, seq, args))
-        if msg == consts.MSG_REQUEST:
-            this_thread._occupation_count += 1
-        else:
-            this_thread._occupation_count -= 1
-            if this_thread._occupation_count == 0:
-                this_thread._remote_thread_id = 0
+        data = brine.dump((msg, seq, args))
+        if self._bind_threads:
+            this_thread = self._get_thread()
+            data = struct.pack('<QQ', this_thread.id, this_thread._remote_thread_id) + data
+            if msg == consts.MSG_REQUEST:
+                this_thread._occupation_count += 1
+            else:
+                this_thread._occupation_count -= 1
+                if this_thread._occupation_count == 0:
+                    this_thread._remote_thread_id = 0
         # GC might run while sending data
         # if so, a BaseNetref.__del__ might be called
         # BaseNetref.__del__ must call asyncreq,
@@ -379,15 +383,16 @@ class Connection(object):
 
     def _dispatch(self, data):  # serving---dispatch?
         msg, seq, args = brine.load(data)
-        this_thread = self._get_thread()
         if msg == consts.MSG_REQUEST:
-            this_thread._occupation_count += 1
+            if self._bind_threads:
+                self._get_thread()._occupation_count += 1
             self._dispatch_request(seq, args)
         else:
-            this_thread._occupation_count -= 1
-            if this_thread._occupation_count == 0:
-                this_thread._remote_thread_id = 0
-
+            if self._bind_threads:
+                this_thread = self._get_thread()
+                this_thread._occupation_count -= 1
+                if this_thread._occupation_count == 0:
+                    this_thread._remote_thread_id = 0
             if msg == consts.MSG_REPLY:
                 obj = self._unbox(args)
                 self._seq_request_callback(msg, seq, False, obj)
@@ -407,7 +412,40 @@ class Connection(object):
                   otherwise.
         """
         timeout = Timeout(timeout)
+        if self._bind_threads:
+            return self._serve_bound(timeout, wait_for_lock)
+        with self._recv_event:
+            # Exit early if we cannot acquire the recvlock
+            if not self._recvlock.acquire(False):
+                if wait_for_lock:
+                    # Wait condition for recvlock release; recvlock is not underlying lock for condition
+                    return self._recv_event.wait(timeout.timeleft())
+                else:
+                    return False
+        # Assume the receive rlock is acquired and incremented
+        try:
+            data = None  # Ensure data is initialized
+            data = self._channel.poll(timeout) and self._channel.recv()
+        except Exception as exc:
+            if isinstance(exc, EOFError):
+                self.close()  # sends close async request
+            self._recvlock.release()
+            with self._recv_event:
+                self._recv_event.notify_all()
+            raise
+        # At this point, the recvlock was acquired once, we must release once before exiting the function
+        if data:
+            # Dispatch will unbox, invoke callbacks, etc.
+            self._dispatch(data)
+            self._recvlock.release()
+            with self._recv_event:
+                self._recv_event.notify_all()
+            return True
+        else:
+            self._recvlock.release()
+            return False
 
+    def _serve_bound(self, timeout, wait_for_lock):
         this_thread = self._get_thread()
         wait = False
 
@@ -434,7 +472,8 @@ class Connection(object):
 
         if wait:
             while True:
-                this_thread._event.wait(timeout.timeleft())
+                if wait_for_lock:
+                    this_thread._event.wait(timeout.timeleft())
 
                 with self._lock:
                     if this_thread._event.is_set():
@@ -518,7 +557,7 @@ class Connection(object):
                             new = True
 
                     if new:
-                        self._thread_pool_executor.submit(self._serve, remote_thread_id, message)
+                        self._thread_pool_executor.submit(self._serve_temporary, remote_thread_id, message)
 
             elif local_thread_id == this_thread.id:
                 this = True
@@ -543,6 +582,36 @@ class Connection(object):
                 this_thread._remote_thread_id = remote_thread_id
                 self._dispatch(message)
                 return True
+
+    def _serve_temporary(self, remote_thread_id, message):
+        thread = self._get_thread()
+        thread._deque.append((remote_thread_id, message))
+        thread._event.set()
+
+        # from upstream
+        try:
+            while not self.closed:
+                self.serve(None)
+
+                if thread._occupation_count == 0:
+                    break
+
+        except (socket.error, select_error, IOError):
+            if not self.closed:
+                raise
+        except EOFError:
+            pass
+
+    def _get_thread(self, id=None):
+        if id is None:
+            id = threading.get_ident()
+
+        thread = self._threads.get(id)
+        if thread is None:
+            thread = _Thread(id)
+            self._threads[id] = thread
+
+        return thread
 
     def poll(self, timeout=0):  # serving
         """Serves a single transaction, should one arrives in the given
@@ -820,36 +889,6 @@ class Connection(object):
                 stop = maxint
             getslice = self._handle_getattr(obj, fallback)
             return getslice(start, stop, *args)
-
-    def _get_thread(self, id=None):
-        if id is None:
-            id = threading.get_ident()
-
-        thread = self._threads.get(id)
-        if thread is None:
-            thread = _Thread(id)
-            self._threads[id] = thread
-
-        return thread
-
-    def _serve(self, remote_thread_id, message):
-        thread = self._get_thread()
-        thread._deque.append((remote_thread_id, message))
-        thread._event.set()
-
-        # from upstream
-        try:
-            while not self.closed:
-                self.serve(None)
-
-                if thread._occupation_count == 0:
-                    break
-
-        except (socket.error, select_error, IOError):
-            if not self.closed:
-                raise
-        except EOFError:
-            pass
 
 
 class _Thread:
