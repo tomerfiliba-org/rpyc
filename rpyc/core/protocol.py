@@ -67,7 +67,7 @@ DEFAULT_CONFIG = dict(
     sync_request_timeout=30,
     before_closed=None,
     close_catchall=False,
-    bind_threads=os.environ.get('RPYC_BIND_THREADS', '0') != '0',
+    bind_threads=os.environ.get('RPYC_BIND_THREADS') == 'true',
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
@@ -125,6 +125,9 @@ Parameter                                Default value     Description
                                                            do no have this configuration option set.
 
 ``sync_request_timeout``                 ``30``            Default timeout for waiting results
+``bind_threads``                         ``False``         Whether to restrict request/reply by thread (experimental).
+                                                           The default value is False. Setting the environment variable
+                                                           `RPYC_BIND_THREADS` to `"true"` will enable this feature.
 =======================================  ================  =====================================================
 """
 
@@ -407,8 +410,7 @@ class Connection(object):
         might trigger multiple (nested) requests, thus this function may be
         reentrant.
 
-        :returns: ``True`` if a request or reply were received, ``False``
-                  otherwise.
+        :returns: ``True`` if a request or reply were received, ``False`` otherwise.
         """
         timeout = Timeout(timeout)
         if self._bind_threads:
@@ -445,6 +447,15 @@ class Connection(object):
             return False
 
     def _serve_bound(self, timeout, wait_for_lock):
+        """Serves messages like `serve` with the added benefit of making request/reply thread bound.
+        - Experimental functionality `RPYC_BIND_THREADS`
+
+        The first 8 bytes indicate the sending thread ID and intended recipient ID. When the recipient
+        thread ID is not the thread that received the data, the remote thread ID and message are appended
+        to the intended threads `_deque` and `_event` is set.
+
+        :returns: ``True`` if a request or reply were received, ``False`` otherwise.
+        """
         this_thread = self._get_thread()
         wait = False
 
@@ -583,6 +594,11 @@ class Connection(object):
                 return True
 
     def _serve_temporary(self, remote_thread_id, message):
+        """Callable that is used to schedule serve as a new thread
+        - Experimental functionality `RPYC_BIND_THREADS`
+
+        :returns: None
+        """
         thread = self._get_thread()
         thread._deque.append((remote_thread_id, message))
         thread._event.set()
@@ -602,6 +618,11 @@ class Connection(object):
             pass
 
     def _get_thread(self, id=None):
+        """Get internal thread information for current thread for ID, when None use current thread.
+        - Experimental functionality `RPYC_BIND_THREADS`
+
+        :returns: _Thread
+        """
         if id is None:
             id = threading.get_ident()
 
@@ -891,6 +912,7 @@ class Connection(object):
 
 
 class _Thread:
+    """Internal thread information for the RPYC protocol used for thread binding."""
     def __init__(self, id):
         super().__init__()
 
