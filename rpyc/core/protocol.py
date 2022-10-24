@@ -9,7 +9,6 @@ import gc  # noqa: F401
 import collections
 import concurrent.futures as c_futures
 import os
-import struct
 import threading
 
 from threading import Lock, Condition, RLock
@@ -253,7 +252,7 @@ class Connection(object):
         data = brine.dump((msg, seq, args))
         if self._bind_threads:
             this_thread = self._get_thread()
-            data = struct.pack('<QQ', this_thread.id, this_thread._remote_thread_id) + data
+            data = brine.I4I4.pack(this_thread.id, this_thread._remote_thread_id) + data
             if msg == consts.MSG_REQUEST:
                 this_thread._occupation_count += 1
             else:
@@ -534,7 +533,7 @@ class Connection(object):
 
                 return False
 
-            remote_thread_id, local_thread_id = struct.unpack('<QQ', message[:16])
+            remote_thread_id, local_thread_id = brine.I4I4.unpack(message[:16])
             message = message[16:]
 
             this = False
