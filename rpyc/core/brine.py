@@ -51,10 +51,14 @@ TAG_FSET = b"\x1a"
 TAG_COMPLEX = b"\x1b"
 IMM_INTS = dict((i, bytes([i + 0x50])) for i in range(-0x30, 0xa0))
 
-I1 = Struct("!B")
-I4 = Struct("!L")
-F8 = Struct("!d")
-C16 = Struct("!dd")
+# Below "!" is used to set byte order as network (= big-endian). See https://docs.python.org/3/library/struct.html
+F8 = Struct("!d")  # Python type float w/ size [8] (ctype double)
+C16 = Struct("!dd")  # Successive floats (complex numbers)
+I1 = Struct("!B")  # Python type int w/ size [1] (ctype unsigned char)
+I4 = Struct("!L")  # Python type int w/ size [4] (ctype unsigned long)
+# I4I4 is successive ints w/ size 4 and was introduced to pack local thread id and remote thread id
+# Since PyThread_get_thread_ident returns a type of unsigned long, !LL can store both thread IDs.
+I4I4 = Struct("!LL")
 
 _dump_registry = {}
 _load_registry = {}
@@ -66,6 +70,7 @@ def register(coll, key):
         coll[key] = func
         return func
     return deco
+
 
 # ===============================================================================
 # dumping
@@ -180,6 +185,7 @@ def _undumpable(obj, stream):
 
 def _dump(obj, stream):
     _dump_registry.get(type(obj), _undumpable)(obj, stream)
+
 
 # ===============================================================================
 # loading
