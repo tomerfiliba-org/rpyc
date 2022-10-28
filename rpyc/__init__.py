@@ -16,12 +16,12 @@ Classic-style usage::
     None
     >>> print(c.eval("x + 2"))
     7
-    >>> print(c.modules.os.listdir("."))       #doctest: +ELLIPSIS
+    >>> print(c.modules.os.listdir("."))  # doctest: +ELLIPSIS
     [...]
-    >>> print(c.modules["xml.dom.minidom"].parseString("<a/>"))   #doctest: +ELLIPSIS
+    >>> print(c.modules["xml.dom.minidom"].parseString("<a/>"))  # doctest: +ELLIPSIS
     <xml.dom.minidom.Document instance at ...>
-    >>> f = c.builtin.open("foobar.txt", "rb")     #doctest: +SKIP
-    >>> print(f.read(100))    #doctest: +SKIP
+    >>> f = c.builtin.open("foobar.txt", "rb")  # doctest: +SKIP
+    >>> print(f.read(100))  # doctest: +SKIP
     ...
 
 """
