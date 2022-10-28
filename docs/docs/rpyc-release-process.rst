@@ -28,7 +28,8 @@ Generate CHANGELOG.rst Entry
 ---------------------------------
 To create an initial entry draft, run some shell commands.
 
-.. code-block:: python
+.. code-block:: bash
+
     owner="tomerfiliba-org"
     repo="rpyc"
     #url="https://github.com/${owner}/${repo}"
