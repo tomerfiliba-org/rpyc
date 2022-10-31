@@ -138,6 +138,11 @@ _connection_id_generator = itertools.count(1)
 class Connection(object):
     """The RPyC *connection* (AKA *protocol*).
 
+    Objects referenced over the connection are either local or remote. This class retains a strong reference to
+    local objects that is deleted when the reference count is zero. Remote/proxied objects have a life-cycle
+    controlled by a different address space. Since garbage collection is handled on the remote end, a weak reference
+    is used for netrefs.
+
     :param root: the :class:`~rpyc.core.service.Service` object to expose
     :param channel: the :class:`~rpyc.core.channel.Channel` over which messages are passed
     :param config: the connection's configuration dict (overriding parameters
