@@ -122,7 +122,7 @@ class TestCustomService(unittest.TestCase):
         self.prefixed_conn.root.prefix_get_decorated_prefix
         self.assertFalse(hasattr(self.conn.root, 'get_decorated_prefix'))
         smc = self.conn.root.MyClass('a', 'b')
-        self.assertEquals(smc.foo(), 'ab')
+        self.assertEqual(smc.foo(), 'ab')
 
     def test_safeattrs(self):
         x = self.conn.root.getlist()
