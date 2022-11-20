@@ -9,7 +9,7 @@ import tracemalloc
 tracemalloc.start()
 
 from rpyc.utils.teleportation import export_function, import_function
-from rpyc.lib.compat import is_py_3k, is_py_gte38
+from rpyc.lib.compat import is_py_3k, is_py_gte38, is_py_gte311
 from rpyc.utils.classic import teleport_function
 
 
@@ -112,7 +112,14 @@ class TeleportationTest(unittest.TestCase):
                     cobj.co_varnames, cobj.co_filename, cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab,
                     cobj.co_freevars, cobj.co_cellvars)
 
-        if is_py_3k:
+        def get311_schema(cobj):
+            return (cobj.co_argcount, 2, cobj.co_kwonlyargcount, cobj.co_nlocals,
+                    cobj.co_stacksize, cobj.co_flags, cobj.co_code, cobj.co_consts, cobj.co_names,
+                    cobj.co_varnames, cobj.co_filename, cobj.co_name, cobj.co_qualname,
+                    cobj.co_firstlineno, cobj.co_lnotab, cobj.co_exceptiontable,
+                    cobj.co_freevars, cobj.co_cellvars)
+
+        if is_py_gte38:
             pow37 = lambda x, y : x ** y  # noqa
             pow38 = lambda x, y : x ** y  # noqa
             export37 = get37_schema(pow37.__code__)
@@ -124,13 +131,23 @@ class TeleportationTest(unittest.TestCase):
             self.assertEqual(pow37_netref(2, 3), pow37(2, 3))
             self.assertEqual(pow38_netref(2, 3), pow38(2, 3))
             self.assertEqual(pow37_netref(x=2, y=3), pow37(x=2, y=3))
-            if not is_py_gte38:
-                return  # skip remained of tests for 3.7
-            pow38.__code__ = types.CodeType(*export38)  # pow38 = lambda x, y, /: x ** y
-            with self.assertRaises(TypeError):  # show local behavior
-                pow38(x=2, y=3)
-            with self.assertRaises(TypeError):
-                pow38_netref(x=2, y=3)
+            if is_py_gte38 and not is_py_gte311:
+                pow38.__code__ = types.CodeType(*export38)  # pow38 = lambda x, y, /: x ** y
+                with self.assertRaises(TypeError):  # show local behavior
+                    pow38(x=2, y=3)
+                with self.assertRaises(TypeError):
+                    pow38_netref(x=2, y=3)
+            if is_py_gte311:
+                pow311 = lambda x, y : x ** y  # noqa
+                export311 = get311_schema(pow311.__code__)
+                schema311 = (pow311.__name__, pow311.__module__, pow311.__defaults__, pow311.__kwdefaults__, export311)
+                pow311_netref = self.conn.modules["rpyc.utils.teleportation"].import_function(schema311)
+                self.assertTrue(is_py_gte311)
+                pow311.__code__ = types.CodeType(*export311)  # pow311 = lambda x, y, /: x ** y
+                with self.assertRaises(TypeError):  # show local behavior
+                    pow311(x=2, y=3)
+                with self.assertRaises(TypeError):
+                    pow311_netref(x=2, y=3)
 
 
 if __name__ == "__main__":
