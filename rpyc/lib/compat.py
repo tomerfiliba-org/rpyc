@@ -7,6 +7,7 @@ import time
 
 is_py_3k = (sys.version_info[0] >= 3)
 is_py_gte311 = is_py_3k and (sys.version_info[1] >= 11)
+is_py_gte310 = is_py_3k and (sys.version_info[1] >= 10)
 is_py_gte38 = is_py_3k and (sys.version_info[1] >= 8)
 is_py_gte37 = is_py_3k and (sys.version_info[1] >= 7)
 
