@@ -48,4 +48,4 @@ jobs:
           uname -a
       - name: Test with unittest
         run: |
-          python -m unittest discover -s ./rpyc ./tests
+          python -m unittest discover -v -s ./rpyc ./tests
