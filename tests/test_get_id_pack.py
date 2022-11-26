@@ -23,7 +23,7 @@ class Test_get_id_pack(unittest.TestCase):
         cls.chained_conn.close()
         cls.conn.close()
         while cls.server2.clients or cls.server.clients:
-            pass  #sti
+            pass  # sti
         cls.server2.close()
         cls.server.close()
         cls.thd.join()

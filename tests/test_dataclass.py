@@ -4,6 +4,7 @@ import unittest
 from rpyc.lib.compat import is_py_gte37
 if is_py_gte37:
     from dataclasses import dataclass
+
     @dataclass
     class StdTypes(object):
         exposed_intObj: int = 31
@@ -19,6 +20,7 @@ class MyService(rpyc.Service):
 
     def exposed_create_dataclass(self):
         return StdTypes()
+
 
 @unittest.skipUnless(is_py_gte37, "Skipping since dataclasses is only in 3.7 and above")
 class TestRemoteDataclass(unittest.TestCase):

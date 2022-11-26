@@ -80,7 +80,8 @@ class Server(object):
             else:
                 family = socket.AF_INET
             self.listener = socket.socket(family, socket.SOCK_STREAM)
-            address = socket.getaddrinfo(hostname, port, family=family, type=socket.SOCK_STREAM, proto=socket.IPPROTO_TCP, flags=socket.AI_PASSIVE)[0][-1]
+            address = socket.getaddrinfo(hostname, port, family=family, type=socket.SOCK_STREAM,
+                                         proto=socket.IPPROTO_TCP, flags=socket.AI_PASSIVE)[0][-1]
 
             if reuse_addr and sys.platform != "win32":
                 # warning: reuseaddr is not what you'd expect on windows!

@@ -918,6 +918,7 @@ class Connection(object):
 
 class _Thread:
     """Internal thread information for the RPYC protocol used for thread binding."""
+
     def __init__(self, id):
         super().__init__()
 

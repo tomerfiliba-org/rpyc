@@ -1,4 +1,7 @@
 from __future__ import with_statement
+from rpyc.utils.classic import teleport_function
+from rpyc.lib.compat import is_py_3k, is_py_gte38, is_py_gte311
+from rpyc.utils.teleportation import export_function, import_function
 import subprocess
 import sys
 import os
@@ -7,10 +10,6 @@ import types
 import unittest
 import tracemalloc
 tracemalloc.start()
-
-from rpyc.utils.teleportation import export_function, import_function
-from rpyc.lib.compat import is_py_3k, is_py_gte38, is_py_gte311
-from rpyc.utils.classic import teleport_function
 
 
 def b(st):
@@ -120,8 +119,8 @@ class TeleportationTest(unittest.TestCase):
                     cobj.co_freevars, cobj.co_cellvars)
 
         if is_py_gte38:
-            pow37 = lambda x, y : x ** y  # noqa
-            pow38 = lambda x, y : x ** y  # noqa
+            def pow37(x, y): return x ** y  # noqa
+            def pow38(x, y): return x ** y  # noqa
             export37 = get37_schema(pow37.__code__)
             export38 = get38_schema(pow38.__code__)
             schema37 = (pow37.__name__, pow37.__module__, pow37.__defaults__, pow37.__kwdefaults__, export37)
@@ -138,7 +137,7 @@ class TeleportationTest(unittest.TestCase):
                 with self.assertRaises(TypeError):
                     pow38_netref(x=2, y=3)
             if is_py_gte311:
-                pow311 = lambda x, y : x ** y  # noqa
+                def pow311(x, y): return x ** y  # noqa
                 export311 = get311_schema(pow311.__code__)
                 schema311 = (pow311.__name__, pow311.__module__, pow311.__defaults__, pow311.__kwdefaults__, export311)
                 pow311_netref = self.conn.modules["rpyc.utils.teleportation"].import_function(schema311)

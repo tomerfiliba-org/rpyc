@@ -218,6 +218,7 @@ class MyDecoratedService(rpyc.Service):
 
 class TestDescriptorErrors(unittest.TestCase):
     """Validate stack traces are consistent independent of how exposed attribute is accessed #478 #479"""
+
     def setUp(self):
         self.cfg = copy.copy(rpyc.core.protocol.DEFAULT_CONFIG)
         self.server = ThreadedServer(MyDecoratedService(), port=0)

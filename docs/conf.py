@@ -11,7 +11,10 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os, time
+from rpyc.version import __version__, release_date
+import sys
+import os
+import time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # If extensions (or modules to document with autodoc) are in another directory,
@@ -49,7 +52,6 @@ copyright = f'{time.gmtime().tm_year}, Tomer Filiba, licensed under Attribution-
 # built documents.
 #
 # The short X.Y version.
-from rpyc.version import __version__, release_date
 version = __version__
 # The full version, including alpha/beta/rc tags.
 release = __version__ + "/" + release_date
@@ -188,8 +190,8 @@ htmlhelp_basename = 'RPyCdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'RPyC.tex', u'RPyC Documentation',
-   u'Tomer Filiba', 'manual'),
+    ('index', 'RPyC.tex', u'RPyC Documentation',
+     u'Tomer Filiba', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

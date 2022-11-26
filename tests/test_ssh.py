@@ -29,9 +29,9 @@ class Test_Ssh(unittest.TestCase):
             #   User <username>
             #   IdentityFile <id_rsa>
             cls.server = ThreadedServer(SlaveService, hostname="localhost",
-                                         ipv6=False, port=18888, auto_register=False)
+                                        ipv6=False, port=18888, auto_register=False)
             cls.server._start_in_thread()
-        cls.remote_machine =  SshMachine("localhost")
+        cls.remote_machine = SshMachine("localhost")
         cls.conn = rpyc.classic.ssh_connect(cls.remote_machine, 18888)
         cls.conn2 = rpyc.ssh_connect(cls.remote_machine, 18888, service=MasterService)
 

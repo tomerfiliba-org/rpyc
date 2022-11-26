@@ -8,14 +8,14 @@ class MyServiceFactory(rpyc.Service):
 
     class exposed_MyService(object):   # exposing names is not limited to methods :)
 
-        def __init__(self, filename, callback, interval = 1):
+        def __init__(self, filename, callback, interval=1):
             print("news client with " + filename + " " + str(callback))
             self.filename = filename
             self.interval = interval
             self.last_stat = None
             self.callback = rpyc.async_(callback)   # create an async callback
             self.active = True
-            self.thread = Thread(target = self.work)
+            self.thread = Thread(target=self.work)
             self.thread.start()
 
         def exposed_stop(self):   # this method has to be exposed too

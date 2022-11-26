@@ -76,6 +76,7 @@ class BaseRegistryTest(object):
         expected = ("FOO",)
         self.assertEqual(set(res), set(expected))
 
+
 class TestTcpRegistry(BaseRegistryTest, unittest.TestCase):
     def _get_server(self):
         return TCPRegistryServer(pruning_timeout=PRUNING_TIMEOUT, allow_listing=True)
