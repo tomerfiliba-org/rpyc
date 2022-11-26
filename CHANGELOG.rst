@@ -1,3 +1,18 @@
+5.3.0
+=====
+Date: 2022-11-25
+
+- `#515`_ Support for Python 3.11 is available after teleportation bug fix
+- `#507`_ Experimental support for threading is added (default is disabled for now)
+- `#516`_ Resolved server-side exceptions due to the logic for checking if a name is in `ModuleNamespace`
+- `#511`_ Improved documentation on the life-cycle of a netref/proxy-object
+
+.. _#515: https://github.com/tomerfiliba-org/rpyc/pull/515
+.. _#507: https://github.com/tomerfiliba-org/rpyc/pull/507
+.. _#516: https://github.com/tomerfiliba-org/rpyc/issues/516
+.. _#515: https://github.com/tomerfiliba-org/rpyc/pull/515
+.. _#511: https://github.com/tomerfiliba-org/rpyc/issues/511
+
 5.2.3
 =====
 Date: 2022-08-03
