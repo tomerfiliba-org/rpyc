@@ -6,6 +6,7 @@ Note that the services by both parties need not be symmetric, e.g., one side may
 exposed *service A*, while the other may expose *service B*. As long as the two
 can interoperate, you're good to go.
 """
+import importlib.util
 from functools import partial
 
 from rpyc.lib import hybridmethod
@@ -119,24 +120,20 @@ class ModuleNamespace(object):
 
     def __init__(self, getmodule):
         self.__getmodule = getmodule
-        self.__cache = {}
+        self.__cache = {m: self.__getmodule(m) for m in ('builtins', 'importlib.util')}
 
     def __contains__(self, name):
-        try:
-            self[name]
-        except ImportError:
-            return False
-        else:
-            return True
+        """Returns True if a module CAN be imported (the loader may still fail to execute module)"""
+        return self.__cache['importlib.util']._find_spec_from_path(name) is not None
 
     def __getitem__(self, name):
-        if type(name) is tuple:
-            name = ".".join(name)
+        """Acts as a 'read-through-cache' for results of getmodule"""
         if name not in self.__cache:
             self.__cache[name] = self.__getmodule(name)
         return self.__cache[name]
 
     def __getattr__(self, name):
+        """Provides dot notation access to modules"""
         try:
             return self[name]
         except ImportError:
@@ -160,7 +157,9 @@ class Slave(object):
 
     def getmodule(self, name):
         """imports an arbitrary module"""
-        return __import__(name, None, None, "*")
+        if type(name) is tuple:
+            name = ".".join(name)
+        return importlib.import_module(name)
 
     def getconn(self):
         """returns the local connection instance to the other side"""
