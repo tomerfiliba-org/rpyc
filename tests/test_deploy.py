@@ -23,6 +23,7 @@ class TestDeploy(unittest.TestCase):
             print(conn.modules.sys)
             func = conn.modules.os.getcwd
             print(func())
+            conn.close()
 
         try:
             func()
@@ -46,14 +47,15 @@ class TestDeploy(unittest.TestCase):
             rem = SshMachine("localhost")
             SshMachine.python = rem[sys.executable]
             dep = DeployedServer(rem)
-            dep.classic_connect()
+            conn = dep.classic_connect()
             dep.close(timeout=expected_timeout)
             rem.close()
+            conn.close()
         finally:
             subprocess.Popen.communicate = original_communicate
         # The last three calls to communicate() happen during close(), so check they
         # applied the timeout.
-        assert observed_timeouts[-3:] == [expected_timeout] * 3
+        self.assertEqual(observed_timeouts[-3:], [expected_timeout] * 3)
 
     def test_close_timeout_default_none(self):
         observed_timeouts = []
@@ -68,13 +70,14 @@ class TestDeploy(unittest.TestCase):
             rem = SshMachine("localhost")
             SshMachine.python = rem[sys.executable]
             dep = DeployedServer(rem)
-            dep.classic_connect()
+            conn = dep.classic_connect()
             dep.close()
             rem.close()
+            conn.close()
         finally:
             subprocess.Popen.communicate = original_communicate
         # No timeout specified, so Popen.communicate should have been called with timeout None.
-        assert observed_timeouts == [None] * len(observed_timeouts)
+        self.assertEqual(observed_timeouts, [None] * len(observed_timeouts))
 
     @unittest.skipIf(_paramiko_import_failed, "Paramiko is not available")
     def test_deploy_paramiko(self):
@@ -84,6 +87,7 @@ class TestDeploy(unittest.TestCase):
             print(conn.modules.sys)
             func = conn.modules.os.getcwd
             print(func())
+            conn.close()
 
         try:
             func()
