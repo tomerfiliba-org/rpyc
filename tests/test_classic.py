@@ -51,6 +51,11 @@ class ClassicMode(unittest.TestCase):
         self.assertTrue(conn.builtin.open is open)
         self.assertEqual(conn.eval("2+3"), 5)
 
+    def test_modules(self):
+        self.assertIn('test_magic', self.conn.modules)
+        self.assertNotIn('test_badmagic', self.conn.modules)
+        self.assertIsNone(self.conn.builtins.locals()['self']._last_traceback)
+
 
 if __name__ == "__main__":
     unittest.main()
