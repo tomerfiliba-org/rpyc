@@ -27,8 +27,8 @@ class Test_OneShotServer(unittest.TestCase):
         while not self.server._closed:
             pass
         self.assertTrue(self.server._closed)
-        with self.assertRaises(Exception):
-            conn = rpyc.connect("localhost", port=18878)
+        self.assertTrue(self.server.listener._closed)
+        self.assertEqual(len(self.server.clients), 0)
 
 
 if __name__ == "__main__":

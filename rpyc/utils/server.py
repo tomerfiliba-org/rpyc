@@ -108,7 +108,6 @@ class Server(object):
         also unregisters from the registry server"""
         if self._closed:
             return
-        self._closed = True
         self.active = False
         if self.auto_register:
             try:
@@ -128,6 +127,7 @@ class Server(object):
                 pass
             c.close()
         self.clients.clear()
+        self._closed = True
 
     def fileno(self):
         """returns the listener socket's file descriptor"""
