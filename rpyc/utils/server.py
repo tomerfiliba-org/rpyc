@@ -341,7 +341,7 @@ class ThreadPoolServer(Server):
         self.workers = []
         for i in range(self.nbthreads):
             t = spawn(self._serve_clients)
-            t.setName(f"Worker{i}")
+            t.name = f"Worker{i}"
             self.workers.append(t)
         # setup a thread for polling inactive connections
         self.polling_thread = spawn(self._poll_inactive_clients)

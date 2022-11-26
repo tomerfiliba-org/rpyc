@@ -11,6 +11,9 @@ import random
 from rpyc.lib.compat import maxint  # noqa: F401
 
 
+SPAWN_THREAD_PREFIX = 'RpycSpawnThread'
+
+
 class MissingModule(object):
     __slots__ = ["__name"]
 
@@ -85,7 +88,8 @@ def hasattr_static(obj, attr):
 def spawn(*args, **kwargs):
     """Start and return daemon thread. ``spawn(func, *args, **kwargs)``."""
     func, args = args[0], args[1:]
-    thread = threading.Thread(target=func, args=args, kwargs=kwargs)
+    str_id_pack = '-'.join([f'{i}' for i in get_id_pack(func)])
+    thread = threading.Thread(name=f'{SPAWN_THREAD_PREFIX}-{str_id_pack}', target=func, args=args, kwargs=kwargs)
     thread.daemon = True
     thread.start()
     return thread
