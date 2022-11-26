@@ -11,7 +11,6 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-from rpyc.version import __version__, release_date
 import sys
 import os
 import time
@@ -52,6 +51,7 @@ copyright = f'{time.gmtime().tm_year}, Tomer Filiba, licensed under Attribution-
 # built documents.
 #
 # The short X.Y version.
+from rpyc.version import __version__, release_date
 version = __version__
 # The full version, including alpha/beta/rc tags.
 release = __version__ + "/" + release_date
