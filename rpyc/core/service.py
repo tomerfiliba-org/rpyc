@@ -66,13 +66,17 @@ class Service(object):
         pass
 
     # Using default defined in 'protocol.Connection._access_attr' for:
-    # def _rpyc_getattr(self, name):
+    def _rpyc_delattr(self, name, config):
+        if config.get("allow_setattr") is True:
+            delattr(self, name)
+        else:
+            raise AttributeError("access denied")
 
-    def _rpyc_delattr(self, name):
-        raise AttributeError("access denied")
-
-    def _rpyc_setattr(self, name, value):
-        raise AttributeError("access denied")
+    def _rpyc_setattr(self, name, value, config):
+        if config.get("allow_setattr") is True:
+            setattr(self, name, value)
+        else:
+            raise AttributeError("access denied")
 
     @classmethod
     def get_service_aliases(cls):

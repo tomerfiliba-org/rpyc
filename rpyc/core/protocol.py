@@ -524,7 +524,7 @@ class Connection(object):
             return name  # chance for better traceback
         raise AttributeError(f"cannot access {name!r}")
 
-    def _access_attr(self, obj, name, args, overrider, param, default):  # attribute access
+    def _access_attr(self, obj, name, args, overrider, param, default, config):  # attribute access
         if type(name) is bytes:
             name = str(name, "utf8")
         elif type(name) is not str:
@@ -533,7 +533,7 @@ class Connection(object):
         if accessor is None:
             accessor = default
             name = self._check_attr(obj, name, param)
-        return accessor(obj, name, *args)
+        return accessor(obj, name, *args, config)
 
     @classmethod
     def _request_handlers(cls):  # request handlers
@@ -605,13 +605,13 @@ class Connection(object):
             return tuple(get_methods(netref.LOCAL_ATTRS, self._local_objects[id_pack]))
 
     def _handle_getattr(self, obj, name):  # request handler
-        return self._access_attr(obj, name, (), "_rpyc_getattr", "allow_getattr", getattr)
+        return self._access_attr(obj, name, (), "_rpyc_getattr", "allow_getattr", getattr, config = self._config)
 
     def _handle_delattr(self, obj, name):  # request handler
-        return self._access_attr(obj, name, (), "_rpyc_delattr", "allow_delattr", delattr)
+        return self._access_attr(obj, name, (), "_rpyc_delattr", "allow_delattr", delattr, config = self._config)
 
     def _handle_setattr(self, obj, name, value):  # request handler
-        return self._access_attr(obj, name, (value,), "_rpyc_setattr", "allow_setattr", setattr)
+        return self._access_attr(obj, name, (value,), "_rpyc_setattr", "allow_setattr", setattr, config = self._config)
 
     def _handle_callattr(self, obj, name, args, kwargs=()):  # request handler
         obj = self._handle_getattr(obj, name)
