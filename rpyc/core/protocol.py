@@ -850,7 +850,7 @@ class Connection(object):
             return tuple(get_methods(netref.LOCAL_ATTRS, self._local_objects[id_pack]))
 
     def _handle_getattr(self, obj, name):  # request handler
-        return self._access_attr(obj, name, (), "_rpyc_getattr", "allow_getattr", getattr)
+        return self._access_attr(obj, name, (), "_rpyc_getattr", "allow_getattr", getattr, config=self._config)
 
     def _handle_delattr(self, obj, name):  # request handler
         return self._access_attr(obj, name, (), "_rpyc_delattr", "allow_delattr", delattr, config=self._config)
