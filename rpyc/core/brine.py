@@ -56,9 +56,11 @@ F8 = Struct("!d")  # Python type float w/ size [8] (ctype double)
 C16 = Struct("!dd")  # Successive floats (complex numbers)
 I1 = Struct("!B")  # Python type int w/ size [1] (ctype unsigned char)
 I4 = Struct("!L")  # Python type int w/ size [4] (ctype unsigned long)
-# I4I4 is successive ints w/ size 4 and was introduced to pack local thread id and remote thread id
-# Since PyThread_get_thread_ident returns a type of unsigned long, !LL can store both thread IDs.
-I4I4 = Struct("!LL")
+# I8I8 is successive ints w/ size 8 and was introduced to pack local thread id and remote thread id
+# PyThread_get_thread_ident returns a type of unsigned long, with platform dependent size.
+# Use 8 byte length such that this also works on Unix 64-bit systems, see:
+# https://en.wikipedia.org/wiki/Integer_(computer_science)#Long_integer 
+I8I8 = Struct("!QQ")
 
 _dump_registry = {}
 _load_registry = {}
