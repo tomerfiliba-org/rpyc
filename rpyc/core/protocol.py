@@ -431,7 +431,7 @@ class Connection(object):
                     return self._recv_event.wait(timeout.timeleft())
                 else:
                     return False
-        # Assume the receive rlock is acquired and incremented
+        # Assume the receive rlock is acquired and incremented. For except/else, we release and notify of _recv_event.
         try:
             data = None  # Ensure data is initialized
             data = self._channel.poll(timeout) and self._channel.recv()
@@ -442,17 +442,16 @@ class Connection(object):
             with self._recv_event:
                 self._recv_event.notify_all()
             raise
-        # At this point, the recvlock was acquired once, we must release once before exiting the function
-        if data:
-            # Dispatch will unbox, invoke callbacks, etc.
-            self._dispatch(data)
+        else:
+            # We must release once, notify, and THEN dispatch (see issue #527).
             self._recvlock.release()
             with self._recv_event:
                 self._recv_event.notify_all()
-            return True
-        else:
-            self._recvlock.release()
-            return False
+            if data:
+                self._dispatch(data)  # Dispatch will unbox, invoke callbacks, etc.
+                return True
+            else:
+                return False
 
     def _serve_bound(self, timeout, wait_for_lock):
         """Serves messages like `serve` with the added benefit of making request/reply thread bound.
