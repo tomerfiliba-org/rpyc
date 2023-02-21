@@ -432,7 +432,7 @@ class Connection(object):
                 else:
                     return False
         # Assume the receive rlock is acquired and incremented
-        # We must release once, dispatch any data, and THEN notify all (see issue #527 and #449)
+        # We must release once BEFORE dispatch, dispatch any data, and THEN notify all (see issue #527 and #449)
         try:
             data = None  # Ensure data is initialized
             data = self._channel.poll(timeout) and self._channel.recv()
