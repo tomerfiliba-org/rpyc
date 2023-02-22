@@ -1,3 +1,3 @@
-__version__ = '5.3.0'
+__version__ = '5.3.1'
 version = tuple(__version__.split('.'))
-release_date = "2022-11-25"
+release_date = "2023-02-21"

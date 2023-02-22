@@ -1,3 +1,17 @@
+5.3.1
+=====
+Date: 2023-02-21
+
+- `#527`_ Resolved timeout issue that was introduced in 5.2.1
+- `#525`_ and `#524`_ Fixed experimental thread binding struct for platforms where unsigned long is 8-bits
+
+  - While the fix for thread binding is not backwards compatible, it only impacts people using an experimental feature. Hence, I did a patch version bump.
+
+.. _#525: https://github.com/tomerfiliba-org/rpyc/pull/525
+.. _#524: https://github.com/tomerfiliba-org/rpyc/issues/524
+.. _#527: https://github.com/tomerfiliba-org/rpyc/issues/527
+
+
 5.3.0
 =====
 Date: 2022-11-25
