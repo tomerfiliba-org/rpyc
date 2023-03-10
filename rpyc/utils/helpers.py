@@ -193,7 +193,11 @@ class BgServingThread(object):
     """Runs an RPyC server in the background to serve all requests and replies
     that arrive on the given RPyC connection. The thread is started upon the
     the instantiation of the ``BgServingThread`` object; you can use the
-    :meth:`stop` method to stop the server thread
+    :meth:`stop` method to stop the server thread.
+
+    CAVEAT: RPyC defaults to bind_threads as False. So, there is no guarantee that the
+    background thread will serve the request. See issue #522 for an example of this behavior.
+    As the bind_threads feature matures, we may change the default to to True in the future.
 
     Example::
 
