@@ -17,9 +17,6 @@ class TestRace(unittest.TestCase):
     def tearDown(self):
         self.connection.close()
 
-    @unittest.skipIf(
-        os.environ.get("RPYC_BIND_THREADS") == "true", "bind threads is unaffected"
-    )
     def test_asyncresult_race(self):
         with _patch():
             def hook():
