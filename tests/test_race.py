@@ -2,8 +2,6 @@ import rpyc
 import rpyc.core.async_ as rc_async_
 import rpyc.core.protocol as rc_protocol
 import contextlib
-import logging
-import os
 import signal
 import threading
 import time
@@ -24,11 +22,8 @@ class TestRace(unittest.TestCase):
     )
     def test_asyncresult_race(self):
         with _patch():
-            event = threading.Event()
-
             def hook():
-                event.set()  # start race
-                time.sleep(0.1)  # loose race
+                time.sleep(0.2)  # loose race
 
             _AsyncResult._HOOK = hook
 
@@ -42,7 +37,7 @@ class TestRace(unittest.TestCase):
             timer.start()
 
             a_result = self.a_str("")  # request
-            event.wait()  # wait for race to start
+            time.sleep(0.1)  # wait for race to start
             try:
                 a_result.wait()
             except KeyboardInterrupt:
