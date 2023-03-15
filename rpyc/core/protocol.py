@@ -260,7 +260,7 @@ class Connection(object):
         return next(self._seqcounter)
 
     def _send(self, msg, seq, args):  # IO
-        data = brine.dump((msg, seq, args))
+        data = brine.I1.pack(msg) + brine.dump((seq, args))  # see _dispatch
         if self._bind_threads:
             this_thread = self._get_thread()
             data = brine.I8I8.pack(this_thread.id, this_thread._remote_thread_id) + data
@@ -392,8 +392,10 @@ class Connection(object):
             self._config["logger"].debug(debug_msg.format(msg, seq))
 
     def _dispatch(self, data):  # serving---dispatch?
-        msg, seq, args = brine.load(data)
+        msg, = brine.I1.unpack(data[:1])  # unpack just msg to minimize time to release
         if msg == consts.MSG_REQUEST:
+            self._recvlock.release()
+            seq, args = brine.load(data[1:])
             if self._bind_threads:
                 self._get_thread()._occupation_count += 1
             self._dispatch_request(seq, args)
@@ -404,15 +406,19 @@ class Connection(object):
                 if this_thread._occupation_count == 0:
                     this_thread._remote_thread_id = UNBOUND_THREAD_ID
             if msg == consts.MSG_REPLY:
+                seq, args = brine.load(data[1:])
                 obj = self._unbox(args)
                 self._seq_request_callback(msg, seq, False, obj)
+                self._recvlock.release()  # releasing here fixes race condition with AsyncResult.wait
             elif msg == consts.MSG_EXCEPTION:
+                self._recvlock.release()
+                seq, args = brine.load(data[1:])
                 obj = self._unbox_exc(args)
                 self._seq_request_callback(msg, seq, True, obj)
             else:
                 raise ValueError(f"invalid message type: {msg!r}")
 
-    def serve(self, timeout=1, wait_for_lock=True):  # serving
+    def serve(self, timeout=1, wait_for_lock=True, waiting=lambda: True):  # serving
         """Serves a single request or reply that arrives within the given
         time frame (default is 1 sec). Note that the dispatching of a request
         might trigger multiple (nested) requests, thus this function may be
@@ -427,10 +433,17 @@ class Connection(object):
             # Exit early if we cannot acquire the recvlock
             if not self._recvlock.acquire(False):
                 if wait_for_lock:
+                    if not waiting():  # unlikely, but the result could've arrived and another thread could've won the race to acquire
+                        return False
                     # Wait condition for recvlock release; recvlock is not underlying lock for condition
                     return self._recv_event.wait(timeout.timeleft())
                 else:
                     return False
+        if not waiting():  # the result arrived and we won the race to acquire, unlucky
+            self._recvlock.release()
+            with self._recv_event:
+                self._recv_event.notify_all()
+            return False
         # Assume the receive rlock is acquired and incremented
         # We must release once BEFORE dispatch, dispatch any data, and THEN notify all (see issue #527 and #449)
         try:
@@ -442,7 +455,6 @@ class Connection(object):
                 self.close()  # sends close async request
             raise
         else:
-            self._recvlock.release()
             if data:
                 self._dispatch(data)  # Dispatch will unbox, invoke callbacks, etc.
                 return True
