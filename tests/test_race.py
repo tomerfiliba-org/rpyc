@@ -3,6 +3,7 @@ import rpyc.core.async_ as rc_async_
 import rpyc.core.protocol as rc_protocol
 import contextlib
 import logging
+import os
 import signal
 import threading
 import time
@@ -18,6 +19,9 @@ class TestRace(unittest.TestCase):
     def tearDown(self):
         self.connection.close()
 
+    @unittest.skipIf(
+        os.environ.get("RPYC_BIND_THREADS") == "true", "bind threads is unaffected"
+    )
     def test_asyncresult_race(self):
         with _patch():
             event = threading.Event()

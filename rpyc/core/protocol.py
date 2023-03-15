@@ -394,10 +394,11 @@ class Connection(object):
     def _dispatch(self, data):  # serving---dispatch?
         msg, = brine.I1.unpack(data[:1])  # unpack just msg to minimize time to release
         if msg == consts.MSG_REQUEST:
-            self._recvlock.release()
-            seq, args = brine.load(data[1:])
             if self._bind_threads:
                 self._get_thread()._occupation_count += 1
+            else:
+                self._recvlock.release()
+            seq, args = brine.load(data[1:])
             self._dispatch_request(seq, args)
         else:
             if self._bind_threads:
@@ -409,9 +410,11 @@ class Connection(object):
                 seq, args = brine.load(data[1:])
                 obj = self._unbox(args)
                 self._seq_request_callback(msg, seq, False, obj)
-                self._recvlock.release()  # releasing here fixes race condition with AsyncResult.wait
+                if not self._bind_threads:
+                    self._recvlock.release()  # releasing here fixes race condition with AsyncResult.wait
             elif msg == consts.MSG_EXCEPTION:
-                self._recvlock.release()
+                if not self._bind_threads:
+                    self._recvlock.release()
                 seq, args = brine.load(data[1:])
                 obj = self._unbox_exc(args)
                 self._seq_request_callback(msg, seq, True, obj)
@@ -459,6 +462,7 @@ class Connection(object):
                 self._dispatch(data)  # Dispatch will unbox, invoke callbacks, etc.
                 return True
             else:
+                self._recvlock.release()
                 return False
         finally:
             with self._recv_event:
