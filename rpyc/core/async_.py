@@ -44,15 +44,18 @@ class AsyncResult(object):
         """Waits for the result to arrive. If the AsyncResult object has an
         expiry set, and the result did not arrive within that timeout,
         an :class:`AsyncResultTimeout` exception is raised"""
-        while not (self._is_ready or self.expired):
+        while self._waiting():
             # Serve the connection since we are not ready. Suppose
             # the reply for our seq is served. The callback is this class
             # so __call__ sets our obj and _is_ready to true.
-            self._conn.serve(self._ttl)
+            self._conn.serve(self._ttl, waiting=self._waiting)
 
         # Check if we timed out before result was ready
         if not self._is_ready:
             raise AsyncResultTimeout("result expired")
+
+    def _waiting(self):
+        return not (self._is_ready or self.expired)
 
     def add_callback(self, func):
         """Adds a callback to be invoked when the result arrives. The callback
