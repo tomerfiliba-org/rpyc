@@ -39,7 +39,7 @@ class Stream(object):
     def poll(self, timeout):
         """indicates whether the stream has data to read (within *timeout*
         seconds)"""
-        timeout = Timeout(timeout)
+        timeout = Timeout.lazy_init(timeout)
         try:
             p = poll()   # from lib.compat, it may be a select object on non-Unix platforms
             p.register(self.fileno(), "r")
@@ -469,7 +469,7 @@ class Win32PipeStream(Stream):
 
     def poll(self, timeout, interval=0.001):
         """a Windows version of select()"""
-        timeout = Timeout(timeout)
+        timeout = Timeout.lazy_init(timeout)
         try:
             while True:
                 if win32pipe.PeekNamedPipe(self.incoming, 0)[1] != 0:
@@ -627,7 +627,7 @@ class NamedPipeStream(Win32PipeStream):
 
     def poll(self, timeout, interval=0.001):
         """Windows version of select()"""
-        timeout = Timeout(timeout)
+        timeout = Timeout.lazy_init(timeout)
         try:
             if timeout.finite:
                 wait_time = int(max(1, timeout.timeleft() * 1000))

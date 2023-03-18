@@ -115,21 +115,23 @@ def spawn_waitready(init, main):
     return thread, stack.pop()
 
 
-class Timeout(object):
+class Timeout:
+    __slots__ = ['finite', 'tmax']
 
     def __init__(self, timeout):
-        if isinstance(timeout, Timeout):
-            self.finite = timeout.finite
-            self.tmax = timeout.tmax
-        else:
-            self.finite = timeout is not None and timeout >= 0
-            self.tmax = time.time() + timeout if self.finite else None
+        self.finite = timeout is not None and timeout >= 0
+        self.tmax = time.time() + timeout if self.finite else None
+
+    @staticmethod
+    def lazy_init(ttl):
+        """Reduce number of name bindings by using a lazy factory... compensates for poor design around timeout"""
+        return ttl if isinstance(ttl, Timeout) else Timeout(ttl)
 
     def expired(self):
         return self.finite and time.time() >= self.tmax
 
     def timeleft(self):
-        return max((0, self.tmax - time.time())) if self.finite else None
+        return max((0, self.tmax - time.time())) if self.finite else -1
 
     def sleep(self, interval):
         time.sleep(min(interval, self.timeleft()) if self.finite else interval)
