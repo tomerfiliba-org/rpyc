@@ -6,7 +6,7 @@ from rpyc.lib.compat import TimeoutError as AsyncResultTimeout
 
 # Magic borrowed from helpers.py..
 SERVE_INTERVAL = 0.0
-SLEEP_INTERVAL = 0.1
+SLEEP_INTERVAL = 0.001
 
 
 class AsyncResult(object):
@@ -53,7 +53,7 @@ class AsyncResult(object):
         # the reply for our seq is served. The callback is this class
         # so __call__ sets our obj and _is_ready to true.
         while not (self._is_ready or self.expired):
-            if self._conn.acquire_recvlock(timeout=SLEEP_INTERVAL, wait_for_lock=False):
+            if self._conn.acquire_recvlock(timeout=SLEEP_INTERVAL, wait_for_lock=True):
                 # Now that we can satisfy the precondition our _is_ready state is static...
                 # Serve a connection if another thread didn't already handle this results callback...
                 try:

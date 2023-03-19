@@ -487,9 +487,11 @@ class Connection(object):
                 remote_thread_id, message = this_thread._deque.popleft()
                 if len(this_thread._deque) == 0:
                     this_thread._event.clear()
-            elif self._recvlock._is_owned():  # enter pool
+            elif not self.acquire_recvlock(wait_for_lock=False):  # enter pool
                 self._thread_pool.append(this_thread)
                 wait_for_event = True
+            else:
+                self.release_recvlock()
 
         if message_available:  # just process
             this_thread._remote_thread_id = remote_thread_id
@@ -505,13 +507,14 @@ class Connection(object):
                 if isinstance(exception, EOFError):
                     self.close()  # sends close async request
 
+                self.release_recvlock()
                 with self._lock:
                     for thread in self._thread_pool:
                         thread._event.set()
                         break
 
                 raise
-            finally:
+            else:
                 self.release_recvlock()
         else:
             while True:
@@ -529,8 +532,9 @@ class Connection(object):
 
                         else:
                             this_thread._event.clear()
-                            if self._recvlock._is_owned():  # another thread was faster
+                            if not self.acquire_recvlock(wait_for_lock=False):  # another thread was faster
                                 continue
+                            self.release_recvlock()
                         self._thread_pool.remove(this_thread)  # leave pool, as we aren't waiting
                         break
                     else:  # timeout
