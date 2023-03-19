@@ -4,11 +4,6 @@ from rpyc.lib import Timeout
 from rpyc.lib.compat import TimeoutError as AsyncResultTimeout
 
 
-# Magic borrowed from helpers.py..
-SERVE_INTERVAL = 0.0
-SLEEP_INTERVAL = 0.001
-
-
 class AsyncResult(object):
     """*AsyncResult* represents a computation that occurs in the background and
     will eventually have a result. Use the :attr:`value` property to access the
@@ -16,13 +11,13 @@ class AsyncResult(object):
     """
     __slots__ = ["_conn", "_is_ready", "_is_exc", "_callbacks", "_obj", "_ttl"]
 
-    def __init__(self, conn, timeout=None):
+    def __init__(self, conn):
         self._conn = conn
         self._is_ready = False
         self._is_exc = None
         self._obj = None
         self._callbacks = []
-        self._ttl = Timeout.lazy_init(timeout)
+        self._ttl = Timeout(None)
 
     def __repr__(self):
         if self._is_ready:
@@ -49,23 +44,18 @@ class AsyncResult(object):
         """Waits for the result to arrive. If the AsyncResult object has an
         expiry set, and the result did not arrive within that timeout,
         an :class:`AsyncResultTimeout` exception is raised"""
-        # Serve the connection since we are not ready. Suppose
-        # the reply for our seq is served. The callback is this class
-        # so __call__ sets our obj and _is_ready to true.
-        while not (self._is_ready or self.expired):
-            if self._conn.acquire_recvlock(timeout=SLEEP_INTERVAL, wait_for_lock=True):
-                # Now that we can satisfy the precondition our _is_ready state is static...
-                # Serve a connection if another thread didn't already handle this results callback...
-                try:
-                    if not self._is_ready:
-                        # Who cares if it expired... one last attempt... worst case timeleft is 0
-                        self._conn.serve(self._ttl)
-                finally:
-                    self._conn.release_recvlock()
+        while self._waiting():
+            # Serve the connection since we are not ready. Suppose
+            # the reply for our seq is served. The callback is this class
+            # so __call__ sets our obj and _is_ready to true.
+            self._conn.serve(self._ttl, waiting=self._waiting)
 
         # Check if we timed out before result was ready
         if not self._is_ready:
             raise AsyncResultTimeout("result expired")
+
+    def _waiting(self):
+        return not (self._is_ready or self.expired)
 
     def add_callback(self, func):
         """Adds a callback to be invoked when the result arrives. The callback
@@ -86,7 +76,7 @@ class AsyncResult(object):
 
         :param timeout: the expiry time in seconds or ``None``
         """
-        self._ttl = Timeout.lazy_init(timeout)
+        self._ttl = Timeout(timeout)
 
     @property
     def ready(self):
