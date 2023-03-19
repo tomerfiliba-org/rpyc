@@ -212,7 +212,16 @@ class Connection(object):
         # self._config.clear()
         del self._HANDLERS
         if self._bind_threads:
-            self._thread_pool_executor.shutdown(wait=False)  # TODO where?
+            self._thread_pool_executor.shutdown(wait=True)  # TODO where?
+        if _anyway:
+            try:
+                self._recvlock.release()
+            except Exception:
+                pass
+            try:
+                self._sendlock.release()
+            except Exception:
+                pass
 
     def close(self):  # IO
         """closes the connection, releasing all held resources"""
@@ -222,8 +231,9 @@ class Connection(object):
             self._closed = True
             if self._config.get("before_closed"):
                 self._config["before_closed"](self.root)
+            # TODO: define invariants/expectations around close sequence and timing
             self.sync_request(consts.HANDLE_CLOSE)
-        except EOFError:
+        except (EOFError, TimeoutError):
             pass
         except Exception:
             if not self._config["close_catchall"]:
