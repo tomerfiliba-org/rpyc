@@ -46,6 +46,9 @@ jobs:
           ssh-keygen -q -f ~/.ssh/id_rsa -N ''
           cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
           uname -a
-      - name: Test with unittest
+      - name: Bind threads tests with unittest 
         run: |
-          python -m unittest discover -v -s ./rpyc ./tests
+          RPYC_BIND_THREADS="true" python -m unittest discover -v
+      - name: Default tests with unittest
+        run: |
+          python -m unittest discover -v
