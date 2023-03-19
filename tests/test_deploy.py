@@ -7,6 +7,7 @@ import sys
 from plumbum import SshMachine
 from plumbum.machines.paramiko_machine import ParamikoMachine
 from rpyc.utils.zerodeploy import DeployedServer
+from rpyc.core import DEFAULT_CONFIG
 try:
     import paramiko  # noqa
     _paramiko_import_failed = False
@@ -17,6 +18,7 @@ except Exception:
 class TestDeploy(unittest.TestCase):
     def test_deploy(self):
         rem = SshMachine("localhost")
+        rem.env['RPYC_BIND_THREADS'] = str(DEFAULT_CONFIG['bind_threads']).lower()
         SshMachine.python = rem[sys.executable]
         with DeployedServer(rem) as dep:
             conn = dep.classic_connect()
@@ -45,6 +47,7 @@ class TestDeploy(unittest.TestCase):
         try:
             subprocess.Popen.communicate = replacement_communicate
             rem = SshMachine("localhost")
+            rem.env['RPYC_BIND_THREADS'] = str(DEFAULT_CONFIG['bind_threads']).lower()
             SshMachine.python = rem[sys.executable]
             dep = DeployedServer(rem)
             conn = dep.classic_connect()
@@ -68,6 +71,7 @@ class TestDeploy(unittest.TestCase):
         try:
             subprocess.Popen.communicate = replacement_communicate
             rem = SshMachine("localhost")
+            rem.env['RPYC_BIND_THREADS'] = str(DEFAULT_CONFIG['bind_threads']).lower()
             SshMachine.python = rem[sys.executable]
             dep = DeployedServer(rem)
             conn = dep.classic_connect()
@@ -82,6 +86,7 @@ class TestDeploy(unittest.TestCase):
     @unittest.skipIf(_paramiko_import_failed, "Paramiko is not available")
     def test_deploy_paramiko(self):
         rem = ParamikoMachine("localhost", missing_host_policy=paramiko.AutoAddPolicy())
+        rem.env['RPYC_BIND_THREADS'] = str(DEFAULT_CONFIG['bind_threads']).lower()
         with DeployedServer(rem) as dep:
             conn = dep.classic_connect()
             print(conn.modules.sys)
