@@ -222,7 +222,7 @@ class Connection(object):
             self._closed = True
             if self._config.get("before_closed"):
                 self._config["before_closed"](self.root)
-            self._async_request(consts.HANDLE_CLOSE)
+            self.sync_request(consts.HANDLE_CLOSE)
         except EOFError:
             pass
         except Exception:
