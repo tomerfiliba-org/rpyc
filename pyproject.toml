@@ -62,3 +62,8 @@ only-include = ["rpyc"]
 
 [tool.hatch.build.targets.wheel]
 only-include = ["rpyc"]
+
+[tool.codespell]
+skip = '.git,*.pdf,*.svg'
+#
+# ignore-words-list = ''
