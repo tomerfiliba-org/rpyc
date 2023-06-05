@@ -171,7 +171,7 @@ else:
 def with_metaclass(meta, *bases):
     """Create a base class with a metaclass."""
     # dummy metaclass that replaces itself with the actual metaclass after
-    # one level of class instanciation:
+    # one level of class instantiation:
     class metaclass(type):
         def __new__(cls, name, this_bases, d):
             return meta(name, bases, d)

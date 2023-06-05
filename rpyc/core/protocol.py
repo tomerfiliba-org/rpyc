@@ -367,7 +367,7 @@ class Connection(object):
             handler, args = raw_args
             args = self._unbox(args)
             res = self._HANDLERS[handler](self, *args)
-        except:  # TODO: revist how to catch handle locally, this should simplify when py2 is dropped
+        except:  # TODO: revisit how to catch handle locally, this should simplify when py2 is dropped
             # need to catch old style exceptions too
             t, v, tb = sys.exc_info()
             self._last_traceback = tb
@@ -734,7 +734,7 @@ class Connection(object):
     def sync_request(self, handler, *args):
         """requests, sends a synchronous request (waits for the reply to arrive)
 
-        :raises: any exception that the requets may be generated
+        :raises: any exception that the requests may be generated
         :returns: the result of the request
         """
         timeout = self._config["sync_request_timeout"]

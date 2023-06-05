@@ -118,7 +118,7 @@ Improvements
 - Fixed teleport function behavior for keyword-only arguments with default `#422`_
 - Improved documentation on custom exception handling
 - Fixed IPv6 support for server `#407`_
-- Added a simple asynchrounous service example `#400`_
+- Added a simple asynchronous service example `#400`_
 
 .. _#425: https://github.com/tomerfiliba-org/rpyc/issues/425
 .. _#412: https://github.com/tomerfiliba-org/rpyc/pull/412
@@ -240,7 +240,7 @@ Backward Incompatibilities
 * no longer store connection as ``self._conn``. (allows services that serve
   multiple clients using the same service object, see `#198`_).
 
-* ``SlaveService`` is now split into two asymetric classes: ``SlaveService``
+* ``SlaveService`` is now split into two asymmetric classes: ``SlaveService``
   and ``MasterService``. The slave exposes functionality to the master but can
   not anymore access remote objects on the master (`#232`_, `#248`_).
   If you were previously using ``SlaveService``, you may experience problems

@@ -19,11 +19,11 @@ a message to a chat server is analogous to calling a function on the server,
 while receiving messages from the chat server is analogous to the server
 calling an(async) function on the client. RPC at its best.
 
-Also, do keep in mind the inherent securiy of this model: the server exposes
+Also, do keep in mind the inherent security of this model: the server exposes
 a well defined set of methods(so there's no risk of the client abusing
                               the server), while the server can't abuse the client because it can invoke
 only a designated callback it is passed. This allows both parties not to
-trust each other while still providing RPyC-grade servive.
+trust each other while still providing RPyC-grade service.
 
 
 == Threading issues ==
@@ -33,7 +33,7 @@ at least the one I provide, is single-threaded.
 
 == Client Design ==
 With all the visual noise caused by the GUI code, it's easy to get lost on
-the RPyC part. In short, this is the RPyC releated code:
+the RPyC part. In short, this is the RPyC related code:
 
     def on_message(text):
         # server-side callback
