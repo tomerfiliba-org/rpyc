@@ -4,7 +4,7 @@ Security
 ========
 Operating over a network always involve a certain security risk, and requires some awareness.
 Version 3 of RPyC was a rewrite of the library, specifically targeting security and
-service-orientation. Unlike version 2.6, RPyC no longer makes use of unsecure protocols like ``pickle``,
+service-orientation. Unlike version 2.6, RPyC no longer makes use of insecure protocols like ``pickle``,
 supports :data:`security-related configuration parameters <rpyc.core.protocol.DEFAULT_CONFIG>`,
 comes with strict defaults, and encourages the use of a capability-based security model. Even so, it behooves you to
 take a layered to secure programming and not let RPyC be a single point of failure.
@@ -23,7 +23,7 @@ Of course, you can use RPyC over a :ref:`secure connection <ssl>`, to mitigate t
 RPyC works by exposing a root object, which in turn may expose other objects (and so on). For
 instance, if you expose a module or an object that has a reference to the ``sys`` module,
 a user may be able to reach it. After reaching ``sys``, the user can traverse ``sys.modules`` and
-gain access to all of the modules that the server imports. More complex methodologies, similiar to those used in ``CVE-2019-16328``,
+gain access to all of the modules that the server imports. More complex methodologies, similar to those used in ``CVE-2019-16328``,
 could leverage access to ``builtins.str``, ``builtins.type``, ``builtins.object``, and ``builtins.dict`` and gain access to
 ``sys`` modules. The default configurations for RPyC are intended to mitigate access to dangerous objects. But if you enable
 ``allow_public_attrs``, return uninitialized classes or override ``_rpyc_getattr`` such things are likely to slip under the radar

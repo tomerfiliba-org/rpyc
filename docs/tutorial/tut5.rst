@@ -1,7 +1,7 @@
 .. _tut5:
 
-Part 5: Asynchrounous Operation and Events
-==========================================
+Part 5: Asynchronous Operation and Events
+=========================================
 
 Asynchronism
 ------------

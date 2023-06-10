@@ -56,7 +56,7 @@ and access the device programmatically with ease (using ``ctypes`` or ``popen`` 
 
 Parallel Execution
 ------------------
-In CPython, the `GIL <http://wiki.python.org/moin/GlobalInterpreterLock>`_ prevents mutliple
+In CPython, the `GIL <http://wiki.python.org/moin/GlobalInterpreterLock>`_ prevents multiple
 threads from executing python bytecode at once. This simplifies the design of the python
 interpreter, but the consequence of which is that CPython cannot utilize multiple/multicore
 CPUs. The only way to achieve scalable, CPU-bound python programs is to use multiple processes,

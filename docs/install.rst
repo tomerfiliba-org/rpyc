@@ -45,7 +45,7 @@ language features were added. These changes render the two major versions
 of Python incompatible with one another, and sadly, this cannot be bridged
 automatically by RPyC at the serialization layer.
 
-It's not that I didn't try -- it's just too hard a feat. It's bascially like
+It's not that I didn't try -- it's just too hard a feat. It's basically like
 writing a 100% working `2to3 <http://docs.python.org/library/2to3.html>`_ tool,
 alongside with a matching ``3to2`` one; and that, I reckon, is comparable to
 the *halting problem* (of course I might be wrong here, but it still doesn't

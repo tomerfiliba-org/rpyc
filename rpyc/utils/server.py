@@ -374,7 +374,7 @@ class ThreadPoolServer(Server):
         '''removes a connection by closing it and removing it from internal structs'''
         conn = None
 
-        # cleanup fd_to_conn dictionnary
+        # cleanup fd_to_conn dictionary
         try:
             conn = self.fd_to_conn[fd]
             del self.fd_to_conn[fd]

@@ -99,7 +99,7 @@ class BaseNetref(with_metaclass(NetrefMetaclass, object)):
     defined in the :data:`_builtin_types`), and they are shared between all
     connections.
 
-    The rest of the netref classes are created by :meth:`rpyc.core.protocl.Connection._unbox`,
+    The rest of the netref classes are created by :meth:`rpyc.core.protocol.Connection._unbox`,
     and are private to the connection.
 
     Do not use this class directly; use :func:`class_factory` instead.
@@ -326,7 +326,7 @@ def class_factory(id_pack, methods):
     # create methods that must perform a syncreq
     for name, doc in methods:
         name = str(name)  # IronPython issue #10
-        # only create methods that wont shadow BaseNetref during merge for mro
+        # only create methods that won't shadow BaseNetref during merge for mro
         if name not in LOCAL_ATTRS:  # i.e. `name != __class__`
             ns[name] = _make_method(name, doc)
     return type(netref_name, (BaseNetref,), ns)

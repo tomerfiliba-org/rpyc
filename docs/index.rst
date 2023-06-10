@@ -74,7 +74,7 @@ Features
   protocol, and requiring no complex setup (name servers, HTTP, URL-mapping, etc.)
 
 * **Secure** - employs a `Capability based <http://en.wikipedia.org/wiki/Capability-based_security>`_
-  security model; intergrates easily with SSH
+  security model; integrates easily with SSH
 
 * **Zero-Deploy Enabled** -- Read more about :ref:`Zero-Deploy RPyC <zerodeploy>`
 

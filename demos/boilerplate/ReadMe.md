@@ -2,7 +2,7 @@
 
 This service is ispired by the FileMonitor example.
 
-It will monitor the file `/tmp/test.txt` to geenrate asynchrounous events that will be notified to the RPyC client.
+It will monitor the file `/tmp/test.txt` to generate asynchronous events that will be notified to the RPyC client.
 
 run in one terminal:
 

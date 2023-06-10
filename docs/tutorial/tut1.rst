@@ -57,7 +57,7 @@ is how you see the server's command line::
     >>> rsys.argv
     ['bin/rpyc_classic.py']
 
-…add module search pathes for the server's import mechanism::
+…add module search paths for the server's import mechanism::
 
     >>> rsys.path.append('/tmp/totally-secure-package-location)
 

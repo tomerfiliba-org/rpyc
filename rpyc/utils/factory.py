@@ -278,7 +278,7 @@ def connect_subproc(args, service=VoidService, config={}):
     from subprocess import Popen, PIPE
     proc = Popen(args, stdin=PIPE, stdout=PIPE)
     conn = connect_pipes(proc.stdout, proc.stdin, service=service, config=config)
-    conn.proc = proc  # just so you can have control over the processs
+    conn.proc = proc  # just so you can have control over the process
     return conn
 
 
@@ -325,7 +325,7 @@ def connect_multiprocess(service=VoidService, config={}, remote_service=VoidServ
     """starts an rpyc server on a new process, bound to an arbitrary port,
     and connects to it over a socket. Basically a copy of connect_thread().
     However if args is used and if these are shared memory then changes
-    will be bi-directional. That is we now have access to shared memmory.
+    will be bi-directional. That is we now have access to shared memory.
 
     :param service: the local service to expose (defaults to Void)
     :param config: configuration dict
