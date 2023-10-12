@@ -1,0 +1,23 @@
+name: "Docs Check and Build"
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  docs-linkcheck-nitpicky:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+      - name: Install Dependencies
+        run: |
+          pip install docs/requirements.txt
+      - name: Build linkcheck with nit-picky mode
+        working-directory: docs
+        run: |
+          sphinx-build -W --keep-going -b linkcheck -n -d _build/doctrees . _build/linkcheck
