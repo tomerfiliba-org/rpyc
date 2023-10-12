@@ -1,4 +1,4 @@
-name: "Docs Check and Build"
+name: "Sphinx Test"
 on:
   push:
     branches: [ master ]
@@ -16,7 +16,7 @@ jobs:
           python-version: 3.12
       - name: Install Dependencies
         run: |
-          pip install docs/requirements.txt
+          pip install -r docs/requirements.txt
       - name: Build linkcheck with nit-picky mode
         working-directory: docs
         run: |
