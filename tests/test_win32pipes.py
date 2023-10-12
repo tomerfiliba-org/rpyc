@@ -7,7 +7,7 @@ import unittest
 
 
 @unittest.skipIf(sys.platform != "win32", "Requires windows")
-class Test_Pipes(unittest.TestCase):
+class TestPipes(unittest.TestCase):
     def test_basic_io(self):
         p1, p2 = PipeStream.create_pair()
         p1.write(BYTES_LITERAL("hello"))
@@ -36,7 +36,7 @@ class Test_Pipes(unittest.TestCase):
 
 
 @unittest.skipIf(sys.platform != "win32", "Requires windows")
-class Test_NamedPipe(object):
+class TestNamedPipe(unittest.TestCase):
     def setUp(self):
         self.pipe_server_thread = rpyc.spawn(self.pipe_server)
         time.sleep(1)  # make sure server is accepting already
