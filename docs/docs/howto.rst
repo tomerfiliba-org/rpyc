@@ -13,23 +13,23 @@ you can use the following receipt::
 
     >>> import rpyc
     >>> c = rpyc.classic.connect("localhost")
-    >>> c.execute("print 'hi there'")   # this will print on the host
+    >>> c.execute("print('hi there')")   # this will print on the host
     >>> import sys
     >>> c.modules.sys.stdout = sys.stdout
-    >>> c.execute("print 'hi here'")   # now this will be redirected here
+    >>> c.execute("print('hi here')")   # now this will be redirected here
     hi here
 
 Also note that if you are using classic mode RPyC, you can use the
 `context manager <http://www.python.org/doc/2.5.2/lib/typecontextmanager.html>`_
 ``rpyc.classic.redirected_stdio``::
 
-    >>> c.execute("print 'hi there'")                   # printed on the server
+    >>> c.execute("print('hi there')")                   # printed on the server
     >>>
     >>> with rpyc.classic.redirected_stdio(c):
-    ...     c.execute("print 'hi here'")                # printed on the client
+    ...     c.execute("print('hi here')")                # printed on the client
     ...
     hi here
-    >>> c.execute("print 'hi there again'")             # printed on the server
+    >>> c.execute("print('hi there again')")             # printed on the server
     >>>
 
 .. figure:: _static/howto-redirected.png

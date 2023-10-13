@@ -31,8 +31,8 @@ Unit tests can be ran using your desired Python version as well.
 
 .. code-block:: bash
 
-    PYENV_VERSION=3.9-dev pyenv exec python -m unittest discover -s ./tests -k test_affinity
-    PYENV_VERSION=3.8-dev pyenv exec python -m unittest discover -s ./tests
+    PYENV_VERSION=3.9-dev pyenv exec python -m unittest discover -v -k test_affinity
+    PYENV_VERSION=3.8-dev pyenv exec python -m unittest discover
 
 Testing Supported Python Versions via Docker
 --------------------------------------------

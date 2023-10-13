@@ -10,9 +10,9 @@ BUILDDIR      = _build
 # Internal variables.
 PAPEROPT_a4     = -D latex_paper_size=a4
 PAPEROPT_letter = -D latex_paper_size=letter
-ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
+ALLSPHINXOPTS   = -n -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) .
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest nitpick
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -124,6 +124,10 @@ linkcheck:
 	@echo "Link check complete; look for any errors in the above output " \
 	      "or in $(BUILDDIR)/linkcheck/output.txt."
 
+nitpick:
+	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) -E -W --keep-going $(BUILDDIR)/html
+	@echo "Nit-picky build test and treating warnings as errors."
+
 doctest:
 	$(SPHINXBUILD) -b doctest $(ALLSPHINXOPTS) $(BUILDDIR)/doctest
 	@echo "Testing of doctests in the sources finished, look at the " \
@@ -131,7 +135,3 @@ doctest:
 
 upload: html
 	rsync -r -v $(BUILDDIR)/html/ gangesmaster,rpyc@web.sourceforge.net:htdocs/
-
-
-
-
