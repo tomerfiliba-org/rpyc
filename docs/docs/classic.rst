@@ -31,6 +31,6 @@ to it like so ::
 
     remote_list = conn.builtin.range(7)
 
-    conn.execute("print 'foo'")
+    conn.execute("print('foo')")
 
 

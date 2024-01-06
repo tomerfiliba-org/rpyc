@@ -64,7 +64,7 @@ decorator. Let's revisit the calculator service, but this time we'll use decorat
         def div(self, a, b):
             return a / b
         def foo(self):
-            print "foo"
+            print("foo")
 
 When implementing services, ``@rpyc.service`` and ``@rpyc.exposed`` can replace the ``exposed_`` naming
 convention.
