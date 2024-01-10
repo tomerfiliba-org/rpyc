@@ -1,8 +1,13 @@
+import inspect
 import math
 import rpyc
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
+from rpyc.core import netref
 import unittest
+
+
+logger = rpyc.lib.setup_logger()
 
 
 class MyMeta(type):
@@ -45,9 +50,42 @@ class MyService(rpyc.Service):
 
     def exposed_getnonetype(self):
         """ About the unit test - what's common to types.MethodType and NoneType is that both are
-        not accessible via builtins. So the unit test I've added in 108ff8e was enough to 
+        not accessible via builtins. So the unit test I've added in 108ff8e was enough to
         my understanding (implement it with NoneType because that's more easily "created") """
         return type(None)
+
+
+class TestBaseNetrefMRO(unittest.TestCase):
+    def setUp(self):
+        self.conn = rpyc.classic.connect_thread()
+
+    def tearDown(self):
+        self.conn.close()
+        self.conn = None
+
+    def test_mro(self):
+        # TODO: netref.class_factory, redesign to register builtin types and better handle generic-aliases/types
+        #   - components to explore: abc.ABCMeta, abc.ABC.register types
+        #   - add mro test for netrefs to remote builtins
+        self.assertEqual(netref.NetrefMetaclass.__mro__, (netref.NetrefMetaclass, type, object))
+
+    def test_basenetref(self):
+        self.assertIsInstance(netref.BaseNetref, netref.NetrefMetaclass)
+        self.assertIsInstance(netref.BaseNetref, object)
+        mro = inspect.getmro(netref.BaseNetref)
+        self.assertEqual(mro, (netref.BaseNetref, object))
+
+    def test_builtins_dict_netref(self):
+        cls = netref.builtin_classes_cache['builtins.dict']
+        mro_netref = inspect.getmro(cls)
+        mro_dict = inspect.getmro(dict)
+        logger.debug('\n')
+        logger.debug(f'dict_netref: {mro_netref}')
+        logger.debug(f'dict:        {mro_dict}')
+        self.conn.execute("dict_ = dict(a=0xd35db33f)")
+        remote_dict = self.conn.namespace['dict_']
+        logger.debug(f'remote_dict: {remote_dict}')
+        self.assertEqual(remote_dict['a'], 3546133311)
 
 
 class Test_Netref_Hierarchy(unittest.TestCase):
@@ -60,7 +98,6 @@ class Test_Netref_Hierarchy(unittest.TestCase):
 
     def setUp(self):
         self.conn = rpyc.classic.connect('localhost', port=18878)
-        self.conn2 = None
 
     @classmethod
     def tearDownClass(cls):
@@ -68,8 +105,6 @@ class Test_Netref_Hierarchy(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
-        if self.conn2 is not None:
-            self.conn2.close()
 
     def test_instancecheck_across_connections(self):
         self.conn2 = rpyc.classic.connect('localhost', port=18878)
@@ -91,9 +126,16 @@ class Test_Netref_Hierarchy(unittest.TestCase):
             isinstance([], x)
         i = 0
         self.assertTrue(type(x).__getitem__(x, i) == x.__getitem__(i))
-        _builtins = self.conn.modules.builtins if rpyc.lib.compat.is_py_3k else self.conn.modules.__builtin__
-        self.assertEqual(repr(_builtins.float.__class__), repr(type))
-        self.assertEqual(repr(type(_builtins.float)), repr(type(_builtins.type)))
+
+    def test_builtins(self):
+        _builtins = self.conn.modules.builtins
+        self.assertEqual(repr(_builtins.dict), repr(dict))  # Check repr behavior of netref matchs local
+        self.assertEqual(repr(type(_builtins.dict.__class__)), repr(type))  # Check netref __class__ is type
+        self.assertIs(type(_builtins.dict.__class__), type)
+        # Check class descriptor for netrefs
+        dict_ = _builtins.dict(space='remote')
+        self.assertIs(type(dict_).__dict__['__class__'].instance, dict)
+        self.assertIs(type(dict_).__dict__['__class__'].owner, type)
 
     def test_instancecheck_list(self):
         service = MyService()
@@ -122,27 +164,28 @@ class Test_Netref_Hierarchy(unittest.TestCase):
 
     def test_modules(self):
         """
-        >>> type(sys)
-        <type 'module'>  # base case
-        >>> type(conn.modules.sys)
-        <netref class 'rpyc.core.netref.__builtin__.module'>  # matches base case
-        >>> sys.__class__
-        <type 'module'>  # base case
-        >>> conn.modules.sys.__class__
-        <type 'module'>  # matches base case
-        >>> type(sys.__class__)
-        <type 'type'>  # base case
-        >>> type(conn.modules.sys.__class__)
-        <netref class 'rpyc.core.netref.__builtin__.module'>  # doesn't match.
-        # ^Should be a netref class of "type" (or maybe just <type 'type'> itself?)
+        >>> type(unittest)
+        <class 'module'>
+        >>> type(self.conn.modules.unittest)
+        <netref class 'rpyc.core.netref.unittest'>  # reflects that it is a proxy object to unittest
+        >>> unittest.__class__
+        <class 'module'>  # base case
+        >>> conn.modules.unittest.__class__
+        <class 'module'>  # matches base case
+        >>> type(unittest.__class__)
+        <class 'type'>  # base case
+        >>> type(conn.modules.unittest.__class__)
+        <class 'type'>  # matches base case
         """
-        import sys
-        self.assertEqual(repr(sys.__class__), repr(self.conn.modules.sys.__class__))
-        # _builtin = sys.modules['builtins' if rpyc.lib.compat.is_py_3k else '__builtins__'].__name__
-        # self.assertEqual(repr(type(self.conn.modules.sys)),
-        #                  "<netref class 'rpyc.core.netref.{}.module'>".format(_builtin))
-        # self.assertEqual(repr(type(self.conn.modules.sys.__class__)),
-        #                  "<netref class 'rpyc.core.netref.{}.type'>".format(_builtin))
+        self.assertEqual(repr(self.conn.modules.unittest), repr(unittest))
+        self.assertEqual(repr(type(self.conn.modules.unittest)), "<netref class 'rpyc.core.netref.unittest'>")
+        self.assertIs(self.conn.modules.unittest.__class__, type(unittest))
+        self.assertIs(type(self.conn.modules.unittest.__class__), type)
+
+    def test_proxy_instancecheck(self):
+        self.assertIsInstance(self.conn.modules.builtins.RuntimeError(), Exception)
+        # TODO: below should pass
+        # self.assertIsInstance(self.conn.modules.builtins.RuntimeError(), self.conn.modules.builtins.Exception)
 
 
 if __name__ == '__main__':

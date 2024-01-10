@@ -4,7 +4,7 @@ of *magic*, so beware.
 import sys
 import types
 from rpyc.lib import get_methods, get_id_pack
-from rpyc.lib.compat import pickle, maxint, with_metaclass
+from rpyc.lib.compat import pickle, maxint
 from rpyc.core import consts
 
 
@@ -83,7 +83,6 @@ class NetrefMetaclass(type):
     """A *metaclass* used to customize the ``__repr__`` of ``netref`` classes.
     It is quite useless, but it makes debugging and interactive programming
     easier"""
-
     __slots__ = ()
 
     def __repr__(self):
@@ -93,7 +92,7 @@ class NetrefMetaclass(type):
             return f"<netref class '{self.__name__}'>"
 
 
-class BaseNetref(with_metaclass(NetrefMetaclass, object)):
+class BaseNetref(object, metaclass=NetrefMetaclass):
     """The base netref class, from which all netref classes derive. Some netref
     classes are "pre-generated" and cached upon importing this module (those
     defined in the :data:`_builtin_types`), and they are shared between all
@@ -320,16 +319,18 @@ def class_factory(id_pack, methods):
                 _class = getattr(_module, _class_name, None)
                 if _class is not None and hasattr(_class, '__class__'):
                     class_descriptor = NetrefClass(_class)
+                elif _class is None:
+                    class_descriptor = NetrefClass(type(_module))
                 break
     ns['__class__'] = class_descriptor
-    netref_name = class_descriptor.owner.__name__ if class_descriptor is not None else name_pack
     # create methods that must perform a syncreq
     for name, doc in methods:
         name = str(name)  # IronPython issue #10
         # only create methods that won't shadow BaseNetref during merge for mro
         if name not in LOCAL_ATTRS:  # i.e. `name != __class__`
             ns[name] = _make_method(name, doc)
-    return type(netref_name, (BaseNetref,), ns)
+    netref_cls = type(name_pack, (BaseNetref, ), ns)
+    return netref_cls
 
 
 for _builtin in _builtin_types:
