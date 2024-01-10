@@ -11,7 +11,7 @@ Let's use `pyenv` to install Python versions under active development. Since dev
 
 .. code-block:: bash
 
-    versions=( 3.7-dev 3.8-dev 3.9-dev 3.10-dev 3.11-dev )
+    versions=( 3.7 3.8 3.9 3.10 3.11 3.12)
     for ver in ${versions[@]}; do
         pyenv install --force ${ver}
         pyenv global ${ver}
