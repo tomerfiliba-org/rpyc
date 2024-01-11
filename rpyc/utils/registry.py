@@ -143,11 +143,11 @@ class RegistryServer(object):
             except Exception:
                 continue
             if magic != "RPYC":
-                self.logger.warn(f"invalid magic: {magic!r}")
+                self.logger.warning(f"invalid magic: {magic!r}")
                 continue
             cmdfunc = getattr(self, f"cmd_{cmd.lower()}", None)
             if not cmdfunc:
-                self.logger.warn(f"unknown command: {cmd!r}")
+                self.logger.warning(f"unknown command: {cmd!r}")
                 continue
 
             try:
@@ -169,7 +169,7 @@ class RegistryServer(object):
             self.active = True
             self._work()
         except KeyboardInterrupt:
-            self.logger.warn("User interrupt!")
+            self.logger.warning("User interrupt!")
         finally:
             self.active = False
             self.logger.debug("server closed")
@@ -392,7 +392,7 @@ class UDPRegistryClient(RegistryClient):
                     data, address = sock.recvfrom(MAX_DGRAM_SIZE)
                     rip, rport = address[:2]
                 except socket.timeout:
-                    self.logger.warn("no registry acknowledged")
+                    self.logger.warning("no registry acknowledged")
                     return False
                 if rport != self.port:
                     continue
@@ -404,7 +404,7 @@ class UDPRegistryClient(RegistryClient):
                     self.logger.info(f"registry {rip}:{rport} acknowledged")
                     return True
             else:
-                self.logger.warn("no registry acknowledged")
+                self.logger.warning("no registry acknowledged")
                 return False
 
     def unregister(self, port):
@@ -481,17 +481,17 @@ class TCPRegistryClient(RegistryClient):
                 sock.connect((self.ip, self.port))
                 sock.send(data)
             except (socket.error, socket.timeout):
-                self.logger.warn("could not connect to registry")
+                self.logger.warning("could not connect to registry")
                 return False
             try:
                 data = sock.recv(MAX_DGRAM_SIZE)
             except socket.timeout:
-                self.logger.warn("registry did not acknowledge")
+                self.logger.warning("registry did not acknowledge")
                 return False
             try:
                 reply = brine.load(data)
             except Exception:
-                self.logger.warn("received corrupted data from registry")
+                self.logger.warning("received corrupted data from registry")
                 return False
             if reply == "OK":
                 self.logger.info(f"registry {self.ip}:{self.port} acknowledged")
@@ -508,4 +508,4 @@ class TCPRegistryClient(RegistryClient):
                 sock.connect((self.ip, self.port))
                 sock.send(data)
             except (socket.error, socket.timeout):
-                self.logger.warn("could not connect to registry")
+                self.logger.warning("could not connect to registry")
