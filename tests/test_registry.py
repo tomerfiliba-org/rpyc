@@ -79,15 +79,16 @@ class BaseRegistryTest(object):
 
 class TestTcpRegistry(BaseRegistryTest, unittest.TestCase):
     def _get_server(self):
-        return TCPRegistryServer(pruning_timeout=PRUNING_TIMEOUT, allow_listing=True)
+        return TCPRegistryServer(host="127.0.0.1", pruning_timeout=PRUNING_TIMEOUT, allow_listing=True)
 
     def _get_client(self):
-        return TCPRegistryClient("localhost")
+        return TCPRegistryClient(ip="127.0.0.1")
 
 
 class TestUdpRegistry(BaseRegistryTest, unittest.TestCase):
+    """ May fail due to iptables/packet-drops. """
     def _get_server(self):
-        return UDPRegistryServer(pruning_timeout=PRUNING_TIMEOUT, allow_listing=True)
+        return UDPRegistryServer(host="0.0.0.0", pruning_timeout=PRUNING_TIMEOUT, allow_listing=True)
 
     def _get_client(self):
         return UDPRegistryClient()
