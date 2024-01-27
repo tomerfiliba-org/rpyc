@@ -91,8 +91,37 @@ class NetrefMetaclass(type):
         else:
             return f"<netref class '{self.__name__}'>"
 
+    def __instancecheck__(cls, inst):
+        """Implement isinstance(inst, cls)."""
+        # if 'Error' in str(type(cls)) or 'Error' in  str(type(inst)): breakpoint()
+        if not cls.__subclass__ and type(inst).__class__ is NetrefMetaclass:
+            # Cases....
+            # protocol.py: isinstance(obj, netref.BaseNetref) and obj.____conn__ is self
+            return True
+        res = any(cls.__subclasscheck__(c) for c in {type(inst), object.__getattribute__(inst, "__class__")})
+        return res
 
-class BaseNetref(object, metaclass=NetrefMetaclass):
+    def __subclasscheck__(cls, sub):
+        """Implement issubclass(sub, cls)."""
+        candidates = type(cls).__dict__.get("__subclass__", set())
+        #sub_candidates = type(sub).__dict__.get("__subclass__", set())
+        #cls_candidates = cls.__class__
+        #cls_sub_candidates = sub.__class__
+        #if cls is BaseNetref and sub in (NetrefMetaclass, NetrefMetaclass, object, type)
+        if type(sub) is BaseNetref or type(sub) is NetrefMetaclass:
+            #sub_candidates = type(sub).__dict__.get("__subclass__", set())
+            if not candidates:
+                return False
+            else:
+                breakpoint()
+            #return any([sub_ in candidates for sub_ in sub_candidates])
+        #elif sub is type:
+        #    return True
+        else:
+            return sub in candidates #any(c in candidates for c in sub.mro())
+
+
+class BaseNetref(metaclass=NetrefMetaclass):
     """The base netref class, from which all netref classes derive. Some netref
     classes are "pre-generated" and cached upon importing this module (those
     defined in the :data:`_builtin_types`), and they are shared between all
@@ -110,6 +139,7 @@ class BaseNetref(object, metaclass=NetrefMetaclass):
                 remote-instance-id := id object instance (hits or misses on proxy cache)
         id_pack is usually created by rpyc.lib.get_id_pack
     """
+    __subclass__ = set()
     __slots__ = ["____conn__", "____id_pack__", "__weakref__", "____refcount__"]
 
     def __init__(self, conn, id_pack):
@@ -214,6 +244,8 @@ class BaseNetref(object, metaclass=NetrefMetaclass):
                     return False
                 elif other.____id_pack__[2] != 0:
                     return True
+            elif type(self).__subclass__ and type(other).__subclass__:
+                return any([ssub in sub.mro() for sub in type(other).__subclass__ for ssub in type(self).__subclass__])
             else:
                 # seems dubious if each netref proxies to a different address spaces
                 return syncreq(self, consts.HANDLE_INSTANCECHECK, other.____id_pack__)
@@ -329,7 +361,13 @@ def class_factory(id_pack, methods):
         # only create methods that won't shadow BaseNetref during merge for mro
         if name not in LOCAL_ATTRS:  # i.e. `name != __class__`
             ns[name] = _make_method(name, doc)
-    netref_cls = type(name_pack, (BaseNetref, ), ns)
+    class NetrefVirtual(NetrefMetaclass):
+        pass
+    if ns['__class__'] is not None:
+        ns['__subclass__'] = {ns['__class__'].instance}
+    else:
+        ns['__subclass__'] = set()
+    netref_cls = type(name_pack, (BaseNetref,), ns)
     return netref_cls
 
 

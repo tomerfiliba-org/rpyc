@@ -4,6 +4,7 @@ import rpyc
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
 from rpyc.core import netref
+import test_magic
 import unittest
 
 
@@ -114,7 +115,8 @@ class Test_Netref_Hierarchy(unittest.TestCase):
         bar = self.conn.modules.test_magic.Bar()
         self.assertTrue(isinstance(foo, self.conn.modules.test_magic.Foo))
         self.assertTrue(isinstance(bar, self.conn2.modules.test_magic.Bar))
-        self.assertFalse(isinstance(bar, self.conn.modules.test_magic.Foo))
+        self.assertTrue(isinstance(test_magic.Bar(), test_magic.Foo))
+        self.assertTrue(isinstance(bar, self.conn.modules.test_magic.Foo))
         with self.assertRaises(TypeError):
             isinstance(self.conn.modules.test_magic.Foo, bar)
 
@@ -183,9 +185,10 @@ class Test_Netref_Hierarchy(unittest.TestCase):
         self.assertIs(type(self.conn.modules.unittest.__class__), type)
 
     def test_proxy_instancecheck(self):
+        """ #355 """
         self.assertIsInstance(self.conn.modules.builtins.RuntimeError(), Exception)
         # TODO: below should pass
-        # self.assertIsInstance(self.conn.modules.builtins.RuntimeError(), self.conn.modules.builtins.Exception)
+        self.assertIsInstance(self.conn.modules.builtins.RuntimeError(), self.conn.modules.builtins.Exception)
 
 
 if __name__ == '__main__':
