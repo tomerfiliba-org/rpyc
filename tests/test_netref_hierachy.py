@@ -129,7 +129,7 @@ class Test_Netref_Hierarchy(unittest.TestCase):
 
     def test_builtins(self):
         _builtins = self.conn.modules.builtins
-        self.assertEqual(repr(_builtins.dict), repr(dict))  # Check repr behavior of netref matchs local
+        self.assertEqual(repr(_builtins.dict), repr(dict))  # Check repr behavior of netref matches local
         self.assertEqual(repr(type(_builtins.dict.__class__)), repr(type))  # Check netref __class__ is type
         self.assertIs(type(_builtins.dict.__class__), type)
         # Check class descriptor for netrefs
