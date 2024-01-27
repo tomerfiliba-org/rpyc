@@ -1,12 +1,12 @@
 import rpyc
-import inspect
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
 import unittest
 try:
     import urllib3
+    urllib3.request
     _urllib3_import_failed = False
-except Except:
+except Exception:
     _urllib3_import_failed = True
 
 
@@ -28,14 +28,13 @@ class TestUrllib3(unittest.TestCase):
     def test_issue(self):
         self.conn.execute('import urllib3')
         urllib3_ = self.conn.modules.urllib3
-        headers = urllib3.HTTPHeaderDict()
-        headers.add("Accept", "application/json")
-        headers.add("Accept", "text/plain")
-        resp = urllib3_.request( "POST", "https://httpbin.org/post", fields={"hello": "world"}, headers={ "X-Request-Id": "test"})
+        # headers = urllib3.HTTPHeaderDict()
+        # headers.add("Accept", "application/json")
+        # headers.add("Accept", "text/plain")
+        headers = {"X-Request-Id": "test"}
+        resp = urllib3_.request("POST", "https://httpbin.org/post", fields={"hello": "world"}, headers=headers)
         __import__('code').interact(local=locals() | globals())
-
-
-        #self.assertTrue(self.conn.root.instance(remote_list, list))
+        # self.assertTrue(self.conn.root.instance(remote_list, list))
 
 
 if __name__ == "__main__":
