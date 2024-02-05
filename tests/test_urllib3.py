@@ -10,7 +10,7 @@ except Exception:
     _urllib3_import_failed = True
 
 
-@unittest.skipIf(_urllib3_import_failed or True, "urllib3 not available")
+@unittest.skipIf(_urllib3_import_failed, "urllib3 not available")
 class TestUrllib3(unittest.TestCase):
     """ #547 """
 
