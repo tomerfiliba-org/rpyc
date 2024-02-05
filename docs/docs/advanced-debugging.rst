@@ -15,7 +15,8 @@ Let's use `pyenv` to install Python versions under active development. Since dev
     for ver in ${versions[@]}; do
         pyenv install --force ${ver}
         pyenv global ${ver}
-        pyenv exec pip install --upgrade pip setuptools wheel plumbum[dev]
+        pyenv exec pip install --upgrade -e .[dev,optional]
+        pyenv exec pip uninstall -y rpyc
         site="$(pyenv exec python -c 'import site; print(site.getsitepackages()[0])')"
         printf "${PWD}\n" > "${site}/rpyc.pth"
     done

@@ -1,6 +1,10 @@
 [build-system]
 requires = [
     "hatchling>=1.6.0",
+    "pip",
+    "setuptools",
+    "wheel",
+    "flake8"
 ]
 build-backend = "hatchling.build"
 
@@ -66,5 +70,14 @@ only-include = ["rpyc"]
 
 [tool.codespell]
 skip = '.git,*.pdf,*.svg'
-#
+
+[project.optional-dependencies]
+dev = [
+    "urllib3",
+]
+optional = [
+    "plumbum[dev]",
+    "gevent"
+]
+
 # ignore-words-list = ''
