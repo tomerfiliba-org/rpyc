@@ -8,6 +8,8 @@ import os
 from rpyc.utils.server import ThreadedServer
 from shutil import which
 
+GDB_ENABLED = False  # Disabled until passes for gdb 7 functional
+
 
 class ParentGDB(rpyc.Service):
     """ starts a new gdb service instance on connect and quits on disconnect """
@@ -32,7 +34,7 @@ class ParentGDB(rpyc.Service):
     def exposed_get_gdb(self):
         return self.gdb_svc_conn.root.get()
 
-GDB_ENABLED = False  # Disabled until passes for gdb 7 functional
+
 @unittest.skipUnless(which('gdb') is not None and GDB_ENABLED, "Skipping gdb example test since gdb not found")
 class Test_GDB(unittest.TestCase):
 
@@ -66,7 +68,3 @@ class Test_GDB(unittest.TestCase):
         print(4)
         self.assertIn('End of assembler dump', disasm)
         parent_gdb_conn.close()
-
-
-if __name__ == "__main__":
-    unittest.main()
