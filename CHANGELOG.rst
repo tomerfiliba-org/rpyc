@@ -1,3 +1,11 @@
+6.0.0
+=====
+Date: 2024-02-23
+
+- `#551`_ Resolves security issue that results in RCE. The fix breaks backwards compatibility for those that rely on the `__array__` attribute used by `numpy`. This RCE is only exploitable when the server-side gets the attribute `__array__` and calls it (e.g., `np.array(x)`). This issues effects all versions since major release 4.
+
+.. _#551: https://github.com/tomerfiliba-org/rpyc/issues/551
+
 5.3.1
 =====
 Date: 2023-02-21
