@@ -250,6 +250,6 @@ def get_methods(obj_attrs, obj):
     for basecls in mros:
         attrs.update(basecls.__dict__)
     for name, attr in attrs.items():
-        if name not in obj_attrs and hasattr(attr, "__call__"):
+        if name not in obj_attrs and inspect.isroutine(attr):
             methods[name] = inspect.getdoc(attr)
     return methods.items()
