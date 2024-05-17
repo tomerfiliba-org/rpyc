@@ -52,7 +52,7 @@ class ClassicMode(unittest.TestCase):
         self.assertEqual(conn.eval("2+3"), 5)
 
     def test_modules(self):
-        self.assertIn('test_magic', self.conn.modules)
+        self.assertIn('tests.test_magic', self.conn.modules)
         self.assertNotIn('test_badmagic', self.conn.modules)
         self.assertIsNone(self.conn.builtins.locals()['self']._last_traceback)
 
