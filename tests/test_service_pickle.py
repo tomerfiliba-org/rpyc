@@ -4,7 +4,7 @@ import pickle  # noqa
 import timeit
 import rpyc
 import unittest
-import cfg_tests
+from tests import cfg_tests
 try:
     import pandas as pd
     import numpy as np
