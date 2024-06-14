@@ -336,9 +336,7 @@ class Connection(object):
             return self._local_objects[value]
         if label == consts.LABEL_REMOTE_REF:
             id_pack = (str(value[0]), value[1], value[2])  # so value is a id_pack
-            nonexistent = object()
-            proxy = self._proxy_cache.get(id_pack, nonexistent)
-            if proxy is not nonexistent:
+            if id_pack in self._proxy_cache:
                 proxy = self._proxy_cache[id_pack]
                 proxy.____refcount__ += 1  # if cached then remote incremented refcount, so sync refcount
             else:
