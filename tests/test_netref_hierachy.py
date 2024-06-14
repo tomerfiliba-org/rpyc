@@ -108,15 +108,15 @@ class Test_Netref_Hierarchy(unittest.TestCase):
 
     def test_instancecheck_across_connections(self):
         self.conn2 = rpyc.classic.connect('localhost', port=18878)
-        self.conn.execute('import test_magic')
-        self.conn2.execute('import test_magic')
-        foo = self.conn.modules.test_magic.Foo()
-        bar = self.conn.modules.test_magic.Bar()
-        self.assertTrue(isinstance(foo, self.conn.modules.test_magic.Foo))
-        self.assertTrue(isinstance(bar, self.conn2.modules.test_magic.Bar))
-        self.assertFalse(isinstance(bar, self.conn.modules.test_magic.Foo))
+        self.conn.execute('import tests.test_magic')
+        self.conn2.execute('import tests.test_magic')
+        foo = self.conn.modules.tests.test_magic.Foo()
+        bar = self.conn.modules.tests.test_magic.Bar()
+        self.assertTrue(isinstance(foo, self.conn.modules.tests.test_magic.Foo))
+        self.assertTrue(isinstance(bar, self.conn2.modules.tests.test_magic.Bar))
+        self.assertFalse(isinstance(bar, self.conn.modules.tests.test_magic.Foo))
         with self.assertRaises(TypeError):
-            isinstance(self.conn.modules.test_magic.Foo, bar)
+            isinstance(self.conn.modules.tests.test_magic.Foo, bar)
 
     def test_classic(self):
         x = self.conn.builtin.list((1, 2, 3, 4))
