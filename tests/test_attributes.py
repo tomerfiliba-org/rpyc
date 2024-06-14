@@ -26,7 +26,7 @@ class TestAttributes(unittest.TestCase):
         self.conn.close()
 
     def test_properties(self):
-        p = self.conn.modules["test_attributes"].Properties()
+        p = self.conn.modules["tests.test_attributes"].Properties()
         print(p.counter)  # 1
         print(p.counter)  # 2
         print(p.counter)  # 3

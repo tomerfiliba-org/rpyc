@@ -37,7 +37,7 @@ class TestContextManagers(unittest.TestCase):
 
     def test_hash_class(self):
         hesh = self.conn.builtins.hash
-        mod = self.conn.modules.test_magic
+        mod = self.conn.modules.tests.test_magic
         self.assertEqual(hash(mod.Base), 4321)
         self.assertEqual(hash(mod.Foo), 4321)
         self.assertEqual(hash(mod.Bar), 4321)
@@ -53,7 +53,7 @@ class TestContextManagers(unittest.TestCase):
 
     def test_hash_obj(self):
         hesh = self.conn.builtins.hash
-        mod = self.conn.modules.test_magic
+        mod = self.conn.modules.tests.test_magic
         obj = mod.Base()
 
         self.assertNotEqual(hash(obj), 1234)

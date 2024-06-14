@@ -1,7 +1,7 @@
 import sys
 import time
 import unittest
-import support
+from tests import support
 import rpyc
 
 
