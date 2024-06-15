@@ -37,6 +37,7 @@ class WeakValueDict(object):
         obj = self._dict[key]()
         if obj is None:
             raise KeyError(key)
+        self[key] = obj
         return obj
 
     def __setitem__(self, key, value):
