@@ -10,16 +10,17 @@ on:
     branches: [ master ]
 
 jobs:
-  lint-and-unittest:
+  unittest:
 
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        RPYC_BIND_THREADS: ["true", "false"]
         python_version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+        RPYC_BIND_THREADS: ["true", "false"]
 
+    name: Unittest (${{ matrix.python_version }}, bind_threads=${{ matrix.RPYC_BIND_THREADS }})
     steps:
       - uses: actions/checkout@v3
 
