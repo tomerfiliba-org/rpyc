@@ -326,7 +326,10 @@ class PipeStream(Stream):
 
         :returns: a :class:`PipeStream` instance
         """
-        return cls(sys.stdin, sys.stdout)
+        pipestream = cls(sys.stdin, sys.stdout)
+        sys.stdin = os.open(os.devnull, os.O_RDWR)
+        sys.stdout = sys.stdin
+        return pipestream
 
     @classmethod
     def create_pair(cls):
@@ -405,7 +408,10 @@ class Win32PipeStream(Stream):
 
     @classmethod
     def from_std(cls):
-        return cls(sys.stdin, sys.stdout)
+        pipestream = cls(sys.stdin, sys.stdout)
+        sys.stdin = os.open(os.devnull, os.O_RDWR)
+        sys.stdout = sys.stdin
+        return pipestream
 
     @classmethod
     def create_pair(cls):
