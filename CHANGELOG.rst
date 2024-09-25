@@ -1,3 +1,17 @@
+6.0.1
+=====
+Date: 2024-09-24
+
+- Minor fixes to class module id packs and related unittest assertions
+- `#559`_ closes `#558`_ which reported issues with proxy cache referrant race conditions, get_method errors, and stream issues
+- `#557`_ fix pytest issues reported in `#544`_
+
+.. _#559: https://github.com/tomerfiliba-org/rpyc/pull/559
+.. _#558: https://github.com/tomerfiliba-org/rpyc/issues/558
+.. _#557: https://github.com/tomerfiliba-org/rpyc/pull/557
+.. _#544: https://github.com/tomerfiliba-org/rpyc/issues/544
+
+
 6.0.0
 =====
 Date: 2024-02-23
