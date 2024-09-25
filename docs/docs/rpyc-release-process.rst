@@ -33,8 +33,8 @@ To create an initial entry draft, run some shell commands.
     owner="tomerfiliba-org"
     repo="rpyc"
     #url="https://github.com/${owner}/${repo}"
-    revisions="$(git rev-list $(hatch version)..HEAD | sed -z 's/\(.*\)\n/\1/;s/\n/|/g')"
-    numbers=( $(git log $(hatch version)..HEAD --no-merges --oneline | sed -nE 's/^.*#([0-9]+).*/\1/p' | sort -nu) )
+    revisions="$(git rev-list $(pyenv exec hatch version)..HEAD | sed -z 's/\(.*\)\n/\1/;s/\n/|/g')"
+    numbers=( $(git log $(pyenv exec hatch version)..HEAD --no-merges --oneline | sed -nE 's/^.*#([0-9]+).*/\1/p' | sort -nu) )
     issue_numbers="$(echo "${numbers[@]}" | sed 's/ /|/g')"
     #
     api_filter() { 
