@@ -177,10 +177,17 @@ class Test_Netref_Hierarchy(unittest.TestCase):
         >>> type(conn.modules.unittest.__class__)
         <class 'type'>  # matches base case
         """
+        # instance module assertions
         self.assertEqual(repr(self.conn.modules.unittest), repr(unittest))
         self.assertEqual(repr(type(self.conn.modules.unittest)), "<netref class 'rpyc.core.netref.unittest'>")
         self.assertIs(self.conn.modules.unittest.__class__, type(unittest))
         self.assertIs(type(self.conn.modules.unittest.__class__), type)
+        # class module assertions
+        remote_module_cls = self.conn.modules.builtins.type(self.conn.modules.sys)
+        remote_module_cls_id = self.conn.modules.builtins.id(remote_module_cls)
+        self.assertEqual(repr(remote_module_cls), "<class 'module'>")
+        self.assertEqual(remote_module_cls.____id_pack__, ('builtins.module', remote_module_cls_id, 0))
+
 
     def test_proxy_instancecheck(self):
         self.assertIsInstance(self.conn.modules.builtins.RuntimeError(), Exception)
