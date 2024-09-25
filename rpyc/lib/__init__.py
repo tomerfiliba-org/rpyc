@@ -191,9 +191,7 @@ def get_id_pack(obj):
     if (inspect.ismodule(obj) or obj_name == 'module'):
         if isinstance(obj, type):  # module
             obj_cls = type(obj)
-            name_pack = (
-                f'{obj_cls.__module__}.{obj_cls.__name__}'
-            )
+            name_pack = f'{obj_cls.__module__}.{obj_cls.__name__}'
             return (name_pack, id(type(obj)), id(obj))
 
         if inspect.ismodule(obj) and obj_name != 'module':
@@ -201,33 +199,23 @@ def get_id_pack(obj):
                 name_pack = obj_name
             else:
                 obj_cls = getattr(obj, '__class__', type(obj))
-                name_pack = (
-                    f'{obj_cls.__module__}.{obj_name}'
-                )
+                name_pack = f'{obj_cls.__module__}.{obj_name}'
         elif inspect.ismodule(obj):
-            name_pack = (
-                f'{obj.__module__}.{obj_name}'
-            )
+            name_pack = '{obj.__module__}.{obj_name}'
         else:
             obj_module = getattr(obj, '__module__', undef)
             if obj_module is not undef:
-                name_pack = (
-                    f'{obj.__module__}.{obj_name}'
-                )
+                name_pack = f'{obj.__module__}.{obj_name}'
             else:
                 name_pack = obj_name
         return (name_pack, id(type(obj)), id(obj))
 
     if not inspect.isclass(obj):
         obj_cls = getattr(obj, '__class__', type(obj))
-        name_pack = (
-            f'{obj_cls.__module__}.{obj_cls.__name__}'
-        )
+        name_pack = f'{obj_cls.__module__}.{obj_cls.__name__}'
         return (name_pack, id(type(obj)), id(obj))
 
-    name_pack = (
-        f'{obj.__module__}.{obj_name}'
-    )
+    name_pack = f'{obj.__module__}.{obj_name}'
     return (name_pack, id(obj), 0)
 
 
