@@ -248,13 +248,14 @@ def _make_method(name, doc):
         method.__doc__ = doc
         return method
     elif name == "__array__":
-        def __array__(self):
+        def __array__(self, *args, **kwargs):
             # Note that protocol=-1 will only work between python
             # interpreters of the same version.
             if not object.__getattribute__(self,'____conn__')._config["allow_pickle"]:
                 # Security check that server side allows pickling per #551
                 raise ValueError("pickling is disabled")
-            return pickle.loads(syncreq(self, consts.HANDLE_PICKLE, -1))
+            array = pickle.loads(syncreq(self, consts.HANDLE_PICKLE, -1))
+            return array.__array__(*args, **kwargs)
         __array__.__doc__ = doc
         return __array__
     else:
