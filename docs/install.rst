@@ -90,6 +90,3 @@ them:
 
 * `PyWin32 <https://sourceforge.net/projects/pywin32/files/pywin32/>`_ - Required
   for ``PipeStream`` on Windows
-
-* `zlib for IronPython <https://bitbucket.org/jdhardy/ironpythonzlib>`_ - Required
-  for IronPython prior to v2.7
