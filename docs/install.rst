@@ -45,15 +45,8 @@ language features were added. These changes render the two major versions
 of Python incompatible with one another, and sadly, this cannot be bridged
 automatically by RPyC at the serialization layer.
 
-It's not that I didn't try -- it's just too hard a feat. It's basically like
-writing a 100% working `2to3 <http://docs.python.org/library/2to3.html>`_ tool,
-alongside with a matching ``3to2`` one; and that, I reckon, is comparable to
-the *halting problem* (of course I might be wrong here, but it still doesn't
-make it feasible).
-
-Big words aside -- you can connect from **Python 2.x to Python 2.y**, as
-long as you only use types/modules/features supported by both; and you can
-connect from **Python 3.x to Python 3.y**, under the same assumption.
+Big words aside -- you can connect from **Python 3.x to Python 3.y**, as
+long as you only use types/modules/features supported by both.
 
 .. note::
    As a side note, do not try to mix different versions of RPyC (e.g., connecting
