@@ -549,7 +549,7 @@ Please excuse the briefity for this versions changelist.
 
 * Shutting down the old wikidot site
 
-* Adding `Travis CI <http://travis-ci.org/#!/tomerfiliba/rpyc>`_ integration
+* Adding Travis CI integration
 
 .. _#68: https://github.com/tomerfiliba-org/rpyc/issues/68
 .. _#71: https://github.com/tomerfiliba-org/rpyc/issues/71
