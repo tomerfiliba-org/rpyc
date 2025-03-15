@@ -77,7 +77,7 @@ Bugs and Patches
 We're using github's `issue tracker <http://github.com/tomerfiliba/rpyc/issues>`_
 for bug reports, feature requests, and overall status.
 
-Patches are accepted through github `pull requests <http://help.github.com/pull-requests/>`_.
+Patches are accepted through github `pull requests <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`_.
 
 .. _dependencies:
 
