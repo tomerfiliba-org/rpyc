@@ -4,7 +4,7 @@ Download and Install
 ====================
 
 You can always download the latest releases of RPyC from the project's
-`github page <https://github.com/tomerfiliba/rpyc/releases>`_ or
+`github page <https://github.com/tomerfiliba-org/rpyc/releases>`_ or
 its `PyPI page <https://pypi.org/project/rpyc/>`_. The easiest way to
 install RPyC, however, is using::
 
@@ -36,7 +36,7 @@ Cross-Interpreter Compatibility
 Note that you **cannot** connect from a **Python 2.x** interpreter to a **3.x**
 one, or vice versa. Trying to do so will
 results in all kinds of `strange exceptions
-<https://github.com/tomerfiliba/rpyc/issues/54>`_, so beware. This is because Python 3 introduces major changes to
+<https://github.com/tomerfiliba-org/rpyc/issues/54>`_, so beware. This is because Python 3 introduces major changes to
 the object model used by Python 2.x: some types were removed, added or
 unified into others. Byte- and Unicode- strings gave me a nightmare (and they
 still account for many bugs in the core interpreter). On top of that,
