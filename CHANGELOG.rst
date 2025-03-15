@@ -602,7 +602,7 @@ Please excuse the briefity for this versions changelist.
 
 * **New documentation** (both the website and docstrings) written in **Sphinx**
 
-  * The site has moved to `sourceforge <http://rpyc.sourceforge.net>`_. Wikidot
+  * The site has moved to `sourceforge <https://rpyc.sourceforge.net>`_. Wikidot
     had served us well over the past three years, but they began displaying way too
     many ads and didn't support uploading files over ``rsync``, which made my life hard.
 

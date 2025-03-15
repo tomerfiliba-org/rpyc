@@ -70,6 +70,7 @@ release = __version__ + "/" + release_date
 # directories to ignore when looking for source files.
 exclude_patterns = ['_build']
 
+user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
 

@@ -88,7 +88,7 @@ box for "simple" use. However, RPyC integrates with some other projects to
 provide more features, and if you wish to use any of those, you must install
 them:
 
-* `PyWin32 <http://sourceforge.net/projects/pywin32/files/pywin32/>`_ - Required
+* `PyWin32 <https://sourceforge.net/projects/pywin32/files/pywin32/>`_ - Required
   for ``PipeStream`` on Windows
 
 * `zlib for IronPython <https://bitbucket.org/jdhardy/ironpythonzlib>`_ - Required
