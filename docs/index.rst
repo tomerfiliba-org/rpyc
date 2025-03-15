@@ -48,8 +48,8 @@ Next, refer to the :ref:`documentation` and :ref:`api-ref`,
 as well as the :ref:`mailing-list`.
 
 For an introductory reading (that may or may not be slightly outdated),
-`David Mertz <http://gnosis.cx/dW/>`_ wrote a very thorough
-`Charming Python <http://www.ibm.com/developerworks/linux/library/l-rpyc/>`_ installment
+David Mertz wrote a very thorough
+`Charming Python <https://web.archive.org/web/20160928013509/http://www.ibm.com/developerworks/linux/library/l-rpyc/>`_ installment
 about RPyC, explaining how it's different from existing alternatives (Pyro, XMLRPC, etc.),
 what roles it can play, and even show-cases some key features of RPyC (like the security model,
 remote monkey-patching, or remote resource utilization).
