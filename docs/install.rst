@@ -5,7 +5,7 @@ Download and Install
 
 You can always download the latest releases of RPyC from the project's
 `github page <https://github.com/tomerfiliba/rpyc/releases>`_ or
-its `PyPI page <http://pypi.python.org/pypi/rpyc>`_. The easiest way to
+its `PyPI page <https://pypi.org/project/rpyc/>`_. The easiest way to
 install RPyC, however, is using::
 
     pip install rpyc
@@ -61,20 +61,20 @@ Development
 
 Mailing List
 ------------
-There is an old `mailing list <http://groups.google.com/group/rpyc>`_ that may
+There is an old `mailing list <https://groups.google.com/g/rpyc>`_ that may
 contain useful information and that you should search before asking questions.
 Nowadays however, do not count on getting any answers for new questions there.
 
 Repository
 ----------
-RPyC is developed on `github <http://github.com/tomerfiliba/rpyc>`_, where you
+RPyC is developed on `github <https://github.com/tomerfiliba-org/rpyc>`_, where you
 can always find the latest code or fork the project.
 
 .. _bugs:
 
 Bugs and Patches
 ----------------
-We're using github's `issue tracker <http://github.com/tomerfiliba/rpyc/issues>`_
+We're using github's `issue tracker <https://github.com/tomerfiliba-org/rpyc/issues>`_
 for bug reports, feature requests, and overall status.
 
 Patches are accepted through github `pull requests <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/creating-a-pull-request>`_.

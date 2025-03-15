@@ -131,7 +131,7 @@ like so::
     machine_c = rpyc.classic.connect("machine-c")
     telnetlib.socket = rpyc.modules.socket
 
-This is called `monkey-patching <http://en.wikipedia.org/wiki/Monkey_patch>`_, it's a very
+This is called `monkey-patching <https://en.wikipedia.org/wiki/Monkey_patch>`_, it's a very
 handy technique which you can use in other places as well, to override functions, classes
 and entire modules. For instance ::
 

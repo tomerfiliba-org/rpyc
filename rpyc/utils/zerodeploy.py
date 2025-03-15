@@ -1,7 +1,7 @@
 """
 .. versionadded:: 3.3
 
-Requires [plumbum](http://plumbum.readthedocs.org/)
+Requires [plumbum](https://plumbum.readthedocs.io/en/latest/)
 """
 from __future__ import with_statement
 from subprocess import TimeoutExpired

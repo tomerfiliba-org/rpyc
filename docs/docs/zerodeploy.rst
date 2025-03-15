@@ -15,7 +15,7 @@ the preferred way to deploy RPyC.
 How It Works
 ------------
 
-Zero-deploy only requires that you have `Plumbum <http://plumbum.readthedocs.org>`_ (1.2 and later) installed on
+Zero-deploy only requires that you have `Plumbum <https://plumbum.readthedocs.io/en/latest/>`_ (1.2 and later) installed on
 your client machine and that you can connect to the remote machine over SSH. It takes care of the rest:
 
 1. Create a temporary directory on the remote machine

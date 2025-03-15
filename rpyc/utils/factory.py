@@ -183,7 +183,7 @@ _ssh_connect_lock = threading.Lock()
 def ssh_connect(remote_machine, remote_port, service=VoidService, config={}):
     """
     Connects to an RPyC server over an SSH tunnel (created by plumbum).
-    See `Plumbum tunneling <http://plumbum.readthedocs.org/en/latest/remote.html#tunneling>`_
+    See `Plumbum tunneling <https://plumbum.readthedocs.org/en/latest/remote.html#tunneling>`_
     for further details.
 
     .. note::

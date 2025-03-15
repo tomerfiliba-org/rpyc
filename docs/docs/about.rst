@@ -3,10 +3,10 @@
 About RPyC
 ==========
 RPyC was inspired by the work of **Eyal Lotem** on
-`pyinvoke <http://pybuild.sourceforge.net/pyinvoke.html>`_, which pioneered in
+`pyinvoke <https://pybuild.sourceforge.net/pyinvoke.html>`_, which pioneered in
 the field of "dynamic RPC" (where there's no predefined contract between the
 two sides). The two projects, however, are completely unrelated in any other
-way. RPyC is developed and maintained by `Tomer Filiba <http://tomerfiliba.com>`_
+way. RPyC is developed and maintained by `Tomer Filiba <https://tomerfiliba.com/>`_
 (tomerfiliba@gmail.com).
 
 .. note::
@@ -19,7 +19,7 @@ Contributors
 
 Logo
 ----
-The logo is derived from the `Python logo <http://www.python.org/community/logos/>`_,
+The logo is derived from the `Python logo <https://www.python.org/community/logos/>`_,
 with explicit permission. I created it using *Power Point* (sorry, I'm no graphic
 designer :), and all the files are made available here:
 

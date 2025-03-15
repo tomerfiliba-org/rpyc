@@ -1,8 +1,8 @@
 """
 RPyC Registry Server maintains service information on RPyC services for *Service Registry and Discovery patterns*. Service Registry and Discovery patterns solve the connectivity problem for communication between services and external consumers. RPyC services will register with the server when :code:`auto_register` is :code:`True`.
 
-Service registries such as `Avahi <http://en.wikipedia.org/wiki/Avahi_(software)>`_ and
-`Bonjour <http://en.wikipedia.org/wiki/Bonjour_(software)>`_ are alternatives to the RPyC Registry Server. These alternatives do no support Windows and have more restrictive licensing.
+Service registries such as `Avahi <https://en.wikipedia.org/wiki/Avahi_(software)>`_ and
+`Bonjour <https://en.wikipedia.org/wiki/Bonjour_(software)>`_ are alternatives to the RPyC Registry Server. These alternatives do no support Windows and have more restrictive licensing.
 
 Refer to :file:`rpyc/scripts/rpyc_registry.py` for more info.
 """
