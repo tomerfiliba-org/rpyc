@@ -144,22 +144,22 @@ class DeployedServer(object):
 
         self.proc = cmd.popen(script, new_session=True)
 
-        line = ""
-        try:
-            line = self.proc.stdout.readline()
-            self.remote_port = int(line.strip())
-        except Exception:
-            try:
-                self.proc.terminate()
-            except Exception:
-                pass
-            stdout, stderr = self.proc.communicate()
-            raise ProcessExecutionError(self.proc.argv, self.proc.returncode, BYTES_LITERAL(line) + stdout, stderr)
 
         if hasattr(remote_machine, "connect_sock"):
             # Paramiko: use connect_sock() instead of tunnels
             self.local_port = None
         else:
+            line = ""
+            try:
+                line = self.proc.stdout.readline()
+                self.remote_port = int(line.strip())
+            except Exception:
+                try:
+                    self.proc.terminate()
+                except Exception:
+                    pass
+                stdout, stderr = self.proc.communicate()
+                raise ProcessExecutionError(self.proc.argv, self.proc.returncode, BYTES_LITERAL(line) + stdout, stderr)
             self.local_port = rpyc.utils.factory._get_free_port()
             self.tun = remote_machine.tunnel(self.local_port, self.remote_port)
 
