@@ -1,5 +1,9 @@
 Contributors for newer versions are visible from the git commit history.
 
+v6.0.2
+^^^^^^
+* Antoine DECHAUME - Add support to current numpy __array__ ndarray method and allow DeployServer to execute any service and script.
+
 v3.2.3
 ^^^^^^
 * Guy Rozendorn - backported lots of fixes from 3.3 branch
