@@ -106,8 +106,8 @@ class BaseNetref(object, metaclass=NetrefMetaclass):
     :param conn: the :class:`rpyc.core.protocol.Connection` instance
     :param id_pack: id tuple for an object ~ (name_pack, remote-class-id, remote-instance-id)
         (cont.) name_pack := __module__.__name__ (hits or misses on builtin cache and sys.module)
-                remote-class-id := id of object class (hits or misses on netref classes cache and instance checks)
-                remote-instance-id := id object instance (hits or misses on proxy cache)
+        remote-class-id := id of object class (hits or misses on netref classes cache and instance checks)
+        remote-instance-id := id object instance (hits or misses on proxy cache)
         id_pack is usually created by rpyc.lib.get_id_pack
     """
     __slots__ = ["____conn__", "____id_pack__", "__weakref__", "____refcount__"]
