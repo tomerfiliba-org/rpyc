@@ -20,7 +20,7 @@ you can use the following receipt::
     hi here
 
 Also note that if you are using classic mode RPyC, you can use the
-`context manager <http://www.python.org/doc/2.5.2/lib/typecontextmanager.html>`_
+`context manager <https://docs.python.org/3/library/stdtypes.html#typecontextmanager>`_
 ``rpyc.classic.redirected_stdio``::
 
     >>> c.execute("print('hi there')")                   # printed on the server
@@ -131,7 +131,7 @@ like so::
     machine_c = rpyc.classic.connect("machine-c")
     telnetlib.socket = rpyc.modules.socket
 
-This is called `monkey-patching <http://en.wikipedia.org/wiki/Monkey_patch>`_, it's a very
+This is called `monkey-patching <https://en.wikipedia.org/wiki/Monkey_patch>`_, it's a very
 handy technique which you can use in other places as well, to override functions, classes
 and entire modules. For instance ::
 

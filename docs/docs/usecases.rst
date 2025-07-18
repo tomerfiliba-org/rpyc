@@ -22,7 +22,7 @@ RPyC is configured (by default) to prevent the use of ``getattr`` on remote obje
 all but "allowed attributes", and the rest of the security model is based on passing
 *capabilities*. Passing capabilities is explicit and fine grained -- for instance,
 instead of allowing the other party call ``open()`` and attempting to block disallowed calls
-at the file-name level (which is `weak <http://en.wikipedia.org/wiki/Directory_traversal>`_),
+at the file-name level (which is `weak <https://en.wikipedia.org/wiki/Directory_traversal>`_),
 you can pass an open file object to the other party. The other party could manipulate the
 file (calling read/write/seek on it), but it would have no access to the rest of the file
 system.
@@ -49,14 +49,14 @@ Many times you find yourself in need of utilizing hardware ("physical") resource
 machine from another. For instance, some testgear or device can only connect to
 Solaris SPARC machines, but you're comfortable with developing on your Windows workstation.
 Assuming your device comes with C bindings, some command-line tool, or accepts commands
-via ``ioctl`` to some `device node <http://en.wikipedia.org/wiki/Device_file>`_ --
+via ``ioctl`` to some `device node <https://en.wikipedia.org/wiki/Device_file>`_ --
 you can just run an RPyC server on that machine, connect to it from your workstation,
 and access the device programmatically with ease (using ``ctypes`` or ``popen`` remotely).
 
 
 Parallel Execution
 ------------------
-In CPython, the `GIL <http://wiki.python.org/moin/GlobalInterpreterLock>`_ prevents multiple
+In CPython, the `GIL <https://wiki.python.org/moin/GlobalInterpreterLock>`_ prevents multiple
 threads from executing python bytecode at once. This simplifies the design of the python
 interpreter, but the consequence of which is that CPython cannot utilize multiple/multicore
 CPUs. The only way to achieve scalable, CPU-bound python programs is to use multiple processes,

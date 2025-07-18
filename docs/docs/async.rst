@@ -42,7 +42,7 @@ result arrives, using ``res.add_callback()``.
 
 Notes
 ^^^^^
-The returns async proxies are cached by a `weak-reference <http://docs.python.org/library/weakref.html>`_.
+The returns async proxies are cached by a `weak-reference <https://docs.python.org/3/library/weakref.html>`_.
 Therefore, you must hold a strong reference to the returned proxy. Particularly, this means
 that instead of doing ::
 

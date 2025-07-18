@@ -98,7 +98,7 @@ def ssl_connect(host, port=DEFAULT_SERVER_SSL_PORT, keyfile=None,
     :param ipv6: whether to create an IPv6 socket or an IPv4 one
 
     The following arguments are passed to
-    `ssl.SSLContext <http://docs.python.org/dev/library/ssl.html#ssl.SSLContext>`_ and
+    `ssl.SSLContext <https://docs.python.org/dev/library/ssl.html>`_ and
     its corresponding methods:
 
     :param keyfile: see ``ssl.SSLContext.load_cert_chain``. May be ``None``

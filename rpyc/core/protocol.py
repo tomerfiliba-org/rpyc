@@ -336,7 +336,7 @@ class Connection(object):
             return self._local_objects[value]
         if label == consts.LABEL_REMOTE_REF:
             id_pack = (str(value[0]), value[1], value[2])  # so value is a id_pack
-            proxy = self._proxy_cache.get(id_pack)
+            proxy = self._proxy_cache.get(id_pack)  # Ensure referents exist until we increment refcount issue #558
             if proxy is not None:
                 proxy.____refcount__ += 1  # if cached then remote incremented refcount, so sync refcount
             else:

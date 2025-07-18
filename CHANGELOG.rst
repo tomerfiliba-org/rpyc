@@ -1,3 +1,17 @@
+6.0.1
+=====
+Date: 2024-09-24
+
+- Minor fixes to class module id packs and related unittest assertions
+- `#559`_ closes `#558`_ which reported issues with proxy cache referrant race conditions, get_method errors, and stream issues
+- `#557`_ fix pytest issues reported in `#544`_
+
+.. _#559: https://github.com/tomerfiliba-org/rpyc/pull/559
+.. _#558: https://github.com/tomerfiliba-org/rpyc/issues/558
+.. _#557: https://github.com/tomerfiliba-org/rpyc/pull/557
+.. _#544: https://github.com/tomerfiliba-org/rpyc/issues/544
+
+
 6.0.0
 =====
 Date: 2024-02-23
@@ -106,8 +120,8 @@ Date: 1.11.2021
 - Fixed unexpected behavior when using inspect.isfunction `#426`_
 - Now prevents installation of RPyC on unsupported versions of python `#429`_
 
-.. _#426: https://github.com/tomerfiliba/rpyc/issues/426
-.. _#429: https://github.com/tomerfiliba/rpyc/pull/429
+.. _#426: https://github.com/tomerfiliba-org/rpyc/issues/426
+.. _#429: https://github.com/tomerfiliba-org/rpyc/pull/429
 
 5.0.0
 -----
@@ -142,9 +156,9 @@ Date: 4.25.2020
 - Corrections to teleport example `#374`_
 - Lowered GIL-lock acquires for <64kb within channel sends to address slowness `#280`_
 
-.. _#376: https://github.com/tomerfiliba/rpyc/pull/376
-.. _#374: https://github.com/tomerfiliba/rpyc/pull/374
-.. _#280: https://github.com/tomerfiliba/rpyc/issues/280
+.. _#376: https://github.com/tomerfiliba-org/rpyc/pull/376
+.. _#374: https://github.com/tomerfiliba-org/rpyc/pull/374
+.. _#280: https://github.com/tomerfiliba-org/rpyc/issues/280
 
 4.1.4
 -----
@@ -154,8 +168,8 @@ Date: 1.30.2020
 - Fixed connection hanging due to namepack cursor  `#369`_
 - Fixed test dependencies and is_py_* for 3.9
 
-.. _#371: https://github.com/tomerfiliba/rpyc/issues/371
-.. _#369: https://github.com/tomerfiliba/rpyc/issues/369
+.. _#371: https://github.com/tomerfiliba-org/rpyc/issues/371
+.. _#369: https://github.com/tomerfiliba-org/rpyc/issues/369
 
 4.1.3
 -----
@@ -166,11 +180,11 @@ Date: 1.25.2020
 - Fixed handling of exceptions for request callbacks `#365`_
 - Partially fixed return value for netref.__class__ `#355`_
 
-.. _#366: https://github.com/tomerfiliba/rpyc/issues/366
-.. _#351: https://github.com/tomerfiliba/rpyc/pull/351
-.. _#364: https://github.com/tomerfiliba/rpyc/pull/364
-.. _#365: https://github.com/tomerfiliba/rpyc/issues/365
-.. _#355: https://github.com/tomerfiliba/rpyc/issues/355
+.. _#366: https://github.com/tomerfiliba-org/rpyc/issues/366
+.. _#351: https://github.com/tomerfiliba-org/rpyc/pull/351
+.. _#364: https://github.com/tomerfiliba-org/rpyc/pull/364
+.. _#365: https://github.com/tomerfiliba-org/rpyc/issues/365
+.. _#355: https://github.com/tomerfiliba-org/rpyc/issues/355
 
 
 4.1.2
@@ -181,7 +195,7 @@ Date: 10.03.2019
 - Fixed RPyC over RPyC for mutable parameters and extended unit testing for `#346`_
 
 .. _CVE-2019-16328: https://rpyc.readthedocs.io/en/latest/docs/security.html
-.. _#346: https://github.com/tomerfiliba/rpyc/issues/346
+.. _#346: https://github.com/tomerfiliba-org/rpyc/issues/346
 
 
 4.1.1
@@ -221,7 +235,7 @@ Date: 12.06.2018
 
 - fix ValueError during install due to absolute PATH in SOURCES.txt (`#276`_)
 
-.. _#276: https://github.com/tomerfiliba/rpyc/issues/276
+.. _#276: https://github.com/tomerfiliba-org/rpyc/issues/276
 
 
 4.0.0
@@ -280,13 +294,13 @@ Backward Incompatibilities
 * Exposed attributes no longer hide plain attributes if one otherwise has the
   required permissions to access the plain attribute. (`#165`_)
 
-.. _#165: https://github.com/tomerfiliba/rpyc/issues/165
-.. _#172: https://github.com/tomerfiliba/rpyc/issues/172
-.. _#173: https://github.com/tomerfiliba/rpyc/issues/173
-.. _#198: https://github.com/tomerfiliba/rpyc/issues/198
-.. _#232: https://github.com/tomerfiliba/rpyc/issues/232
-.. _#238: https://github.com/tomerfiliba/rpyc/issues/238
-.. _#248: https://github.com/tomerfiliba/rpyc/issues/248
+.. _#165: https://github.com/tomerfiliba-org/rpyc/issues/165
+.. _#172: https://github.com/tomerfiliba-org/rpyc/issues/172
+.. _#173: https://github.com/tomerfiliba-org/rpyc/issues/173
+.. _#198: https://github.com/tomerfiliba-org/rpyc/issues/198
+.. _#232: https://github.com/tomerfiliba-org/rpyc/issues/232
+.. _#238: https://github.com/tomerfiliba-org/rpyc/issues/238
+.. _#248: https://github.com/tomerfiliba-org/rpyc/issues/248
 
 What else is new
 ^^^^^^^^^^^^^^^^
@@ -360,25 +374,25 @@ What else is new
 
 * fix logger issue on jython
 
-.. _#137: https://github.com/tomerfiliba/rpyc/issues/137
-.. _#146: https://github.com/tomerfiliba/rpyc/issues/146
-.. _#153: https://github.com/tomerfiliba/rpyc/issues/153
-.. _#165: https://github.com/tomerfiliba/rpyc/issues/165
-.. _#228: https://github.com/tomerfiliba/rpyc/issues/228
-.. _#231: https://github.com/tomerfiliba/rpyc/issues/231
-.. _#236: https://github.com/tomerfiliba/rpyc/issues/236
-.. _#237: https://github.com/tomerfiliba/rpyc/issues/237
-.. _#239: https://github.com/tomerfiliba/rpyc/issues/239
-.. _#244: https://github.com/tomerfiliba/rpyc/issues/244
-.. _#247: https://github.com/tomerfiliba/rpyc/issues/247
-.. _#251: https://github.com/tomerfiliba/rpyc/issues/251
-.. _#253: https://github.com/tomerfiliba/rpyc/issues/253
-.. _#264: https://github.com/tomerfiliba/rpyc/issues/264
-.. _#265: https://github.com/tomerfiliba/rpyc/issues/265
-.. _#267: https://github.com/tomerfiliba/rpyc/issues/267
-.. _#268: https://github.com/tomerfiliba/rpyc/issues/268
-.. _#269: https://github.com/tomerfiliba/rpyc/issues/269
-.. _#270: https://github.com/tomerfiliba/rpyc/issues/270
+.. _#137: https://github.com/tomerfiliba-org/rpyc/issues/137
+.. _#146: https://github.com/tomerfiliba-org/rpyc/issues/146
+.. _#153: https://github.com/tomerfiliba-org/rpyc/issues/153
+.. _#165: https://github.com/tomerfiliba-org/rpyc/issues/165
+.. _#228: https://github.com/tomerfiliba-org/rpyc/issues/228
+.. _#231: https://github.com/tomerfiliba-org/rpyc/issues/231
+.. _#236: https://github.com/tomerfiliba-org/rpyc/issues/236
+.. _#237: https://github.com/tomerfiliba-org/rpyc/issues/237
+.. _#239: https://github.com/tomerfiliba-org/rpyc/issues/239
+.. _#244: https://github.com/tomerfiliba-org/rpyc/issues/244
+.. _#247: https://github.com/tomerfiliba-org/rpyc/issues/247
+.. _#251: https://github.com/tomerfiliba-org/rpyc/issues/251
+.. _#253: https://github.com/tomerfiliba-org/rpyc/issues/253
+.. _#264: https://github.com/tomerfiliba-org/rpyc/issues/264
+.. _#265: https://github.com/tomerfiliba-org/rpyc/issues/265
+.. _#267: https://github.com/tomerfiliba-org/rpyc/issues/267
+.. _#268: https://github.com/tomerfiliba-org/rpyc/issues/268
+.. _#269: https://github.com/tomerfiliba-org/rpyc/issues/269
+.. _#270: https://github.com/tomerfiliba-org/rpyc/issues/270
 
 .. _gevent: http://www.gevent.org/
 
@@ -394,14 +408,14 @@ Date: 07.08.2017
 * Fix deadlock problem with logging (`#207`_, `#212`_)
 * Fix timeout problem for long commands (`#169`_)
 
-.. _#100: https://github.com/tomerfiliba/rpyc/issues/100
-.. _#169: https://github.com/tomerfiliba/rpyc/issues/169
-.. _#196: https://github.com/tomerfiliba/rpyc/issues/196
-.. _#202: https://github.com/tomerfiliba/rpyc/issues/202
-.. _#207: https://github.com/tomerfiliba/rpyc/issues/207
-.. _#208: https://github.com/tomerfiliba/rpyc/issues/208
-.. _#212: https://github.com/tomerfiliba/rpyc/issues/212
-.. _#220: https://github.com/tomerfiliba/rpyc/issues/220
+.. _#100: https://github.com/tomerfiliba-org/rpyc/issues/100
+.. _#169: https://github.com/tomerfiliba-org/rpyc/issues/169
+.. _#196: https://github.com/tomerfiliba-org/rpyc/issues/196
+.. _#202: https://github.com/tomerfiliba-org/rpyc/issues/202
+.. _#207: https://github.com/tomerfiliba-org/rpyc/issues/207
+.. _#208: https://github.com/tomerfiliba-org/rpyc/issues/208
+.. _#212: https://github.com/tomerfiliba-org/rpyc/issues/212
+.. _#220: https://github.com/tomerfiliba-org/rpyc/issues/220
 
 3.4.3
 -----
@@ -411,13 +425,13 @@ Date: 26.07.2017
 * Fix jython support (`#156`_, `#171`_)
 * Improve documentation (`#158`_, `#185`_, `#189`_, `#198`_ and more)
 
-.. _#156: https://github.com/tomerfiliba/rpyc/issues/156
-.. _#158: https://github.com/tomerfiliba/rpyc/issues/158
-.. _#171: https://github.com/tomerfiliba/rpyc/issues/171
-.. _#185: https://github.com/tomerfiliba/rpyc/issues/185
-.. _#189: https://github.com/tomerfiliba/rpyc/issues/189
-.. _#198: https://github.com/tomerfiliba/rpyc/issues/198
-.. _#222: https://github.com/tomerfiliba/rpyc/issues/222
+.. _#156: https://github.com/tomerfiliba-org/rpyc/issues/156
+.. _#158: https://github.com/tomerfiliba-org/rpyc/issues/158
+.. _#171: https://github.com/tomerfiliba-org/rpyc/issues/171
+.. _#185: https://github.com/tomerfiliba-org/rpyc/issues/185
+.. _#189: https://github.com/tomerfiliba-org/rpyc/issues/189
+.. _#198: https://github.com/tomerfiliba-org/rpyc/issues/198
+.. _#222: https://github.com/tomerfiliba-org/rpyc/issues/222
 
 3.4.2
 -----
@@ -434,10 +448,10 @@ Date: 09.06.2017
 * Improved log messages (`#191`_, `#204`_)
 * Drop support for python 3.2 and py 2.5
 
-.. _#191: https://github.com/tomerfiliba/rpyc/issues/191
-.. _#197: https://github.com/tomerfiliba/rpyc/issues/197
-.. _#204: https://github.com/tomerfiliba/rpyc/issues/204
-.. _#218: https://github.com/tomerfiliba/rpyc/issues/218
+.. _#191: https://github.com/tomerfiliba-org/rpyc/issues/191
+.. _#197: https://github.com/tomerfiliba-org/rpyc/issues/197
+.. _#204: https://github.com/tomerfiliba-org/rpyc/issues/204
+.. _#218: https://github.com/tomerfiliba-org/rpyc/issues/218
 
 3.4.0
 -----
@@ -449,21 +463,21 @@ Please excuse the briefity for this versions changelist.
 
 * Various fixes: `#136`_, `#140`_, `#143`_, `#147`_, `#149`_, `#151`_, `#159`_, `#160`_, `#166`_, `#173`_, `#176`_, `#179`_, `#174`_, `#182`_, `#183`_ and others.
 
-.. _#136: https://github.com/tomerfiliba/rpyc/issues/136
-.. _#140: https://github.com/tomerfiliba/rpyc/issues/140
-.. _#143: https://github.com/tomerfiliba/rpyc/issues/143
-.. _#147: https://github.com/tomerfiliba/rpyc/issues/147
-.. _#149: https://github.com/tomerfiliba/rpyc/issues/149
-.. _#151: https://github.com/tomerfiliba/rpyc/issues/151
-.. _#159: https://github.com/tomerfiliba/rpyc/issues/159
-.. _#160: https://github.com/tomerfiliba/rpyc/issues/160
-.. _#166: https://github.com/tomerfiliba/rpyc/issues/166
-.. _#173: https://github.com/tomerfiliba/rpyc/issues/173
-.. _#174: https://github.com/tomerfiliba/rpyc/issues/174
-.. _#176: https://github.com/tomerfiliba/rpyc/issues/176
-.. _#179: https://github.com/tomerfiliba/rpyc/issues/179
-.. _#182: https://github.com/tomerfiliba/rpyc/issues/182
-.. _#183: https://github.com/tomerfiliba/rpyc/issues/183
+.. _#136: https://github.com/tomerfiliba-org/rpyc/issues/136
+.. _#140: https://github.com/tomerfiliba-org/rpyc/issues/140
+.. _#143: https://github.com/tomerfiliba-org/rpyc/issues/143
+.. _#147: https://github.com/tomerfiliba-org/rpyc/issues/147
+.. _#149: https://github.com/tomerfiliba-org/rpyc/issues/149
+.. _#151: https://github.com/tomerfiliba-org/rpyc/issues/151
+.. _#159: https://github.com/tomerfiliba-org/rpyc/issues/159
+.. _#160: https://github.com/tomerfiliba-org/rpyc/issues/160
+.. _#166: https://github.com/tomerfiliba-org/rpyc/issues/166
+.. _#173: https://github.com/tomerfiliba-org/rpyc/issues/173
+.. _#174: https://github.com/tomerfiliba-org/rpyc/issues/174
+.. _#176: https://github.com/tomerfiliba-org/rpyc/issues/176
+.. _#179: https://github.com/tomerfiliba-org/rpyc/issues/179
+.. _#182: https://github.com/tomerfiliba-org/rpyc/issues/182
+.. _#183: https://github.com/tomerfiliba-org/rpyc/issues/183
 
 3.3.0
 -----
@@ -516,10 +530,10 @@ Please excuse the briefity for this versions changelist.
 
 * Add UNIX domain sockets (`#100`_)
 
-.. _#76: https://github.com/tomerfiliba/rpyc/issues/76
-.. _#89: https://github.com/tomerfiliba/rpyc/issues/89
-.. _#91: https://github.com/tomerfiliba/rpyc/issues/91
-.. _#100: https://github.com/tomerfiliba/rpyc/issues/100
+.. _#76: https://github.com/tomerfiliba-org/rpyc/issues/76
+.. _#89: https://github.com/tomerfiliba-org/rpyc/issues/89
+.. _#91: https://github.com/tomerfiliba-org/rpyc/issues/91
+.. _#100: https://github.com/tomerfiliba-org/rpyc/issues/100
 
 3.2.2
 -----
@@ -535,13 +549,13 @@ Please excuse the briefity for this versions changelist.
 
 * Shutting down the old wikidot site
 
-* Adding `Travis CI <http://travis-ci.org/#!/tomerfiliba/rpyc>`_ integration
+* Adding Travis CI integration
 
-.. _#68: https://github.com/tomerfiliba/rpyc/issues/68
-.. _#71: https://github.com/tomerfiliba/rpyc/issues/71
-.. _#72: https://github.com/tomerfiliba/rpyc/issues/72
-.. _#73: https://github.com/tomerfiliba/rpyc/issues/73
-.. _#76: https://github.com/tomerfiliba/rpyc/issues/76
+.. _#68: https://github.com/tomerfiliba-org/rpyc/issues/68
+.. _#71: https://github.com/tomerfiliba-org/rpyc/issues/71
+.. _#72: https://github.com/tomerfiliba-org/rpyc/issues/72
+.. _#73: https://github.com/tomerfiliba-org/rpyc/issues/73
+.. _#76: https://github.com/tomerfiliba-org/rpyc/issues/76
 
 3.2.1
 -----
@@ -555,14 +569,14 @@ Please excuse the briefity for this versions changelist.
 
 * Added the ``endpoints`` parameter to the config dict of connection (only on the server side)
 
-.. _#52: https://github.com/tomerfiliba/rpyc/issues/52
-.. _#54: https://github.com/tomerfiliba/rpyc/issues/54
-.. _#58: https://github.com/tomerfiliba/rpyc/issues/58
-.. _#59: https://github.com/tomerfiliba/rpyc/issues/59
-.. _#60: https://github.com/tomerfiliba/rpyc/issues/60
-.. _#61: https://github.com/tomerfiliba/rpyc/issues/61
-.. _#62: https://github.com/tomerfiliba/rpyc/issues/62
-.. _#66: https://github.com/tomerfiliba/rpyc/issues/66
+.. _#52: https://github.com/tomerfiliba-org/rpyc/issues/52
+.. _#54: https://github.com/tomerfiliba-org/rpyc/issues/54
+.. _#58: https://github.com/tomerfiliba-org/rpyc/issues/58
+.. _#59: https://github.com/tomerfiliba-org/rpyc/issues/59
+.. _#60: https://github.com/tomerfiliba-org/rpyc/issues/60
+.. _#61: https://github.com/tomerfiliba-org/rpyc/issues/61
+.. _#62: https://github.com/tomerfiliba-org/rpyc/issues/62
+.. _#66: https://github.com/tomerfiliba-org/rpyc/issues/66
 
 3.2.0
 -----
@@ -588,7 +602,7 @@ Please excuse the briefity for this versions changelist.
 
 * **New documentation** (both the website and docstrings) written in **Sphinx**
 
-  * The site has moved to `sourceforge <http://rpyc.sourceforge.net>`_. Wikidot
+  * The site has moved to `sourceforge <https://rpyc.sourceforge.net>`_. Wikidot
     had served us well over the past three years, but they began displaying way too
     many ads and didn't support uploading files over ``rsync``, which made my life hard.
 
@@ -597,15 +611,15 @@ Please excuse the briefity for this versions changelist.
 
 * **Python 3.0-3.2** support
 
-.. _#8: https://github.com/tomerfiliba/rpyc/issues/8
-.. _#28: https://github.com/tomerfiliba/rpyc/issues/28
-.. _#40: https://github.com/tomerfiliba/rpyc/issues/40
-.. _#41: https://github.com/tomerfiliba/rpyc/issues/41
-.. _#42: https://github.com/tomerfiliba/rpyc/issues/42
-.. _#43: https://github.com/tomerfiliba/rpyc/issues/43
-.. _#45: https://github.com/tomerfiliba/rpyc/issues/45
-.. _#46: https://github.com/tomerfiliba/rpyc/issues/46
-.. _#49: https://github.com/tomerfiliba/rpyc/issues/49
+.. _#8: https://github.com/tomerfiliba-org/rpyc/issues/8
+.. _#28: https://github.com/tomerfiliba-org/rpyc/issues/28
+.. _#40: https://github.com/tomerfiliba-org/rpyc/issues/40
+.. _#41: https://github.com/tomerfiliba-org/rpyc/issues/41
+.. _#42: https://github.com/tomerfiliba-org/rpyc/issues/42
+.. _#43: https://github.com/tomerfiliba-org/rpyc/issues/43
+.. _#45: https://github.com/tomerfiliba-org/rpyc/issues/45
+.. _#46: https://github.com/tomerfiliba-org/rpyc/issues/46
+.. _#49: https://github.com/tomerfiliba-org/rpyc/issues/49
 
 3.1.0
 ------
@@ -637,13 +651,13 @@ What's New
 
 * Fixes typos, running pylint, etc.
 
-.. _#3: https://github.com/tomerfiliba/rpyc/issues/3
-.. _#4: https://github.com/tomerfiliba/rpyc/issues/4
-.. _#7: https://github.com/tomerfiliba/rpyc/issues/7
-.. _#13: https://github.com/tomerfiliba/rpyc/issues/13
-.. _#15: https://github.com/tomerfiliba/rpyc/issues/15
-.. _#16: https://github.com/tomerfiliba/rpyc/issues/16
-.. _#32: https://github.com/tomerfiliba/rpyc/issues/32
+.. _#3: https://github.com/tomerfiliba-org/rpyc/issues/3
+.. _#4: https://github.com/tomerfiliba-org/rpyc/issues/4
+.. _#7: https://github.com/tomerfiliba-org/rpyc/issues/7
+.. _#13: https://github.com/tomerfiliba-org/rpyc/issues/13
+.. _#15: https://github.com/tomerfiliba-org/rpyc/issues/15
+.. _#16: https://github.com/tomerfiliba-org/rpyc/issues/16
+.. _#32: https://github.com/tomerfiliba-org/rpyc/issues/32
 
 Breakage from 3.0.7
 ^^^^^^^^^^^^^^^^^^^

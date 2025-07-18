@@ -24,4 +24,4 @@ Client side::
     conn = rpyc.ssl_connect("hostname", port = 12345, keyfile="client.key",
                             certfile="client.cert")
 
-For more info, see the documentation of `ssl module <http://docs.python.org/library/ssl.html>`_.
+For more info, see the documentation of `ssl module <https://docs.python.org/3/library/ssl.html>`_.

@@ -1,7 +1,7 @@
 """
 .. versionadded:: 3.3
 
-Requires [plumbum](http://plumbum.readthedocs.org/)
+Requires [plumbum](https://plumbum.readthedocs.io/en/latest/)
 """
 from __future__ import with_statement
 from subprocess import TimeoutExpired
@@ -47,13 +47,13 @@ except Exception:
     pass
 
 sys.path.insert(0, here)
-from $MODULE$ import $SERVER$ as ServerCls
-from rpyc.core.service import SlaveService
+from $SERVER_MODULE$ import $SERVER_CLASS$ as ServerCls
+from $SERVICE_MODULE$ import $SERVICE_CLASS$ as ServiceCls
 
 logger = None
 $EXTRA_SETUP$
 
-t = ServerCls(SlaveService, hostname = "localhost", port = 0, reuse_addr = True, logger = logger)
+t = ServerCls(ServiceCls, hostname = "localhost", port = 0, reuse_addr = True, logger = logger)
 thd = t._start_in_thread()
 
 sys.stdout.write(f"{t.port}\n")
@@ -85,11 +85,19 @@ class DeployedServer(object):
     :param remote_machine: a plumbum ``SshMachine`` or ``ParamikoMachine`` instance, representing
                            an SSH connection to the desired remote machine
     :param server_class: the server to create (e.g., ``"ThreadedServer"``, ``"ForkingServer"``)
+    :param service_class: the service to serve (e.g., ``"SlaveService"``, ...)
+    :param server_script: the script that is executed by ``python_executable`` on the remote host
+                          to run the server.
     :param extra_setup: any extra code to add to the script
     """
 
-    def __init__(self, remote_machine, server_class="rpyc.utils.server.ThreadedServer",
-                 extra_setup="", python_executable=None):
+    def __init__(self,
+                 remote_machine,
+                 server_class="rpyc.utils.server.ThreadedServer",
+                 service_class="rpyc.core.service.SlaveService",
+                 server_script=SERVER_SCRIPT,
+                 extra_setup="",
+                 python_executable=None):
         self.proc = None
         self.tun = None
         self.remote_machine = remote_machine
@@ -101,9 +109,21 @@ class DeployedServer(object):
         copy(rpyc_root, tmp / "rpyc")
 
         script = (tmp / "deployed-rpyc.py")
-        modname, clsname = server_class.rsplit(".", 1)
-        script.write(SERVER_SCRIPT.replace("$MODULE$", modname).replace(
-            "$SERVER$", clsname).replace("$EXTRA_SETUP$", extra_setup))
+
+        server_modname, server_clsname = server_class.rsplit(".", 1)
+        service_modname, service_clsname = service_class.rsplit(".", 1)
+
+        for source, target in (
+            ("$SERVER_MODULE$", server_modname),
+            ("$SERVER_CLASS$", server_clsname),
+            ("$SERVICE_MODULE$", service_modname),
+            ("$SERVICE_CLASS$", service_clsname),
+            ("$EXTRA_SETUP$", extra_setup),
+        ):
+            server_script = server_script.replace(source, target)
+
+        script.write(server_script)
+
         if isinstance(python_executable, BoundCommand):
             cmd = python_executable
         elif python_executable:

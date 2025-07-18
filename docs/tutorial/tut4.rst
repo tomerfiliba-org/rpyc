@@ -5,9 +5,9 @@ Part 4: Callbacks and Symmetry
 Before we dive into asynchronous invocation, we have to cover once last topic:
 `callbacks <http://en.wikipedia.org/wiki/Callback_(computer_science)>`_. Passing a
 "callback function" means treating functions (or any callable objects in our case) as
-`first-class objects <http://en.wikipedia.org/wiki/First-class_object>`_, i.e., like any
+`first-class objects <https://en.wikipedia.org/wiki/First-class_object>`_, i.e., like any
 other value in the language. In ``C`` and ``C++`` this is done with
-`function pointers <http://en.wikipedia.org/wiki/Function_pointer>`_, but in python,
+`function pointers <https://en.wikipedia.org/wiki/Function_pointer>`_, but in python,
 there's no special machinery for it. Surely you've seen callbacks before::
 
     >>> def f(x):

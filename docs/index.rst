@@ -24,9 +24,9 @@ RPyC - Transparent, Symmetric Distributed Computing
 .. _release: https://pypi.python.org/pypi/rpyc/
 
 **RPyC** (pronounced as *are-pie-see*), or *Remote Python Call*, is a **transparent**
-`python <http://www.python.org>`_ library for **symmetrical**
-`remote procedure calls <http://en.wikipedia.org/wiki/Remote_procedure_calls>`_,
-`clustering <http://en.wikipedia.org/wiki/Clustering>`_ and
+`python <https://www.python.org/>`_ library for **symmetrical**
+`remote procedure calls <https://en.wikipedia.org/wiki/Remote_procedure_calls>`_,
+`clustering <https://en.wikipedia.org/wiki/Clustering>`_ and
 `distributed-computing <http://en.wikipedia.org/wiki/Distributed_computing>`_.
 RPyC makes use of `object-proxying <http://en.wikipedia.org/wiki/Proxy_pattern>`_,
 a technique that employs python's dynamic nature, to overcome the physical boundaries
@@ -48,8 +48,8 @@ Next, refer to the :ref:`documentation` and :ref:`api-ref`,
 as well as the :ref:`mailing-list`.
 
 For an introductory reading (that may or may not be slightly outdated),
-`David Mertz <http://gnosis.cx/dW/>`_ wrote a very thorough
-`Charming Python <http://www.ibm.com/developerworks/linux/library/l-rpyc/>`_ installment
+David Mertz wrote a very thorough
+`Charming Python <https://web.archive.org/web/20160928013509/http://www.ibm.com/developerworks/linux/library/l-rpyc/>`_ installment
 about RPyC, explaining how it's different from existing alternatives (Pyro, XMLRPC, etc.),
 what roles it can play, and even show-cases some key features of RPyC (like the security model,
 remote monkey-patching, or remote resource utilization).
@@ -73,13 +73,13 @@ Features
 * **Low Overhead** - RpyC takes an *all-in-one* approach, using a compact binary
   protocol, and requiring no complex setup (name servers, HTTP, URL-mapping, etc.)
 
-* **Secure** - employs a `Capability based <http://en.wikipedia.org/wiki/Capability-based_security>`_
+* **Secure** - employs a `Capability based <https://en.wikipedia.org/wiki/Capability-based_security>`_
   security model; integrates easily with SSH
 
 * **Zero-Deploy Enabled** -- Read more about :ref:`Zero-Deploy RPyC <zerodeploy>`
 
-* **Integrates** with `TLS/SSL <http://en.wikipedia.org/wiki/Transport_Layer_Security>`_,
-  `SSH <http://en.wikipedia.org/wiki/Secure_Shell>`_ and `inetd <http://en.wikipedia.org/wiki/inetd>`_.
+* **Integrates** with `TLS/SSL <https://en.wikipedia.org/wiki/Transport_Layer_Security>`_,
+  `SSH <https://en.wikipedia.org/wiki/Secure_Shell>`_ and `inetd <https://en.wikipedia.org/wiki/Inetd>`_.
 
 Use Cases
 ---------
@@ -103,8 +103,8 @@ Use Cases
 
 * Distributing workload among multiple machines with ease
 
-* Implement remote services (like `WSDL <http://en.wikipedia.org/wiki/WSDL>`_
-  or `RMI <http://en.wikipedia.org/wiki/Java_remote_method_invocation>`_)
+* Implement remote services (like `WSDL <https://en.wikipedia.org/wiki/WSDL>`_
+  or `RMI <https://en.wikipedia.org/wiki/Java_remote_method_invocation>`_)
   quickly and concisely (without the overhead and limitations of these technologies)
 
 

@@ -11,7 +11,7 @@ The last part of the tutorial deals with a more "advanced" issue of RPC programm
 when you invoke a function, you block until the result arrives. Asynchronous invocation
 allows you to start the request and continue rather than waiting.
 Instead of getting the result of the call, you get an object known as an
-``AsyncResult`` (also known as a `"future" or "promise" <http://en.wikipedia.org/wiki/Futures_and_promises>`_)
+``AsyncResult`` (also known as a `"future" or "promise" <https://en.wikipedia.org/wiki/Futures_and_promises>`_)
 that will **eventually** hold the result.
 
 Note that there is no guarantee on execution order for async requests!
