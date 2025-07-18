@@ -242,17 +242,17 @@ class SocketStream(Stream):
         return self.sock is ClosedFile
 
     def close(self):
-        if not self.closed:
+        sock, self.sock = self.sock, ClosedFile
+        if sock is not ClosedFile:
             try:
-                self.sock.shutdown(socket.SHUT_RDWR)
+                sock.shutdown(socket.SHUT_RDWR)
             except Exception:
                 pass
-        self.sock.close()
-        self.sock = ClosedFile
+        sock.close()
 
     def fileno(self):
         try:
-            return self.sock.fileno()
+            fileno = self.sock.fileno()
         except socket.error:
             self.close()
             ex = sys.exc_info()[1]
@@ -260,6 +260,10 @@ class SocketStream(Stream):
                 raise EOFError()
             else:
                 raise
+        if fileno == -1:
+            raise EOFError("stream has been closed")
+
+        return fileno
 
     def read(self, count):
         data = []
