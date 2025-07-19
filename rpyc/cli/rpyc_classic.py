@@ -113,13 +113,7 @@ class ClassicServer(cli.Application):
         t.start()
 
     def _serve_stdio(self):
-        # remove buffering
-        sys.stdout.flush()
-        stdin = open(sys.stdin.fileno(), 'rb', buffering=0, closefd=False)
-        stdout = open(sys.stdout.fileno(), 'wb', buffering=0, closefd=False)
-        sys.stdin = open(os.devnull, "r")
-        sys.stdout = open(os.devnull, "w")
-        conn = rpyc.classic.connect_pipes(stdin, stdout)
+        conn = rpyc.classic.connect_stdpipes()
         try:
             conn.serve_all()
         except KeyboardInterrupt:
