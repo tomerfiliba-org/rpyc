@@ -180,7 +180,8 @@ class Connection(object):
             self._threads = {}
             self._receiving = False
             self._thread_pool = []
-            self._thread_pool_executor = c_futures.ThreadPoolExecutor()
+            self._worker = set()
+            self._thread_pool_executor = c_futures.ThreadPoolExecutor(initializer=self._add_worker)
 
     def __del__(self):
         self.close()
@@ -190,6 +191,10 @@ class Connection(object):
 
     def __exit__(self, t, v, tb):
         self.close()
+
+    @staticmethod
+    def _add_worker():
+        self._worker.add(threading.current_thread())
 
     def __repr__(self):
         a, b = object.__repr__(self).split(" object ")
@@ -215,10 +220,12 @@ class Connection(object):
 
     def _cleanup_threaded(self, _anyway):
         if self._bind_threads:
-            if threading.current_thread() in self._thread_pool_executor._threads:
+            if threading.current_thread() in self._worker:
                 threading.Thread(target=self._cleanup_threaded, args=(_anyway, ), daemon=True).start()
                 return
             self._thread_pool_executor.shutdown(wait=True)  # TODO where?
+            self._worker = set()
+
         if _anyway:
             try:
                 self._recvlock.release()
