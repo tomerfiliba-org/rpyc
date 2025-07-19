@@ -212,14 +212,13 @@ class Connection(object):
         # self._seqcounter = None
         # self._config.clear()
         del self._HANDLERS
-        if (self._bind_threads and
-                threading.current_thread() in self._thread_pool_executor._threads):
-            threading.Thread(target=self._cleanup_threaded, args=(_anyway, ), daemon=True).start()
-        else:
-            self._cleanup_threaded(_anyway)
+        self._cleanup_threaded(_anyway)
 
     def _cleanup_threaded(self, _anyway):
         if self._bind_threads:
+            if threading.current_thread() in self._thread_pool_executor._threads:
+                threading.Thread(target=self._cleanup_threaded, args=(_anyway, ), daemon=True).start()
+                return
             self._thread_pool_executor.shutdown(wait=True)  # TODO where?
         if _anyway:
             try:

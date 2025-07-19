@@ -115,18 +115,20 @@ class ClassicServer(cli.Application):
     def _serve_stdio(self):
         origstdin = sys.stdin
         origstdout = sys.stdout
-        sys.stdin = os.open(os.devnull, os.O_RDWR)
-        sys.stdout = sys.stdin
-        sys.stderr = sys.stdin
+        sys.stdin = open(os.devnull, "r")
+        sys.stdout = open(os.devnull, "w")
+        sys.stderr = open(os.devnull, "w")
+        sys.__stdin__ = sys.stdin
+        sys.__stdout__ = sys.stdout
+        sys.__stderr__ = sys.stderr
         conn = rpyc.classic.connect_pipes(origstdin, origstdout)
         try:
-            try:
-                conn.serve_all()
-            except KeyboardInterrupt:
-                print("User interrupt!")
+            conn.serve_all()
+        except KeyboardInterrupt:
+            print("User interrupt!")
         finally:
+            # should be already done in serve_all
             conn.close()
-
 
 def main():
     ClassicServer.run()
