@@ -121,7 +121,7 @@ class ClassicServer(cli.Application):
         try:
             conn.serve_all()
         except KeyboardInterrupt:
-            print("User interrupt!")
+            print("User interrupt!", file=sys.stderr)
         finally:
             conn.close()
 
