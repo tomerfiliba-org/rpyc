@@ -276,7 +276,7 @@ def connect_subproc(args, service=VoidService, config={}):
     :param config: configuration dict
     """
     from subprocess import Popen, PIPE
-    proc = Popen(args, stdin=PIPE, stdout=PIPE)
+    proc = Popen(args, bufsize=0, stdin=PIPE, stdout=PIPE)
     conn = connect_pipes(proc.stdout, proc.stdin, service=service, config=config)
     conn.proc = proc  # just so you can have control over the process
     return conn
