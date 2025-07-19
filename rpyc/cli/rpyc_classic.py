@@ -117,6 +117,7 @@ class ClassicServer(cli.Application):
         origstdout = sys.stdout
         sys.stdin = os.open(os.devnull, os.O_RDWR)
         sys.stdout = sys.stdin
+        sys.stderr = sys.stdin
         conn = rpyc.classic.connect_pipes(origstdin, origstdout)
         try:
             try:
