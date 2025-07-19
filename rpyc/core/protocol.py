@@ -200,6 +200,10 @@ class Connection(object):
         if self._closed and not _anyway:
             return
         self._closed = True
+        if (self._bind_threads and
+                threading.current_thread() in self._thread_pool_executor._threads):
+            threading.Thread(target=self._cleanup, args=(True, ), daemon=True).start()
+            return
         self._channel.close()
         self._local_root.on_disconnect(self)
         self._request_callbacks.clear()
@@ -227,10 +231,6 @@ class Connection(object):
     def close(self):  # IO
         """closes the connection, releasing all held resources"""
         if self._closed:
-            return
-        if (self._bind_threads and
-                threading.current_thread() in self._thread_pool_executor._threads):
-            threading.Thread(target=self.close, daemon=True).start()
             return
         try:
             self._closed = True
