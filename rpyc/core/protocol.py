@@ -177,7 +177,6 @@ class Connection(object):
         self._threads = None
         if self._bind_threads:
             self._lock = threading.Lock()
-            self._waited = False
             self._threads = {}
             self._receiving = False
             self._thread_pool = []
