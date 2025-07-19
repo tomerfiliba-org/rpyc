@@ -216,7 +216,7 @@ class Connection(object):
                 threading.current_thread() in self._thread_pool_executor._threads):
             threading.Thread(target=self._cleanup_threaded, args=(_anyway, ), daemon=True).start()
         else:
-            self._cleanup_threaded()
+            self._cleanup_threaded(_anyway)
 
     def _cleanup_threaded(self, _anyway):
         if self._bind_threads:
