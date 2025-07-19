@@ -192,8 +192,7 @@ class Connection(object):
     def __exit__(self, t, v, tb):
         self.close()
 
-    @staticmethod
-    def _add_worker():
+    def _add_worker(self):
         self._worker.add(threading.current_thread())
 
     def __repr__(self):
