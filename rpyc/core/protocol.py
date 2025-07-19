@@ -214,11 +214,11 @@ class Connection(object):
         del self._HANDLERS
         if (self._bind_threads and
                 threading.current_thread() in self._thread_pool_executor._threads):
-            threading.Thread(target=self._cleanup_threaded, daemon=True).start()
+            threading.Thread(target=self._cleanup_threaded, args=(_anyway, ), daemon=True).start()
         else:
             self._cleanup_threaded()
 
-    def _cleanup_threaded(self):
+    def _cleanup_threaded(self, _anyway):
         if self._bind_threads:
             self._thread_pool_executor.shutdown(wait=True)  # TODO where?
         if _anyway:
