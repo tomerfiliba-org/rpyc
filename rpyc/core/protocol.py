@@ -200,10 +200,6 @@ class Connection(object):
         if self._closed and not _anyway:
             return
         self._closed = True
-        if (self._bind_threads and
-                threading.current_thread() in self._thread_pool_executor._threads):
-            threading.Thread(target=self._cleanup, args=(True, ), daemon=True).start()
-            return
         self._channel.close()
         self._local_root.on_disconnect(self)
         self._request_callbacks.clear()
@@ -216,6 +212,13 @@ class Connection(object):
         # self._seqcounter = None
         # self._config.clear()
         del self._HANDLERS
+        if (self._bind_threads and
+                threading.current_thread() in self._thread_pool_executor._threads):
+            threading.Thread(target=self._cleanup_threaded, daemon=True).start()
+        else:
+            self._cleanup_threaded()
+
+    def _cleanup_threaded(self):
         if self._bind_threads:
             self._thread_pool_executor.shutdown(wait=True)  # TODO where?
         if _anyway:
