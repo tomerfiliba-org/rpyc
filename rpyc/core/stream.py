@@ -307,7 +307,7 @@ class TunneledSocketStream(SocketStream):
         self.tun = None
 
     def close(self):
-        super().close(self)
+        super().close()
         if self.tun:
             self.tun.close()
 
@@ -504,7 +504,7 @@ class NamedPipeStream(Win32PipeStream):
 
     def __init__(self, handle, is_server_side):
         import pywintypes
-        super().__init__(self, handle, handle)
+        super().__init__(handle, handle)
         self.is_server_side = is_server_side
         self.read_overlapped = pywintypes.OVERLAPPED()
         self.read_overlapped.hEvent = win32event.CreateEvent(None, 1, 1, None)
