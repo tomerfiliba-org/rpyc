@@ -260,7 +260,7 @@ class SocketStream(Stream):
                 raise EOFError()
             else:
                 raise
-        if fileno == -1:
+        if isinstance(fileno, int) and fileno == -1:
             raise EOFError("stream has been closed")
 
         return fileno
