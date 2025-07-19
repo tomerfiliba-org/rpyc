@@ -213,13 +213,7 @@ class Connection(object):
         # self._config.clear()
         del self._HANDLERS
         if self._bind_threads:
-            # cannot wait for ourself
-            if threading.current_thread() not in self._thread_pool_executor._threads:
-                self._waited, waited = True, self._waited
-                wait = not waited
-            else:
-                wait = False
-            self._thread_pool_executor.shutdown(wait=wait)  # TODO where?
+            self._thread_pool_executor.shutdown(wait=True)  # TODO where?
         if _anyway:
             try:
                 self._recvlock.release()
@@ -233,11 +227,10 @@ class Connection(object):
     def close(self):  # IO
         """closes the connection, releasing all held resources"""
         if self._closed:
-            if (self._bind_threads and
-                    threading.current_thread() not in self._thread_pool_executor._threads):
-                self._waited, waited = True, self._waited
-                if not waited:
-                    self._thread_pool_executor.shutdown(True)
+            return
+        if (self._bind_threads and
+                threading.current_thread() in self._thread_pool_executor._threads):
+            threading.Thread(target=self.close, daemon=True).start()
             return
         try:
             self._closed = True
