@@ -123,7 +123,6 @@ class ClassicServer(cli.Application):
         except KeyboardInterrupt:
             print("User interrupt!")
         finally:
-            # should be already done in serve_all
             conn.close()
 
 def main():
