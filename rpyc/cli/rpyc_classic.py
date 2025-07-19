@@ -123,3 +123,4 @@ class ClassicServer(cli.Application):
 
 def main():
     ClassicServer.run()
+    print("exiting success", file=sys.stderr)
