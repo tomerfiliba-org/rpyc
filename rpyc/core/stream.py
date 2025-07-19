@@ -330,9 +330,12 @@ class PipeStream(Stream):
 
         :returns: a :class:`PipeStream` instance
         """
-        pipestream = cls(sys.stdin, sys.stdout)
-        sys.stdin = os.open(os.devnull, os.O_RDWR)
-        sys.stdout = sys.stdin
+        stdout.flush()
+        stdin = open(sys.stdin.fileno(), 'rb', buffering=0, closefd=False)
+        stdout = open(sys.stdout.fileno(), 'wb', buffering=0, closefd=False)
+        pipestream = cls(stdin, stdout)
+        sys.stdin = open(os.devnull, "r")
+        sys.stdout = open(os.devnull, "w")
         return pipestream
 
     @classmethod
