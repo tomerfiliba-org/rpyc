@@ -323,12 +323,12 @@ class PipeStream(Stream):
         outgoing.flush()
         self.incoming = incoming
         self.outgoing = outgoing
-        self._set_nonblocking(incoming)
-        self._set_nonblocking(outgoing)
+        self._set_non_blocking(incoming)
+        self._set_non_blocking(outgoing)
         self._read_data = BYTES_LITERAL("")
 
-    @classmethod
-    def _set_nonblocking(stream):
+    @staticmethod
+    def _set_non_blocking(stream):
         fd = stream.fileno()
         flags = fcntl.fcntl(fd, fcntl.F_GETFL)
         fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
