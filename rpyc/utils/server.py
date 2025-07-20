@@ -348,7 +348,7 @@ class ThreadedServer(Server):
                     self._terminated.add(current)
                     self._workers.remove(current)
                     if not self._workers:
-                        self._cond.notify()
+                        self._cond.notify_all()
 
 
 class ThreadPoolServer(Server):
