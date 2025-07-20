@@ -118,6 +118,7 @@ class ClassicServer(cli.Application):
         if sigmask:
             sigmask(signal.SIG_BLOCK, [signal.SIGPIPE, signal.SIGHUP])
 
+        print("starting server in serve_stdio", file=sys.stderr)
         conn = rpyc.classic.connect_stdpipes()
         try:
             conn.serve_all()
