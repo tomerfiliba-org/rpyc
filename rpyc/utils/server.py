@@ -334,8 +334,8 @@ class ThreadedServer(Server):
         for t in terminated:
             t.join()
 
-        t = worker(self._authenticate_and_serve_client, sock)
         with self._cond:
+            t = worker(self._authenticate_and_serve_client, sock)
             self._workers.add(t)
 
     def _authenticate_and_serve_client(self, sock):
