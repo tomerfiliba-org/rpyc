@@ -316,7 +316,7 @@ class TunneledSocketStream(SocketStream):
 class PipeStream(Stream):
     """A stream over two simplex pipes (one used to input, another for output)"""
 
-    __slots__ = ("incoming", "outgoing")
+    __slots__ = ("incoming", "outgoing", "_read_data")
     MAX_IO_CHUNK = STREAM_CHUNK
 
     def __init__(self, incoming, outgoing):
