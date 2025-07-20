@@ -126,8 +126,8 @@ class ClassicServer(cli.Application):
             print("User interrupt!", file=sys.stderr)
         finally:
             conn.close()
-
+            print("finalizing serve_stdio", file=sys.stderr)
+        print("all good", file=sys.stderr)
 
 def main():
     ClassicServer.run()
-    print("terminating from main", file=sys.stderr)
