@@ -384,7 +384,7 @@ class PipeStream(Stream):
 
         while data or count < len(self._read_data):
             for f, mask in p.poll():
-                if f == read:
+                if f == readfd:
                     buf = os.read(readfd, min(self.MAX_IO_CHUNK, count))
                     if not buf:
                         raise EOFError("connection closed by peer")
