@@ -13,7 +13,7 @@ def splice_to_stderr(stream):
         if not data:
             break
         while data:
-            count = sys.stderr.write(data)
+            count = sys.stderr.write(data.decode('utf-8'))
             data = data[count:]
 
 
