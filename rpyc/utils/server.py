@@ -313,6 +313,9 @@ class ThreadedServer(Server):
 
     def close(self):
         super().close()
+        if threading.current_thread() in self._workers:
+            return
+
         print('before wait', file=sys.stderr)
         with self._cond:
             self._cond.wait_for(lambda: not self._workers)
