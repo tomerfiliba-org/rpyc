@@ -11,6 +11,7 @@ usage:
 import os
 import sys
 import rpyc
+import signal
 from plumbum import cli
 from rpyc.utils.server import ThreadedServer, ForkingServer, OneShotServer
 from rpyc.utils.classic import DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT
@@ -113,6 +114,10 @@ class ClassicServer(cli.Application):
         t.start()
 
     def _serve_stdio(self):
+        sigmask = getattr(signal, 'pthread_sigmask', None)
+        if sigmask:
+            sigmask(signal.SIG_BLOCK, [signal.SIGPIPE, signal.SIGHUP])
+
         conn = rpyc.classic.connect_stdpipes()
         try:
             conn.serve_all()
