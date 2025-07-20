@@ -17,7 +17,7 @@ def splice_to_stderr(stream):
                 count = sys.stderr.write(data.decode('utf-8'))
                 data = data[count:]
     finally:
-        close(stream)
+        stream.close()
 
 
 class ClassicMode(unittest.TestCase):
