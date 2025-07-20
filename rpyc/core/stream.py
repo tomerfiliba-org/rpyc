@@ -323,8 +323,8 @@ class PipeStream(Stream):
         outgoing.flush()
         self.incoming = incoming
         self.outgoing = outgoing
-        self.set_nonblocking(incoming)
-        self.set_nonblocking(outgoing)
+        self._set_nonblocking(incoming)
+        self._set_nonblocking(outgoing)
         self._read_data = BYTES_LITERAL("")
 
     @classmethod
