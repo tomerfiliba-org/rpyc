@@ -267,7 +267,7 @@ def connect_by_service(service_name, host=None, registrar=None, timeout=2, servi
     raise DiscoveryError(f"All services are down: {addrs}")
 
 
-def connect_subproc(args, service=VoidService, config={}):
+def connect_subproc(args, service=VoidService, config={}, *, stderr=None):
     """runs an rpyc server on a child process that and connects to it over
     the stdio pipes. uses the subprocess module.
 
@@ -276,7 +276,7 @@ def connect_subproc(args, service=VoidService, config={}):
     :param config: configuration dict
     """
     from subprocess import Popen, PIPE
-    proc = Popen(args, bufsize=0, stdin=PIPE, stdout=PIPE)
+    proc = Popen(args, bufsize=0, stdin=PIPE, stdout=PIPE, stderr=stderr)
     conn = connect_pipes(proc.stdout, proc.stdin, service=service, config=config)
     conn.proc = proc  # just so you can have control over the process
     return conn
@@ -316,6 +316,7 @@ def connect_thread(service=VoidService, config={}, remote_service=VoidService, r
     listener.bind(("localhost", 0))
     listener.listen(1)
     remote_server = partial(_server, listener, remote_service, remote_config)
+    # TODO: where to put the join for this thread?
     spawn(remote_server)
     host, port = listener.getsockname()
     return connect(host, port, service=service, config=config)

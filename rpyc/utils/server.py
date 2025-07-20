@@ -302,8 +302,48 @@ class ThreadedServer(Server):
     Parameters: see :class:`Server`
     """
 
+    def __init__(self, *args, **kwargs):
+        self._cond = threading.Condition()
+        self._workers = set()
+        self._terminated = set()
+        super().__init__(*args, **kwargs)
+
+    def __del__(self):
+        self.close()
+
+    def close(self):
+        super().close()
+        with self._cond:
+            self._cond.wait_for(lambda: not self._workers)
+            terminated = self._terminated
+            self._terminated = set()
+
+        for t in terminated:
+            t.join()
+
     def _accept_method(self, sock):
-        spawn(self._authenticate_and_serve_client, sock)
+        with self._cond:
+            terminated = self._terminated
+            self._terminated = set()
+
+        for t in terminated:
+            t.join()
+
+        t = spawn(self._authenticate_and_serve_client, sock)
+        with self._cond:
+            self._workers.add(t)
+
+    def _authenticate_and_serve_client(self, sock):
+        try:
+            super()._authenticate_and_serve_client(sock)
+        finally:
+            current = threading.current_thread()
+            with self._cond:
+                if current in self._workers:
+                    self._terminated.add(current)
+                    self._workers.remove(current)
+                    if not self._workers:
+                        self.cond.notify()
 
 
 class ThreadPoolServer(Server):
@@ -326,13 +366,16 @@ class ThreadPoolServer(Server):
         self.nbthreads = kwargs.pop('nbThreads', 20)
         self.request_batch_size = kwargs.pop('requestBatchSize', 10)
         # init the parent
-        Server.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         # a queue of connections having something to process
         self._active_connection_queue = Queue.Queue()
         # a dictionary fd -> connection
         self.fd_to_conn = {}
         # a polling object to be used be the polling thread
         self.poll_object = poll()
+
+    def __del__(self):
+        self.close()
 
     def _listen(self):
         if self.active:
@@ -351,7 +394,7 @@ class ThreadPoolServer(Server):
     def close(self):
         '''closes a ThreadPoolServer. In particular, joins the thread pool.'''
         # close parent server
-        Server.close(self)
+        super().close()
         # stop producer thread
         self.polling_thread.join()
         # cleanup thread pool : first fill the pool with None fds so that all threads exit
@@ -514,12 +557,12 @@ class ForkingServer(Server):
     def __init__(self, *args, **kwargs):
         if not signal:
             raise OSError("ForkingServer not supported on this platform")
-        Server.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         # setup sigchld handler
         self._prevhandler = signal.signal(signal.SIGCHLD, self._handle_sigchld)
 
     def close(self):
-        Server.close(self)
+        super().close()
         signal.signal(signal.SIGCHLD, self._prevhandler)
 
     @classmethod

@@ -90,7 +90,10 @@ def spawn(*args, **kwargs):
     func, args = args[0], args[1:]
     str_id_pack = '-'.join([f'{i}' for i in get_id_pack(func)])
     thread = threading.Thread(name=f'{SPAWN_THREAD_PREFIX}-{str_id_pack}', target=func, args=args, kwargs=kwargs)
-    thread.daemon = True
+    # discuss if it should be really a daemon thread
+    # as a lot of locations were "joining" with the thread
+    # which is simply not possible due to the daemon property
+    #thread.daemon = True
     thread.start()
     return thread
 

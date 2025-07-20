@@ -181,10 +181,13 @@ class Connection(object):
             self._receiving = False
             self._thread_pool = []
             self._worker = set()
+            self._cleaning_thread = None
             self._thread_pool_executor = c_futures.ThreadPoolExecutor(initializer=self._add_worker)
 
     def __del__(self):
         self.close()
+        if self._cleaning_thread is not None:
+            self._cleaning_thread.join()
 
     def __enter__(self):
         return self
@@ -220,7 +223,11 @@ class Connection(object):
     def _cleanup_threaded(self, _anyway):
         if self._bind_threads:
             if threading.current_thread() in self._worker:
-                threading.Thread(target=self._cleanup_threaded, args=(_anyway, ), daemon=True).start()
+                if self._cleaning_thread is None:
+                    self._cleaning_thread = threading.Thread(
+                        target=self._cleanup_threaded, args=(_anyway, )
+                    )
+                    self._cleaning_thread.start()
                 return
             self._thread_pool_executor.shutdown(wait=True)  # TODO where?
             self._worker = set()

@@ -9,7 +9,6 @@ usage:
     rpyc_classic.py --ssl-keyfile keyfile.pem --ssl-certfile certfile.pem --ssl-cafile cafile.pem
 """
 import sys
-import os
 import rpyc
 from plumbum import cli
 from rpyc.utils.server import ThreadedServer, ForkingServer, OneShotServer
@@ -120,6 +119,7 @@ class ClassicServer(cli.Application):
             print("User interrupt!", file=sys.stderr)
         finally:
             conn.close()
+
 
 def main():
     ClassicServer.run()

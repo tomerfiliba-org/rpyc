@@ -133,7 +133,7 @@ def ssh_connect(remote_machine, remote_port):
     return factory.ssh_connect(remote_machine, remote_port, SlaveService)
 
 
-def connect_subproc(server_file=None):
+def connect_subproc(server_file=None, *, stderr=None):
     """Runs an RPyC classic server as a subprocess and returns an RPyC
     connection to it over stdio
 
@@ -146,8 +146,11 @@ def connect_subproc(server_file=None):
         server_file = os.popen("which rpyc_classic.py").read().strip()
         if not server_file:
             raise ValueError("server_file not given and could not be inferred")
-    return factory.connect_subproc([sys.executable, "-u", server_file, "-q", "-m", "stdio"],
-                                   SlaveService)
+    return factory.connect_subproc(
+        [sys.executable, "-u", server_file, "-q", "-m", "stdio"],
+        SlaveService,
+        stderr=stderr,
+    )
 
 
 def connect_thread():
