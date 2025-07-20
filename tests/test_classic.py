@@ -1,4 +1,5 @@
 import os
+import sys
 import rpyc
 import unittest
 import threading
@@ -12,7 +13,7 @@ def splice_to_stderr(stream):
         if not data:
             break
         while data:
-            count = stderr.write(data)
+            count = sys.stderr.write(data)
             data = data[count:]
 
 
