@@ -8,6 +8,7 @@ usage:
     # ssl-authenticated server (keyfile and certfile are required)
     rpyc_classic.py --ssl-keyfile keyfile.pem --ssl-certfile certfile.pem --ssl-cafile cafile.pem
 """
+import os
 import sys
 import rpyc
 from plumbum import cli
@@ -123,3 +124,4 @@ class ClassicServer(cli.Application):
 
 def main():
     ClassicServer.run()
+    print("terminating from main", file=sys.stderr)
