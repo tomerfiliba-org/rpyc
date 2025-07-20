@@ -16,10 +16,22 @@ except ImportError:
 from rpyc.core import SocketStream, Channel
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
-from rpyc.lib import safe_import, spawn, spawn_waitready
+from rpyc.lib import safe_import, spawn, spawn_waitready, get_id_pack
 from rpyc.lib.compat import poll, get_exc_errno
 signal = safe_import("signal")
 gevent = safe_import("gevent")
+
+
+WORKER_THREAD_PREFIX = 'RpycSpawnThread'
+
+
+def worker(*args, **kwargs):
+    """Start and return daemon thread. ``spawn(func, *args, **kwargs)``."""
+    func, args = args[0], args[1:]
+    str_id_pack = '-'.join([f'{i}' for i in get_id_pack(func)])
+    thread = threading.Thread(name=f'{WORKER_THREAD_PREFIX}-{str_id_pack}', target=func, args=args, kwargs=kwargs)
+    thread.start()
+    return thread
 
 
 class Server(object):
@@ -329,7 +341,7 @@ class ThreadedServer(Server):
         for t in terminated:
             t.join()
 
-        t = spawn(self._authenticate_and_serve_client, sock)
+        t = worker(self._authenticate_and_serve_client, sock)
         with self._cond:
             self._workers.add(t)
 
@@ -384,11 +396,11 @@ class ThreadPoolServer(Server):
         # setup the thread pool for handling requests
         self.workers = []
         for i in range(self.nbthreads):
-            t = spawn(self._serve_clients)
+            t = worker(self._serve_clients)
             t.name = f"Worker{i}"
             self.workers.append(t)
         # setup a thread for polling inactive connections
-        self.polling_thread = spawn(self._poll_inactive_clients)
+        self.polling_thread = worker(self._poll_inactive_clients)
         self.polling_thread.setName('PollingThread')
 
     def close(self):
