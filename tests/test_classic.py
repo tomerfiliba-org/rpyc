@@ -8,13 +8,16 @@ from rpyc.core.consts import STREAM_CHUNK
 
 
 def splice_to_stderr(stream):
-    while True:
-        data = stream.read(STREAM_CHUNK)
-        if not data:
-            break
-        while data:
-            count = sys.stderr.write(data.decode('utf-8'))
-            data = data[count:]
+    try:
+        while True:
+            data = stream.read(STREAM_CHUNK)
+            if not data:
+                break
+            while data:
+                count = sys.stderr.write(data.decode('utf-8'))
+                data = data[count:]
+    finally:
+        close(stream)
 
 
 class ClassicMode(unittest.TestCase):
