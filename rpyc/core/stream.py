@@ -375,6 +375,9 @@ class PipeStream(Stream):
         return self.incoming.fileno()
 
     def _read_write(self, count, data):
+        if count < 0:
+            count = 0
+
         p = poll()
         readfd = self.incoming.fileno()
         p.register(readfd, "r")
@@ -395,6 +398,7 @@ class PipeStream(Stream):
                     data = data[written:]
 
         buf = self._read_data[:count]
+        assert len(buf) == count, "wrong buf length"
         self._read_data = self._read_data[count:]
         return buf
 
