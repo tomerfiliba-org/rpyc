@@ -364,7 +364,7 @@ class PipeStream(Stream):
         with self._condition:
             if self._ready:
                 return False
-        return self.incoming is ClosedFile
+            return self.incoming is ClosedFile
 
     def close(self):
         with self._condition:
@@ -384,7 +384,8 @@ class PipeStream(Stream):
             self._condition.notify_all()
 
     def fileno(self):
-        return self.incoming.fileno()
+        with self._condition:
+            return self.incoming.fileno()
 
     def poll(self, timeout):
         with self._condition:
