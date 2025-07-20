@@ -398,7 +398,9 @@ class PipeStream(Stream):
                     data = data[written:]
 
         buf = self._read_data[:count]
-        assert len(buf) == count, "wrong buf length"
+        assert len(buf) == count, (
+            f"{len(buf)} != {count} wrong buf length !!!"
+        )
         self._read_data = self._read_data[count:]
         return buf
 
