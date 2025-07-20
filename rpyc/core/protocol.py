@@ -12,7 +12,7 @@ import os
 import threading
 
 from threading import Lock, Condition, RLock
-from rpyc.lib import spawn, Timeout, get_methods, get_id_pack, hasattr_static
+from rpyc.lib import worker, Timeout, get_methods, get_id_pack, hasattr_static
 from rpyc.lib.compat import pickle, next, maxint, select_error, acquire_lock  # noqa: F401
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
@@ -727,7 +727,7 @@ class Connection(object):
                 pass
 
         try:
-            threads = [spawn(_thread_target)
+            threads = [worker(_thread_target)
                        for _ in range(thread_count)]
 
             for thread in threads:

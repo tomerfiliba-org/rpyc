@@ -12,6 +12,7 @@ from rpyc.lib.compat import maxint  # noqa: F401
 
 
 SPAWN_THREAD_PREFIX = 'RpycSpawnThread'
+WORKER_THREAD_PREFIX = 'RpycWorkerThread'
 
 
 class MissingModule(object):
@@ -83,6 +84,15 @@ def hasattr_static(obj, attr):
         return False
     else:
         return True
+
+
+def worker(*args, **kwargs):
+    """Start and return daemon thread. ``spawn(func, *args, **kwargs)``."""
+    func, args = args[0], args[1:]
+    str_id_pack = '-'.join([f'{i}' for i in get_id_pack(func)])
+    thread = threading.Thread(name=f'{WORKER_THREAD_PREFIX}-{str_id_pack}', target=func, args=args, kwargs=kwargs)
+    thread.start()
+    return thread
 
 
 def spawn(*args, **kwargs):

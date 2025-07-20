@@ -16,22 +16,10 @@ except ImportError:
 from rpyc.core import SocketStream, Channel
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
-from rpyc.lib import safe_import, spawn, spawn_waitready, get_id_pack
+from rpyc.lib import safe_import, worker, spawn, spawn_waitready
 from rpyc.lib.compat import poll, get_exc_errno
 signal = safe_import("signal")
 gevent = safe_import("gevent")
-
-
-WORKER_THREAD_PREFIX = 'RpycSpawnThread'
-
-
-def worker(*args, **kwargs):
-    """Start and return daemon thread. ``spawn(func, *args, **kwargs)``."""
-    func, args = args[0], args[1:]
-    str_id_pack = '-'.join([f'{i}' for i in get_id_pack(func)])
-    thread = threading.Thread(name=f'{WORKER_THREAD_PREFIX}-{str_id_pack}', target=func, args=args, kwargs=kwargs)
-    thread.start()
-    return thread
 
 
 class Server(object):
@@ -325,13 +313,15 @@ class ThreadedServer(Server):
 
     def close(self):
         super().close()
+        print('before wait', file=sys.stderr)
         with self._cond:
             self._cond.wait_for(lambda: not self._workers)
             terminated = self._terminated
             self._terminated = set()
-
+        print('before join', file=sys.stderr)
         for t in terminated:
             t.join()
+        print('after join', file=sys.stderr)
 
     def _accept_method(self, sock):
         with self._cond:
@@ -401,7 +391,7 @@ class ThreadPoolServer(Server):
             self.workers.append(t)
         # setup a thread for polling inactive connections
         self.polling_thread = worker(self._poll_inactive_clients)
-        self.polling_thread.setName('PollingThread')
+        self.polling_thread.name = 'PollingThread'
 
     def close(self):
         '''closes a ThreadPoolServer. In particular, joins the thread pool.'''
