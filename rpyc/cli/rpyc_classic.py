@@ -118,7 +118,6 @@ class ClassicServer(cli.Application):
         if sigmask:
             sigmask(signal.SIG_BLOCK, [signal.SIGPIPE, signal.SIGHUP])
 
-        print("starting server in serve_stdio", file=sys.stderr)
         conn = rpyc.classic.connect_stdpipes()
         try:
             conn.serve_all()
@@ -126,8 +125,6 @@ class ClassicServer(cli.Application):
             print("User interrupt!", file=sys.stderr)
         finally:
             conn.close()
-            print("finalizing serve_stdio", file=sys.stderr)
-        print("all good", file=sys.stderr)
 
 def main():
     ClassicServer.run()

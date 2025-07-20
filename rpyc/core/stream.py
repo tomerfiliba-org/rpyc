@@ -4,6 +4,7 @@ consistent view of a *duplex byte stream*.
 """
 import sys
 import os
+import fcntl
 import socket
 import errno
 from rpyc.lib import safe_import, Timeout, socket_backoff_connect
@@ -322,6 +323,15 @@ class PipeStream(Stream):
         outgoing.flush()
         self.incoming = incoming
         self.outgoing = outgoing
+        self.set_nonblocking(incoming)
+        self.set_nonblocking(outgoing)
+        self._read_data = BYTES_LITERAL("")
+
+    @classmethod
+    def _set_nonblocking(stream):
+        fd = stream.fileno()
+        flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
 
     @classmethod
     def from_std(cls):
@@ -364,15 +374,33 @@ class PipeStream(Stream):
     def fileno(self):
         return self.incoming.fileno()
 
+    def _read_write(self, count, data):
+        p = poll()
+        readfd = self.incoming.fileno()
+        p.register(readfd, "r")
+        if data is not None:
+            writefd = self.outgoing.fileno()
+            p.register(writefd, "w")
+
+        while data or count < len(self._read_data):
+            for f, mask in p.poll():
+                if f == read:
+                    buf = os.read(readfd, min(self.MAX_IO_CHUNK, count))
+                    if not buf:
+                        raise EOFError("connection closed by peer")
+                    self._read_data = self._read_data + buf
+                elif data is not None:
+                    chunk = data[:self.MAX_IO_CHUNK]
+                    written = os.write(writefd, chunk)
+                    data = data[written:]
+
+        buf = self._read_data[:count]
+        self._read_data = self._read_data[count:]
+        return buf
+
     def read(self, count):
-        data = []
         try:
-            while count > 0:
-                buf = os.read(self.incoming.fileno(), min(self.MAX_IO_CHUNK, count))
-                if not buf:
-                    raise EOFError("connection closed by peer")
-                data.append(buf)
-                count -= len(buf)
+            return self._read_write(count, None)
         except EOFError:
             self.close()
             raise
@@ -380,14 +408,10 @@ class PipeStream(Stream):
             ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
-        return BYTES_LITERAL("").join(data)
 
     def write(self, data):
         try:
-            while data:
-                chunk = data[:self.MAX_IO_CHUNK]
-                written = os.write(self.outgoing.fileno(), chunk)
-                data = data[written:]
+            self._read_write(count, 0, data)
         except EnvironmentError:
             ex = sys.exc_info()[1]
             self.close()
