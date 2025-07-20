@@ -186,8 +186,10 @@ class Connection(object):
 
     def __del__(self):
         self.close()
-        if self._cleaning_thread is not None:
-            self._cleaning_thread.join()
+        if self._bind_threads:
+            cleaning_thread, self._cleaning_thread = self._cleaning_thread, None
+            if cleaning_thread is not None:
+                cleaning_thread.join()
 
     def __enter__(self):
         return self
