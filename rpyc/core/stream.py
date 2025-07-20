@@ -411,7 +411,7 @@ class PipeStream(Stream):
 
     def write(self, data):
         try:
-            self._read_write(count, 0, data)
+            self._read_write(0, data)
         except EnvironmentError:
             ex = sys.exc_info()[1]
             self.close()

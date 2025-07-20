@@ -8,7 +8,6 @@ usage:
     # ssl-authenticated server (keyfile and certfile are required)
     rpyc_classic.py --ssl-keyfile keyfile.pem --ssl-certfile certfile.pem --ssl-cafile cafile.pem
 """
-import os
 import sys
 import rpyc
 import signal
@@ -125,6 +124,7 @@ class ClassicServer(cli.Application):
             print("User interrupt!", file=sys.stderr)
         finally:
             conn.close()
+
 
 def main():
     ClassicServer.run()
