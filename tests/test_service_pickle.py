@@ -64,6 +64,7 @@ class TestServicePickle(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
+        self.conn2.close()
         self.server.close()
         self.thd.join()
         cfg_tests.timeit.clear()
