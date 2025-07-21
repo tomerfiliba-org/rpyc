@@ -63,22 +63,13 @@ class TestServicePickle(unittest.TestCase):
         cfg_tests.timeit['df'] = pd.DataFrame(np.random.rand(DF_ROWS, DF_COLS))
 
     def tearDown(self):
-        import sys
-        print("1", file=sys.stderr)
         self.conn.close()
-        print("2", file=sys.stderr)
         self.conn2.close()
-        print("3", file=sys.stderr)
         while self.server.clients:
-            print(f"server: {self.server.clients!r}", file=sys.stderr)
             pass
-        print("4", file=sys.stderr)
         self.server.close()
-        print("5", file=sys.stderr)
         self.thd.join()
-        print("6", file=sys.stderr)
         cfg_tests.timeit.clear()
-        print("7", file=sys.stderr)
 
     def test_dataframe_pickling(self):
         # the proxy will sync w/ the pickle handle and default proto and provide this as the argument to pickle.load

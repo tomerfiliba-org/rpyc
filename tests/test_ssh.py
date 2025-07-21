@@ -37,15 +37,28 @@ class Test_Ssh(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        import sys
+        print("1", file=sys.stderr)
         cls.conn.close()
+        print("2", file=sys.stderr)
         cls.conn2.close()
+        print("3", file=sys.stderr)
         # TODO review "ResourceWarning: subprocess 111785 is still running"
         cls.remote_machine._session.proc.terminate()  # fix resource warning
+        print("4", file=sys.stderr)
         cls.remote_machine._session.proc.communicate()  # fix resource warning
+        print("5", file=sys.stderr)
         cls.remote_machine.close()
+        print("6", file=sys.stderr)
         if cls.server is not None:
+            print("7", file=sys.stderr)
+            while cls.server.clients:
+                pass
+            print("8", file=sys.stderr)
             cls.server.close()
+            print("9", file=sys.stderr)
             cls.thd.join()
+            print("10", file=sys.stderr)
 
     def test_simple(self):
         print("server's pid =", self.conn.modules.os.getpid())
