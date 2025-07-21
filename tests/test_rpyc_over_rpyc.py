@@ -77,11 +77,11 @@ class Test_rpyc_over_rpyc(unittest.TestCase):
         print("1", file=sys.stderr)
         self.conn.close()
         print("2", file=sys.stderr)
-        while self.server.clients or self.i_server.clients:
-            print(f"server: {self.server.clients!r}", file=sys.stderr)
-            print(f"i_server: {self.i_server.clients!r}", file=sys.stderr)
-            time.sleep(0.250)
-            pass
+        # while self.server.clients or self.i_server.clients:
+        #     print(f"server: {self.server.clients!r}", file=sys.stderr)
+        #     print(f"i_server: {self.i_server.clients!r}", file=sys.stderr)
+        #     time.sleep(0.250)
+        #     pass
         print("3", file=sys.stderr)
         self.server.close()
         print("4", file=sys.stderr)
