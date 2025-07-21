@@ -77,6 +77,8 @@ class Test_rpyc_over_rpyc(unittest.TestCase):
         self.conn.close()
         print("2", file=sys.stderr)
         while self.server.clients or self.i_server.clients:
+            print(f"server: {self.server.client!r}", file=sys.stderr)
+            print(f"i_server: {self.i_server.client!r}", file=sys.stderr)
             pass
         print("3", file=sys.stderr)
         self.server.close()
