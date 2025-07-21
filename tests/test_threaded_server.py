@@ -1,4 +1,5 @@
 import os
+import time
 import rpyc
 import tempfile
 from rpyc.utils.server import ThreadedServer, ThreadPoolServer
@@ -15,7 +16,7 @@ class Test_ThreadedServer(unittest.TestCase):
 
     def tearDown(self):
         while self.server.clients:
-            pass
+            time.sleep(0.250)
         self.server.close()
         self.thd.join()
 

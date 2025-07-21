@@ -1,5 +1,6 @@
 from __future__ import print_function
 import sys
+import time
 import pickle  # noqa
 import timeit
 import rpyc
@@ -66,7 +67,7 @@ class TestServicePickle(unittest.TestCase):
         self.conn.close()
         self.conn2.close()
         while self.server.clients:
-            pass
+            time.sleep(0.250)
         self.server.close()
         self.thd.join()
         cfg_tests.timeit.clear()

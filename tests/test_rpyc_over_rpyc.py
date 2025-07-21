@@ -1,3 +1,4 @@
+import time
 import rpyc
 from rpyc.utils.server import ThreadedServer
 import unittest
@@ -79,6 +80,7 @@ class Test_rpyc_over_rpyc(unittest.TestCase):
         while self.server.clients or self.i_server.clients:
             print(f"server: {self.server.clients!r}", file=sys.stderr)
             print(f"i_server: {self.i_server.clients!r}", file=sys.stderr)
+            time.sleep(0.250)
             pass
         print("3", file=sys.stderr)
         self.server.close()

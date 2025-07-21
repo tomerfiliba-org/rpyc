@@ -1,4 +1,5 @@
 import rpyc
+import time
 import sys
 import os
 import unittest
@@ -53,7 +54,7 @@ class Test_Ssh(unittest.TestCase):
         if cls.server is not None:
             print("7", file=sys.stderr)
             while cls.server.clients:
-                pass
+                time.sleep(0.250)
             print("8", file=sys.stderr)
             cls.server.close()
             print("9", file=sys.stderr)
