@@ -226,10 +226,9 @@ class Connection(object):
         if self._bind_threads:
             if threading.current_thread() in self._worker:
                 if self._cleaning_thread is None:
-                    self._cleaning_thread = threading.Thread(
-                        target=self._cleanup_threaded, args=(_anyway, )
+                    self._cleaning_thread = worker(
+                        self._cleanup_threaded, _anyway
                     )
-                    self._cleaning_thread.start()
                 return
             self._thread_pool_executor.shutdown(wait=True)  # TODO where?
             self._worker = set()

@@ -44,8 +44,7 @@ class ClassicMode(unittest.TestCase):
         # to stderr
         server_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bin", "rpyc_classic.py")
         conn = rpyc.classic.connect_subproc(server_file, stderr=PIPE)
-        worker = threading.Thread(target=splice_to_stderr, args=(conn.proc.stderr, ))
-        worker.start()
+        worker = rpyc.worker(splice_to_stderr, conn.proc.stderr)
         try:
             conn.modules.sys.path.append("xxx")
             self.assertEqual(conn.modules.sys.path.pop(-1), "xxx")
