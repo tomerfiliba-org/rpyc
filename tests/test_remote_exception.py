@@ -23,6 +23,7 @@ class TestRemoteException(unittest.TestCase):
     def tearDown(self):
         rpyc.version.__version__ = self.original_version_string
         self.conn.close()
+        self.server.close()
         self.thd.join()
 
     def test_remote_exception(self):
@@ -62,6 +63,7 @@ class TestExclusionsRemoteException(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
+        self.server.close()
         self.thd.join()
 
     def test_remote_exception(self):

@@ -24,6 +24,7 @@ class TestNumpy(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
+        self.server.close()
         self.thd.join()
 
     def test_numpy(self):
