@@ -69,10 +69,10 @@ class Test_SSL(unittest.TestCase):
                                          keyfile=self.client2_key, certfile=self.client2_cert)
             c.close()
 
-    @unittest.skipIf(True, "temporarily disabled as not working reliable")
     def test_nokey(self):
         '''Assert exception when cert not provided'''
-        with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert certificate required'):
+        with self.assertRaisesRegex(EOFError,
+                                    'tlsv[0-9]* alert certificate required|EOF occurred in violation of protocol'):
             c = rpyc.classic.ssl_connect("localhost", port=18812)
             c.close()
 
@@ -98,7 +98,8 @@ class Test_SSL_CERT_REQUIRED(unittest.TestCase):
 
     def test_nokey(self):
         '''Assert exception when cert not provided'''
-        with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert certificate required'):
+        with self.assertRaisesRegex(EOFError,
+                                    'tlsv[0-9]* alert certificate required|EOF occurred in violation of protocol'):
             c = rpyc.classic.ssl_connect("localhost", port=18812)
             c.close()
 
