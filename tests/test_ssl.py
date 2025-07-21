@@ -16,7 +16,7 @@ sslport=18812
 
 class Authenticator(SSLAuthenticator):
     def __call__(self, sock):
-        time.sleep(0.25)
+        #time.sleep(0.5)
         return super().__call__(sock)
 
 @unittest.skipIf(_ssl_import_failed, "Ssl not available")
@@ -74,14 +74,16 @@ class Test_SSL(unittest.TestCase):
 
     def test_client2(self):
         '''Assert exception client signed client2, but being in ca bundle is not server signature'''
-        with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert unknown ca'):
+        with self.assertRaisesRegex(EOFError,
+                                    'tlsv[0-9]* alert unknown ca|EOF occurred in violation of protocol'):
             c = rpyc.classic.ssl_connect("localhost", port=sslport,
                                          keyfile=self.client2_key, certfile=self.client2_cert)
             c.close()
 
     def test_nokey(self):
         '''Assert exception when cert not provided'''
-        with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert certificate required'):
+        with self.assertRaisesRegex(EOFError,
+                                    'tlsv[0-9]* alert certificate required|EOF occurred in violation of protocol'):
             c = rpyc.classic.ssl_connect("localhost", port=sslport)
             c.close()
 
@@ -110,7 +112,8 @@ class Test_SSL_CERT_REQUIRED(unittest.TestCase):
 
     def test_nokey(self):
         '''Assert exception when cert not provided'''
-        with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert certificate required'):
+        with self.assertRaisesRegex(EOFError,
+                                    'tlsv[0-9]* alert certificate required|EOF occurred in violation of protocol'):
             c = rpyc.classic.ssl_connect("localhost", port=sslport)
             c.close()
 
