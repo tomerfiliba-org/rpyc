@@ -87,7 +87,7 @@ def hasattr_static(obj, attr):
 
 
 def worker(*args, **kwargs):
-    """Start and return daemon thread. ``spawn(func, *args, **kwargs)``."""
+    """Start and return non-daemon thread. ``worker(func, *args, **kwargs)``."""
     func, args = args[0], args[1:]
     str_id_pack = '-'.join([f'{i}' for i in get_id_pack(func)])
     thread = threading.Thread(name=f'{WORKER_THREAD_PREFIX}-{str_id_pack}', target=func, args=args, kwargs=kwargs)
@@ -105,7 +105,7 @@ def spawn(*args, **kwargs):
     return thread
 
 
-def spawn_waitready(init, main):
+def worker_waitready(init, main):
     """
     Start a thread that runs ``init`` and then ``main``. Wait for ``init`` to
     be finished before returning.
@@ -120,7 +120,7 @@ def spawn_waitready(init, main):
         stack.append(init())
         stack.pop(0).set()
         return main()
-    thread = spawn(start)
+    thread = worker(start)
     event.wait()
     return thread, stack.pop()
 

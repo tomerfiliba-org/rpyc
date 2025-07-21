@@ -47,12 +47,13 @@ class Test_GDB(unittest.TestCase):
             raise ValueError("stdout and stderr should have be empty for a.out creation")
         self.server = ThreadedServer(ParentGDB, port=18878, auto_register=False,
                                      protocol_config={'allow_all_attrs': True})
-        self.server._start_in_thread()
+        self.thd = self.server._start_in_thread()
 
     def tearDown(self):
         self.server.close()
         while not self.server._closed:
             pass
+        self.thd.join()
 
     def test_gdb(self):
         print(0)

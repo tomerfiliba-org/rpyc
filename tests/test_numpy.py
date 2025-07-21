@@ -19,11 +19,12 @@ class TestNumpy(unittest.TestCase):
     def setUp(self):
         self.server = rpyc.utils.server.OneShotServer(MyService, port=0, protocol_config={"allow_pickle":True})
         self.server.logger.quiet = False
-        self.server._start_in_thread()
+        self.thd = self.server._start_in_thread()
         self.conn = rpyc.connect("localhost", port=self.server.port, config={"allow_pickle":True})
 
     def tearDown(self):
         self.conn.close()
+        self.thd.join()
 
     def test_numpy(self):
         remote_array = self.conn.root.create_array(np.array([0.]))

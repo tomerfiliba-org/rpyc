@@ -30,7 +30,7 @@ class Test_Ssh(unittest.TestCase):
             #   IdentityFile <id_rsa>
             cls.server = ThreadedServer(SlaveService, hostname="localhost",
                                         ipv6=False, port=18888, auto_register=False)
-            cls.server._start_in_thread()
+            cls.thd = cls.server._start_in_thread()
         cls.remote_machine = SshMachine("localhost")
         cls.conn = rpyc.classic.ssh_connect(cls.remote_machine, 18888)
         cls.conn2 = rpyc.ssh_connect(cls.remote_machine, 18888, service=MasterService)
@@ -43,7 +43,9 @@ class Test_Ssh(unittest.TestCase):
         cls.remote_machine._session.proc.terminate()  # fix resource warning
         cls.remote_machine._session.proc.communicate()  # fix resource warning
         cls.remote_machine.close()
-        cls.server.close()
+        if cls.server is not None:
+            cls.server.close()
+            cls.thd.join()
 
     def test_simple(self):
         print("server's pid =", self.conn.modules.os.getpid())

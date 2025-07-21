@@ -67,8 +67,8 @@ class Test_rpyc_over_rpyc(unittest.TestCase):
         self.server = ThreadedServer(Service, port=Service.PORT, auto_register=False)
         self.i_server = ThreadedServer(Intermediate, port=Intermediate.PORT,
                                        auto_register=False, protocol_config=CONNECT_CONFIG)
-        self.server._start_in_thread()
-        self.i_server._start_in_thread()
+        self.thd = self.server._start_in_thread()
+        self.i_thd = self.i_server._start_in_thread()
         self.conn = rpyc.connect("localhost", port=Intermediate.PORT, config=CONNECT_CONFIG)
 
     def tearDown(self):
@@ -77,6 +77,8 @@ class Test_rpyc_over_rpyc(unittest.TestCase):
             pass
         self.server.close()
         self.i_server.close()
+        self.thd.join()
+        self.i_thd.join()
 
     def test_immutable_object_return(self):
         """Tests using rpyc over rpyc---issue #346 reported traceback for this use case"""

@@ -11,12 +11,13 @@ class Test_ThreadedServer(unittest.TestCase):
     def setUp(self):
         self.server = ThreadedServer(SlaveService, port=18878, auto_register=False)
         self.server.logger.quiet = False
-        self.server._start_in_thread()
+        self.thd = self.server._start_in_thread()
 
     def tearDown(self):
         while self.server.clients:
             pass
         self.server.close()
+        self.thd.join()
 
     def test_connection(self):
         conn = rpyc.classic.connect("localhost", port=18878)
@@ -34,10 +35,11 @@ class Test_ThreadedServerOverUnixSocket(unittest.TestCase):
         self.socket_path = tempfile.mktemp()
         self.server = ThreadedServer(SlaveService, socket_path=self.socket_path, auto_register=False)
         self.server.logger.quiet = False
-        self.server._start_in_thread()
+        self.thd = self.server._start_in_thread()
 
     def tearDown(self):
         self.server.close()
+        self.thd.join()
         os.remove(self.socket_path)
 
     def test_connection(self):
@@ -55,8 +57,11 @@ class Test_ThreadPoolServer(Test_ThreadedServer):
     def setUp(self):
         self.server = ThreadPoolServer(SlaveService, port=18878, auto_register=False)
         self.server.logger.quiet = False
-        self.server._start_in_thread()
+        self.thd = self.server._start_in_thread()
 
+    def tearDown(self):
+        self.server.close()
+        self.thd.join()
 
 if __name__ == "__main__":
     unittest.main()

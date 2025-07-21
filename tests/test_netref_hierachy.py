@@ -94,7 +94,7 @@ class Test_Netref_Hierarchy(unittest.TestCase):
     def setUpClass(cls):
         cls.server = ThreadedServer(SlaveService, port=18878, auto_register=False)
         cls.server.logger.quiet = False
-        cls.server._start_in_thread()
+        cls.thd = cls.server._start_in_thread()
 
     def setUp(self):
         self.conn = rpyc.classic.connect('localhost', port=18878)
@@ -102,6 +102,7 @@ class Test_Netref_Hierarchy(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.server.close()
+        cls.thd.join()
 
     def tearDown(self):
         self.conn.close()
