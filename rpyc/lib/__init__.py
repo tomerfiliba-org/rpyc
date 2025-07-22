@@ -105,7 +105,7 @@ def spawn(*args, **kwargs):
     return thread
 
 
-def worker_waitready(init, main):
+def spawn_waitready(init, main):
     """
     Start a thread that runs ``init`` and then ``main``. Wait for ``init`` to
     be finished before returning.

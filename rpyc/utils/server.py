@@ -16,7 +16,7 @@ except ImportError:
 from rpyc.core import SocketStream, Channel
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
-from rpyc.lib import safe_import, worker, spawn, worker_waitready
+from rpyc.lib import safe_import, worker, spawn, spawn_waitready
 from rpyc.lib.compat import poll, get_exc_errno
 signal = safe_import("signal")
 gevent = safe_import("gevent")
@@ -277,7 +277,7 @@ class Server(object):
         ready to accept incoming connections.
 
         Used for testing, API could change anytime! Do not use!"""
-        return worker_waitready(self._listen, self.start)[0]
+        return spawn_waitready(self._listen, self.start)[0]
 
 
 class OneShotServer(Server):
@@ -322,20 +322,16 @@ class ThreadedServer(Server):
             terminated = self._terminated
             self._terminated = set()
 
-        print('before join close', file=sys.stderr)
         for t in terminated:
             t.join()
-        print('after join close', file=sys.stderr)
 
     def _accept_method(self, sock):
         with self._cond:
             terminated = self._terminated
             self._terminated = set()
 
-        print('before join accept', file=sys.stderr)
         for t in terminated:
             t.join()
-        print('after join accept', file=sys.stderr)
 
         with self._cond:
             t = worker(self._authenticate_and_serve_client, sock)

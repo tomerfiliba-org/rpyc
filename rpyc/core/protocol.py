@@ -230,9 +230,7 @@ class Connection(object):
                         self._cleanup_threaded, _anyway
                     )
                 return
-            print('before thread_pool_executor.shutdown', file=sys.stderr)
             self._thread_pool_executor.shutdown(wait=True)  # TODO where?
-            print('after thread_pool_executor.shutdown', file=sys.stderr)
             self._worker = set()
 
         if _anyway:

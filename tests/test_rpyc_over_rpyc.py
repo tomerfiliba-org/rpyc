@@ -73,24 +73,13 @@ class Test_rpyc_over_rpyc(unittest.TestCase):
         self.conn = rpyc.connect("localhost", port=Intermediate.PORT, config=CONNECT_CONFIG)
 
     def tearDown(self):
-        import sys
-        print("1", file=sys.stderr)
         self.conn.close()
-        print("2", file=sys.stderr)
-        # while self.server.clients or self.i_server.clients:
-        #     print(f"server: {self.server.clients!r}", file=sys.stderr)
-        #     print(f"i_server: {self.i_server.clients!r}", file=sys.stderr)
-        #     time.sleep(0.250)
-        #     pass
-        print("3", file=sys.stderr)
+        while self.server.clients or self.i_server.clients:
+            time.sleep(0.250)
         self.server.close()
-        print("4", file=sys.stderr)
         self.i_server.close()
-        print("5", file=sys.stderr)
         self.thd.join()
-        print("6", file=sys.stderr)
         self.i_thd.join()
-        print("7", file=sys.stderr)
 
     def test_immutable_object_return(self):
         """Tests using rpyc over rpyc---issue #346 reported traceback for this use case"""
