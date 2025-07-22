@@ -50,7 +50,7 @@ class Test_SSL(unittest.TestCase):
         cls.ca_certs = os.path.join(os.path.dirname(__file__), "client-server.bundle.crt")
         print(cls.cert, cls.key)
 
-        authenticator = Authenticator(cls.key, cls.cert, cls.ca_certs)
+        authenticator = Authenticator(cls.key, cls.cert, cls.ca_certs, ssl_version=ssl.PROTOCOL_TLS_SERVER)
         cls.server = ThreadedServer(SlaveService, port=sslport,
                                      auto_register=False, authenticator=authenticator)
         cls.server.logger.quiet = False
@@ -65,7 +65,7 @@ class Test_SSL(unittest.TestCase):
 
     def test_client(self):
         c = rpyc.classic.ssl_connect("localhost", port=sslport,
-                                     ssl_version=ssl.PROTOCOL_TLS,
+                                     ssl_version=ssl.PROTOCOL_TLS_CLIENT,
                                      keyfile=self.client_key, certfile=self.client_cert,
                                      ca_certs=self.ca_certs)
         print(repr(c))
@@ -81,7 +81,7 @@ class Test_SSL(unittest.TestCase):
         with self.assertRaisesRegex(EOFError,
                                     'tlsv[0-9]* alert unknown ca|EOF occurred in violation of protocol'):
             c = rpyc.classic.ssl_connect("localhost", port=sslport,
-                                         ssl_version=ssl.PROTOCOL_TLS,
+                                         ssl_version=ssl.PROTOCOL_TLS_CLIENT,
                                          keyfile=self.client2_key, certfile=self.client2_cert, ca_certs=self.ca_certs)
             c.close()
 
@@ -90,7 +90,7 @@ class Test_SSL(unittest.TestCase):
         with self.assertRaisesRegex(EOFError,
                                     'tlsv[0-9]* alert certificate required|EOF occurred in violation of protocol'):
             c = rpyc.classic.ssl_connect("localhost", port=sslport,
-                                         ssl_version=ssl.PROTOCOL_TLS,
+                                         ssl_version=ssl.PROTOCOL_TLS_CLIENT,
                                          ca_certs=self.ca_certs)
             c.close()
 
@@ -123,7 +123,7 @@ class Test_SSL_CERT_REQUIRED(unittest.TestCase):
         with self.assertRaisesRegex(EOFError,
                                     'tlsv[0-9]* alert certificate required|EOF occurred in violation of protocol'):
             c = rpyc.classic.ssl_connect("localhost", port=sslport,
-                                         ssl_version=ssl.PROTOCOL_TLS,
+                                         ssl_version=ssl.PROTOCOL_TLS_CLIENT,
                                          ca_certs=self.ca_certs)
             c.close()
 
@@ -153,7 +153,7 @@ class Test_SSL_CERT_NONE(unittest.TestCase):
 
     def test_nokey_noexc(self):
         c = rpyc.classic.ssl_connect("localhost", port=sslport,
-                                     ssl_version=ssl.PROTOCOL_TLS,
+                                     ssl_version=ssl.PROTOCOL_TLS_CLIENT,
                                      ca_certs=self.ca_certs)
         c.close()
 
