@@ -319,7 +319,7 @@ class ThreadedServer(Server):
                 return
 
             print('before wait_for', file=sys.stderr)
-            self._cond.wait_for(lambda: not self._workers)
+            self._cond.wait_for(lambda: not self._workers, timeout=2)
             print('after wait_for', file=sys.stderr)
             terminated = self._terminated
             self._terminated = set()
