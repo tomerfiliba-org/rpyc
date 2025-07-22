@@ -14,10 +14,12 @@ except ImportError:
 
 sslport=18812
 
+
 class Authenticator(SSLAuthenticator):
     def __call__(self, sock):
         #time.sleep(0.5)
         return super().__call__(sock)
+
 
 @unittest.skipIf(_ssl_import_failed, "Ssl not available")
 class Test_SSL(unittest.TestCase):
@@ -63,6 +65,7 @@ class Test_SSL(unittest.TestCase):
 
     def test_client(self):
         c = rpyc.classic.ssl_connect("localhost", port=sslport,
+                                     ssl_version=ssl.PROTOCOL_TLS,
                                      keyfile=self.client_key, certfile=self.client_cert,
                                      ca_certs=self.ca_certs)
         print(repr(c))
@@ -78,6 +81,7 @@ class Test_SSL(unittest.TestCase):
         with self.assertRaisesRegex(EOFError,
                                     'tlsv[0-9]* alert unknown ca|EOF occurred in violation of protocol'):
             c = rpyc.classic.ssl_connect("localhost", port=sslport,
+                                         ssl_version=ssl.PROTOCOL_TLS,
                                          keyfile=self.client2_key, certfile=self.client2_cert, ca_certs=self.ca_certs)
             c.close()
 
@@ -85,7 +89,9 @@ class Test_SSL(unittest.TestCase):
         '''Assert exception when cert not provided'''
         with self.assertRaisesRegex(EOFError,
                                     'tlsv[0-9]* alert certificate required|EOF occurred in violation of protocol'):
-            c = rpyc.classic.ssl_connect("localhost", port=sslport, ca_certs=self.ca_certs)
+            c = rpyc.classic.ssl_connect("localhost", port=sslport,
+                                         ssl_version=ssl.PROTOCOL_TLS,
+                                         ca_certs=self.ca_certs)
             c.close()
 
 
@@ -116,7 +122,9 @@ class Test_SSL_CERT_REQUIRED(unittest.TestCase):
         '''Assert exception when cert not provided'''
         with self.assertRaisesRegex(EOFError,
                                     'tlsv[0-9]* alert certificate required|EOF occurred in violation of protocol'):
-            c = rpyc.classic.ssl_connect("localhost", port=sslport, ca_certs=self.ca_certs)
+            c = rpyc.classic.ssl_connect("localhost", port=sslport,
+                                         ssl_version=ssl.PROTOCOL_TLS,
+                                         ca_certs=self.ca_certs)
             c.close()
 
 
@@ -144,7 +152,9 @@ class Test_SSL_CERT_NONE(unittest.TestCase):
         cls.thd.join()
 
     def test_nokey_noexc(self):
-        c = rpyc.classic.ssl_connect("localhost", port=sslport, ca_certs=self.ca_certs)
+        c = rpyc.classic.ssl_connect("localhost", port=sslport,
+                                     ssl_version=ssl.PROTOCOL_TLS,
+                                     ca_certs=self.ca_certs)
         c.close()
 
 
