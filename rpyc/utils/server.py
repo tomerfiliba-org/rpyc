@@ -318,22 +318,24 @@ class ThreadedServer(Server):
             if threading.current_thread() in self._workers:
                 return
 
-            print('before wait_for', file=sys.stderr)
             self._cond.wait_for(lambda: not self._workers, timeout=2)
-            print('after wait_for', file=sys.stderr)
             terminated = self._terminated
             self._terminated = set()
 
+        print('before join close', file=sys.stderr)
         for t in terminated:
             t.join()
+        print('after join close', file=sys.stderr)
 
     def _accept_method(self, sock):
         with self._cond:
             terminated = self._terminated
             self._terminated = set()
 
+        print('before join accept', file=sys.stderr)
         for t in terminated:
             t.join()
+        print('after join accept', file=sys.stderr)
 
         with self._cond:
             t = worker(self._authenticate_and_serve_client, sock)
