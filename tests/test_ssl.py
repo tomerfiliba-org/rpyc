@@ -127,6 +127,7 @@ class Test_SSL_CERT_NONE(unittest.TestCase):
     def setUpClass(cls):
         cls.key = os.path.join(os.path.dirname(__file__), "server.key")
         cls.cert = os.path.join(os.path.dirname(__file__), "server.crt")
+        cls.ca_certs = os.path.join(os.path.dirname(__file__), "client-server.bundle.crt")
         print(cls.cert, cls.key)
 
         authenticator = Authenticator(cls.key, cls.cert)
