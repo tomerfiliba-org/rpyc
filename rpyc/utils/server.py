@@ -318,7 +318,9 @@ class ThreadedServer(Server):
             if threading.current_thread() in self._workers:
                 return
 
+            print('before wait_for', file=sys.stderr)
             self._cond.wait_for(lambda: not self._workers)
+            print('after wait_for', file=sys.stderr)
             terminated = self._terminated
             self._terminated = set()
 
@@ -345,7 +347,7 @@ class ThreadedServer(Server):
             with self._cond:
                 if current in self._workers:
                     self._terminated.add(current)
-                    self._workers.remove(current)
+                    self._workers.discard(current)
                     if not self._workers:
                         self._cond.notify_all()
 
