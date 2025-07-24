@@ -7,15 +7,15 @@ from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService, MasterService
 
 
+ssh_opts = ("-o", "PasswordAuthentication=no")
 try:
     from plumbum.machines.ssh_machine import SshMachine
-    localhost_machine = SshMachine("localhost")
+    localhost_machine = SshMachine("localhost", ssh_opts=ssh_opts)
     localhost_machine.close()
 except Exception:
     localhost_machine = None
 
-
-@unittest.skipIf(localhost_machine is None, "Requires paramiko_machine to localhost")
+@unittest.skipIf(localhost_machine is None, "Requires SshMachine to localhost")
 class Test_Ssh(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -32,7 +32,7 @@ class Test_Ssh(unittest.TestCase):
             cls.server = ThreadedServer(SlaveService, hostname="localhost",
                                         ipv6=False, port=18888, auto_register=False)
             cls.thd = cls.server._start_in_thread()
-        cls.remote_machine = SshMachine("localhost")
+        cls.remote_machine = SshMachine("localhost", ssh_opts=ssh_opts)
         cls.conn = rpyc.classic.ssh_connect(cls.remote_machine, 18888)
         cls.conn2 = rpyc.ssh_connect(cls.remote_machine, 18888, service=MasterService)
 
