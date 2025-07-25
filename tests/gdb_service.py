@@ -11,7 +11,7 @@ class GDBService(rpyc.Service):
 
 
 if __name__ == "__main__":
-    server = rpyc.ThreadedServer(GDBService, port=0, protocol_config={'allow_all_attrs': True})
+    server = rpyc.OneShotServer(GDBService, port=0, protocol_config={'allow_all_attrs': True})
     gdb.write('{}\n'.format(server.port))
     gdb.flush()
     server.start()
