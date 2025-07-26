@@ -160,12 +160,15 @@ def socket_backoff_connect(family, socktype, proto, addr, timeout, attempts):
             sock.connect(addr)
             connecting = False
         except socket.timeout:
+            sock.close()
             if collision == attempts or attempts < 1:
                 raise
             else:
-                sock.close()
                 sock = socket.socket(family, socktype, proto)
                 time.sleep(exp_backoff(collision))
+        except Exception:
+            sock.close()
+            raise
     return sock
 
 

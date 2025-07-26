@@ -74,11 +74,13 @@ class Test_rpyc_over_rpyc(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
-        while self.server.clients or self.i_server.clients:
+        while self.server.clients:
             time.sleep(0.250)
         self.server.close()
-        self.i_server.close()
         self.thd.join()
+        while self.i_server.clients:
+            time.sleep(0.250)
+        self.i_server.close()
         self.i_thd.join()
 
     def test_immutable_object_return(self):

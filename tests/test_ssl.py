@@ -17,7 +17,7 @@ sslport=18812
 
 class Authenticator(SSLAuthenticator):
     def __call__(self, sock):
-        #time.sleep(0.5)
+        time.sleep(0.5)
         return super().__call__(sock)
 
 

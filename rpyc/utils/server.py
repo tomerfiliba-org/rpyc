@@ -16,7 +16,7 @@ except ImportError:
 from rpyc.core import SocketStream, Channel
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
-from rpyc.lib import safe_import, worker, worker_waitready, spawn
+from rpyc.lib import safe_import, worker, worker_waitready
 from rpyc.lib.compat import poll, get_exc_errno
 signal = safe_import("signal")
 gevent = safe_import("gevent")
@@ -60,6 +60,8 @@ class Server(object):
             self.auto_register = bool(registrar)
         else:
             self.auto_register = auto_register
+        if self.auto_register:
+            self.register_thread = None
 
         if protocol_config is None:
             protocol_config = {}
@@ -111,6 +113,9 @@ class Server(object):
             return
         self.active = False
         if self.auto_register:
+            register_thread, self.register_thread = self.register_thread, None
+            if register_thread:
+                register_thread.join()
             try:
                 self.registrar.unregister(self.port)
             except Exception:
@@ -253,7 +258,7 @@ class Server(object):
 
     def _register(self):
         if self.auto_register:
-            spawn(self._bg_register)
+            self.register_thread = worker(self._bg_register)
 
     def start(self):
         """Starts the server (blocking). Use :meth:`close` to stop"""

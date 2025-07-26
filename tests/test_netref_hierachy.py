@@ -109,15 +109,18 @@ class Test_Netref_Hierarchy(unittest.TestCase):
 
     def test_instancecheck_across_connections(self):
         self.conn2 = rpyc.classic.connect('localhost', port=18878)
-        self.conn.execute('import tests.test_magic')
-        self.conn2.execute('import tests.test_magic')
-        foo = self.conn.modules.tests.test_magic.Foo()
-        bar = self.conn.modules.tests.test_magic.Bar()
-        self.assertTrue(isinstance(foo, self.conn.modules.tests.test_magic.Foo))
-        self.assertTrue(isinstance(bar, self.conn2.modules.tests.test_magic.Bar))
-        self.assertFalse(isinstance(bar, self.conn.modules.tests.test_magic.Foo))
-        with self.assertRaises(TypeError):
-            isinstance(self.conn.modules.tests.test_magic.Foo, bar)
+        try:
+            self.conn.execute('import tests.test_magic')
+            self.conn2.execute('import tests.test_magic')
+            foo = self.conn.modules.tests.test_magic.Foo()
+            bar = self.conn.modules.tests.test_magic.Bar()
+            self.assertTrue(isinstance(foo, self.conn.modules.tests.test_magic.Foo))
+            self.assertTrue(isinstance(bar, self.conn2.modules.tests.test_magic.Bar))
+            self.assertFalse(isinstance(bar, self.conn.modules.tests.test_magic.Foo))
+            with self.assertRaises(TypeError):
+                isinstance(self.conn.modules.tests.test_magic.Foo, bar)
+        finally:
+            self.conn2.close()
 
     def test_classic(self):
         x = self.conn.builtin.list((1, 2, 3, 4))
@@ -141,10 +144,12 @@ class Test_Netref_Hierarchy(unittest.TestCase):
     def test_instancecheck_list(self):
         service = MyService()
         conn = rpyc.connect_thread(remote_service=service)
-        conn.root
-        remote_list = conn.root.getlist()
-        self.assertTrue(conn.root.instance(remote_list, list))
-        conn.close()
+        try:
+            conn.root
+            remote_list = conn.root.getlist()
+            self.assertTrue(conn.root.instance(remote_list, list))
+        finally:
+            conn.close()
 
     def test_instancecheck_none(self):
         """
@@ -152,9 +157,11 @@ class Test_Netref_Hierarchy(unittest.TestCase):
         """
         service = MyService()
         conn = rpyc.connect_thread(remote_service=service)
-        remote_NoneType = conn.root.getnonetype()
-        self.assertTrue(isinstance(None, remote_NoneType))
-        conn.close()
+        try:
+            remote_NoneType = conn.root.getnonetype()
+            self.assertTrue(isinstance(None, remote_NoneType))
+        finally:
+            conn.close()
 
     def test_StandardError(self):
         _builtins = self.conn.modules.builtins if rpyc.lib.compat.is_py_3k else self.conn.modules.__builtin__
