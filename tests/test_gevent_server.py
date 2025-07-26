@@ -22,7 +22,7 @@ class Test_GeventServer(unittest.TestCase):
             self.fail("server failed to start")
 
     def tearDown(self):
-        self.proc.kill()
+        self.proc.terminate()
         self.proc.communicate()  # clear io so resources are closed
         self.proc.wait()
 
