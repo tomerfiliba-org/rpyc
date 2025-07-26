@@ -1,3 +1,4 @@
+import time
 import rpyc
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
@@ -23,7 +24,7 @@ class Test_get_id_pack(unittest.TestCase):
         cls.chained_conn.close()
         cls.conn.close()
         while cls.server2.clients or cls.server.clients:
-            pass  # sti
+            time.sleep(0.250)
         cls.server2.close()
         cls.server.close()
         cls.thd.join()

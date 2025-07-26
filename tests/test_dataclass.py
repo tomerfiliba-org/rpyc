@@ -27,11 +27,13 @@ class TestRemoteDataclass(unittest.TestCase):
     def setUp(self):
         self.server = rpyc.utils.server.OneShotServer(MyService, port=0)
         self.server.logger.quiet = False
-        self.server._start_in_thread()
+        self.thd = self.server._start_in_thread()
         self.conn = rpyc.connect("localhost", port=self.server.port)
 
     def tearDown(self):
         self.conn.close()
+        self.server.close()
+        self.thd.join()
 
     def test_remote_dataclass(self):
         remote_dataclass = self.conn.root.create_dataclass()

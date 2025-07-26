@@ -12,7 +12,7 @@ import os
 import threading
 
 from threading import Lock, Condition, RLock
-from rpyc.lib import spawn, Timeout, get_methods, get_id_pack, hasattr_static
+from rpyc.lib import worker, Timeout, get_methods, get_id_pack, hasattr_static
 from rpyc.lib.compat import pickle, next, maxint, select_error, acquire_lock  # noqa: F401
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
@@ -180,16 +180,25 @@ class Connection(object):
             self._threads = {}
             self._receiving = False
             self._thread_pool = []
-            self._thread_pool_executor = c_futures.ThreadPoolExecutor()
+            self._worker = set()
+            self._cleaning_thread = None
+            self._thread_pool_executor = c_futures.ThreadPoolExecutor(initializer=self._add_worker)
 
     def __del__(self):
         self.close()
+        if self._bind_threads:
+            cleaning_thread, self._cleaning_thread = self._cleaning_thread, None
+            if cleaning_thread is not None:
+                cleaning_thread.join()
 
     def __enter__(self):
         return self
 
     def __exit__(self, t, v, tb):
         self.close()
+
+    def _add_worker(self):
+        self._worker.add(threading.current_thread())
 
     def __repr__(self):
         a, b = object.__repr__(self).split(" object ")
@@ -211,8 +220,19 @@ class Connection(object):
         # self._seqcounter = None
         # self._config.clear()
         del self._HANDLERS
+        self._cleanup_threaded(_anyway)
+
+    def _cleanup_threaded(self, _anyway):
         if self._bind_threads:
+            if threading.current_thread() in self._worker:
+                if self._cleaning_thread is None:
+                    self._cleaning_thread = worker(
+                        self._cleanup_threaded, _anyway
+                    )
+                return
             self._thread_pool_executor.shutdown(wait=True)  # TODO where?
+            self._worker = set()
+
         if _anyway:
             try:
                 self._recvlock.release()
@@ -706,7 +726,7 @@ class Connection(object):
                 pass
 
         try:
-            threads = [spawn(_thread_target)
+            threads = [worker(_thread_target)
                        for _ in range(thread_count)]
 
             for thread in threads:

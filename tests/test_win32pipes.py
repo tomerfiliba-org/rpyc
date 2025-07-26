@@ -25,7 +25,7 @@ class TestPipes(unittest.TestCase):
         p1, p2 = PipeStream.create_pair()
         client = rpyc.connect_stream(p1)
         server = rpyc.connect_stream(p2)
-        server_thread = rpyc.spawn(server.serve_all)
+        server_thread = rpyc.worker(server.serve_all)
         assert client.root.get_service_name() == "VOID"
         t = rpyc.BgServingThread(client)
         assert server.root.get_service_name() == "VOID"
@@ -38,7 +38,7 @@ class TestPipes(unittest.TestCase):
 @unittest.skipIf(sys.platform != "win32", "Requires windows")
 class TestNamedPipe(unittest.TestCase):
     def setUp(self):
-        self.pipe_server_thread = rpyc.spawn(self.pipe_server)
+        self.pipe_server_thread = rpyc.worker(self.pipe_server)
         time.sleep(1)  # make sure server is accepting already
         self.np_client = NamedPipeStream.create_client("floop")
         self.client = rpyc.connect_stream(self.np_client)

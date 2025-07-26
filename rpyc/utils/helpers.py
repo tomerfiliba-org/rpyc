@@ -2,7 +2,7 @@
 Helpers and wrappers for common RPyC tasks
 """
 import time
-from rpyc.lib import spawn
+from rpyc.lib import worker
 from rpyc.lib.colls import WeakValueDict
 from rpyc.lib.compat import callable
 from rpyc.core.consts import HANDLE_BUFFITER, HANDLE_CALL
@@ -221,7 +221,7 @@ class BgServingThread(object):
         self._callback = callback
         self._serve_interval = serve_interval
         self._sleep_interval = sleep_interval
-        self._thread = spawn(self._bg_server)
+        self._thread = worker(self._bg_server)
 
     def __del__(self):
         if self._active:

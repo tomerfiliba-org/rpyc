@@ -36,7 +36,7 @@ from rpyc.utils.helpers import async_, timed, buffiter, BgServingThread, restric
 from rpyc.utils import classic, exposed, service
 from rpyc.version import __version__
 
-from rpyc.lib import setup_logger, spawn
+from rpyc.lib import setup_logger, worker
 from rpyc.utils.server import OneShotServer, ThreadedServer, ThreadPoolServer, ForkingServer
 from rpyc import cli
 

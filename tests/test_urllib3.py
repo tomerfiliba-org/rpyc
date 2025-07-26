@@ -18,12 +18,13 @@ class TestUrllib3(unittest.TestCase):
         self.cfg = {'sync_request_timeout': 60*60}
         self.server = ThreadedServer(SlaveService, port=18878, auto_register=False, protocol_config=self.cfg)
         self.server.logger.quiet = False
-        self.server._start_in_thread()
+        self.thd = self.server._start_in_thread()
         self.conn = rpyc.classic.connect('localhost', port=18878)
 
     def tearDown(self):
         self.conn.close()
         self.server.close()
+        self.thd.join()
 
     def test_issue(self):
         self.conn.execute('import urllib3')

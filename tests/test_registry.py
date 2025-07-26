@@ -19,7 +19,7 @@ class BaseRegistryTest(object):
     def setUp(self):
         self.server = self._get_server()
         self.server.logger.quiet = True
-        self.server_thread = rpyc.spawn(self.server.start)
+        self.server_thread = rpyc.worker(self.server.start)
 
     def tearDown(self):
         self.server.close()
