@@ -16,7 +16,7 @@ except ImportError:
 from rpyc.core import SocketStream, Channel
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
-from rpyc.lib import safe_import, worker, spawn, spawn_waitready
+from rpyc.lib import safe_import, worker, worker_waitready, spawn
 from rpyc.lib.compat import poll, get_exc_errno
 signal = safe_import("signal")
 gevent = safe_import("gevent")
@@ -277,7 +277,7 @@ class Server(object):
         ready to accept incoming connections.
 
         Used for testing, API could change anytime! Do not use!"""
-        return spawn_waitready(self._listen, self.start)[0]
+        return worker_waitready(self._listen, self.start)[0]
 
 
 class OneShotServer(Server):
