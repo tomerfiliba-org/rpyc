@@ -1,0 +1,6 @@
+plumbum
+urllib3
+gevent
+pandas
+numpy
+paramiko
