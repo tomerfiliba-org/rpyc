@@ -15,6 +15,7 @@ try:
 except Exception:
     localhost_machine = None
 
+
 @unittest.skipIf(localhost_machine is None, "Requires SshMachine to localhost")
 class Test_Ssh(unittest.TestCase):
     @classmethod

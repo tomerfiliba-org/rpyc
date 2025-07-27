@@ -196,7 +196,6 @@ class Test_Netref_Hierarchy(unittest.TestCase):
         self.assertEqual(repr(remote_module_cls), "<class 'module'>")
         self.assertEqual(remote_module_cls.____id_pack__, ('builtins.module', remote_module_cls_id, 0))
 
-
     def test_proxy_instancecheck(self):
         self.assertIsInstance(self.conn.modules.builtins.RuntimeError(), Exception)
         # TODO: below should pass

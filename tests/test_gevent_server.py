@@ -8,6 +8,7 @@ import rpyc
 _gevent_spec = importlib.util.find_spec("gevent")
 _gevent_missing = _gevent_spec is None
 
+
 @unittest.skipIf(_gevent_missing, "Gevent is not available")
 class Test_GeventServer(unittest.TestCase):
 

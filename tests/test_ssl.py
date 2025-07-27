@@ -1,6 +1,5 @@
 import rpyc
 import os
-import time
 import sys
 import socket
 import unittest
@@ -15,7 +14,7 @@ try:
 except ImportError:
     _ssl_import_failed = True
 
-sslport=18812
+sslport = 18812
 
 
 class SSLServerAuthenticator:
@@ -120,7 +119,7 @@ class Test_SSL(unittest.TestCase):
 
         authenticator = SSLServerAuthenticator(cls.key, cls.cert, cls.ca_certs, ssl_version=ssl.PROTOCOL_TLS_SERVER)
         cls.server = ThreadedServer(SlaveService, port=sslport,
-                                     auto_register=False, authenticator=authenticator)
+                                    auto_register=False, authenticator=authenticator)
         cls.server.logger.quiet = False
         cls.thd = cls.server._start_in_thread()
 
@@ -175,7 +174,7 @@ class Test_SSL_CERT_REQUIRED(unittest.TestCase):
 
         authenticator = SSLServerAuthenticator(cls.key, cls.cert, cert_reqs=ssl.CERT_REQUIRED)
         cls.server = ThreadedServer(SlaveService, port=sslport,
-                                     auto_register=False, authenticator=authenticator)
+                                    auto_register=False, authenticator=authenticator)
         cls.server.logger.quiet = False
         cls.thd = cls.server._start_in_thread()
 
@@ -208,7 +207,7 @@ class Test_SSL_CERT_NONE(unittest.TestCase):
 
         authenticator = SSLServerAuthenticator(cls.key, cls.cert)
         cls.server = ThreadedServer(SlaveService, port=sslport,
-                                     auto_register=False, authenticator=authenticator)
+                                    auto_register=False, authenticator=authenticator)
         cls.server.logger.quiet = False
         cls.thd = cls.server._start_in_thread()
 

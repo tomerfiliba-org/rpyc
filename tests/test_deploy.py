@@ -11,7 +11,6 @@ from rpyc.core import DEFAULT_CONFIG
 
 ssh_opts = ("-o", "PasswordAuthentication=no")
 try:
-    from plumbum.machines.ssh_machine import SshMachine
     localhost_machine = SshMachine("localhost", ssh_opts=ssh_opts)
     localhost_machine.close()
 except Exception:

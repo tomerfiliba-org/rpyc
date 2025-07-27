@@ -2,7 +2,7 @@ from __future__ import with_statement
 import sys
 import os
 import inspect
-from rpyc.lib.compat import pickle, execute
+from rpyc.lib.compat import pickle
 from rpyc.core.service import ClassicService, Slave
 from rpyc.utils import factory
 from rpyc.core.service import ModuleNamespace  # noqa: F401

@@ -18,9 +18,15 @@ class ParentGDB(rpyc.Service):
         env = os.environ.copy()
         env['PYTHONPATH'] = ':'.join(sys.path)
         self._proc = subprocess.Popen(gdb_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env)
-        stdout = self._proc.stdout.readline()
-        self._gdb_svc_port = int(stdout.strip().decode())
-        print(self._gdb_svc_port)
+        while True:
+            stdout = self._proc.stdout.readline()
+            if not stdout:
+                break
+            stdout = stdout.strip().decode()
+            print(stdout)
+            if stdout:
+                break
+        self._gdb_svc_port = int(stdout)
         self._gdb_svc_conn = rpyc.connect(host='localhost', port=self._gdb_svc_port)
 
     def on_disconnect(self, conn):

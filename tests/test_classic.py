@@ -2,7 +2,6 @@ import os
 import sys
 import rpyc
 import unittest
-import threading
 from subprocess import PIPE
 from rpyc.core.consts import STREAM_CHUNK
 

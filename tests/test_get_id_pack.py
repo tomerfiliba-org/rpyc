@@ -31,7 +31,7 @@ class Test_get_id_pack(unittest.TestCase):
         cls.thd2.join()
 
     def test_chained_connect(self):
-        remote_os = self.chained_conn.root.getmodule('os')
+        self.chained_conn.root.getmodule('os')
 
     def test_netref(self):
         self.assertEqual(self.conn.root.____id_pack__, rpyc.lib.get_id_pack(self.conn.root))

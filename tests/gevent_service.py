@@ -2,9 +2,9 @@ from gevent import monkey
 monkey.patch_all()
 import gevent
 
-import sys
 import rpyc
 from rpyc.utils.server import GeventServer
+
 
 class GeventService(rpyc.SlaveService):
     @staticmethod

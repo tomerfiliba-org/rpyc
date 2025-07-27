@@ -1,6 +1,6 @@
 import sys
-import rpyc
 from pathlib import Path
+
 
 def load_tests(loader, standard_tests, pattern):
     # Hook rpyc logger, unittest verbosity, and system paths

@@ -251,7 +251,7 @@ def _make_method(name, doc):
         def __array__(self, *args, **kwargs):
             # Note that protocol=-1 will only work between python
             # interpreters of the same version.
-            if not object.__getattribute__(self,'____conn__')._config["allow_pickle"]:
+            if not object.__getattribute__(self, '____conn__')._config["allow_pickle"]:
                 # Security check that server side allows pickling per #551
                 raise ValueError("pickling is disabled")
             array = pickle.loads(syncreq(self, consts.HANDLE_PICKLE, -1))
