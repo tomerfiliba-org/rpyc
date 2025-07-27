@@ -317,12 +317,10 @@ def connect_subproc(args, service=VoidService, config={}, *, stderr=None):
     return conn
 
 
-def _server(listener, remote_service, remote_config, args=None):
+def _server(server, remote_service, remote_config, args=None):
+    conn = None
     try:
-        with closing(listener):
-            client = listener.accept()[0]
-
-        s = SocketStream(client)
+        s = SocketStream(server)
         try:
             conn = connect_stream(s, service=remote_service, config=remote_config)
         except Exception:
@@ -343,6 +341,9 @@ def _server(listener, remote_service, remote_config, args=None):
         conn.serve_all()
     except KeyboardInterrupt:
         interrupt_main()
+    finally:
+        if conn:
+            conn.close()
 
 
 def connect_thread(service=VoidService, config={}, remote_service=VoidService, remote_config={}):
@@ -354,15 +355,16 @@ def connect_thread(service=VoidService, config={}, remote_service=VoidService, r
     :param remote_service: the remote service to expose (of the server; defaults to Void)
     :param remote_config: remote configuration dict (of the server)
     """
-    listener = socket.socket()
-    listener.bind(("localhost", 0))
-    listener.listen(1)
-    remote_server = partial(_server, listener, remote_service, remote_config)
+    client, server = socket.socketpair()
+    remote_server = partial(_server, server, remote_service, remote_config)
     # TODO: where to put the join for this thread?
     spawn(remote_server)
-    host, port = listener.getsockname()
-    return connect(host, port, service=service, config=config)
-
+    s = SocketStream(client)
+    try:
+        return connect_stream(s, service=service, config=config)
+    except Exception:
+        s.close()
+        raise
 
 def connect_multiprocess(service=VoidService, config={}, remote_service=VoidService, remote_config={}, args={}):
     """starts an rpyc server on a new process, bound to an arbitrary port,
@@ -380,11 +382,20 @@ def connect_multiprocess(service=VoidService, config={}, remote_service=VoidServ
     """
     from multiprocessing import Process
 
-    listener = socket.socket()
-    listener.bind(("localhost", 0))
-    listener.listen(1)
-    remote_server = partial(_server, listener, remote_service, remote_config, args)
+    client, server = socket.socketpair()
+
+    def forkserver(*args, **kwargs):
+        client.close()
+        return _server(*args, **kwargs)
+
+    remote_server = partial(forkserver, server, remote_service, remote_config, args)
     t = Process(target=remote_server)
+    # TODO: where to put the join for this process?
     t.start()
-    host, port = listener.getsockname()
-    return connect(host, port, service=service, config=config)
+    server.close()
+    s = SocketStream(client)
+    try:
+        return connect_stream(s, service=service, config=config)
+    except Exception:
+        s.close()
+        raise
