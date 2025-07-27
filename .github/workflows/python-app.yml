@@ -46,8 +46,8 @@ jobs:
           chmod 700 ~/.ssh
           echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config
           echo StrictHostKeyChecking no >> ~/.ssh/config
-          ssh-keygen -q -f ~/.ssh/id_rsa -N ''
-          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+          ssh-keygen -q -t ed25519 -f ~/.ssh/id_ed25519 -N ''
+          cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
           uname -a
       - name: Run unittest with default settings
         if: ${{ matrix.RPYC_BIND_THREADS == 'false' }}
