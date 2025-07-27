@@ -108,8 +108,7 @@ class TeleportationTest(unittest.TestCase):
         def get38_schema(cobj):
             return (cobj.co_argcount, 2, cobj.co_kwonlyargcount, cobj.co_nlocals,
                     cobj.co_stacksize, cobj.co_flags, cobj.co_code, cobj.co_consts, cobj.co_names,
-                    cobj.co_varnames, cobj.co_filename, cobj.co_name, cobj.co_firstlineno,
-                    cobj.co_linetable if is_py_gte310 else cobj.co_lnotab,
+                    cobj.co_varnames, cobj.co_filename, cobj.co_name, cobj.co_firstlineno, cobj.co_lnotab,
                     cobj.co_freevars, cobj.co_cellvars)
 
         def get311_schema(cobj):
