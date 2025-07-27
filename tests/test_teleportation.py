@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from rpyc.utils.classic import teleport_function
-from rpyc.lib.compat import is_py_gte38, is_py_gte310, is_py_gte311
+from rpyc.lib.compat import is_py_gte38, is_py_gte311
 from rpyc.utils.teleportation import export_function, import_function
 import subprocess
 import sys
