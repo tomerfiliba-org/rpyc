@@ -53,8 +53,8 @@ jobs:
       - name: Run unittest with default settings
         if: ${{ matrix.RPYC_BIND_THREADS == 'false' }}
         run: |
-          python -m unittest discover -v
+          RPYC_SKIP_IPV6=FALSE python -m unittest discover -v
       - name: Run unittest with RPYC_BIND_THREADS enabled
         if: ${{ matrix.RPYC_BIND_THREADS == 'true' }}
         run: |
-          RPYC_BIND_THREADS="${{ matrix.RPYC_BIND_THREADS }}" python -m unittest discover -v
+          RPYC_BIND_THREADS="${{ matrix.RPYC_BIND_THREADS }}" RPYC_SKIP_IPV6=FALSE python -m unittest discover -v
