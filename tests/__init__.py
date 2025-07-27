@@ -1,10 +1,13 @@
+import os
 import sys
+import rpyc
 from pathlib import Path
 
 
 def load_tests(loader, standard_tests, pattern):
     # Hook rpyc logger, unittest verbosity, and system paths
-    #rpyc.core.DEFAULT_CONFIG['logger'] = rpyc.lib.setup_logger()
+    if os.getenv('RPYC_INSTALL_LOGGER', 'FALSE').lower() == 'true':
+        rpyc.core.DEFAULT_CONFIG['logger'] = rpyc.lib.setup_logger()
     rpyc_tests_path = Path(__file__).absolute().parent
     rpyc_path = rpyc_tests_path.parent
     for p in [str(rpyc_path), str(rpyc_tests_path)]:
