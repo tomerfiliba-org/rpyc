@@ -1,4 +1,5 @@
 import rpyc
+import rpyc.core as rc
 import rpyc.core.async_ as rc_async_
 import rpyc.core.protocol as rc_protocol
 import contextlib
@@ -59,11 +60,15 @@ def _patch():
     try:
         rc_async_.AsyncResult = _AsyncResult
         rc_protocol.AsyncResult = _AsyncResult  # from import
+        rc.AsyncResult = _AsyncResult  # from import
+        rpyc.AsyncResult = _AsyncResult  # from import
         yield
 
     finally:
         rc_async_.AsyncResult = AsyncResult
         rc_protocol.AsyncResult = AsyncResult
+        rc.AsyncResult = AsyncResult
+        rpyc.AsyncResult = AsyncResult
 
 
 if __name__ == "__main__":
