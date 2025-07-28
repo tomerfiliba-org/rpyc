@@ -95,8 +95,6 @@ class TestCustomService(unittest.TestCase):
             self.conn.close()
         if not self.prefixed_conn.closed:
             self.prefixed_conn.close()
-        time.sleep(0.5)  # this will wait a little, making sure
-        # on_disconnect_called is already True
         self.assertTrue(self.service.on_disconnect_called)
 
     def test_before_closed(self):
