@@ -21,7 +21,7 @@ from rpyc.core.channel import Channel
 from rpyc.core.stream import SocketStream, TunneledSocketStream, PipeStream
 from rpyc.core.service import VoidService, MasterService, SlaveService
 from rpyc.utils.registry import UDPRegistryClient
-from rpyc.lib import safe_import, spawn
+from rpyc.lib import safe_import, worker
 ssl = safe_import("ssl")
 
 
@@ -346,6 +346,18 @@ def _server(server, remote_service, remote_config, args=None):
             conn.close()
 
 
+class ServerSocketStream(SocketStream):
+    def __init__(self, sock, server):
+        self._server = server
+        super().__init__(sock)
+
+    def close(self):
+        super().close()
+        server, self._server = self._server, None
+        if server is not None:
+            server.join()
+
+
 def connect_thread(service=VoidService, config={}, remote_service=VoidService, remote_config={}):
     """starts an rpyc server on a new thread, bound to an arbitrary port,
     and connects to it over a socket.
@@ -357,9 +369,8 @@ def connect_thread(service=VoidService, config={}, remote_service=VoidService, r
     """
     client, server = socket.socketpair()
     remote_server = partial(_server, server, remote_service, remote_config)
-    # TODO: where to put the join for this thread?
-    spawn(remote_server)
-    s = SocketStream(client)
+    thd = worker(remote_server)
+    s = ServerSocketStream(client, thd)
     try:
         return connect_stream(s, service=service, config=config)
     except Exception:
@@ -390,11 +401,10 @@ def connect_multiprocess(service=VoidService, config={}, remote_service=VoidServ
         return _server(*args, **kwargs)
 
     remote_server = partial(forkserver, server, remote_service, remote_config, args)
-    t = Process(target=remote_server)
-    # TODO: where to put the join for this process?
-    t.start()
+    proc = Process(target=remote_server)
+    proc.start()
     server.close()
-    s = SocketStream(client)
+    s = ServerSocketStream(client, proc)
     try:
         return connect_stream(s, service=service, config=config)
     except Exception:

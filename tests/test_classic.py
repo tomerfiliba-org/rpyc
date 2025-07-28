@@ -47,8 +47,12 @@ class ClassicMode(unittest.TestCase):
         try:
             conn.modules.sys.path.append("xxx")
             self.assertEqual(conn.modules.sys.path.pop(-1), "xxx")
-            conn.close()
+        except Exception:
+            conn.proc.kill()
+            conn.proc.wait()
+            raise
         finally:
+            conn.close()
             worker.join()
         self.assertEqual(conn.proc.wait(), 0)
 
