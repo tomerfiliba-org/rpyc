@@ -547,7 +547,7 @@ class ThreadPoolServer(Server):
             # put the connection in the active queue
             addrinfo = sock.getpeername()
             fd = conn.fileno()
-            self.logger.debug("Created connection to {addrinfo} with fd {fd}")
+            self.logger.debug(f"Created connection to {addrinfo} with fd {fd}")
             self.fd_to_conn[fd] = conn
             self._add_inactive_connection(fd)
             self.clients.clear()
