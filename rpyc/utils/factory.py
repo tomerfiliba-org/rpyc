@@ -366,6 +366,7 @@ def connect_thread(service=VoidService, config={}, remote_service=VoidService, r
         s.close()
         raise
 
+
 def connect_multiprocess(service=VoidService, config={}, remote_service=VoidService, remote_config={}, args={}):
     """starts an rpyc server on a new process, bound to an arbitrary port,
     and connects to it over a socket. Basically a copy of connect_thread().

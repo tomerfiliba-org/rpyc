@@ -8,7 +8,6 @@ import time
 import threading  # noqa: F401
 import errno
 import logging
-from contextlib import closing
 try:
     import Queue
 except ImportError:
@@ -171,31 +170,34 @@ class Server(object):
         raise NotImplementedError
 
     def _authenticate_and_serve_client(self, sock):
+        credentials = None
+        sock_auth = sock
         try:
             if self.authenticator:
                 addrinfo = sock.getpeername()
                 try:
-                    sock2, credentials = self.authenticator(sock)
+                    sock_auth, credentials = self.authenticator(sock)
+                    if sock_auth is not sock:
+                        self.clients.add(sock_auth)
+                        self.clients.discard(sock)
+                        sock.close()
                 except AuthenticationError:
                     self.logger.info(f"{addrinfo} failed to authenticate... rejecting connection")
                     return
                 else:
                     self.logger.info(f"{addrinfo} authenticated successfully")
-            else:
-                credentials = None
-                sock2 = sock
             try:
-                self._serve_client(sock2, credentials)
+                self._serve_client(sock_auth, credentials)
             except Exception:
                 self.logger.exception("client connection terminated abruptly")
                 raise
         finally:
             try:
-                sock.shutdown(socket.SHUT_RDWR)
+                sock_auth.shutdown(socket.SHUT_RDWR)
             except Exception:
                 pass
-            closing(sock)
-            self.clients.discard(sock)
+            sock_auth.close()
+            self.clients.discard(sock_auth)
 
     def _serve_client(self, sock, credentials):
         addrinfo = sock.getpeername()
