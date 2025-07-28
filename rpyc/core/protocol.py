@@ -187,7 +187,9 @@ class Connection(object):
     def __del__(self):
         self.close()
         if self._bind_threads:
-            cleaning_thread, self._cleaning_thread = self._cleaning_thread, None
+            with self._lock:
+                cleaning_thread = self._cleaning_thread
+                self._cleaning_thread = None
             if cleaning_thread is not None:
                 cleaning_thread.join()
 
@@ -225,10 +227,11 @@ class Connection(object):
     def _cleanup_threaded(self, _anyway):
         if self._bind_threads:
             if threading.current_thread() in self._worker:
-                if self._cleaning_thread is None:
-                    self._cleaning_thread = worker(
-                        self._cleanup_threaded, _anyway
-                    )
+                with self._lock:
+                    if self._cleaning_thread is None:
+                        self._cleaning_thread = worker(
+                            self._cleanup_threaded, _anyway
+                        )
                 return
             self._thread_pool_executor.shutdown(wait=True)  # TODO where?
             self._worker = set()
