@@ -133,13 +133,13 @@ class Timeout(object):
             self.tmax = timeout.tmax
         else:
             self.finite = timeout is not None and timeout >= 0
-            self.tmax = time.time() + timeout if self.finite else None
+            self.tmax = time.monotonic() + timeout if self.finite else None
 
     def expired(self):
-        return self.finite and time.time() >= self.tmax
+        return self.finite and time.monotonic() >= self.tmax
 
     def timeleft(self):
-        return max((0, self.tmax - time.time())) if self.finite else None
+        return max((0, self.tmax - time.monotonic())) if self.finite else None
 
     def sleep(self, interval):
         time.sleep(min(interval, self.timeleft()) if self.finite else interval)

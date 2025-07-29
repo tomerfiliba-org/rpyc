@@ -57,11 +57,11 @@ class Test_Affinity(unittest.TestCase):
 
     def _time_execute_sleep(self):
         """returns time to execute 0.3s worth of sleeping"""
-        t0 = time.time()
+        t0 = time.monotonic()
         self.conn.execute("import time")
         for p in (0, 0.1, 0.2):
             self.conn.execute(f"time.sleep({p})")
-        return time.time() - t0
+        return time.monotonic() - t0
 
     def _reset_affinity(self):
         if self._os is not None:

@@ -788,9 +788,9 @@ class Connection(object):
         if kwargs:
             raise TypeError("got unexpected keyword argument(s) {list(kwargs.keys()}")
         res = AsyncResult(self)
-        self._async_request(handler, args, res)
         if timeout is not None:
             res.set_expiry(timeout)
+        self._async_request(handler, args, res)
         return res
 
     @property

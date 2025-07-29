@@ -50,13 +50,13 @@ class Test_GeventServer(unittest.TestCase):
         conns = [rpyc.classic.connect("localhost", port=18878)
                  for _ in range(50)]
         try:
-            start = time.time()
+            start = time.monotonic()
             for t in [
                 rpyc.worker(c.modules.time.sleep, 1)
                 for c in conns
             ]:
                 t.join()
-            stop = time.time()
+            stop = time.monotonic()
 
             self.assertLessEqual(stop - start, 2)
 

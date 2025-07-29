@@ -13,6 +13,7 @@ try:
 except ImportError:
     import queue as Queue
 from rpyc.core import SocketStream, Channel
+from rpyc.core.consts import STREAM_CHUNK
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
 from rpyc.lib import safe_import, worker, worker_waitready
@@ -127,7 +128,13 @@ class Server(object):
         self.logger.info("listener closed")
         for c in set(self.clients):
             try:
-                c.shutdown(socket.SHUT_RDWR)
+                # inform peer that we are finished sending
+                c.shutdown(socket.SHUT_WR)
+                # wait for peer to close it's sending side as well
+                while True:
+                    buf = c.recv(STREAM_CHUNK)
+                    if not buf:
+                        break
             except Exception:
                 pass
             c.close()
@@ -193,7 +200,13 @@ class Server(object):
                 raise
         finally:
             try:
-                sock_auth.shutdown(socket.SHUT_RDWR)
+                # inform peer that we are finished sending
+                sock_auth.shutdown(socket.SHUT_WR)
+                while True:
+                    # wait for peer to close it's sending side as well
+                    buf = sock_auth.recv(STREAM_CHUNK)
+                    if not buf:
+                        break
             except Exception:
                 pass
             sock_auth.close()
@@ -224,7 +237,7 @@ class Server(object):
         tnext = 0
         try:
             while self.active:
-                t = time.time()
+                t = time.monotonic()
                 if t >= tnext:
                     did_register = False
                     aliases = self.service.get_service_aliases()

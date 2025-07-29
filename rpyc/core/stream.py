@@ -247,7 +247,13 @@ class SocketStream(Stream):
         sock, self.sock = self.sock, ClosedFile
         if sock is not ClosedFile:
             try:
-                sock.shutdown(socket.SHUT_RDWR)
+                # inform peer that we are finished sending
+                sock.shutdown(socket.SHUT_WR)
+                while True:
+                    # wait for peer to close it's sending side as well
+                    buf = sock.recv(self.MAX_IO_CHUNK)
+                    if not buf:
+                        break
             except Exception:
                 pass
         sock.close()
