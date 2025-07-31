@@ -624,11 +624,11 @@ class Connection(object):
             thread.serve = False
 
     @staticmethod
-    def _is_thread_alive(thid):
+    def _is_thread_alive(thd):
         # gevent does not properly implement in it's wrapper is_alive.
         # It causes an AttributeError
         # Consider thread to be alive in this case
-        is_alive = thid.is_alive
+        is_alive = thd.is_alive
         try:
             return is_alive()
         except AttributeError:
