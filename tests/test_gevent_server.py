@@ -15,11 +15,10 @@ class Test_GeventServer(unittest.TestCase):
     def setUp(self):
         server_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gevent_service.py")
         self.proc = subprocess.Popen([sys.executable, '-u', server_file],
-                                     stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                                     stdin=subprocess.DEVNULL, stdout=subprocess.PIPE)
 
         self.ident = int(self.proc.stdout.readline().strip())
         if not self.ident:
-            print(self.proc.stderr.read())
             self.fail("server failed to start")
 
     def tearDown(self):

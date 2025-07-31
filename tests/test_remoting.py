@@ -6,19 +6,6 @@ import rpyc
 
 
 class Test_Remoting(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        # Increase timeout as some of the tests sometimes the
-        # command takes longer than 30s, which is the default.
-        # This was tested more than 200 times with this value
-        # and no problem was visible with this setting.
-        cls.sync_request_timeout = rpyc.core.DEFAULT_CONFIG['sync_request_timeout']
-        rpyc.core.DEFAULT_CONFIG['sync_request_timeout'] = 60
-
-    @classmethod
-    def tearDownClass(cls):
-        rpyc.core.DEFAULT_CONFIG['sync_request_timeout'] = cls.sync_request_timeout
-
     def setUp(self):
         self.conn = rpyc.classic.connect_thread()
 

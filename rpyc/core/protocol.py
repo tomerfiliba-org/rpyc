@@ -7,12 +7,12 @@ import time  # noqa: F401
 import gc  # noqa: F401
 
 import collections
-import concurrent.futures as c_futures
 import os
 import threading
 
+from weakref import ref
 from threading import Lock, Condition, RLock
-from rpyc.lib import worker, Timeout, get_methods, get_id_pack, hasattr_static
+from rpyc.lib import worker, spawn, Timeout, get_methods, get_id_pack, hasattr_static
 from rpyc.lib.compat import pickle, next, maxint, select_error, acquire_lock  # noqa: F401
 from rpyc.lib.colls import WeakValueDict, RefCountingColl
 from rpyc.core import consts, brine, vinegar, netref
@@ -68,7 +68,7 @@ DEFAULT_CONFIG = dict(
     sync_request_timeout=30,
     before_closed=None,
     close_catchall=False,
-    bind_threads=os.environ.get('RPYC_BIND_THREADS') == 'true',
+    bind_threads=os.environ.get('RPYC_BIND_THREADS').lower() == 'true',
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
@@ -176,13 +176,12 @@ class Connection(object):
         self._bind_threads = self._config['bind_threads']
         self._threads = None
         if self._bind_threads:
-            self._lock = threading.Lock()
+            self._lock = threading.RLock()
             self._threads = {}
             self._receiving = False
             self._thread_pool = []
-            self._worker = set()
+            self._worker_pool = set()
             self._cleaning_thread = None
-            self._thread_pool_executor = c_futures.ThreadPoolExecutor(initializer=self._add_worker)
 
     def __del__(self):
         self.close()
@@ -190,7 +189,9 @@ class Connection(object):
             with self._lock:
                 cleaning_thread = self._cleaning_thread
                 self._cleaning_thread = None
-            if cleaning_thread is not None:
+            if cleaning_thread is threading.current_thread():
+                spawn(cleaning_thread.join)
+            elif cleaning_thread is not None:
                 cleaning_thread.join()
 
     def __enter__(self):
@@ -198,9 +199,6 @@ class Connection(object):
 
     def __exit__(self, t, v, tb):
         self.close()
-
-    def _add_worker(self):
-        self._worker.add(threading.current_thread())
 
     def __repr__(self):
         a, b = object.__repr__(self).split(" object ")
@@ -222,20 +220,6 @@ class Connection(object):
         # self._seqcounter = None
         # self._config.clear()
         del self._HANDLERS
-        self._cleanup_threaded(_anyway)
-
-    def _cleanup_threaded(self, _anyway):
-        if self._bind_threads:
-            if threading.current_thread() in self._worker:
-                with self._lock:
-                    if self._cleaning_thread is None:
-                        self._cleaning_thread = worker(
-                            self._cleanup_threaded, _anyway
-                        )
-                return
-            self._thread_pool_executor.shutdown(wait=True)  # TODO where?
-            self._worker = set()
-
         if _anyway:
             try:
                 self._recvlock.release()
@@ -245,6 +229,29 @@ class Connection(object):
                 self._sendlock.release()
             except Exception:
                 pass
+        self._cleanup_threads()
+
+    def _cleanup_threads(self):
+        if self._bind_threads:
+            with self._lock:
+                if threading.current_thread() in self._worker_pool:
+                    if self._cleaning_thread is None:
+                        self._cleaning_thread = worker(
+                            self._cleanup_threads
+                        )
+                    return
+
+                with _ReceivingGuard(self):
+                    worker_pool = self._worker_pool
+                    self._worker_pool = set()
+
+                    for thd in worker_pool:
+                        thread = self._get_thread(thd)
+                        if thread:
+                            thread.serve = False
+
+            for thd in worker_pool:
+                thd.join()
 
     def close(self):  # IO
         """closes the connection, releasing all held resources"""
@@ -295,14 +302,13 @@ class Connection(object):
     def _send(self, msg, seq, args):  # IO
         data = brine.I1.pack(msg) + brine.dump((seq, args))  # see _dispatch
         if self._bind_threads:
-            this_thread = self._get_thread()
-            data = brine.I8I8.pack(this_thread.id, this_thread._remote_thread_id) + data
-            if msg == consts.MSG_REQUEST:
-                this_thread._occupation_count += 1
-            else:
-                this_thread._occupation_count -= 1
-                if this_thread._occupation_count == 0:
-                    this_thread._remote_thread_id = UNBOUND_THREAD_ID
+            with self._lock:
+                this_thread = self._get_thread()
+                data = brine.I8I8.pack(this_thread.tid, this_thread._remote_thread_id) + data
+                if msg == consts.MSG_REQUEST:
+                    this_thread.incr()
+                else:
+                    this_thread.decr()
         # GC might run while sending data
         # if so, a BaseNetref.__del__ might be called
         # BaseNetref.__del__ must call asyncreq,
@@ -421,24 +427,23 @@ class Connection(object):
         if _callback is not None:
             _callback(is_exc, obj)
         elif self._config["logger"] is not None:
-            debug_msg = 'Recieved {} seq {} and a related request callback did not exist'
+            debug_msg = 'Received {} seq {} and a related request callback did not exist'
             self._config["logger"].debug(debug_msg.format(msg, seq))
 
     def _dispatch(self, data):  # serving---dispatch?
         msg, = brine.I1.unpack(data[:1])  # unpack just msg to minimize time to release
         if msg == consts.MSG_REQUEST:
             if self._bind_threads:
-                self._get_thread()._occupation_count += 1
+                with self._lock:
+                    self._get_thread().incr()
             else:
                 self._recvlock.release()
             seq, args = brine.load(data[1:])
             self._dispatch_request(seq, args)
         else:
             if self._bind_threads:
-                this_thread = self._get_thread()
-                this_thread._occupation_count -= 1
-                if this_thread._occupation_count == 0:
-                    this_thread._remote_thread_id = UNBOUND_THREAD_ID
+                with self._lock:
+                    self._get_thread().decr()
             if msg == consts.MSG_REPLY:
                 seq, args = brine.load(data[1:])
                 obj = self._unbox(args)
@@ -511,179 +516,168 @@ class Connection(object):
 
         :returns: ``True`` if a request or reply were received, ``False`` otherwise.
         """
-        this_thread = self._get_thread()
-        wait = False
+        message_available = False
 
-        with self._lock:
-            message_available = this_thread._event.is_set() and len(this_thread._deque) != 0
+        try:
+            with self._lock:
+                this_thread = self._get_thread()
 
-            if message_available:
-                remote_thread_id, message = this_thread._deque.popleft()
-                if len(this_thread._deque) == 0:
-                    this_thread._event.clear()
+                def isready():
+                    nonlocal message_available
+                    message_available = bool(this_thread._deque)
+                    return message_available or not self._receiving
 
-            else:
-                if self._receiving:  # enter pool
-                    self._thread_pool.append(this_thread)
-                    wait = True
+                ready = isready()
+                if not ready and wait_for_lock:
+                    self._thread_pool.append(this_thread)  # enter pool
+                    ready = this_thread._condition.wait_for(isready, timeout=timeout.timeleft())
+                    self._thread_pool.remove(this_thread)  # leave pool
 
-                else:
-                    self._receiving = True
+                if not ready:
+                    # timeout or not wait_for_lock
+                    return False
 
-        if message_available:  # just process
-            this_thread._remote_thread_id = remote_thread_id
-            self._dispatch(message)
-            return True
-
-        if wait:
-            while True:
-                if wait_for_lock:
-                    this_thread._event.wait(timeout.timeleft())
-
-                with self._lock:
-                    if this_thread._event.is_set():
-                        message_available = len(this_thread._deque) != 0
-
-                        if message_available:
-                            remote_thread_id, message = this_thread._deque.popleft()
-                            if len(this_thread._deque) == 0:
-                                this_thread._event.clear()
-
-                        else:
-                            this_thread._event.clear()
-
-                            if self._receiving:  # another thread was faster
-                                continue
-
-                            self._receiving = True
-
-                        self._thread_pool.remove(this_thread)  # leave pool
-                        break
-
-                    else:  # timeout
+                if message_available:
+                    top = this_thread._deque.popleft()
+                    if top is None:
                         return False
+                    remote_thread_id, message = top
+                else:
+                    with _ReceivingGuard(self):
+                        while True:
+                            # from upstream
+                            if not this_thread.serve:
+                                return False
 
-            if message_available:
-                this_thread._remote_thread_id = remote_thread_id
-                self._dispatch(message)
-                return True
+                            with _UnlockGuard(self._lock):
+                                message = self._channel.poll(timeout) and self._channel.recv()
 
-        while True:
-            # from upstream
-            try:
-                message = self._channel.poll(timeout) and self._channel.recv()
+                            if not message:  # timeout; from upstream
+                                return False
 
-            except Exception as exception:
-                if isinstance(exception, EOFError):
-                    self.close()  # sends close async request
+                            remote_thread_id, local_thread_id = brine.I8I8.unpack(message[:16])
+                            message = message[16:]
 
-                with self._lock:
-                    self._receiving = False
+                            new = False
 
-                    for thread in self._thread_pool:
-                        thread._event.set()
-                        break
+                            if local_thread_id == UNBOUND_THREAD_ID and this_thread._occupation_count != 0:
+                                # Message is not meant for this thread. Use a thread that is not occupied
+                                # or have the pool create a new one. Occupation count for threads in
+                                # thread_pool can be trusted
+                                new = True
+                                for thread in self._thread_pool:
+                                    if thread.serve and thread._occupation_count == 0 and not thread._deque:
+                                        new = False
+                                        break
 
-                raise
+                            elif local_thread_id in {UNBOUND_THREAD_ID, this_thread.tid}:
+                                # Of course, the message is for this thread if equal. When id is UNBOUND_THREAD_ID,
+                                # we deduce that occupation count is 0 from the previous if condition.
+                                break
+                            else:
+                                # Otherwise, message was meant for another thread.
+                                thread = self._get_thread(tid=local_thread_id)
+                                if not thread or not thread.serve:
+                                    # bound thread terminated already.
+                                    new = True
 
-            if not message:  # timeout; from upstream
-                with self._lock:
-                    for thread in self._thread_pool:
-                        if not thread._event.is_set():
-                            self._receiving = False
-                            thread._event.set()
-                            break
+                            if new:
+                                if not self._closed:
+                                    thd = worker(self._serve_worker)
+                                    self._worker_pool.add(thd)
+                                    thread = self._get_thread(thd, create=True)
+                                else:
+                                    thread = None
 
-                    else:  # stop receiving
-                        self._receiving = False
-
-                return False
-
-            remote_thread_id, local_thread_id = brine.I8I8.unpack(message[:16])
-            message = message[16:]
-
-            this = False
-
-            if local_thread_id == UNBOUND_THREAD_ID and this_thread._occupation_count != 0:
-                # Message is not meant for this thread. Use a thread that is not occupied or have the pool create a new one.
-                # TODO: reusing threads may be problematic if occupation being zero is wrong...
-                new = False
-                with self._lock:
-                    for thread in self._thread_pool:
-                        if thread._occupation_count == 0 and not thread._event.is_set():
-                            thread._deque.append((remote_thread_id, message))
-                            thread._event.set()
-                            break
-
-                    else:
-                        new = True
-
-                if new:
-                    self._thread_pool_executor.submit(self._serve_temporary, remote_thread_id, message)
-
-            elif local_thread_id in {UNBOUND_THREAD_ID, this_thread.id}:
-                # Of course, the message is for this thread if equal. When id is UNBOUND_THREAD_ID,
-                # we deduce that occupation count is 0 from the previous if condition. So, set this True.
-                this = True
-            else:
-                # Otherwise, message was meant for another thread.
-                thread = self._get_thread(id=local_thread_id)
-                with self._lock:
-                    thread._deque.append((remote_thread_id, message))
-                    thread._event.set()
-
-            if this:
-                with self._lock:
-                    for thread in self._thread_pool:
-                        if not thread._event.is_set():
-                            self._receiving = False
-                            thread._event.set()
-                            break
-
-                    else:  # stop receiving
-                        self._receiving = False
+                            if thread:
+                                thread._deque.append((remote_thread_id, message))
+                                thread._condition.notify()
 
                 this_thread._remote_thread_id = remote_thread_id
-                self._dispatch(message)
-                return True
 
-    def _serve_temporary(self, remote_thread_id, message):
+        except EOFError:
+            self.close()  # sends close async request
+            raise
+
+        self._dispatch(message)
+        return True
+
+    def _serve_worker(self):
         """Callable that is used to schedule serve as a new thread
         - Experimental functionality `RPYC_BIND_THREADS`
 
         :returns: None
         """
         thread = self._get_thread()
-        thread._deque.append((remote_thread_id, message))
-        thread._event.set()
 
         # from upstream
         try:
-            while not self.closed:
+            while thread.loop:
                 self.serve(None)
-
-                if thread._occupation_count == 0:
-                    break
 
         except (socket.error, select_error, IOError):
             if not self.closed:
                 raise
         except EOFError:
             pass
+        finally:
+            thread.serve = False
 
-    def _get_thread(self, id=None):
+    @staticmethod
+    def _is_thread_alive(thid):
+        # gevent does not properly implement in it's wrapper is_alive.
+        # It causes an AttributeError
+        # Consider thread to be alive in this case
+        is_alive = thid.is_alive
+        try:
+            return is_alive()
+        except AttributeError:
+            return True
+
+    def _get_thread(self, tid=None, *, create=None):
         """Get internal thread information for current thread for ID, when None use current thread.
         - Experimental functionality `RPYC_BIND_THREADS`
 
         :returns: _Thread
         """
-        if id is None:
-            id = threading.get_ident()
+        if isinstance(tid, threading.Thread):
+            cthid = tid
+            cid = tid.ident
+            tid = cid
+            if create is None:
+                create = cthid is threading.current_thread()
+        else:
+            cthid = threading.current_thread()
+            cid = cthid.ident
+            if tid is None:
+                tid = cid
+            if create is None:
+                create = tid == cid
+            assert not create or cid == tid, (
+                "create only supported for current thread or when thread object is given"
+            )
 
-        thread = self._threads.get(id)
-        if thread is None:
-            thread = _Thread(id)
-            self._threads[id] = thread
+        with self._lock:
+            rthd, thread = self._threads.get(tid, (None, None))
+            if rthd is not None:
+                thd = rthd()
+                if thd is None or not self._is_thread_alive(thd):
+                    del rthd
+                    self._threads.pop(tid)
+                    thread = None
+            if thread is None and create:
+                rconnection = ref(self)
+
+                def thread_deleted(_, tid=cid, rconnection=rconnection):
+                    connection = rconnection()
+                    if connection is not None:
+                        with connection._lock:
+                            connection._threads.pop(tid)
+
+                thd = cthid
+                rthd = ref(thd, thread_deleted)
+                thread = _Thread(cid, self._lock)
+                self._threads[cid] = rthd, thread
 
         return thread
 
@@ -968,12 +962,83 @@ class Connection(object):
 class _Thread:
     """Internal thread information for the RPYC protocol used for thread binding."""
 
-    def __init__(self, id):
+    def __init__(self, tid, lock):
         super().__init__()
 
-        self.id = id
+        self.tid = tid
 
         self._remote_thread_id = UNBOUND_THREAD_ID
         self._occupation_count = 0
-        self._event = threading.Event()
+        self._serve = True
+        self._condition = threading.Condition(lock)
         self._deque = collections.deque()
+
+    @property
+    def serve(self):
+        with self._condition:
+            return self._serve
+
+    @property
+    def loop(self):
+        with self._condition:
+            return self._serve or bool(self._deque)
+
+    @serve.setter
+    def serve(self, value):
+        with self._condition:
+            if value is False and self._serve is True:
+                self._serve = False
+                self._deque.append(None)
+                self._condition.notify()
+
+    def decr(self):
+        with self._condition:
+            if self._occupation_count <= 1:
+                self._occupation_count = 0
+                self._remote_thread_id = UNBOUND_THREAD_ID
+            else:
+                self._occupation_count -= 1
+
+    def incr(self):
+        self._occupation_count += 1
+
+
+class _UnlockGuard:
+    def __init__(self, lock):
+        self._lock = lock
+
+    def __enter__(self):
+        self._depth = 0
+        while True:
+            try:
+                self._lock.release()
+            except RuntimeError:
+                break
+            else:
+                self._depth += 1
+        return self
+
+    def __exit__(self, t, v, tb):
+        for _ in range(self._depth):
+            self._lock.acquire()
+
+
+class _ReceivingGuard:
+    def __init__(self, connection):
+        self._connection = connection
+
+    def __enter__(self):
+        self._connection._lock.acquire()
+        self._receiver = not self._connection._receiving
+        if self._receiver:
+            self._connection._receiving = True
+        return self
+
+    def __exit__(self, t, v, tb):
+        if self._receiver:
+            self._connection._receiving = False
+            for thread in self._connection._thread_pool:
+                if not thread._deque:
+                    thread._condition.notify()
+                    break
+        self._connection._lock.release()
