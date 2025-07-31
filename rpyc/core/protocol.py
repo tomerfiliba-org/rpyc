@@ -68,7 +68,7 @@ DEFAULT_CONFIG = dict(
     sync_request_timeout=30,
     before_closed=None,
     close_catchall=False,
-    bind_threads=os.environ.get('RPYC_BIND_THREADS').lower() == 'true',
+    bind_threads=os.environ.get('RPYC_BIND_THREADS', 'false').lower() == 'true',
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
