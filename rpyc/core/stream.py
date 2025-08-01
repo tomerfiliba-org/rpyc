@@ -345,11 +345,18 @@ class PipeStream(Stream):
         :returns: a :class:`PipeStream` instance
         """
         sys.stdout.flush()
-        stdin = open(sys.stdin.fileno(), 'rb', buffering=0)
-        stdout = open(sys.stdout.fileno(), 'wb', buffering=0)
+        stdin = open(sys.stdin.fileno(), "rb", buffering=0)
+        stdout = open(sys.stdout.fileno(), "wb", buffering=0)
         pipestream = cls(stdin, stdout)
-        sys.stdin = open(os.devnull, "r")
-        sys.stdout = open(os.devnull, "w")
+        newstdin = open(os.devnull, "r")
+        if sys.__stdin__ is sys.stdin:
+            sys.__stdin__ = newstdin
+        sys.stdin = newstdin
+        newstdout = open(os.devnull, "w")
+        if sys.__stdout__ is sys.stdout:
+            sys.__stdout__ = newstdout
+        sys.stdout = newstdout
+
         return pipestream
 
     @classmethod
