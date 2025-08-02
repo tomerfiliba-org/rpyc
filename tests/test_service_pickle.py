@@ -84,8 +84,8 @@ class TestServicePickle(unittest.TestCase):
         repeat = 3
         number = 1
         pickle_stmt = 'pickle.loads(pickle.dumps(cfg_tests.timeit["df"]))'
-        write_stmt = 'rpyc.lib.spawn(cfg_tests.timeit["conn"].root.write_data, cfg_tests.timeit["df"]); '
-        write_stmt += '[cfg_tests.timeit["conn2"].root.ping() for i in range(30)]'
+        write_stmt = 'thd = rpyc.lib.worker(cfg_tests.timeit["conn"].root.write_data, cfg_tests.timeit["df"]); '
+        write_stmt += '[cfg_tests.timeit["conn2"].root.ping() for i in range(30)]; thd.join()'
         # write_stmt = 'cfg_tests.timeit["conn"].root.write_data(cfg_tests.timeit["df"])'
         t = timeit.Timer(pickle_stmt, globals=globals())
         tpickle = min(t.repeat(repeat, number))
