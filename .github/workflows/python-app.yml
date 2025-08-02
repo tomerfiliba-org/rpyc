@@ -31,7 +31,7 @@ jobs:
       - name: Install gdb
         if: ${{ matrix.PYTHON_VERSION == '3.12' }}
         run: |
-          sudo apt-get install -y gdb
+          sudo apt-get -o DPkg::Lock::Timeout=-1 install -y gdb
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools flake8
