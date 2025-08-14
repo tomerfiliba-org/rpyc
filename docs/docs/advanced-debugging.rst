@@ -11,11 +11,12 @@ Let's use `pyenv` to install Python versions under active development. Since dev
 
 .. code-block:: bash
 
-    versions=( 3.8 3.9 3.10 3.11 3.12 3.13.0rc2 3.14-dev)
+    versions=( 3.10 3.11 3.12 3.13 3.14.0rc1 3.15-dev )
     for ver in ${versions[@]}; do
         pyenv install --force ${ver}
         pyenv global ${ver}
-        pyenv exec pip install --upgrade pip setuptools wheel plumbum[dev]
+        pyenv exec pip install --upgrade pip setuptools wheel
+        pyenv exec pip install --upgrade --pre plumbum
         site="$(pyenv exec python -c 'import site; print(site.getsitepackages()[0])')"
         printf "${PWD}\n" > "${site}/rpyc.pth"
     done
@@ -31,8 +32,8 @@ Unit tests can be ran using your desired Python version as well.
 
 .. code-block:: bash
 
-    PYENV_VERSION=3.9-dev pyenv exec python -m unittest discover -v -k test_affinity
-    PYENV_VERSION=3.8-dev pyenv exec python -m unittest discover
+    PYENV_VERSION=3.10 pyenv exec python -m unittest discover -v -k test_affinity
+    PYENV_VERSION=3.10 pyenv exec python -m unittest discover
 
 Testing Supported Python Versions via Docker
 --------------------------------------------
