@@ -1,28 +1,30 @@
+import os
+import sys
 import unittest
-from rpyc import SlaveService
-from rpyc.utils.server import GeventServer
+import subprocess
+import importlib.util
 import time
 import rpyc
-try:
-    import gevent
-    _gevent_import_failed = False
-except Exception:
-    _gevent_import_failed = True
+_gevent_spec = importlib.util.find_spec("gevent")
+_gevent_missing = _gevent_spec is None
 
 
-@unittest.skipIf(_gevent_import_failed, "Gevent is not available")
+@unittest.skipIf(_gevent_missing, "Gevent is not available")
 class Test_GeventServer(unittest.TestCase):
 
     def setUp(self):
-        from gevent import monkey
-        monkey.patch_all()
-        self.server = GeventServer(SlaveService, port=18878, auto_register=False)
-        self.server.logger.quiet = False
-        self.server._listen()
-        gevent.spawn(self.server.start)
+        server_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gevent_service.py")
+        self.proc = subprocess.Popen([sys.executable, '-u', server_file],
+                                     stdin=subprocess.DEVNULL, stdout=subprocess.PIPE)
+
+        self.ident = int(self.proc.stdout.readline().strip())
+        if not self.ident:
+            self.fail("server failed to start")
 
     def tearDown(self):
-        self.server.close()
+        self.proc.terminate()
+        self.proc.communicate()  # clear io so resources are closed
+        self.proc.wait()
 
     def test_connection(self):
         with rpyc.classic.connect("localhost", port=18878) as c:
@@ -31,18 +33,15 @@ class Test_GeventServer(unittest.TestCase):
             self.assertEqual(c.eval("1+x"), 6)
 
     def test_multiple_connections(self):
-        def get_ident(gevent):
-            return gevent.monkey.get_original('threading', 'get_ident')()
         c1 = rpyc.classic.connect("localhost", port=18878)
         c2 = rpyc.classic.connect("localhost", port=18878)
         c3 = rpyc.classic.connect("localhost", port=18878)
         with c1, c2, c3:
-            id0 = get_ident(gevent)
-            id1 = get_ident(c1.modules.gevent)
-            id2 = get_ident(c2.modules.gevent)
-            id3 = get_ident(c3.modules.gevent)
+            id1 = c1.root.get_ident()
+            id2 = c2.root.get_ident()
+            id3 = c2.root.get_ident()
             # all server greenlets and clients running in same OS thread ;)
-            self.assertEqual(id0, id1)
+            self.assertEqual(id1, self.ident)
             self.assertEqual(id1, id2)
             self.assertEqual(id1, id3)
 
@@ -50,12 +49,13 @@ class Test_GeventServer(unittest.TestCase):
         conns = [rpyc.classic.connect("localhost", port=18878)
                  for _ in range(50)]
         try:
-            start = time.time()
-            gevent.joinall([
-                gevent.spawn(c.modules.time.sleep, 1)
+            start = time.monotonic()
+            for t in [
+                rpyc.worker(c.modules.time.sleep, 1)
                 for c in conns
-            ])
-            stop = time.time()
+            ]:
+                t.join()
+            stop = time.monotonic()
 
             self.assertLessEqual(stop - start, 2)
 

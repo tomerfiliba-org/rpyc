@@ -24,9 +24,9 @@ class TestAsync(unittest.TestCase):
     def test_asyncresult_expiry(self):
         res = self.a_sleep(5)
         res.set_expiry(4)
-        t0 = time.time()
+        t0 = time.monotonic()
         self.assertRaises(rpyc.AsyncResultTimeout, res.wait)
-        dt = time.time() - t0
+        dt = time.monotonic() - t0
         # print(f"timed out after {dt}")
         self.assertTrue(dt >= 3.5, str(dt))
         self.assertTrue(dt <= 4.5, str(dt))

@@ -17,21 +17,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python_version: ["3", "3.10", "3.11", "3.12", "3.13.6", "3.14.0-rc.1"]
+        PYTHON_VERSION: ["3", "3.10", "3.11", "3.12", "3.13", "3.14.0-rc.1"]
         RPYC_BIND_THREADS: ["true", "false"]
 
     name: Unittest (${{ matrix.python_version }}, bind_threads=${{ matrix.RPYC_BIND_THREADS }})
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python ${{ matrix.python_version }}
+      - name: Set up Python ${{ matrix.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
-          python_version: ${{ matrix.python_version }}
+          python-version: ${{ matrix.PYTHON_VERSION }}
+      - name: Install gdb
+        if: ${{ matrix.PYTHON_VERSION == '3.12' }}
+        run: |
+          sudo apt-get -o DPkg::Lock::Timeout=-1 install -y gdb
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip setuptools flake8
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          if [ -f tests/requirements.txt ]; then pip install -r tests/requirements.txt; fi
           echo "PYTHONPATH=${PYTHONPATH}:/home/runner/work/rpyc" >> $GITHUB_ENV
       - name: Lint with flake8
         run: |
@@ -45,14 +50,14 @@ jobs:
           chmod 700 ~/.ssh
           echo NoHostAuthenticationForLocalhost yes >> ~/.ssh/config
           echo StrictHostKeyChecking no >> ~/.ssh/config
-          ssh-keygen -q -f ~/.ssh/id_rsa -N ''
-          cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+          ssh-keygen -q -t ed25519 -f ~/.ssh/id_ed25519 -N ''
+          cat ~/.ssh/id_ed25519.pub >> ~/.ssh/authorized_keys
           uname -a
       - name: Run unittest with default settings
         if: ${{ matrix.RPYC_BIND_THREADS == 'false' }}
         run: |
-          python -m unittest discover -v
+          RPYC_SKIP_IPV6="false" python -m unittest discover -v
       - name: Run unittest with RPYC_BIND_THREADS enabled
         if: ${{ matrix.RPYC_BIND_THREADS == 'true' }}
         run: |
-          RPYC_BIND_THREADS="${{ matrix.RPYC_BIND_THREADS }}" python -m unittest discover -v
+          RPYC_BIND_THREADS="${{ matrix.RPYC_BIND_THREADS }}" RPYC_SKIP_IPV6="false" python -m unittest discover -v

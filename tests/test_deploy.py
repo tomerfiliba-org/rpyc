@@ -8,6 +8,14 @@ from plumbum import SshMachine
 from plumbum.machines.paramiko_machine import ParamikoMachine
 from rpyc.utils.zerodeploy import DeployedServer
 from rpyc.core import DEFAULT_CONFIG
+
+ssh_opts = ("-o", "PasswordAuthentication=no")
+try:
+    localhost_machine = SshMachine("localhost", ssh_opts=ssh_opts)
+    localhost_machine.close()
+except Exception:
+    localhost_machine = None
+
 try:
     import paramiko  # noqa
     _paramiko_import_failed = False
@@ -15,9 +23,10 @@ except Exception:
     _paramiko_import_failed = True
 
 
+@unittest.skipIf(localhost_machine is None, "Requires SshMachine to localhost")
 class TestDeploy(unittest.TestCase):
     def test_deploy(self):
-        rem = SshMachine("localhost")
+        rem = SshMachine("localhost", ssh_opts=ssh_opts)
         rem.env['RPYC_BIND_THREADS'] = str(DEFAULT_CONFIG['bind_threads']).lower()
         SshMachine.python = rem[sys.executable]
         with DeployedServer(rem) as dep:
@@ -46,7 +55,7 @@ class TestDeploy(unittest.TestCase):
 
         try:
             subprocess.Popen.communicate = replacement_communicate
-            rem = SshMachine("localhost")
+            rem = SshMachine("localhost", ssh_opts=ssh_opts)
             rem.env['RPYC_BIND_THREADS'] = str(DEFAULT_CONFIG['bind_threads']).lower()
             SshMachine.python = rem[sys.executable]
             dep = DeployedServer(rem)
@@ -70,7 +79,7 @@ class TestDeploy(unittest.TestCase):
 
         try:
             subprocess.Popen.communicate = replacement_communicate
-            rem = SshMachine("localhost")
+            rem = SshMachine("localhost", ssh_opts=ssh_opts)
             rem.env['RPYC_BIND_THREADS'] = str(DEFAULT_CONFIG['bind_threads']).lower()
             SshMachine.python = rem[sys.executable]
             dep = DeployedServer(rem)

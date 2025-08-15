@@ -1,5 +1,6 @@
 from __future__ import print_function
 import sys
+import time
 import pickle  # noqa
 import timeit
 import rpyc
@@ -64,6 +65,9 @@ class TestServicePickle(unittest.TestCase):
 
     def tearDown(self):
         self.conn.close()
+        self.conn2.close()
+        while self.server.clients:
+            time.sleep(0.250)
         self.server.close()
         self.thd.join()
         cfg_tests.timeit.clear()
@@ -80,8 +84,8 @@ class TestServicePickle(unittest.TestCase):
         repeat = 3
         number = 1
         pickle_stmt = 'pickle.loads(pickle.dumps(cfg_tests.timeit["df"]))'
-        write_stmt = 'rpyc.lib.spawn(cfg_tests.timeit["conn"].root.write_data, cfg_tests.timeit["df"]); '
-        write_stmt += '[cfg_tests.timeit["conn2"].root.ping() for i in range(30)]'
+        write_stmt = 'thd = rpyc.lib.worker(cfg_tests.timeit["conn"].root.write_data, cfg_tests.timeit["df"]); '
+        write_stmt += '[cfg_tests.timeit["conn2"].root.ping() for i in range(30)]; thd.join()'
         # write_stmt = 'cfg_tests.timeit["conn"].root.write_data(cfg_tests.timeit["df"])'
         t = timeit.Timer(pickle_stmt, globals=globals())
         tpickle = min(t.repeat(repeat, number))

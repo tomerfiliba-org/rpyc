@@ -8,15 +8,15 @@ import time
 import threading  # noqa: F401
 import errno
 import logging
-from contextlib import closing
 try:
     import Queue
 except ImportError:
     import queue as Queue
 from rpyc.core import SocketStream, Channel
+from rpyc.core.consts import STREAM_CHUNK
 from rpyc.utils.registry import UDPRegistryClient
 from rpyc.utils.authenticators import AuthenticationError
-from rpyc.lib import safe_import, spawn, spawn_waitready
+from rpyc.lib import safe_import, worker, worker_waitready
 from rpyc.lib.compat import poll, get_exc_errno
 signal = safe_import("signal")
 gevent = safe_import("gevent")
@@ -60,6 +60,8 @@ class Server(object):
             self.auto_register = bool(registrar)
         else:
             self.auto_register = auto_register
+        if self.auto_register:
+            self.register_thread = None
 
         if protocol_config is None:
             protocol_config = {}
@@ -111,6 +113,9 @@ class Server(object):
             return
         self.active = False
         if self.auto_register:
+            register_thread, self.register_thread = self.register_thread, None
+            if register_thread:
+                register_thread.join()
             try:
                 self.registrar.unregister(self.port)
             except Exception:
@@ -123,7 +128,13 @@ class Server(object):
         self.logger.info("listener closed")
         for c in set(self.clients):
             try:
-                c.shutdown(socket.SHUT_RDWR)
+                # inform peer that we are finished sending
+                c.shutdown(socket.SHUT_WR)
+                # wait for peer to close it's sending side as well
+                while True:
+                    buf = c.recv(STREAM_CHUNK)
+                    if not buf:
+                        break
             except Exception:
                 pass
             c.close()
@@ -166,31 +177,40 @@ class Server(object):
         raise NotImplementedError
 
     def _authenticate_and_serve_client(self, sock):
+        credentials = None
+        sock_auth = sock
         try:
             if self.authenticator:
                 addrinfo = sock.getpeername()
                 try:
-                    sock2, credentials = self.authenticator(sock)
+                    sock_auth, credentials = self.authenticator(sock)
+                    if sock_auth is not sock:
+                        self.clients.add(sock_auth)
+                        self.clients.discard(sock)
+                        sock.close()
                 except AuthenticationError:
                     self.logger.info(f"{addrinfo} failed to authenticate... rejecting connection")
                     return
                 else:
                     self.logger.info(f"{addrinfo} authenticated successfully")
-            else:
-                credentials = None
-                sock2 = sock
             try:
-                self._serve_client(sock2, credentials)
+                self._serve_client(sock_auth, credentials)
             except Exception:
                 self.logger.exception("client connection terminated abruptly")
                 raise
         finally:
             try:
-                sock.shutdown(socket.SHUT_RDWR)
+                # inform peer that we are finished sending
+                sock_auth.shutdown(socket.SHUT_WR)
+                while True:
+                    # wait for peer to close it's sending side as well
+                    buf = sock_auth.recv(STREAM_CHUNK)
+                    if not buf:
+                        break
             except Exception:
                 pass
-            closing(sock)
-            self.clients.discard(sock)
+            sock_auth.close()
+            self.clients.discard(sock_auth)
 
     def _serve_client(self, sock, credentials):
         addrinfo = sock.getpeername()
@@ -217,7 +237,7 @@ class Server(object):
         tnext = 0
         try:
             while self.active:
-                t = time.time()
+                t = time.monotonic()
                 if t >= tnext:
                     did_register = False
                     aliases = self.service.get_service_aliases()
@@ -253,7 +273,7 @@ class Server(object):
 
     def _register(self):
         if self.auto_register:
-            spawn(self._bg_register)
+            self.register_thread = worker(self._bg_register)
 
     def start(self):
         """Starts the server (blocking). Use :meth:`close` to stop"""
@@ -277,7 +297,7 @@ class Server(object):
         ready to accept incoming connections.
 
         Used for testing, API could change anytime! Do not use!"""
-        return spawn_waitready(self._listen, self.start)[0]
+        return worker_waitready(self._listen, self.start)[0]
 
 
 class OneShotServer(Server):
@@ -302,8 +322,52 @@ class ThreadedServer(Server):
     Parameters: see :class:`Server`
     """
 
+    def __init__(self, *args, **kwargs):
+        self._cond = threading.Condition()
+        self._workers = set()
+        self._terminated = set()
+        super().__init__(*args, **kwargs)
+
+    def __del__(self):
+        self.close()
+
+    def close(self):
+        super().close()
+
+        with self._cond:
+            if threading.current_thread() in self._workers:
+                return
+
+            self._cond.wait_for(lambda: not self._workers, timeout=2)
+            terminated = self._terminated
+            self._terminated = set()
+
+        for t in terminated:
+            t.join()
+
     def _accept_method(self, sock):
-        spawn(self._authenticate_and_serve_client, sock)
+        with self._cond:
+            terminated = self._terminated
+            self._terminated = set()
+
+        for t in terminated:
+            t.join()
+
+        with self._cond:
+            t = worker(self._authenticate_and_serve_client, sock)
+            self._workers.add(t)
+
+    def _authenticate_and_serve_client(self, sock):
+        try:
+            super()._authenticate_and_serve_client(sock)
+        finally:
+            current = threading.current_thread()
+            with self._cond:
+                if current in self._workers:
+                    self._terminated.add(current)
+                    self._workers.discard(current)
+                    if not self._workers:
+                        self._cond.notify_all()
 
 
 class ThreadPoolServer(Server):
@@ -326,13 +390,16 @@ class ThreadPoolServer(Server):
         self.nbthreads = kwargs.pop('nbThreads', 20)
         self.request_batch_size = kwargs.pop('requestBatchSize', 10)
         # init the parent
-        Server.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         # a queue of connections having something to process
         self._active_connection_queue = Queue.Queue()
         # a dictionary fd -> connection
         self.fd_to_conn = {}
         # a polling object to be used be the polling thread
         self.poll_object = poll()
+
+    def __del__(self):
+        self.close()
 
     def _listen(self):
         if self.active:
@@ -341,17 +408,17 @@ class ThreadPoolServer(Server):
         # setup the thread pool for handling requests
         self.workers = []
         for i in range(self.nbthreads):
-            t = spawn(self._serve_clients)
+            t = worker(self._serve_clients)
             t.name = f"Worker{i}"
             self.workers.append(t)
         # setup a thread for polling inactive connections
-        self.polling_thread = spawn(self._poll_inactive_clients)
-        self.polling_thread.setName('PollingThread')
+        self.polling_thread = worker(self._poll_inactive_clients)
+        self.polling_thread.name = 'PollingThread'
 
     def close(self):
         '''closes a ThreadPoolServer. In particular, joins the thread pool.'''
         # close parent server
-        Server.close(self)
+        super().close()
         # stop producer thread
         self.polling_thread.join()
         # cleanup thread pool : first fill the pool with None fds so that all threads exit
@@ -493,7 +560,7 @@ class ThreadPoolServer(Server):
             # put the connection in the active queue
             addrinfo = sock.getpeername()
             fd = conn.fileno()
-            self.logger.debug("Created connection to {addrinfo} with fd {fd}")
+            self.logger.debug(f"Created connection to {addrinfo} with fd {fd}")
             self.fd_to_conn[fd] = conn
             self._add_inactive_connection(fd)
             self.clients.clear()
@@ -514,12 +581,12 @@ class ForkingServer(Server):
     def __init__(self, *args, **kwargs):
         if not signal:
             raise OSError("ForkingServer not supported on this platform")
-        Server.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         # setup sigchld handler
         self._prevhandler = signal.signal(signal.SIGCHLD, self._handle_sigchld)
 
     def close(self):
-        Server.close(self)
+        super().close()
         signal.signal(signal.SIGCHLD, self._prevhandler)
 
     @classmethod

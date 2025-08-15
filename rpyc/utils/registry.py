@@ -55,7 +55,7 @@ class RegistryServer(object):
         if name not in self.services:
             self.services[name] = {}
         is_new = addrinfo not in self.services[name]
-        self.services[name][addrinfo] = time.time()
+        self.services[name][addrinfo] = time.monotonic()
         if is_new:
             try:
                 self.on_service_added(name, addrinfo)
@@ -80,7 +80,7 @@ class RegistryServer(object):
             self.logger.debug("no such service")
             return ()
 
-        oldest = time.time() - self.pruning_timeout
+        oldest = time.monotonic() - self.pruning_timeout
         all_servers = sorted(self.services[name].items(), key=lambda x: x[1])
         servers = []
         for addrinfo, t in all_servers:
@@ -385,9 +385,9 @@ class UDPRegistryClient(RegistryClient):
             data = brine.dump(("RPYC", "REGISTER", (aliases, port)))
             sock.sendto(data, (self.ip, self.port))
 
-            tmax = time.time() + self.timeout
-            while time.time() < tmax:
-                sock.settimeout(tmax - time.time())
+            tmax = time.monotonic() + self.timeout
+            while time.monotonic() < tmax:
+                sock.settimeout(tmax - time.monotonic())
                 try:
                     data, address = sock.recvfrom(MAX_DGRAM_SIZE)
                     rip, rport = address[:2]

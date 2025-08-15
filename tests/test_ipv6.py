@@ -1,11 +1,14 @@
+import os
 import rpyc
 import unittest
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
 
+_skip_ipv6 = os.getenv('RPYC_SKIP_IPV6', 'TRUE').lower() == 'true'
+
 
 # travis: "Network is unreachable", https://travis-ci.org/tomerfiliba/rpyc/jobs/108231239#L450
-@unittest.skip("requires IPv6")
+@unittest.skipIf(_skip_ipv6, "IPv6 tests requested to be skipped")
 class Test_IPv6(unittest.TestCase):
     def setUp(self):
         self.server = ThreadedServer(SlaveService, port=0, ipv6=True)

@@ -1,3 +1,4 @@
+import time
 import rpyc
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
@@ -23,14 +24,14 @@ class Test_get_id_pack(unittest.TestCase):
         cls.chained_conn.close()
         cls.conn.close()
         while cls.server2.clients or cls.server.clients:
-            pass  # sti
+            time.sleep(0.250)
         cls.server2.close()
         cls.server.close()
         cls.thd.join()
         cls.thd2.join()
 
     def test_chained_connect(self):
-        remote_os = self.chained_conn.root.getmodule('os')
+        self.chained_conn.root.getmodule('os')
 
     def test_netref(self):
         self.assertEqual(self.conn.root.____id_pack__, rpyc.lib.get_id_pack(self.conn.root))

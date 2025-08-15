@@ -12,6 +12,7 @@ from rpyc.lib.compat import maxint  # noqa: F401
 
 
 SPAWN_THREAD_PREFIX = 'RpycSpawnThread'
+WORKER_THREAD_PREFIX = 'RpycWorkerThread'
 
 
 class MissingModule(object):
@@ -85,6 +86,15 @@ def hasattr_static(obj, attr):
         return True
 
 
+def worker(*args, **kwargs):
+    """Start and return non-daemon thread. ``worker(func, *args, **kwargs)``."""
+    func, args = args[0], args[1:]
+    str_id_pack = '-'.join([f'{i}' for i in get_id_pack(func)])
+    thread = threading.Thread(name=f'{WORKER_THREAD_PREFIX}-{str_id_pack}', target=func, args=args, kwargs=kwargs)
+    thread.start()
+    return thread
+
+
 def spawn(*args, **kwargs):
     """Start and return daemon thread. ``spawn(func, *args, **kwargs)``."""
     func, args = args[0], args[1:]
@@ -95,7 +105,7 @@ def spawn(*args, **kwargs):
     return thread
 
 
-def spawn_waitready(init, main):
+def worker_waitready(init, main):
     """
     Start a thread that runs ``init`` and then ``main``. Wait for ``init`` to
     be finished before returning.
@@ -110,7 +120,7 @@ def spawn_waitready(init, main):
         stack.append(init())
         stack.pop(0).set()
         return main()
-    thread = spawn(start)
+    thread = worker(start)
     event.wait()
     return thread, stack.pop()
 
@@ -123,13 +133,13 @@ class Timeout(object):
             self.tmax = timeout.tmax
         else:
             self.finite = timeout is not None and timeout >= 0
-            self.tmax = time.time() + timeout if self.finite else None
+            self.tmax = time.monotonic() + timeout if self.finite else None
 
     def expired(self):
-        return self.finite and time.time() >= self.tmax
+        return self.finite and time.monotonic() >= self.tmax
 
     def timeleft(self):
-        return max((0, self.tmax - time.time())) if self.finite else None
+        return max((0, self.tmax - time.monotonic())) if self.finite else None
 
     def sleep(self, interval):
         time.sleep(min(interval, self.timeleft()) if self.finite else interval)
@@ -150,12 +160,15 @@ def socket_backoff_connect(family, socktype, proto, addr, timeout, attempts):
             sock.connect(addr)
             connecting = False
         except socket.timeout:
+            sock.close()
             if collision == attempts or attempts < 1:
                 raise
             else:
-                sock.close()
                 sock = socket.socket(family, socktype, proto)
                 time.sleep(exp_backoff(collision))
+        except Exception:
+            sock.close()
+            raise
     return sock
 
 

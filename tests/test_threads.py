@@ -10,7 +10,7 @@ class MyService(rpyc.Service):
             self.callback = rpyc.async_(callback)
             self.interval = interval
             self.active = True
-            self.thread = rpyc.spawn(self.work)
+            self.thread = rpyc.worker(self.work)
 
         def exposed_stop(self):
             self.active = False

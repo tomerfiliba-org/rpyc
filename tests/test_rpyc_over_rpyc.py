@@ -1,3 +1,4 @@
+import time
 import rpyc
 from rpyc.utils.server import ThreadedServer
 import unittest
@@ -67,16 +68,20 @@ class Test_rpyc_over_rpyc(unittest.TestCase):
         self.server = ThreadedServer(Service, port=Service.PORT, auto_register=False)
         self.i_server = ThreadedServer(Intermediate, port=Intermediate.PORT,
                                        auto_register=False, protocol_config=CONNECT_CONFIG)
-        self.server._start_in_thread()
-        self.i_server._start_in_thread()
+        self.thd = self.server._start_in_thread()
+        self.i_thd = self.i_server._start_in_thread()
         self.conn = rpyc.connect("localhost", port=Intermediate.PORT, config=CONNECT_CONFIG)
 
     def tearDown(self):
         self.conn.close()
-        while self.server.clients or self.i_server.clients:
-            pass
+        while self.server.clients:
+            time.sleep(0.250)
         self.server.close()
+        self.thd.join()
+        while self.i_server.clients:
+            time.sleep(0.250)
         self.i_server.close()
+        self.i_thd.join()
 
     def test_immutable_object_return(self):
         """Tests using rpyc over rpyc---issue #346 reported traceback for this use case"""

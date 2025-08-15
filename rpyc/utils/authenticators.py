@@ -24,7 +24,9 @@ validate an incoming connection. Using them is pretty trivial ::
     s.start()
 """
 import sys
+import socket
 from rpyc.lib import safe_import
+from rpyc.core.consts import STREAM_CHUNK
 ssl = safe_import("ssl")
 
 
@@ -85,7 +87,25 @@ class SSLAuthenticator(object):
                 context.set_ciphers(self.ciphers)
             if self.cert_reqs is not None:
                 context.verify_mode = self.cert_reqs
-            sock2 = context.wrap_socket(sock, server_side=True)
+            sock2 = context.wrap_socket(sock, do_handshake_on_connect=False, server_side=True)
+            try:
+                sock2.do_handshake()
+            except Exception:
+                # exception during connection setup
+                # enforce client side to receive reason for handshake problem
+                sock3 = socket.socket(fileno=sock2.detach())
+                try:
+                    # inform peer that we are finished sending
+                    sock3.shutdown(socket.SHUT_WR)
+                    while True:
+                        # wait for peer to close it's sending side as well
+                        buf = sock3.recv(STREAM_CHUNK)
+                        if not buf:
+                            break
+                except Exception:
+                    pass
+                sock3.close()
+                raise
         except ssl.SSLError:
             ex = sys.exc_info()[1]
             raise AuthenticationError(str(ex))

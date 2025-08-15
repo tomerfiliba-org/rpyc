@@ -1,6 +1,6 @@
 from __future__ import with_statement
 from rpyc.utils.classic import teleport_function
-from rpyc.lib.compat import is_py_3k, is_py_gte38, is_py_gte311
+from rpyc.lib.compat import is_py_gte38, is_py_gte311
 from rpyc.utils.teleportation import export_function, import_function
 import subprocess
 import sys
@@ -115,7 +115,7 @@ class TeleportationTest(unittest.TestCase):
             return (cobj.co_argcount, 2, cobj.co_kwonlyargcount, cobj.co_nlocals,
                     cobj.co_stacksize, cobj.co_flags, cobj.co_code, cobj.co_consts, cobj.co_names,
                     cobj.co_varnames, cobj.co_filename, cobj.co_name, cobj.co_qualname,
-                    cobj.co_firstlineno, cobj.co_lnotab, cobj.co_exceptiontable,
+                    cobj.co_firstlineno, cobj.co_linetable, cobj.co_exceptiontable,
                     cobj.co_freevars, cobj.co_cellvars)
 
         if is_py_gte38:

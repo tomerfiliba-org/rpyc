@@ -1,3 +1,4 @@
+import time
 import rpyc
 import copy
 import unittest
@@ -96,7 +97,7 @@ class TestRestricted(unittest.TestCase):
     def tearDown(self):
         self.conn.close()
         while self.server.clients:
-            pass
+            time.sleep(0.250)
         self.server.close()
         self.thd.join()
 
@@ -129,7 +130,7 @@ class TestConfigAllows(unittest.TestCase):
     def tearDown(self):
         self.conn.close()
         while self.server.clients:
-            pass
+            time.sleep(0.250)
         self.server.close()
         self.thd.join()
 
@@ -228,7 +229,7 @@ class TestDescriptorErrors(unittest.TestCase):
     def tearDown(self):
         self.conn.close()
         while self.server.clients:
-            pass
+            time.sleep(0.250)
         self.server.close()
         self.thd.join()
 

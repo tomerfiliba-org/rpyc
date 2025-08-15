@@ -1,6 +1,22 @@
 import os
+import sys
 import rpyc
 import unittest
+from subprocess import PIPE
+from rpyc.core.consts import STREAM_CHUNK
+
+
+def splice_to_stderr(stream):
+    try:
+        while True:
+            data = stream.read(STREAM_CHUNK)
+            if not data:
+                break
+            while data:
+                count = sys.stderr.write(data.decode('utf-8'))
+                data = data[count:]
+    finally:
+        stream.close()
 
 
 class ClassicMode(unittest.TestCase):
@@ -26,10 +42,18 @@ class ClassicMode(unittest.TestCase):
         # considered harmless, but there's no way to disable that message
         # to stderr
         server_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "bin", "rpyc_classic.py")
-        conn = rpyc.classic.connect_subproc(server_file)
-        conn.modules.sys.path.append("xxx")
-        self.assertEqual(conn.modules.sys.path.pop(-1), "xxx")
-        conn.close()
+        conn = rpyc.classic.connect_subproc(server_file, stderr=PIPE)
+        worker = rpyc.worker(splice_to_stderr, conn.proc.stderr)
+        try:
+            conn.modules.sys.path.append("xxx")
+            self.assertEqual(conn.modules.sys.path.pop(-1), "xxx")
+        except Exception:
+            conn.proc.kill()
+            conn.proc.wait()
+            raise
+        finally:
+            conn.close()
+            worker.join()
         self.assertEqual(conn.proc.wait(), 0)
 
     def test_buffiter(self):

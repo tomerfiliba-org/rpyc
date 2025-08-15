@@ -6,7 +6,9 @@ import sys
 import os
 import socket
 import errno
-from rpyc.lib import safe_import, Timeout, socket_backoff_connect
+import fcntl
+import threading
+from rpyc.lib import safe_import, Timeout, worker, socket_backoff_connect
 from rpyc.lib.compat import poll, select_error, BYTES_LITERAL, get_exc_errno, maxint  # noqa: F401
 from rpyc.core.consts import STREAM_CHUNK
 win32file = safe_import("win32file")
@@ -242,17 +244,23 @@ class SocketStream(Stream):
         return self.sock is ClosedFile
 
     def close(self):
-        if not self.closed:
+        sock, self.sock = self.sock, ClosedFile
+        if sock is not ClosedFile:
             try:
-                self.sock.shutdown(socket.SHUT_RDWR)
+                # inform peer that we are finished sending
+                sock.shutdown(socket.SHUT_WR)
+                while True:
+                    # wait for peer to close it's sending side as well
+                    buf = sock.recv(self.MAX_IO_CHUNK)
+                    if not buf:
+                        break
             except Exception:
                 pass
-        self.sock.close()
-        self.sock = ClosedFile
+        sock.close()
 
     def fileno(self):
         try:
-            return self.sock.fileno()
+            fileno = self.sock.fileno()
         except socket.error:
             self.close()
             ex = sys.exc_info()[1]
@@ -260,6 +268,10 @@ class SocketStream(Stream):
                 raise EOFError()
             else:
                 raise
+        if isinstance(fileno, int) and fileno == -1:
+            raise EOFError("stream has been closed")
+
+        return fileno
 
     def read(self, count):
         data = []
@@ -299,11 +311,11 @@ class TunneledSocketStream(SocketStream):
     __slots__ = ("tun",)
 
     def __init__(self, sock):
-        self.sock = sock
+        super().__init__(sock)
         self.tun = None
 
     def close(self):
-        SocketStream.close(self)
+        super().close()
         if self.tun:
             self.tun.close()
 
@@ -311,13 +323,19 @@ class TunneledSocketStream(SocketStream):
 class PipeStream(Stream):
     """A stream over two simplex pipes (one used to input, another for output)"""
 
-    __slots__ = ("incoming", "outgoing")
+    __slots__ = ("incoming", "outgoing", "_condition", "_ready", "_reader")
     MAX_IO_CHUNK = STREAM_CHUNK
 
     def __init__(self, incoming, outgoing):
         outgoing.flush()
         self.incoming = incoming
         self.outgoing = outgoing
+        self._condition = threading.Condition()
+        self._ready = BYTES_LITERAL("")
+        self._reader = worker(self._readthread, incoming)
+
+    def __del__(self):
+        self.close()
 
     @classmethod
     def from_std(cls):
@@ -326,9 +344,19 @@ class PipeStream(Stream):
 
         :returns: a :class:`PipeStream` instance
         """
-        pipestream = cls(sys.stdin, sys.stdout)
-        sys.stdin = os.open(os.devnull, os.O_RDWR)
-        sys.stdout = sys.stdin
+        sys.stdout.flush()
+        stdin = open(sys.stdin.fileno(), "rb", buffering=0)
+        stdout = open(sys.stdout.fileno(), "wb", buffering=0)
+        pipestream = cls(stdin, stdout)
+        newstdin = open(os.devnull, "r")
+        if sys.__stdin__ is sys.stdin:
+            sys.__stdin__ = newstdin
+        sys.stdin = newstdin
+        newstdout = open(os.devnull, "w")
+        if sys.__stdout__ is sys.stdout:
+            sys.__stdout__ = newstdout
+        sys.stdout = newstdout
+
         return pipestream
 
     @classmethod
@@ -346,26 +374,84 @@ class PipeStream(Stream):
 
     @property
     def closed(self):
-        return self.incoming is ClosedFile
+        with self._condition:
+            if self._ready:
+                return False
+            return self.incoming is ClosedFile
 
     def close(self):
-        self.incoming.close()
-        self.outgoing.close()
-        self.incoming = ClosedFile
-        self.outgoing = ClosedFile
+        with self._condition:
+            incoming = self.incoming
+            outgoing = self.outgoing
+            self.incoming = ClosedFile
+            self.outgoing = ClosedFile
+            reader = self._reader
+            self._reader = None
+            self._condition.notify_all()
+        incoming.close()
+        outgoing.close()
+        if reader:
+            reader.join()
+        with self._condition:
+            self._ready = BYTES_LITERAL("")
+            self._condition.notify_all()
 
     def fileno(self):
-        return self.incoming.fileno()
+        with self._condition:
+            return self.incoming.fileno()
+
+    def poll(self, timeout):
+        with self._condition:
+            self._condition.wait_for(lambda: self._ready or self.incoming is ClosedFile, timeout.timeleft())
+            if self._ready:
+                return True
+            if self.incoming is ClosedFile:
+                raise EOFError("stream has been closed")
+            return False
+
+    def _readthread(self, incoming):
+        fd = incoming.fileno()
+        flags = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, flags | os.O_NONBLOCK)
+
+        p = poll()
+        p.register(fd, "r")
+
+        while True:
+            try:
+                p.poll()
+            except select_error:
+                ex = sys.exc_info()[1]
+                if ex.args[0] == errno.EINTR:
+                    continue
+                buf = None
+            else:
+                try:
+                    buf = os.read(fd, self.MAX_IO_CHUNK)
+                except OSError:
+                    buf = None
+            with self._condition:
+                if buf:
+                    self._ready = self._ready + buf
+                else:
+                    self.incoming = ClosedFile
+                self._condition.notify_all()
+            if not buf:
+                incoming.close()
+                break
 
     def read(self, count):
-        data = []
         try:
-            while count > 0:
-                buf = os.read(self.incoming.fileno(), min(self.MAX_IO_CHUNK, count))
-                if not buf:
-                    raise EOFError("connection closed by peer")
-                data.append(buf)
-                count -= len(buf)
+            with self._condition:
+                self._condition.wait_for(lambda: len(self._ready) >= count or self.incoming is ClosedFile)
+                if len(self._ready) < count:
+                    if len(self._ready) > 0:
+                        self._ready = BYTES_LITERAL("")
+                        self._condition.notify_all()
+                    raise EOFError("stream has been closed")
+                data = self._ready[:count]
+                self._ready = self._ready[count:]
+                return data
         except EOFError:
             self.close()
             raise
@@ -373,7 +459,6 @@ class PipeStream(Stream):
             ex = sys.exc_info()[1]
             self.close()
             raise EOFError(ex)
-        return BYTES_LITERAL("").join(data)
 
     def write(self, data):
         try:
@@ -500,7 +585,7 @@ class NamedPipeStream(Win32PipeStream):
 
     def __init__(self, handle, is_server_side):
         import pywintypes
-        Win32PipeStream.__init__(self, handle, handle)
+        super().__init__(handle, handle)
         self.is_server_side = is_server_side
         self.read_overlapped = pywintypes.OVERLAPPED()
         self.read_overlapped.hEvent = win32event.CreateEvent(None, 1, 1, None)

@@ -21,19 +21,22 @@ class ParentGDB(rpyc.Service):
         stdout = self._proc.stdout.readline()
         self._gdb_svc_port = int(stdout.strip().decode())
         print(self._gdb_svc_port)
-        self.gdb_svc_conn = rpyc.connect(host='localhost', port=self._gdb_svc_port)
+        self._gdb_svc_conn = rpyc.connect(host='localhost', port=self._gdb_svc_port)
 
     def on_disconnect(self, conn):
+        try:
+            self._gdb_svc_conn.root.quit()
+        except EOFError:
+            pass
         self._proc.communicate()
-        self._proc.kill()
-        self.gdb_svc_conn.root.quit()
-        self.gdb_svc_conn.close()
+        self._gdb_svc_conn.close()
+        self._proc.wait()
 
     def exposed_get_gdb(self):
-        return self.gdb_svc_conn.root.get()
+        return self._gdb_svc_conn.root.get()
 
 
-@unittest.skip("This test is known to fail... skip until fixed")
+@unittest.skipUnless(which('gdb') is not None, "Skipping gdb example test since gdb not found")
 class Test_GDB(unittest.TestCase):
 
     def setUp(self):
@@ -47,23 +50,19 @@ class Test_GDB(unittest.TestCase):
             raise ValueError("stdout and stderr should have be empty for a.out creation")
         self.server = ThreadedServer(ParentGDB, port=18878, auto_register=False,
                                      protocol_config={'allow_all_attrs': True})
-        self.server._start_in_thread()
+        self.thd = self.server._start_in_thread()
 
     def tearDown(self):
         self.server.close()
         while not self.server._closed:
             pass
+        self.thd.join()
 
     def test_gdb(self):
-        print(0)
         parent_gdb_conn = rpyc.connect(host='localhost', port=18878)
-        print(1)
         gdb = parent_gdb_conn.root.get_gdb()
-        print(2)
         gdb.execute('file {}'.format(self.a_out))
-        print(3)
         disasm = gdb.execute('disassemble main', to_string=True)
-        print(4)
         self.assertIn('End of assembler dump', disasm)
         parent_gdb_conn.close()
 

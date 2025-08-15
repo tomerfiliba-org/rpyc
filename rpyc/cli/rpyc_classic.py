@@ -9,8 +9,8 @@ usage:
     rpyc_classic.py --ssl-keyfile keyfile.pem --ssl-certfile certfile.pem --ssl-cafile cafile.pem
 """
 import sys
-import os
 import rpyc
+import signal
 from plumbum import cli
 from rpyc.utils.server import ThreadedServer, ForkingServer, OneShotServer
 from rpyc.utils.classic import DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT
@@ -113,17 +113,15 @@ class ClassicServer(cli.Application):
         t.start()
 
     def _serve_stdio(self):
-        origstdin = sys.stdin
-        origstdout = sys.stdout
-        sys.stdin = open(os.devnull, "r")
-        sys.stdout = open(os.devnull, "w")
-        sys.stderr = open(os.devnull, "w")
-        conn = rpyc.classic.connect_pipes(origstdin, origstdout)
+        sigmask = getattr(signal, 'pthread_sigmask', None)
+        if sigmask:
+            sigmask(signal.SIG_BLOCK, [signal.SIGPIPE, signal.SIGHUP])
+
+        conn = rpyc.classic.connect_stdpipes()
         try:
-            try:
-                conn.serve_all()
-            except KeyboardInterrupt:
-                print("User interrupt!")
+            conn.serve_all()
+        except KeyboardInterrupt:
+            print("User interrupt!", file=sys.stderr)
         finally:
             conn.close()
 

@@ -11,6 +11,8 @@ try:
 except ImportError:
     _ssl_import_failed = True
 
+sslport = 18812
+
 
 @unittest.skipIf(_ssl_import_failed, "Ssl not available")
 class Test_SSL(unittest.TestCase):
@@ -30,30 +32,35 @@ class Test_SSL(unittest.TestCase):
     cat client.crt server.crt > client-server.bundle.crt
     '''
 
-    def setUp(self):
-        self.key = os.path.join(os.path.dirname(__file__), "server.key")
-        self.cert = os.path.join(os.path.dirname(__file__), "server.crt")
-        self.client_key = os.path.join(os.path.dirname(__file__), "client.key")
-        self.client_cert = os.path.join(os.path.dirname(__file__), "client.crt")
-        self.client2_key = os.path.join(os.path.dirname(__file__), "client2.key")
-        self.client2_cert = os.path.join(os.path.dirname(__file__), "client2.crt")
-        self.ca_certs = os.path.join(os.path.dirname(__file__), "client-server.bundle.crt")
-        print(self.cert, self.key)
+    @classmethod
+    def setUpClass(cls):
+        cls.key = os.path.join(os.path.dirname(__file__), "server.key")
+        cls.cert = os.path.join(os.path.dirname(__file__), "server.crt")
+        cls.client_key = os.path.join(os.path.dirname(__file__), "client.key")
+        cls.client_cert = os.path.join(os.path.dirname(__file__), "client.crt")
+        cls.client2_key = os.path.join(os.path.dirname(__file__), "client2.key")
+        cls.client2_cert = os.path.join(os.path.dirname(__file__), "client2.crt")
+        cls.ca_certs = os.path.join(os.path.dirname(__file__), "client-server.bundle.crt")
+        print(cls.cert, cls.key)
 
-        authenticator = SSLAuthenticator(self.key, self.cert, self.ca_certs)
-        self.server = ThreadedServer(SlaveService, port=18812,
-                                     auto_register=False, authenticator=authenticator)
-        self.server.logger.quiet = False
-        self.server._start_in_thread()
+        authenticator = SSLAuthenticator(cls.key, cls.cert, cls.ca_certs, ssl_version=ssl.PROTOCOL_TLS_SERVER)
+        cls.server = ThreadedServer(SlaveService, port=sslport,
+                                    auto_register=False, authenticator=authenticator)
+        cls.server.logger.quiet = False
+        cls.thd = cls.server._start_in_thread()
 
-    def tearDown(self):
-        while self.server.clients:
+    @classmethod
+    def tearDownClass(cls):
+        while cls.server.clients:
             pass
-        self.server.close()
+        cls.server.close()
+        cls.thd.join()
 
     def test_client(self):
-        c = rpyc.classic.ssl_connect("localhost", port=18812,
-                                     keyfile=self.client_key, certfile=self.client_cert)
+        c = rpyc.classic.ssl_connect("localhost", port=sslport,
+                                     ssl_version=ssl.PROTOCOL_TLS_CLIENT,
+                                     keyfile=self.client_key, certfile=self.client_cert,
+                                     ca_certs=self.ca_certs)
         print(repr(c))
         print(c.modules.sys)
         print(c.modules["xml.dom.minidom"].parseString("<a/>"))
@@ -64,65 +71,83 @@ class Test_SSL(unittest.TestCase):
 
     def test_client2(self):
         '''Assert exception client signed client2, but being in ca bundle is not server signature'''
-        with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert unknown ca'):
-            c = rpyc.classic.ssl_connect("localhost", port=18812,
-                                         keyfile=self.client2_key, certfile=self.client2_cert)
+        with self.assertRaisesRegex(EOFError,
+                                    'tlsv[0-9]* alert unknown ca'):
+            c = rpyc.classic.ssl_connect("localhost", port=sslport,
+                                         ssl_version=ssl.PROTOCOL_TLS_CLIENT,
+                                         keyfile=self.client2_key, certfile=self.client2_cert, ca_certs=self.ca_certs)
             c.close()
 
     def test_nokey(self):
         '''Assert exception when cert not provided'''
-        with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert certificate required'):
-            c = rpyc.classic.ssl_connect("localhost", port=18812)
+        with self.assertRaisesRegex(EOFError,
+                                    'tlsv[0-9]* alert certificate required'):
+            c = rpyc.classic.ssl_connect("localhost", port=sslport,
+                                         ssl_version=ssl.PROTOCOL_TLS_CLIENT,
+                                         ca_certs=self.ca_certs)
             c.close()
 
 
 @unittest.skipIf(_ssl_import_failed, "Ssl not available")
 class Test_SSL_CERT_REQUIRED(unittest.TestCase):
     '''It may be nonobvious and easy to misconfigure, but not specify'''
-    def setUp(self):
-        self.key = os.path.join(os.path.dirname(__file__), "server.key")
-        self.cert = os.path.join(os.path.dirname(__file__), "server.crt")
-        print(self.cert, self.key)
+    @classmethod
+    def setUpClass(cls):
+        cls.key = os.path.join(os.path.dirname(__file__), "server.key")
+        cls.cert = os.path.join(os.path.dirname(__file__), "server.crt")
+        cls.ca_certs = os.path.join(os.path.dirname(__file__), "client-server.bundle.crt")
+        print(cls.cert, cls.key)
 
-        authenticator = SSLAuthenticator(self.key, self.cert, cert_reqs=ssl.CERT_REQUIRED)
-        self.server = ThreadedServer(SlaveService, port=18812,
-                                     auto_register=False, authenticator=authenticator)
-        self.server.logger.quiet = False
-        self.server._start_in_thread()
+        authenticator = SSLAuthenticator(cls.key, cls.cert, cert_reqs=ssl.CERT_REQUIRED)
+        cls.server = ThreadedServer(SlaveService, port=sslport,
+                                    auto_register=False, authenticator=authenticator)
+        cls.server.logger.quiet = False
+        cls.thd = cls.server._start_in_thread()
 
-    def tearDown(self):
-        while self.server.clients:
+    @classmethod
+    def tearDownClass(cls):
+        while cls.server.clients:
             pass
-        self.server.close()
+        cls.server.close()
+        cls.thd.join()
 
     def test_nokey(self):
         '''Assert exception when cert not provided'''
-        with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert certificate required'):
-            c = rpyc.classic.ssl_connect("localhost", port=18812)
+        with self.assertRaisesRegex(EOFError,
+                                    'tlsv[0-9]* alert certificate required'):
+            c = rpyc.classic.ssl_connect("localhost", port=sslport,
+                                         ssl_version=ssl.PROTOCOL_TLS_CLIENT,
+                                         ca_certs=self.ca_certs)
             c.close()
 
 
 @unittest.skipIf(_ssl_import_failed, "Ssl not available")
 class Test_SSL_CERT_NONE(unittest.TestCase):
     '''It may be nonobvious and easy to misconfigure, but not specify'''
-    def setUp(self):
-        self.key = os.path.join(os.path.dirname(__file__), "server.key")
-        self.cert = os.path.join(os.path.dirname(__file__), "server.crt")
-        print(self.cert, self.key)
+    @classmethod
+    def setUpClass(cls):
+        cls.key = os.path.join(os.path.dirname(__file__), "server.key")
+        cls.cert = os.path.join(os.path.dirname(__file__), "server.crt")
+        cls.ca_certs = os.path.join(os.path.dirname(__file__), "client-server.bundle.crt")
+        print(cls.cert, cls.key)
 
-        authenticator = SSLAuthenticator(self.key, self.cert)
-        self.server = ThreadedServer(SlaveService, port=18812,
-                                     auto_register=False, authenticator=authenticator)
-        self.server.logger.quiet = False
-        self.server._start_in_thread()
+        authenticator = SSLAuthenticator(cls.key, cls.cert)
+        cls.server = ThreadedServer(SlaveService, port=sslport,
+                                    auto_register=False, authenticator=authenticator)
+        cls.server.logger.quiet = False
+        cls.thd = cls.server._start_in_thread()
 
-    def tearDown(self):
-        while self.server.clients:
+    @classmethod
+    def tearDownClass(cls):
+        while cls.server.clients:
             pass
-        self.server.close()
+        cls.server.close()
+        cls.thd.join()
 
     def test_nokey_noexc(self):
-        c = rpyc.classic.ssl_connect("localhost", port=18812)
+        c = rpyc.classic.ssl_connect("localhost", port=sslport,
+                                     ssl_version=ssl.PROTOCOL_TLS_CLIENT,
+                                     ca_certs=self.ca_certs)
         c.close()
 
 

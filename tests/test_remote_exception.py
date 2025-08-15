@@ -16,13 +16,15 @@ class TestRemoteException(unittest.TestCase):
     def setUp(self):
         self.server = rpyc.utils.server.OneShotServer(MyService, port=0)
         self.server.logger.quiet = False
-        self.server._start_in_thread()
+        self.thd = self.server._start_in_thread()
         self.original_version_string = rpyc.version.__version__
         self.conn = rpyc.connect("localhost", port=self.server.port)
 
     def tearDown(self):
         rpyc.version.__version__ = self.original_version_string
         self.conn.close()
+        self.server.close()
+        self.thd.join()
 
     def test_remote_exception(self):
         # Since the server/client share the same namespace, the version will change for both.
@@ -56,11 +58,13 @@ class TestExclusionsRemoteException(unittest.TestCase):
         config = {'include_local_traceback': False, 'include_local_version': False}
         self.server = rpyc.utils.server.OneShotServer(MyService, port=0, protocol_config=config)
         self.server.logger.quiet = False
-        self.server._start_in_thread()
+        self.thd = self.server._start_in_thread()
         self.conn = rpyc.connect("localhost", port=self.server.port)
 
     def tearDown(self):
         self.conn.close()
+        self.server.close()
+        self.thd.join()
 
     def test_remote_exception(self):
         try:
