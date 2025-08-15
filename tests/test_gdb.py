@@ -59,15 +59,10 @@ class Test_GDB(unittest.TestCase):
         self.thd.join()
 
     def test_gdb(self):
-        print(0)
         parent_gdb_conn = rpyc.connect(host='localhost', port=18878)
-        print(1)
         gdb = parent_gdb_conn.root.get_gdb()
-        print(2)
         gdb.execute('file {}'.format(self.a_out))
-        print(3)
         disasm = gdb.execute('disassemble main', to_string=True)
-        print(4)
         self.assertIn('End of assembler dump', disasm)
         parent_gdb_conn.close()
 

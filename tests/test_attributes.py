@@ -27,9 +27,9 @@ class TestAttributes(unittest.TestCase):
 
     def test_properties(self):
         p = self.conn.modules["tests.test_attributes"].Properties()
-        print(p.counter)  # 1
-        print(p.counter)  # 2
-        print(p.counter)  # 3
+        self.assertEqual(p.counter, 1)  # 1
+        self.assertEqual(p.counter, 2)  # 2
+        self.assertEqual(p.counter, 3)  # 3
         self.assertEqual(p.counter, 4)  # 4
 
 
