@@ -17,15 +17,16 @@ class Test_SSL(unittest.TestCase):
     '''Created keys/certs like https://gist.github.com/soarez/9688998
     # Server key
     openssl genrsa -out server.key 4096
-    openssl req -new -x509 -key server.key -out server.crt
+    openssl req -days 3650 -new -x509 -key server.key -out server.crt \
+            -subj "/C=US/ST=State/L=City/O=Organization/OU=Department/CN=localhost"
     # Client key
     openssl genrsa -out client.key 4096
-    openssl req -new -key client.key -out client.csr
-    openssl x509 -req -in  client.csr  -CA server.crt -CAkey server.key -out client.crt
+    openssl req -days 3650 -new -key client.key -out client.csr
+    openssl x509 -req -days 3650 -in  client.csr  -CA server.crt -CAkey server.key -out client.crt
     # Client2 key
     openssl genrsa -out client2.key 4096
-    openssl req -new -key client2.key -out client2.csr
-    openssl x509 -req -in  client2.csr  -CA client.crt -CAkey client.key -out client2.crt
+    openssl req -days 3650 -new -key client2.key -out client2.csr
+    openssl x509 -req -days 3650 -in  client2.csr  -CA client.crt -CAkey client.key -out client2.crt
     # Create bundle
     cat client.crt server.crt > client-server.bundle.crt
     '''
@@ -77,14 +78,18 @@ class Test_SSL(unittest.TestCase):
 
 
 @unittest.skipIf(_ssl_import_failed, "Ssl not available")
-class Test_SSL_CERT_REQUIRED(unittest.TestCase):
-    '''It may be nonobvious and easy to misconfigure, but not specify'''
+class Test_SSL_SERVER_AUTH(unittest.TestCase):
+    '''This will validate certificate authentication for clients'''
     def setUp(self):
         self.key = os.path.join(os.path.dirname(__file__), "server.key")
         self.cert = os.path.join(os.path.dirname(__file__), "server.crt")
+        self.ca_certs = os.path.join(os.path.dirname(__file__), "client-server.bundle.crt")
+        self.client2_key = os.path.join(os.path.dirname(__file__), "client2.key")
+        self.client2_cert = os.path.join(os.path.dirname(__file__), "client2.crt")
         print(self.cert, self.key)
 
-        authenticator = SSLAuthenticator(self.key, self.cert, cert_reqs=ssl.CERT_REQUIRED)
+        authenticator = SSLAuthenticator(self.key, self.cert, self.ca_certs,
+                                         cert_reqs=ssl.CERT_REQUIRED, ssl_version=ssl.PROTOCOL_TLS_SERVER)
         self.server = ThreadedServer(SlaveService, port=18812,
                                      auto_register=False, authenticator=authenticator)
         self.server.logger.quiet = False
@@ -101,10 +106,20 @@ class Test_SSL_CERT_REQUIRED(unittest.TestCase):
             c = rpyc.classic.ssl_connect("localhost", port=18812)
             c.close()
 
+    def test_client2(self):
+        '''Assert exception client signed client2, but being in ca bundle is not server signature'''
+        with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert unknown ca'):
+            c = rpyc.classic.ssl_connect("localhost", port=18812,
+                                         keyfile=self.client2_key, certfile=self.client2_cert)
+            c.close()
+
+
 
 @unittest.skipIf(_ssl_import_failed, "Ssl not available")
 class Test_SSL_CERT_NONE(unittest.TestCase):
-    '''It may be nonobvious and easy to misconfigure, but not specify'''
+    '''If ca_certs is not specified, then verify_mode is set to CERT_NONE. So, any certificate is accepted really.
+    TODO: decide if this is counter-intuitive enough to break backwards compatibility.
+    '''
     def setUp(self):
         self.key = os.path.join(os.path.dirname(__file__), "server.key")
         self.cert = os.path.join(os.path.dirname(__file__), "server.crt")
