@@ -8,7 +8,6 @@ import time
 import threading  # noqa: F401
 import errno
 import logging
-from contextlib import closing
 try:
     import Queue
 except ImportError:
@@ -189,7 +188,7 @@ class Server(object):
                 sock.shutdown(socket.SHUT_RDWR)
             except Exception:
                 pass
-            closing(sock)
+            sock.close()
             self.clients.discard(sock)
 
     def _serve_client(self, sock, credentials):
@@ -493,7 +492,7 @@ class ThreadPoolServer(Server):
             # put the connection in the active queue
             addrinfo = sock.getpeername()
             fd = conn.fileno()
-            self.logger.debug("Created connection to {addrinfo} with fd {fd}")
+            self.logger.debug(f"Created connection to {addrinfo} with fd {fd}")
             self.fd_to_conn[fd] = conn
             self._add_inactive_connection(fd)
             self.clients.clear()
