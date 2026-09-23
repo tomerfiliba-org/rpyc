@@ -54,7 +54,7 @@ class Test_SSL(unittest.TestCase):
 
     def test_client(self):
         c = rpyc.classic.ssl_connect("localhost", port=18812,
-                                     keyfile=self.client_key, certfile=self.client_cert)
+                                     keyfile=self.client_key, certfile=self.client_cert, ca_certs=self.ca_certs)
         print(repr(c))
         print(c.modules.sys)
         print(c.modules["xml.dom.minidom"].parseString("<a/>"))
@@ -63,17 +63,23 @@ class Test_SSL(unittest.TestCase):
         self.assertEqual(c.eval("1+x"), 6)
         c.close()
 
+    def test_cert_verify_fail(self):
+        with self.assertRaisesRegex(ssl.SSLCertVerificationError, 'certificate verify failed'):
+            c = rpyc.classic.ssl_connect("localhost", port=18812,
+                                         keyfile=self.client_key, certfile=self.client_cert, ca_certs=self.client_cert)
+            c.close()
+
     def test_client2(self):
         '''Assert exception client signed client2, but being in ca bundle is not server signature'''
         with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert unknown ca'):
             c = rpyc.classic.ssl_connect("localhost", port=18812,
-                                         keyfile=self.client2_key, certfile=self.client2_cert)
+                                         keyfile=self.client2_key, certfile=self.client2_cert, ca_certs=self.ca_certs)
             c.close()
 
     def test_nokey(self):
         '''Assert exception when cert not provided'''
         with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert certificate required'):
-            c = rpyc.classic.ssl_connect("localhost", port=18812)
+            c = rpyc.classic.ssl_connect("localhost", port=18812, ca_certs=self.ca_certs)
             c.close()
 
 
@@ -103,14 +109,14 @@ class Test_SSL_SERVER_AUTH(unittest.TestCase):
     def test_nokey(self):
         '''Assert exception when cert not provided'''
         with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert certificate required'):
-            c = rpyc.classic.ssl_connect("localhost", port=18812)
+            c = rpyc.classic.ssl_connect("localhost", port=self.server.port, ca_certs=self.ca_certs)
             c.close()
 
     def test_client2(self):
         '''Assert exception client signed client2, but being in ca bundle is not server signature'''
         with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert unknown ca'):
             c = rpyc.classic.ssl_connect("localhost", port=18812,
-                                         keyfile=self.client2_key, certfile=self.client2_cert)
+                                         keyfile=self.client2_key, certfile=self.client2_cert, ca_certs=self.ca_certs)
             c.close()
 
 
