@@ -31,6 +31,12 @@ class Test_SSL(unittest.TestCase):
     cat client.crt server.crt > client-server.bundle.crt
     '''
 
+    @classmethod
+    def setUpClass(cls):
+        print(f'OpenSSL Version: {ssl.OPENSSL_VERSION}')
+        print(f'OpenSSL Options: {repr(ssl.create_default_context().options)}')
+        print(f'TLS Version {" ".join([repr(v) for v in ssl.TLSVersion])}')
+
     def setUp(self):
         self.key = os.path.join(os.path.dirname(__file__), "server.key")
         self.cert = os.path.join(os.path.dirname(__file__), "server.crt")
