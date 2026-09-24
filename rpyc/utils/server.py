@@ -171,6 +171,7 @@ class Server(object):
                 try:
                     sock2, credentials = self.authenticator(sock)
                 except AuthenticationError:
+                    self.logger.exception("Failed auth server-side")
                     self.logger.info(f"{addrinfo} failed to authenticate... rejecting connection")
                     return
                 else:

@@ -1,6 +1,7 @@
 import rpyc
 import os
 import unittest
+from pathlib import Path
 from rpyc.utils.authenticators import SSLAuthenticator
 from rpyc.utils.server import ThreadedServer
 from rpyc import SlaveService
@@ -45,7 +46,12 @@ class Test_SSL(unittest.TestCase):
         self.client2_key = os.path.join(os.path.dirname(__file__), "client2.key")
         self.client2_cert = os.path.join(os.path.dirname(__file__), "client2.crt")
         self.ca_certs = os.path.join(os.path.dirname(__file__), "client-server.bundle.crt")
-        print(self.cert, self.key)
+        for p in (self.cert, self.key, self.ca_certs):
+            if Path(p).exists():
+                print(f'{p} exists')
+            else:
+                print(f'{p} dne')
+
 
         authenticator = SSLAuthenticator(self.key, self.cert, self.ca_certs)
         self.server = ThreadedServer(SlaveService, port=18812,
@@ -75,7 +81,7 @@ class Test_SSL(unittest.TestCase):
                                          keyfile=self.client_key, certfile=self.client_cert, ca_certs=self.client_cert)
             c.close()
 
-    def test_client2(self):
+    def test_bad_client(self):
         '''Assert exception client signed client2, but being in ca bundle is not server signature'''
         with self.assertRaisesRegex(EOFError, 'tlsv[0-9]* alert unknown ca'):
             c = rpyc.classic.ssl_connect("localhost", port=18812,
