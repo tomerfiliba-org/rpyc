@@ -56,12 +56,12 @@ class Test_SSL(unittest.TestCase):
         # the context now uses VERIFY_X509_PARTIAL_CHAIN and
         # VERIFY_X509_STRICT in its default verify flags. So,
         # for consistency between versions we pass verify_flags.
-        verify_flags = (
+        self.verify_flags = (
             ssl.VERIFY_X509_STRICT |
             ssl.VERIFY_X509_TRUSTED_FIRST |
             ssl.VERIFY_X509_PARTIAL_CHAIN
         )
-        authenticator = SSLAuthenticator(self.key, self.cert, self.ca_certs, verify_flags=verify_flags)
+        authenticator = SSLAuthenticator(self.key, self.cert, self.ca_certs, verify_flags=self.verify_flags)
         self.server = ThreadedServer(SlaveService, port=18812,
                                      auto_register=False, authenticator=authenticator)
         self.server.logger.quiet = False
@@ -74,7 +74,10 @@ class Test_SSL(unittest.TestCase):
 
     def test_client(self):
         c = rpyc.classic.ssl_connect("localhost", port=18812,
-                                     keyfile=self.client_key, certfile=self.client_cert, ca_certs=self.ca_certs, cert_reqs=ssl.CERT_REQUIRED)
+                                     keyfile=self.client_key, certfile=self.client_cert, ca_certs=self.ca_certs,
+                                     verify_flags=self.verify_flags)
+        context = c._channel.stream.sock._sslobj.context
+        self.assertEqual(context.verify_flags, self.verify_flags)
         print(repr(c))
         print(c.modules.sys)
         print(c.modules["xml.dom.minidom"].parseString("<a/>"))

@@ -89,7 +89,7 @@ def unix_connect(path):
 
 def ssl_connect(host, port=DEFAULT_SERVER_SSL_PORT, keyfile=None,
                 certfile=None, ca_certs=None, cert_reqs=None, ssl_version=None,
-                ciphers=None, ipv6=False):
+                ciphers=None, ipv6=False, verify_flags=None):
     """Creates a secure (``SSL``) socket connection to the given host and port,
     authenticating with the given certfile and CA file.
 
@@ -111,6 +111,7 @@ def ssl_connect(host, port=DEFAULT_SERVER_SSL_PORT, keyfile=None,
                         ``ssl.create_default_context``
     :param ciphers: see ``ssl.SSLContext.set_ciphers``. May be ``None``. New in
                     Python 2.7/3.2
+    :param verify_flags: the verify_flags to use for the SSL context
 
     :returns: an RPyC connection exposing ``SlaveService``
 

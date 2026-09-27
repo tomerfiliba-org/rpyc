@@ -119,7 +119,7 @@ def unix_connect(path, service=VoidService, config={}):
 
 def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
                 cert_reqs=None, ssl_version=None, ciphers=None,
-                service=VoidService, config={}, ipv6=False, keepalive=False, verify_mode=None):
+                service=VoidService, config={}, ipv6=False, keepalive=False, verify_mode=None, verify_flags=None):
     """
     creates an SSL-wrapped connection to the given host (encrypted and
     authenticated).
@@ -142,6 +142,7 @@ def ssl_connect(host, port, keyfile=None, certfile=None, ca_certs=None,
     :param ciphers: see ``ssl.SSLContext.set_ciphers``. May be ``None``. New in
                     Python 2.7/3.2
     :param verify_mode: see ``ssl.SSLContext.verify_mode``
+    :param verify_flags: the verify_flags to use for the SSL context
 
     :returns: an RPyC connection
     """
