@@ -231,6 +231,9 @@ class SocketStream(Stream):
             cert_reqs = ssl_kwargs.pop("cert_reqs", None)
             if cert_reqs is not None:
                 context.verify_mode = cert_reqs
+            verify_flags = ssl_kwargs.pop("verify_flags", None)
+            if verify_flags is not None:
+                context.verify_flags = verify_flags
             s2 = context.wrap_socket(s, server_hostname=host, **ssl_kwargs)
             return cls(s2)
         except BaseException:
