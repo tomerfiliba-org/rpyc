@@ -44,9 +44,10 @@ class SSLAuthenticator(object):
     :param cert_reqs: the certificate requirements. By default, if ``ca_cert`` is
                       specified, the requirement is set to ``CERT_REQUIRED``;
                       otherwise it is set to ``CERT_NONE``
+    :param ssl_version: the SSL version to use
     :param ciphers: the list of ciphers to use, or ``None``, if you do not wish
                     to restrict the available ciphers. New in Python 2.7/3.2
-    :param ssl_version: the SSL version to use
+    :param verify_flags: the verify_flags to use for the SSL context
 
     Refer to `ssl.SSLContext <https://docs.python.org/dev/library/ssl.html#ssl.SSLContext>`_
     for more info.
@@ -58,11 +59,12 @@ class SSLAuthenticator(object):
     """
 
     def __init__(self, keyfile, certfile, ca_certs=None, cert_reqs=None,
-                 ssl_version=None, ciphers=None):
+                 ssl_version=None, ciphers=None, verify_flags=None):
         self.keyfile = str(keyfile)
         self.certfile = str(certfile)
         self.ca_certs = str(ca_certs) if ca_certs else None
         self.ciphers = ciphers
+        self.verify_flags = verify_flags
         if cert_reqs is None:
             if ca_certs:
                 self.cert_reqs = ssl.CERT_REQUIRED
@@ -85,6 +87,8 @@ class SSLAuthenticator(object):
                 context.set_ciphers(self.ciphers)
             if self.cert_reqs is not None:
                 context.verify_mode = self.cert_reqs
+            if self.verify_flags is not None:
+                context.verify_flags = self.verify_flags
             sock2 = context.wrap_socket(sock, server_side=True)
         except ssl.SSLError:
             ex = sys.exc_info()[1]
